@@ -8,6 +8,12 @@
 
 <div class="nguoi-dung-container">
 
+    <div class="rs-page-header">
+        <div class="rs-page-header-text">
+            <h1 class="rs-page-title">Tài khoản hệ thống</h1>
+            <p class="rs-page-subtitle">Quản lý thông tin đăng nhập và phân quyền tài khoản người dùng.</p>
+        </div>
+    </div>
   
     @if($errors->any())
     <div class="alert alert-error" id="alert-error">
@@ -39,7 +45,12 @@
                         <label>Mật khẩu</label>
                         <div class="password-wrapper">
                             <input type="password" name="mat_khau" id="mat_khau" minlength="6">
-                            <button type="button" class="toggle-pwd" onclick="togglePassword('mat_khau')">👁</button>
+                            <button type="button" class="toggle-pwd" onclick="togglePassword('mat_khau')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                            </button>
                         </div>
                         <small>Tối thiểu 6 ký tự. Để trống nếu không muốn đổi khi sửa</small>
                     </div>

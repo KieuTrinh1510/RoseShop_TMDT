@@ -14,9 +14,11 @@
 
 <div class="page-container">
 
-    {{-- ═══════════════════════ PAGE HEADER ═══════════════════════ --}}
-    <div class="page-header-section mb-4">
-       
+    <div class="rs-page-header">
+        <div class="rs-page-header-text">
+            <h1 class="rs-page-title">Báo cáo sản phẩm</h1>
+            <p class="rs-page-subtitle">Phân tích số lượng tiêu thụ, hàng tồn kho và tỷ lệ hao hụt sản phẩm.</p>
+        </div>
         <div class="header-actions">
             <a href="{{ route('bao-cao.san-pham.export', array_filter([
                     'ngay_bat_dau' => $ngayBatDau->format('Y-m-d'),

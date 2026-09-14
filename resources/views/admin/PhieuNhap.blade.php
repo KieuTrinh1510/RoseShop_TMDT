@@ -12,6 +12,13 @@
 <div class="nhap-hang-container">
 <div class="container py-4">
 
+    <div class="rs-page-header">
+        <div class="rs-page-header-text">
+            <h1 class="rs-page-title">Quản lý nhập hàng</h1>
+            <p class="rs-page-subtitle">Lập và theo dõi các phiếu nhập hàng từ nhà vườn và nhà cung cấp.</p>
+        </div>
+    </div>
+
     {{-- ===== THÔNG BÁO ===== --}}
     @if(session('success'))
         <div class="alert alert-dark alert-dismissible fade show" role="alert">

@@ -10,7 +10,12 @@
 
 <div class="nhan-vien-container">
 <div class="container mt-4">
-    <h2>Quản lý nhân viên</h2>
+    <div class="rs-page-header">
+        <div class="rs-page-header-text">
+            <h1 class="rs-page-title">Quản lý nhân viên</h1>
+            <p class="rs-page-subtitle">Hồ sơ nhân sự, chức vụ và thanh toán thù lao nhân viên.</p>
+        </div>
+    </div>
 
     {{-- Thông báo --}}
     @if(session('success'))

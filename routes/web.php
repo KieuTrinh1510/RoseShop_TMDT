@@ -103,6 +103,23 @@ Route::get('/doanh-thu/export', [BaoCaoController::class, 'exportDoanhThu'])->na
         Route::get('/ton-kho',      [BaoCaoController::class, 'index'])->name('ton-kho');
         Route::get('/khach-hang',   [BaoCaoController::class, 'index'])->name('khach-hang');
     });
+
+    // ─── Placeholder routes cho các menu đang phát triển (ADMIN only) ──
+    Route::get('/admin/thanh-toan',             fn() => view('admin.placeholder', ['title' => 'Thanh toán']))->name('admin.thanh-toan');
+    Route::get('/admin/mau-bo-hoa',             fn() => view('admin.placeholder', ['title' => 'Mẫu bó hoa']))->name('admin.mau-bo-hoa');
+    Route::get('/admin/nguyen-vat-lieu',        fn() => view('admin.placeholder', ['title' => 'Nguyên vật liệu']))->name('admin.nguyen-vat-lieu');
+    Route::get('/admin/nha-cung-cap',           fn() => view('admin.placeholder', ['title' => 'Nhà cung cấp']))->name('admin.nha-cung-cap');
+    Route::get('/admin/lo-hang',                fn() => view('admin.placeholder', ['title' => 'Lô hàng']))->name('admin.lo-hang');
+    Route::get('/admin/ton-kho',                fn() => view('admin.placeholder', ['title' => 'Tồn kho']))->name('admin.ton-kho');
+    Route::get('/admin/quan-ly-shipper',        fn() => view('admin.placeholder', ['title' => 'Shipper']))->name('admin.shipper');
+    Route::get('/admin/giao-hang/phan-cong',    fn() => view('admin.placeholder', ['title' => 'Phân công giao hàng']))->name('admin.giao-hang.phan-cong');
+    Route::get('/admin/giao-hang/theo-doi',     fn() => view('admin.placeholder', ['title' => 'Theo dõi giao hàng']))->name('admin.giao-hang.theo-doi');
+    Route::get('/admin/giao-hang/hang-hoan',    fn() => view('admin.placeholder', ['title' => 'Hàng hoàn']))->name('admin.giao-hang.hang-hoan');
+    Route::get('/admin/giao-hang/doi-soat-cod', fn() => view('admin.placeholder', ['title' => 'Đối soát COD']))->name('admin.giao-hang.doi-soat-cod');
+    Route::get('/admin/bao-cao/kho',            fn() => view('admin.placeholder', ['title' => 'Báo cáo kho']))->name('admin.bao-cao.kho');
+    Route::get('/admin/bao-cao/giao-hang',      fn() => view('admin.placeholder', ['title' => 'Báo cáo hoạt động giao hàng']))->name('admin.bao-cao.giao-hang');
+    Route::get('/admin/he-thong/thong-bao',     fn() => view('admin.placeholder', ['title' => 'Thông báo']))->name('admin.he-thong.thong-bao');
+    Route::get('/admin/he-thong/cau-hinh',      fn() => view('admin.placeholder', ['title' => 'Cấu hình hệ thống']))->name('admin.he-thong.cau-hinh');
 });
 
 // ─── ADMIN + NHÂN VIÊN ────────────────────────────────────────────────────────

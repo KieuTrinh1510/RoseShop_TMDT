@@ -2,12 +2,19 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/Admin/HoaDon.css') }}">
-<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=IM+Fell+English:ital@0;1&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 @endpush
 
 @section('content')
 
 <div class="hoa-don-container">
+
+    <div class="rs-page-header">
+        <div class="rs-page-header-text">
+            <h1 class="rs-page-title">Quản lý hóa đơn</h1>
+            <p class="rs-page-subtitle">Danh sách hóa đơn bán hàng, lịch sử thanh toán và trạng thái xử lý.</p>
+        </div>
+    </div>
+
 <div class="page-body" id="page-body">
 
     {{-- ── Ô 1: BỘ LỌC ── --}}

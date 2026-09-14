@@ -10,12 +10,15 @@
 <div class="bao-cao-doanh-thu-container">
 <div class="page-container">
 
-    <div class="page-header-section">
+    <div class="rs-page-header">
+        <div class="rs-page-header-text">
+            <h1 class="rs-page-title">Báo cáo doanh thu & lợi nhuận</h1>
+            <p class="rs-page-subtitle">Thống kê biến động doanh thu, giá vốn và tỷ suất lợi nhuận theo kỳ.</p>
+        </div>
         <div class="header-actions">
             @if(Route::has('bao-cao.doanh-thu.export'))
                 <a href="{{ route('bao-cao.doanh-thu.export', request()->query()) }}" class="btn-excel">
-                    <i class="bi bi-file-earmark-excel-fill"></i>
-                    Xuất Excel
+                    <i class="bi bi-file-earmark-excel-fill me-1"></i> Xuất Excel
                 </a>
             @endif
         </div>

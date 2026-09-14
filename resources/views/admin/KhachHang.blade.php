@@ -8,10 +8,23 @@
 
 <div class="khach-hang-container">
 
+    <div class="rs-page-header">
+        <div class="rs-page-header-text">
+            <h1 class="rs-page-title">Quản lý khách hàng</h1>
+            <p class="rs-page-subtitle">Danh sách khách hàng, thông tin liên hệ và điểm thưởng tích lũy.</p>
+        </div>
+    </div>
 
     <div class="kh-stats">
         <div class="kh-stat-item">
-            <div class="kh-stat-icon">👤</div>
+            <div class="kh-stat-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+            </div>
             <div>
                 <span>Tổng khách hàng</span>
                 <h2>{{ $khachHangs->count() }}</h2>
@@ -19,7 +32,14 @@
         </div>
 
         <div class="kh-stat-item">
-            <div class="kh-stat-icon">🎁</div>
+            <div class="kh-stat-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="8" width="18" height="4" rx="1"/>
+                    <path d="M12 8v13"/>
+                    <path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/>
+                    <path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/>
+                </svg>
+            </div>
             <div>
                 <span>Tổng điểm tích lũy</span>
                 <h2>{{ number_format($khachHangs->sum('diem_tich_luy')) }}</h2>
@@ -27,7 +47,12 @@
         </div>
 
         <div class="kh-stat-item">
-            <div class="kh-stat-icon">📈</div>
+            <div class="kh-stat-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 3v18h18"/>
+                    <path d="m19 9-5 5-4-4-3 3"/>
+                </svg>
+            </div>
             <div>
                 <span>Điểm trung bình</span>
                 <h2>

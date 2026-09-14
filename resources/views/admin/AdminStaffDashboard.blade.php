@@ -4,20 +4,33 @@
 
 <div class="admin-home">
 
-    <div class="home-header">
-        <div>
-            <!-- <h1>Chào mừng trở lại, {{ Auth::user()->ten_dang_nhap }} 👋</h1>
-            <p>Dưới đây là tổng quan hoạt động của cửa hàng hôm nay.</p> -->
+    <div class="rs-page-header">
+        <div class="rs-page-header-text">
+            <h1 class="rs-page-title">Tổng quan cửa hàng</h1>
+            <p class="rs-page-subtitle">Theo dõi doanh thu, đơn hàng và các chỉ số hoạt động của RoseShop.</p>
         </div>
 
         <div class="home-date">
-            📅 Hôm nay: {{ now()->format('d/m/Y') }}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #667085;">
+                <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                <line x1="16" x2="16" y1="2" y2="6"/>
+                <line x1="8" x2="8" y1="2" y2="6"/>
+                <line x1="3" x2="21" y1="10" y2="10"/>
+            </svg>
+            <span>Hôm nay: {{ now()->format('d/m/Y') }}</span>
         </div>
     </div>
 
     <div class="home-stats">
         <div class="home-card">
-            <div class="home-icon pink">🛍️</div>
+            <div class="home-icon pink">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m7.5 4.27 9 5.15"/>
+                    <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+                    <path d="m3.3 7 8.7 5 8.7-5"/>
+                    <path d="M12 22V12"/>
+                </svg>
+            </div>
             <div>
                 <p>Tổng sản phẩm</p>
                 <h2>{{ number_format($tongSanPham ?? 0) }}</h2>
@@ -25,7 +38,13 @@
         </div>
 
         <div class="home-card">
-            <div class="home-icon blue">🛒</div>
+            <div class="home-icon blue">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="8" cy="21" r="1"/>
+                    <circle cx="19" cy="21" r="1"/>
+                    <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+                </svg>
+            </div>
             <div>
                 <p>Tổng đơn hàng</p>
                 <h2>{{ number_format($tongDonHang ?? 0) }}</h2>
@@ -33,7 +52,12 @@
         </div>
 
         <div class="home-card">
-            <div class="home-icon green">💵</div>
+            <div class="home-icon green">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" x2="12" y1="2" y2="22"/>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+            </div>
             <div>
                 <p>Doanh thu hôm nay</p>
                 <h2>{{ number_format($doanhThuHomNay ?? 0, 0, ',', '.') }}đ</h2>
@@ -41,7 +65,14 @@
         </div>
 
         <div class="home-card">
-            <div class="home-icon purple">👥</div>
+            <div class="home-icon purple">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+            </div>
             <div>
                 <p>Tổng khách hàng</p>
                 <h2>{{ number_format($tongKhachHang ?? 0) }}</h2>

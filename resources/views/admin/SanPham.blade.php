@@ -10,6 +10,14 @@
 
 <div class="san-pham-container">
     <div class="container-fluid p-0">
+
+    <div class="rs-page-header">
+        <div class="rs-page-header-text">
+            <h1 class="rs-page-title">Quản lý sản phẩm</h1>
+            <p class="rs-page-subtitle">Theo dõi và quản lý danh mục hoa tươi, phụ kiện và quà tặng của cửa hàng.</p>
+        </div>
+    </div>
+
     {{-- ===== THÔNG BÁO ===== --}}
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
