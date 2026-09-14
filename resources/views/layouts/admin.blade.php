@@ -23,7 +23,9 @@
     ])
 
     <style>
-        /* Bulletproof Sidebar Layout & UI/UX */
+        /* ==========================================================================
+           Sidebar Navigation Styles (Single Active Menu & Accordion)
+           ========================================================================== */
         .sidebar .menu-item {
             display: flex !important;
             flex-direction: row !important;
@@ -33,6 +35,7 @@
             margin-bottom: 4px !important;
             border-radius: 8px !important;
             color: #344054 !important;
+            background-color: transparent !important;
             text-decoration: none !important;
             font-size: 15px !important;
             font-weight: 700 !important;
@@ -57,12 +60,46 @@
             min-height: 18px !important;
             flex-shrink: 0 !important;
             color: #344054 !important;
+            stroke: currentColor !important;
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
             transition: color 0.2s ease-in-out !important;
         }
 
+        /* Active Main Menu Item (e.g. Tổng quan active) */
+        .sidebar .menu-item.active {
+            background-color: #FDEAF3 !important;
+            color: #EC3D8F !important;
+            border-radius: 8px !important;
+        }
+
+        .sidebar .menu-item.active .menu-icon {
+            color: #EC3D8F !important;
+            stroke: #EC3D8F !important;
+        }
+
+        .sidebar .menu-item.active span {
+            color: #EC3D8F !important;
+        }
+
+        /* Hover Main Menu Item */
+        .sidebar .menu-item:hover {
+            background-color: #FDEAF3 !important;
+            color: #EC3D8F !important;
+            border-radius: 8px !important;
+        }
+
+        .sidebar .menu-item:hover .menu-icon {
+            color: #EC3D8F !important;
+            stroke: #EC3D8F !important;
+        }
+
+        .sidebar .menu-item:hover span {
+            color: #EC3D8F !important;
+        }
+
+        /* Main Menu Parent Button */
         .sidebar .menu-parent {
             width: 100% !important;
             display: flex !important;
@@ -119,6 +156,7 @@
             min-height: 18px !important;
             flex-shrink: 0 !important;
             color: #344054 !important;
+            stroke: currentColor !important;
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
@@ -132,69 +170,61 @@
             min-height: 16px !important;
             flex-shrink: 0 !important;
             color: #98A2B3 !important;
+            stroke: currentColor !important;
             margin-left: auto !important;
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
-            transition: transform 0.2s ease, color 0.2s ease-in-out !important;
+            transform: rotate(0deg) !important;
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease-in-out !important;
         }
 
-        /* Hover states - Pink background frame like Tổng quan */
-        .sidebar .menu-item:hover,
+        /* Active / Open Main Menu Parent Button */
+        .sidebar .menu-parent.active,
+        .sidebar .menu-group.open > .menu-parent {
+            background-color: #FDEAF3 !important;
+            color: #EC3D8F !important;
+            border-radius: 8px !important;
+        }
+
+        .sidebar .menu-parent.active .menu-parent-left span,
+        .sidebar .menu-group.open > .menu-parent .menu-parent-left span {
+            color: #EC3D8F !important;
+        }
+
+        .sidebar .menu-parent.active .menu-icon,
+        .sidebar .menu-parent.active .menu-chevron,
+        .sidebar .menu-group.open > .menu-parent .menu-icon,
+        .sidebar .menu-group.open > .menu-parent .menu-chevron {
+            color: #EC3D8F !important;
+            stroke: #EC3D8F !important;
+        }
+
+        /* Open group rotates chevron downwards */
+        .sidebar .menu-group.open .menu-chevron {
+            transform: rotate(90deg) !important;
+            color: #EC3D8F !important;
+            stroke: #EC3D8F !important;
+        }
+
+        /* Hover Main Menu Parent Button */
         .sidebar .menu-parent:hover {
             background-color: #FDEAF3 !important;
             color: #EC3D8F !important;
             border-radius: 8px !important;
         }
 
-        .sidebar .menu-item:hover .menu-icon,
+        .sidebar .menu-parent:hover .menu-parent-left span {
+            color: #EC3D8F !important;
+        }
+
         .sidebar .menu-parent:hover .menu-icon,
         .sidebar .menu-parent:hover .menu-chevron {
             color: #EC3D8F !important;
             stroke: #EC3D8F !important;
         }
 
-        .sidebar .menu-item:hover span,
-        .sidebar .menu-parent:hover .menu-parent-left span {
-            color: #EC3D8F !important;
-        }
-
-        /* Active states */
-        .sidebar .menu-item.active {
-            background-color: #FDEAF3 !important;
-            color: #EC3D8F !important;
-            border-radius: 8px !important;
-            font-weight: 700 !important;
-        }
-
-        .sidebar .menu-item.active .menu-icon {
-            color: #EC3D8F !important;
-            stroke: #EC3D8F !important;
-        }
-
-        .sidebar .menu-item.active span {
-            color: #EC3D8F !important;
-        }
-
-        .sidebar .menu-parent.has-active {
-            color: #EC3D8F !important;
-        }
-
-        .sidebar .menu-parent.has-active .menu-parent-left span {
-            color: #EC3D8F !important;
-        }
-
-        .sidebar .menu-parent.has-active .menu-icon {
-            color: #EC3D8F !important;
-            stroke: #EC3D8F !important;
-        }
-
-        .sidebar .menu-group.open .menu-chevron {
-            transform: rotate(90deg) !important;
-            color: #EC3D8F !important;
-        }
-
-        /* Submenu items */
+        /* Submenu Lists and Items */
         .sidebar .submenu-list {
             margin-top: 2px !important;
             margin-bottom: 6px !important;
@@ -204,11 +234,10 @@
             display: flex !important;
             flex-direction: row !important;
             align-items: center !important;
-            gap: 8px !important;
             margin-left: 32px !important;
             margin-right: 6px !important;
             margin-bottom: 2px !important;
-            padding: 7px 12px !important;
+            padding: 8px 12px !important;
             border-radius: 6px !important;
             color: #475467 !important;
             text-decoration: none !important;
@@ -218,11 +247,15 @@
             white-space: nowrap !important;
         }
 
-        .sidebar .submenu-item:hover,
+        .sidebar .submenu-item:hover {
+            background-color: #FDEAF3 !important;
+            color: #EC3D8F !important;
+            font-weight: 600 !important;
+        }
+
         .sidebar .submenu-item.active {
             background-color: #FDEAF3 !important;
             color: #EC3D8F !important;
-            border-radius: 6px !important;
             font-weight: 600 !important;
         }
     </style>
@@ -273,12 +306,20 @@
 
                 // Hệ thống: admin.he-thong.*
                 $isHeThongActive = request()->routeIs('admin.he-thong.*');
+
+                // Kiểm tra xem có bất kỳ menu con/nhóm nào đang active không
+                $hasAnyGroupActive = $isBanHangActive || $isSanPhamKhoActive || $isNguoiDungActive 
+                                  || $isGiaoHangActive || $isBaoCaoActive || $isHeThongActive;
+
+                // "Tổng quan" CHỈ active khi ở route admin.dashboard VÀ không có menu cha nào khác active
+                $isTongQuanActive = request()->routeIs('admin.dashboard') && !$hasAnyGroupActive;
             @endphp
 
             <nav class="menu">
                 {{-- Tổng quan --}}
                 <a href="{{ route('admin.dashboard') }}" 
-                   class="menu-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                   class="menu-item {{ $isTongQuanActive ? 'active' : '' }}" 
+                   id="menu-tong-quan">
                     <svg class="menu-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                         <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                         <polyline points="9 22 9 12 15 12 15 22"/>
@@ -287,8 +328,8 @@
                 </a>
 
                 {{-- Bán hàng --}}
-                <div class="menu-group {{ $isBanHangActive ? 'open' : '' }}">
-                    <button type="button" class="menu-parent {{ $isBanHangActive ? 'has-active' : '' }}" onclick="toggleSubmenu(this)">
+                <div class="menu-group {{ $isBanHangActive ? 'open' : '' }}" id="group-ban-hang">
+                    <button type="button" class="menu-parent {{ $isBanHangActive ? 'active' : '' }}" onclick="toggleSubmenu(this)">
                         <div class="menu-parent-left">
                             <svg class="menu-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="8" cy="21" r="1"/>
@@ -317,8 +358,8 @@
                 </div>
 
                 {{-- Sản phẩm & Kho --}}
-                <div class="menu-group {{ $isSanPhamKhoActive ? 'open' : '' }}">
-                    <button type="button" class="menu-parent {{ $isSanPhamKhoActive ? 'has-active' : '' }}" onclick="toggleSubmenu(this)">
+                <div class="menu-group {{ $isSanPhamKhoActive ? 'open' : '' }}" id="group-san-pham-kho">
+                    <button type="button" class="menu-parent {{ $isSanPhamKhoActive ? 'active' : '' }}" onclick="toggleSubmenu(this)">
                         <div class="menu-parent-left">
                             <svg class="menu-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="m7.5 4.27 9 5.15"/>
@@ -363,8 +404,8 @@
 
                 {{-- Người dùng (ADMIN only) --}}
                 @if($isAdmin)
-                    <div class="menu-group {{ $isNguoiDungActive ? 'open' : '' }}">
-                        <button type="button" class="menu-parent {{ $isNguoiDungActive ? 'has-active' : '' }}" onclick="toggleSubmenu(this)">
+                    <div class="menu-group {{ $isNguoiDungActive ? 'open' : '' }}" id="group-nguoi-dung">
+                        <button type="button" class="menu-parent {{ $isNguoiDungActive ? 'active' : '' }}" onclick="toggleSubmenu(this)">
                             <div class="menu-parent-left">
                                 <svg class="menu-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
@@ -395,8 +436,8 @@
                     </div>
 
                     {{-- Giao hàng (ADMIN only) --}}
-                    <div class="menu-group {{ $isGiaoHangActive ? 'open' : '' }}">
-                        <button type="button" class="menu-parent {{ $isGiaoHangActive ? 'has-active' : '' }}" onclick="toggleSubmenu(this)">
+                    <div class="menu-group {{ $isGiaoHangActive ? 'open' : '' }}" id="group-giao-hang">
+                        <button type="button" class="menu-parent {{ $isGiaoHangActive ? 'active' : '' }}" onclick="toggleSubmenu(this)">
                             <div class="menu-parent-left">
                                 <svg class="menu-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/>
@@ -428,8 +469,8 @@
                     </div>
 
                     {{-- Báo cáo & Thống kê (ADMIN only) --}}
-                    <div class="menu-group {{ $isBaoCaoActive ? 'open' : '' }}">
-                        <button type="button" class="menu-parent {{ $isBaoCaoActive ? 'has-active' : '' }}" onclick="toggleSubmenu(this)">
+                    <div class="menu-group {{ $isBaoCaoActive ? 'open' : '' }}" id="group-bao-cao">
+                        <button type="button" class="menu-parent {{ $isBaoCaoActive ? 'active' : '' }}" onclick="toggleSubmenu(this)">
                             <div class="menu-parent-left">
                                 <svg class="menu-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M3 3v18h18"/>
@@ -458,8 +499,8 @@
                     </div>
 
                     {{-- Hệ thống (ADMIN only) --}}
-                    <div class="menu-group {{ $isHeThongActive ? 'open' : '' }}">
-                        <button type="button" class="menu-parent {{ $isHeThongActive ? 'has-active' : '' }}" onclick="toggleSubmenu(this)">
+                    <div class="menu-group {{ $isHeThongActive ? 'open' : '' }}" id="group-he-thong">
+                        <button type="button" class="menu-parent {{ $isHeThongActive ? 'active' : '' }}" onclick="toggleSubmenu(this)">
                             <div class="menu-parent-left">
                                 <svg class="menu-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
@@ -504,20 +545,70 @@
     @stack('scripts')
 
     <script>
-        function toggleSubmenu(button) {
-            const group = button.closest('.menu-group');
-            if (!group) return;
-            const submenu = group.querySelector('.submenu-list');
-            const isOpen = group.classList.contains('open');
+        document.addEventListener('DOMContentLoaded', function() {
+            const allGroups = document.querySelectorAll('.sidebar .menu-group');
+            const tongQuanItem = document.getElementById('menu-tong-quan');
+            const isDashboard = {{ request()->routeIs('admin.dashboard') ? 'true' : 'false' }};
 
-            if (isOpen) {
-                group.classList.remove('open');
-                if (submenu) submenu.style.display = 'none';
-            } else {
-                group.classList.add('open');
-                if (submenu) submenu.style.display = 'block';
+            // Accordion toggle & active state handling
+            window.toggleSubmenu = function(button) {
+                const currentGroup = button.closest('.menu-group');
+                if (!currentGroup) return;
+
+                const isCurrentlyOpen = currentGroup.classList.contains('open');
+
+                // 1. Accordion: Đóng TẤT CẢ các nhóm menu khác và bỏ trạng thái active của chúng
+                allGroups.forEach(group => {
+                    if (group !== currentGroup) {
+                        group.classList.remove('open');
+                        const submenu = group.querySelector('.submenu-list');
+                        if (submenu) submenu.style.display = 'none';
+                        const parentBtn = group.querySelector('.menu-parent');
+                        if (parentBtn) parentBtn.classList.remove('active');
+                    }
+                });
+
+                // 2. Xử lý nhóm vừa click
+                if (isCurrentlyOpen) {
+                    // Nếu nhóm này đang mở -> đóng lại
+                    currentGroup.classList.remove('open');
+                    const submenu = currentGroup.querySelector('.submenu-list');
+                    if (submenu) submenu.style.display = 'none';
+                    button.classList.remove('active');
+
+                    // Nếu đóng hết tất cả nhóm và đang ở trang Dashboard -> khôi phục active cho Tổng quan
+                    const anyGroupOpen = document.querySelector('.sidebar .menu-group.open');
+                    if (!anyGroupOpen && isDashboard && tongQuanItem) {
+                        tongQuanItem.classList.add('active');
+                    }
+                } else {
+                    // Nếu nhóm này đang đóng -> mở ra và gán trạng thái active màu hồng
+                    currentGroup.classList.add('open');
+                    const submenu = currentGroup.querySelector('.submenu-list');
+                    if (submenu) submenu.style.display = 'block';
+                    button.classList.add('active');
+
+                    // Tắt active ở Tổng quan
+                    if (tongQuanItem) {
+                        tongQuanItem.classList.remove('active');
+                    }
+                }
+            };
+
+            // Khi click Tổng quan: đóng tất cả các submenu đang mở
+            if (tongQuanItem) {
+                tongQuanItem.addEventListener('click', function() {
+                    allGroups.forEach(group => {
+                        group.classList.remove('open');
+                        const submenu = group.querySelector('.submenu-list');
+                        if (submenu) submenu.style.display = 'none';
+                        const parentBtn = group.querySelector('.menu-parent');
+                        if (parentBtn) parentBtn.classList.remove('active');
+                    });
+                    tongQuanItem.classList.add('active');
+                });
             }
-        }
+        });
     </script>
 </div>
 </body>

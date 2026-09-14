@@ -454,15 +454,23 @@ button, .btn, input[type="button"], input[type="submit"] {
     stroke: #EC3D8F !important;
 }
 
-.menu-parent.has-active {
+/* Active & Open state on Menu Parent */
+.menu-parent.active,
+.menu-group.open > .menu-parent {
+    background-color: #FDEAF3 !important;
+    color: #EC3D8F !important;
+    border-radius: 8px !important;
+}
+
+.menu-parent.active .menu-parent-left span,
+.menu-group.open > .menu-parent .menu-parent-left span {
     color: #EC3D8F !important;
 }
 
-.menu-parent.has-active .menu-parent-left span {
-    color: #EC3D8F !important;
-}
-
-.menu-parent.has-active .menu-icon {
+.menu-parent.active .menu-icon,
+.menu-parent.active .menu-chevron,
+.menu-group.open > .menu-parent .menu-icon,
+.menu-group.open > .menu-parent .menu-chevron {
     color: #EC3D8F !important;
     stroke: #EC3D8F !important;
 }
@@ -470,6 +478,7 @@ button, .btn, input[type="button"], input[type="submit"] {
 .menu-group.open .menu-chevron {
     transform: rotate(90deg) !important;
     color: #EC3D8F !important;
+    stroke: #EC3D8F !important;
 }
 
 /* Submenu Lists and Items */
