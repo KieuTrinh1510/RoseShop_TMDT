@@ -31,6 +31,7 @@ class MauBoHoa extends Model
     protected $casts = [
         'kieu_bo_hoa' => 'string',
         'size'        => 'string',
+        'concept'     => 'string',
         'trang_thai'  => 'string',
     ];
 
@@ -43,7 +44,6 @@ class MauBoHoa extends Model
         );
     }
 
-    // Các bó hoa thực tế đã được tạo dựa trên mẫu này
     public function boHoas()
     {
         return $this->hasMany(

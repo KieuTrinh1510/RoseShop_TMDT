@@ -5,6 +5,15 @@
 
 @section('head-styles')
 <link rel="stylesheet" href="{{ asset('css/Customer/GioHang.css') }}">
+<style>
+    /* ✅ Nút thanh toán bị disable khi chưa chọn sản phẩm */
+    .btn-checkout[disabled] {
+        opacity: .5;
+        cursor: not-allowed;
+        pointer-events: none;
+        filter: grayscale(.4);
+    }
+</style>
 @endsection
 
 @section('content')
@@ -175,7 +184,9 @@
             </div>
 
             @auth
-                <button class="btn-checkout" id="btnProceed" onclick="proceedToCheckout()">
+                {{-- ✅ Ban đầu disabled vì chưa chọn sản phẩm nào --}}
+                <button class="btn-checkout" id="btnProceed" onclick="proceedToCheckout()" disabled
+                        title="Vui lòng chọn ít nhất 1 sản phẩm để thanh toán">
                     💳 Tiến Hành Thanh Toán
                 </button>
             @else
@@ -204,7 +215,6 @@
 
     let diemSuDung = {{ $diemSuDung }};
 
-    // Giá của từng item (để tính lại subtotal phía client)
     const prices = {
         @foreach($gioHang as $key => $item)
         '{{ $key }}': {{ $item['gia_ban'] }},
@@ -215,16 +225,24 @@
         '{{ $key }}': {{ $item['so_luong'] }},
         @endforeach
     };
-    // track selected items for checkout
     let selectedItems = {};
-
-    // initialize selectedItems (none selected by default)
     @foreach($gioHang as $key => $item)
     selectedItems['{{ $key }}'] = false;
     @endforeach
 
+    // ✅ Bật/tắt nút thanh toán dựa trên số item đang chọn
+    function updateCheckoutButtonState() {
+        const btn = document.getElementById('btnProceed');
+        if (!btn) return;
+
+        const soChon = Object.values(selectedItems).filter(Boolean).length;
+        btn.disabled = soChon === 0;
+        btn.title = soChon === 0
+            ? 'Vui lòng chọn ít nhất 1 sản phẩm để thanh toán'
+            : 'Tiến hành thanh toán ' + soChon + ' sản phẩm';
+    }
+
     function recalcSummary() {
-        // calculate based only on selected items
         let subtotal = 0;
         let count = 0;
         Object.keys(quantities).forEach(k => {
@@ -245,6 +263,9 @@
             discRow.style.display = diemSuDung > 0 ? '' : 'none';
             document.getElementById('summaryDiscount').textContent = '−' + fmt(giam);
         }
+
+        // ✅ Cập nhật trạng thái nút thanh toán
+        updateCheckoutButtonState();
     }
 
     async function changeQty(key, newQty, maxQty) {
@@ -282,6 +303,7 @@
             row.remove();
             delete quantities[key];
             delete prices[key];
+            delete selectedItems[key];   // ✅ Xoá khỏi danh sách đã chọn
             recalcSummary();
             updateCartBadge(data.so_san_pham);
 
@@ -291,12 +313,10 @@
         }
     }
 
-    // Selection handling
     document.addEventListener('change', function (e) {
         if (e.target && e.target.classList.contains('select-item')) {
             const key = e.target.dataset.key;
             selectedItems[key] = e.target.checked;
-            // update selectAll checkbox
             const all = Array.from(document.querySelectorAll('.select-item'));
             const selAll = document.getElementById('selectAll');
             if (selAll) selAll.checked = all.length > 0 && all.every(i => i.checked);
@@ -304,7 +324,10 @@
         }
         if (e.target && e.target.id === 'selectAll') {
             const checked = e.target.checked;
-            document.querySelectorAll('.select-item').forEach(i => { i.checked = checked; selectedItems[i.dataset.key] = checked; });
+            document.querySelectorAll('.select-item').forEach(i => {
+                i.checked = checked;
+                selectedItems[i.dataset.key] = checked;
+            });
             recalcSummary();
         }
     });
@@ -331,11 +354,19 @@
                 window.location.href = CHECKOUT_PAGE_URL;
             } else {
                 showToast('❌ ' + (data.message || 'Không thể chuyển đến trang thanh toán.'));
-                if (btn) { btn.disabled = false; btn.textContent = '💳 Tiến Hành Thanh Toán'; }
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '💳 Tiến Hành Thanh Toán';
+                    updateCheckoutButtonState();
+                }
             }
         } catch (err) {
             showToast('❌ Không thể kết nối, vui lòng thử lại.');
-            if (btn) { btn.disabled = false; btn.textContent = '💳 Tiến Hành Thanh Toán'; }
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '💳 Tiến Hành Thanh Toán';
+                updateCheckoutButtonState();
+            }
         }
     }
 
@@ -393,5 +424,8 @@
         }
     });
     @endif
+
+    // ✅ Khởi tạo trạng thái nút khi vào trang (chưa chọn gì → disabled)
+    updateCheckoutButtonState();
 </script>
 @endsection

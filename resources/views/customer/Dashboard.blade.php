@@ -5,6 +5,16 @@
 
 @section('content')
 <div class="main-wrap">
+    <section class="home-block">
+        <div class="home-block-title">
+            <h2>Mua bó hoa</h2>
+            <a href="{{ route('customer.bo-hoa.he-thong') }}">Khám phá bó hoa →</a>
+        </div>
+        <p>
+            Chọn <a href="{{ route('customer.bo-hoa.he-thong') }}">bó hoa cửa hàng đề xuất</a>
+            hoặc <a href="{{ route('customer.bo-hoa.tu-tao') }}">tự tạo bó theo sở thích</a>.
+        </p>
+    </section>
 
     @if(request('q'))
 
@@ -134,8 +144,7 @@
                 @foreach($hoaTuoiBanChay as $sp)
                     @php
                         $loConHang = $sp->chiTietNhaps->where('so_luong_con_lai', '>', 0);
-                        /////$gia = $loConHang->max('gia_ban');
-                         $gia = $sp->gia_ban_hien_tai;
+                        $gia = $sp->gia_ban_hien_tai;
                         $tonKho = $loConHang->sum('so_luong_con_lai');
                     @endphp
 

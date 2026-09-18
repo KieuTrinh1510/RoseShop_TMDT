@@ -21,7 +21,7 @@ class BaoCaoHangHong extends Model
 
     protected $fillable = [
         'ma_san_pham',
-        'ma_chi_tiet_nhap',   
+        'ma_chi_tiet_nhap',
         'ma_nhan_vien',
         'so_luong_hong',
         'ly_do',
@@ -29,7 +29,10 @@ class BaoCaoHangHong extends Model
         'thoi_gian_bao_cao',
     ];
 
-    
+    protected $casts = [
+        'thoi_gian_bao_cao' => 'datetime',
+        'so_luong_hong'     => 'integer',
+    ];
 
     public function sanPham()
     {
@@ -49,7 +52,6 @@ class BaoCaoHangHong extends Model
         );
     }
 
-    
     public function chiTietNhap()
     {
         return $this->belongsTo(

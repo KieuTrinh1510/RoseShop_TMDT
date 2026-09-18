@@ -9,7 +9,6 @@ use Carbon\Carbon;
 
 class HoaDonController extends Controller
 {
-    
     public function index(Request $request)
     {
         $query = HoaDon::with([
@@ -47,7 +46,6 @@ class HoaDonController extends Controller
         return view('admin.HoaDon', compact('hoaDons', 'khachHangs'));
     }
 
-   
     public function show($id)
     {
         $hoaDon = HoaDon::with([
@@ -57,22 +55,45 @@ class HoaDonController extends Controller
         ])->findOrFail($id);
 
         if (request()->ajax()) {
-            $chiTiet = $hoaDon->chiTietHoaDon->map(function ($ct) {
-                return [
-                    'ma_chi_tiet'       => $ct->ma_chi_tiet,
-                    // THÊM: cần ma_san_pham để frontend group đúng các dòng
-                    // cùng 1 sản phẩm nhưng khác batch (ma_chi_tiet_nhap) lại
-                    // với nhau khi hiển thị (xem HoaDon_blade.php: renderPanel()).
-                    'ma_san_pham'       => $ct->ma_san_pham,
-                    'so_luong'          => $ct->so_luong,
-                    'gia_ban_snapshot'  => $ct->gia_ban_snapshot,
-                    'gia_nhap_snapshot' => $ct->gia_nhap_snapshot,
-                    'thanh_tien'        => $ct->so_luong * $ct->gia_ban_snapshot,
-                    'san_pham'          => $ct->sanPham
-                        ? ['ten_san_pham' => $ct->sanPham->ten_san_pham]
-                        : ['ten_san_pham' => '(Đã xóa)'],
-                ];
-            });
+            // Nếu đơn có bó hoa ĐỀ XUẤT (loai_bo_hoa = HE_THONG) → KHÔNG hiển thị
+            // các dòng ChiTietHoaDon (vật phẩm nhỏ), chỉ hiển thị dòng bó hoa.
+            // Nếu là bó TỰ CHỌN → hiển thị các vật phẩm nhỏ qua ChiTietHoaDon.
+            $hasHeThong = \App\Models\BoHoa::where('ma_hoa_don', $id)
+                ->where('loai_bo_hoa', 'HE_THONG')
+                ->exists();
+
+            $chiTiet = $hasHeThong
+                ? collect()
+                : $hoaDon->chiTietHoaDon->map(function ($ct) {
+                    return [
+                        'ma_chi_tiet'       => $ct->ma_chi_tiet,
+                        'ma_san_pham'       => $ct->ma_san_pham,
+                        'so_luong'          => $ct->so_luong,
+                        'gia_ban_snapshot'  => $ct->gia_ban_snapshot,
+                        'gia_nhap_snapshot' => $ct->gia_nhap_snapshot,
+                        'thanh_tien'        => $ct->so_luong * $ct->gia_ban_snapshot,
+                        'san_pham'          => $ct->sanPham
+                            ? ['ten_san_pham' => $ct->sanPham->ten_san_pham]
+                            : ['ten_san_pham' => '(Đã xóa)'],
+                    ];
+                });
+
+            // Chỉ hiển thị dòng bó hoa cho ĐỀ XUẤT (HE_THONG).
+            // Bó TỰ CHỌN đã hiện qua ChiTietHoaDon ở trên nên không lặp lại.
+            $boLines = \App\Models\BoHoa::where('ma_hoa_don', $id)
+                ->where('loai_bo_hoa', 'HE_THONG')
+                ->get()
+                ->map(fn ($bo) => [
+                    'ma_bo_hoa'        => $bo->ma_bo_hoa,
+                    'ma_san_pham'      => null,
+                    'so_luong'         => $bo->so_luong,
+                    'gia_ban_snapshot' => $bo->gia_ban,
+                    'thanh_tien'       => $bo->gia_ban * $bo->so_luong,
+                    'san_pham'         => ['ten_san_pham' => $bo->ten_bo_hoa.' · '.$bo->size],
+                    'loi_nhan'         => $bo->loi_nhan,
+                ]);
+
+            $chiTiet = $chiTiet->concat($boLines);
 
             return response()->json([
                 'success' => true,
@@ -104,10 +125,13 @@ class HoaDonController extends Controller
         return view('hoa-don.show', compact('hoaDon'));
     }
 
-   
     public function destroy($id)
     {
         $hoaDon = HoaDon::findOrFail($id);
+
+        if (\App\Models\BoHoa::where('ma_hoa_don', $id)->exists()) {
+            return response()->json(['success' => false, 'message' => 'Hóa đơn bó hoa cần giữ để đối soát tồn kho. Xử lý đơn qua Xác nhận/Từ chối.'], 422);
+        }
 
         if ($hoaDon->trang_thai === 'DELIVERED') {
             return response()->json([

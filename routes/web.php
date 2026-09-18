@@ -3,7 +3,9 @@
 use App\Http\Controllers\Admin\NguoiDungController;
 use App\Http\Controllers\Admin\KhachHangController;
 use App\Http\Controllers\Admin\NhanVienController;
-use App\Http\Controllers\Admin\SanPhamController;
+use App\Http\Controllers\Admin\SanPham\SanPhamController;
+use App\Http\Controllers\Admin\SanPham\BoHoaController as SanPhamBoHoaController;
+use App\Http\Controllers\Admin\SanPham\NguyenVatLieuController;
 use App\Http\Controllers\Admin\HoaDonController;
 use App\Http\Controllers\Admin\DonHangController;
 use App\Http\Controllers\Admin\PhieuNhapController;
@@ -23,9 +25,72 @@ use App\Http\Controllers\Customer\ThanhToanController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\Admin\BoHoaController as AdminBoHoaController;
+use App\Http\Controllers\Customer\BoHoaController as CustomerBoHoaController;
 
 use App\Http\Controllers\VnPayController;
+
+Route::middleware(['auth', 'role:ADMIN,NHAN_VIEN'])->prefix('admin/bo-hoa')->name('admin.bo-hoa.')->group(function () {
+    // Mẫu
+    Route::get('/mau',                    [AdminBoHoaController::class, 'mau'])->name('mau');
+    Route::post('/mau',                   [AdminBoHoaController::class, 'storeMau'])->name('mau.store');
+    Route::put('/mau/{id}',               [AdminBoHoaController::class, 'updateMau'])->name('mau.update');
+    Route::delete('/mau/{id}',            [AdminBoHoaController::class, 'destroyMau'])->name('mau.destroy');
+    Route::patch('/mau/{id}/trang-thai',  [AdminBoHoaController::class, 'trangThaiMau'])->name('mau.trang-thai');
+    Route::get('/mau/{id}/edit-data',     [AdminBoHoaController::class, 'editDataMau'])->name('mau.edit-data');
+
+    // Phụ phí + tính giá
+    Route::get('/phu-phi',  [AdminBoHoaController::class, 'phuPhi'])->name('phu-phi');
+    Route::post('/phu-phi', [AdminBoHoaController::class, 'luuPhuPhi'])->name('phu-phi.store');
+    Route::post('/tinh-gia',[AdminBoHoaController::class, 'tinhGia'])->name('tinh-gia');
+
+    // Bó hoa
+    Route::post('/',                        [AdminBoHoaController::class, 'store'])->name('store');
+    Route::get('/{id}/edit-data',           [AdminBoHoaController::class, 'editData'])->name('edit-data');
+   
+    Route::post('/{id}/bao-hong',           [AdminBoHoaController::class, 'baoHangHong'])->name('bao-hong');
+    Route::delete('/{id}',                  [AdminBoHoaController::class, 'destroy'])->name('destroy');
+    Route::get('/{id}/chi-tiet-gia',        [AdminBoHoaController::class, 'chiTietGiaBoHoa'])->name('chi-tiet-gia');
+});
+
+// ─── Giỏ bó hoa mẫu (tách riêng khỏi giỏ sản phẩm đơn lẻ) ────────────
+Route::middleware(['auth', 'role:KHACH_HANG'])
+    ->prefix('bo-hoa/gio')
+    ->name('customer.bo-hoa.gio.')
+    ->group(function () {
+        Route::get('/',       [CustomerBoHoaController::class, 'gioBoHoa'])->name('index');
+        Route::post('/add',   [CustomerBoHoaController::class, 'themVaoGio'])->name('add');
+        Route::post('/remove',[CustomerBoHoaController::class, 'xoaKhoiGio'])->name('remove');
+    });
+// ─── Bó hoa — khách hàng ─────────────────────────────────────────────
+Route::prefix('bo-hoa')->name('customer.bo-hoa.')->group(function () {
+    Route::get('/he-thong',  [CustomerBoHoaController::class, 'heThong'])->name('he-thong');
+    Route::get('/tu-tao',    [CustomerBoHoaController::class, 'create'])->name('tu-tao');
+    Route::post('/tinh-gia', [CustomerBoHoaController::class, 'quote'])->name('quote');
+
+        Route::middleware(['auth', 'role:KHACH_HANG'])->group(function () {
+        Route::get('/tu-tao/tiep-tuc/{id}', [CustomerBoHoaController::class, 'tiepTucTuTao'])
+            ->whereNumber('id')
+            ->name('tu-tao.tiep-tuc');
+        Route::post('/tu-tao/xac-nhan', [CustomerBoHoaController::class, 'xacNhanTuTao'])->name('tu-tao.xac-nhan');
+        Route::post('/tu-tao/mua',      [CustomerBoHoaController::class, 'muaTuTao'])->name('tu-tao.mua');
+    });
+});
+
+Route::post('/mau-bo-hoa/{id}/mua', [CustomerBoHoaController::class, 'muaMau'])
+    ->middleware(['auth', 'role:KHACH_HANG'])->name('customer.mau-bo-hoa.mua');
+
+
+
+// ─── Chi tiết mẫu bó hoa / bó hoa tự tạo ──────────────────────────────
+Route::get('/mau-bo-hoa/chi-tiet/{id}', [ChiTietSanPhamController::class, 'showMauBoHoa'])
+    ->name('customer.mau-bo-hoa.chi-tiet');
+Route::get('/bo-hoa-tu-tao/chi-tiet',   [ChiTietSanPhamController::class, 'showTuTao'])
+    ->middleware(['auth', 'role:KHACH_HANG'])
+    ->name('customer.bo-hoa-tu-tao.chi-tiet');
+
+
+
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/vnpay/payment/{hoaDon}', [VnPayController::class, 'payment'])
@@ -83,27 +148,6 @@ Route::middleware(['auth', 'role:ADMIN'])->group(function () {
         Route::post('/{ma}/tra-tien',     'payback')->name('payback');
     });
 
-    // Phiếu nhập
-    Route::prefix('phieu-nhap')->name('phieu-nhap.')->controller(PhieuNhapController::class)->group(function () {
-        Route::get('/',              'index')->name('index');
-        Route::post('/',             'store')->name('store');
-        Route::get('/{id}/edit-data','editData')->name('edit-data');
-        Route::put('/{id}',          'update')->name('update');
-        Route::delete('/{id}',       'destroy')->name('destroy');
-        Route::post('/{id}/confirm', 'confirm')->name('confirm');
-    });
-
-    // Báo cáo
-    Route::prefix('bao-cao')->name('bao-cao.')->group(function () {
-        Route::get('/',             [BaoCaoController::class, 'index'])->name('index');
-        Route::get('/doanh-thu',    [BaoCaoController::class, 'doanhThu'])->name('doanh-thu');
-Route::get('/doanh-thu/export', [BaoCaoController::class, 'exportDoanhThu'])->name('doanh-thu.export');
-        Route::get('/loi-nhuan',    [BaoCaoController::class, 'index'])->name('loi-nhuan');
-        Route::get('/san-pham',     [BaoCaoController::class, 'baoCaoSanPham'])->name('san-pham');
-        Route::get('/ton-kho',      [BaoCaoController::class, 'index'])->name('ton-kho');
-        Route::get('/khach-hang',   [BaoCaoController::class, 'index'])->name('khach-hang');
-    });
-
     // ─── Placeholder routes cho các menu đang phát triển (ADMIN only) ──
     Route::get('/admin/thanh-toan',             fn() => view('admin.placeholder', ['title' => 'Thanh toán']))->name('admin.thanh-toan');
     Route::get('/admin/mau-bo-hoa',             fn() => view('admin.placeholder', ['title' => 'Mẫu bó hoa']))->name('admin.mau-bo-hoa');
@@ -134,14 +178,21 @@ Route::middleware(['auth', 'role:ADMIN,NHAN_VIEN'])->group(function () {
 
     // Sản phẩm
     Route::prefix('san-pham')->name('san-pham.')->group(function () {
-        Route::get('/',              [SanPhamController::class, 'index'])->name('index');
-        Route::post('/',             [SanPhamController::class, 'store'])->name('store');
-        Route::get('/{id}/edit-data',[SanPhamController::class, 'editData'])->name('editData');
-        Route::put('/{id}',          [SanPhamController::class, 'update'])->name('update');
-        Route::patch('/{id}/toggle', [SanPhamController::class, 'toggleTrangThai'])->name('toggle');
-        Route::get('/{id}/lo-nhap',   [SanPhamController::class, 'loNhap'])->name('lo-nhap');
-        Route::post('/bao-hang-hong', [SanPhamController::class, 'baoHangHong'])->name('bao-hang-hong');
-    });
+    // Trang chính — quản lý sản phẩm đơn lẻ
+    Route::get('/', [SanPhamController::class, 'index'])->name('index');
+
+    // 2 trang con — phải đặt TRƯỚC route động {id} để không bị nuốt
+    Route::get('/bo-hoa',          [SanPhamBoHoaController::class,  'index'])->name('bo-hoa.index');
+    Route::get('/nguyen-vat-lieu', [NguyenVatLieuController::class, 'index'])->name('nguyen-vat-lieu.index');
+
+    // CRUD sản phẩm — giữ nguyên path + name như cũ
+    Route::post('/',              [SanPhamController::class, 'store'])->name('store');
+    Route::get('/{id}/edit-data', [SanPhamController::class, 'editData'])->name('editData')->whereNumber('id');
+    Route::put('/{id}',           [SanPhamController::class, 'update'])->name('update')->whereNumber('id');
+    Route::patch('/{id}/toggle',  [SanPhamController::class, 'toggleTrangThai'])->name('toggle')->whereNumber('id');
+    Route::get('/{id}/lo-nhap',   [SanPhamController::class, 'loNhap'])->name('lo-nhap')->whereNumber('id');
+    Route::post('/bao-hang-hong', [SanPhamController::class, 'baoHangHong'])->name('bao-hang-hong');
+});
 
     // Hóa đơn
     Route::prefix('hoa-don')->name('hoa-don.')->controller(HoaDonController::class)->group(function () {
@@ -175,6 +226,7 @@ Route::prefix('phieu-nhap')->name('phieu-nhap.')->controller(PhieuNhapController
 });
 Route::get('/bao-cao',               [BaoCaoController::class, 'index'])->name('bao-cao.index');
 Route::get('/bao-cao/doanh-thu',     [BaoCaoController::class, 'doanhThu'])->name('bao-cao.doanh-thu');
+Route::get('/bao-cao/doanh-thu/export', [BaoCaoController::class, 'exportDoanhThu'])->name('bao-cao.doanh-thu.export');
 Route::get('/bao-cao/loi-nhuan',     [BaoCaoController::class, 'index'])->name('bao-cao.loi-nhuan');
 Route::get('/bao-cao/san-pham',              [BaoCaoController::class, 'baoCaoSanPham'])->name('bao-cao.san-pham');
 Route::get('/bao-cao/san-pham/export',         [BaoCaoController::class, 'exportBaoCaoSanPham'])->name('bao-cao.san-pham.export');
@@ -273,5 +325,3 @@ Route::get('/customer/gioi-thieu', [CustomerController::class, 'gioiThieu'])
 // Liên hệ
 Route::get('/customer/lien-he', [CustomerController::class, 'lienHe'])
     ->name('customer.lien-he');
-
-

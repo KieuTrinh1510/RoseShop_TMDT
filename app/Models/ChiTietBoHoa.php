@@ -19,6 +19,25 @@ class ChiTietBoHoa extends Model
 
     public $timestamps = false;
 
+    
+    public const VAI_TRO_HOA_CHINH          = 'HOA_CHINH';
+    public const VAI_TRO_HOA_TRANG_TRI      = 'HOA_TRANG_TRI';
+    public const VAI_TRO_GIAY_GOI           = 'GIAY_GOI';
+    public const VAI_TRO_RUY_BANG           = 'RUY_BANG';
+    public const VAI_TRO_PHU_KIEN_TRANG_TRI = 'PHU_KIEN_TRANG_TRI';
+    public const VAI_TRO_THIEP              = 'THIEP';
+    public const VAI_TRO_XOP                = 'XOP';
+
+    public const VAI_TRO = [
+        self::VAI_TRO_HOA_CHINH,
+        self::VAI_TRO_HOA_TRANG_TRI,
+        self::VAI_TRO_GIAY_GOI,
+        self::VAI_TRO_RUY_BANG,
+        self::VAI_TRO_PHU_KIEN_TRANG_TRI,
+        self::VAI_TRO_THIEP,
+        self::VAI_TRO_XOP,
+    ];
+
     protected $fillable = [
         'ma_bo_hoa',
         'ma_san_pham',
@@ -28,8 +47,11 @@ class ChiTietBoHoa extends Model
     ];
 
     protected $casts = [
-        'vai_tro'  => 'string',
-        'so_luong' => 'integer',
+        'ma_bo_hoa'        => 'integer',
+        'ma_san_pham'      => 'integer',
+        'ma_chi_tiet_nhap' => 'integer',
+        'vai_tro'          => 'string',
+        'so_luong'         => 'integer',
     ];
 
     public function boHoa()
@@ -69,5 +91,15 @@ class ChiTietBoHoa extends Model
     public function scopeDaCoLo($query)
     {
         return $query->whereNotNull('ma_chi_tiet_nhap');
+    }
+
+    public function scopeTheoVaiTro($query, string $vaiTro)
+    {
+        return $query->where('vai_tro', $vaiTro);
+    }
+
+    public function scopeXop($query)
+    {
+        return $query->where('vai_tro', self::VAI_TRO_XOP);
     }
 }

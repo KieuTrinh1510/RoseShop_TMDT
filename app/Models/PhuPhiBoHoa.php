@@ -24,4 +24,9 @@ class PhuPhiBoHoa extends Model
         'gia_tri',
         'phu_phi',
     ];
+
+    protected $casts = [
+        'loai'    => 'string',
+        'phu_phi' => 'decimal:2',
+    ];
 }

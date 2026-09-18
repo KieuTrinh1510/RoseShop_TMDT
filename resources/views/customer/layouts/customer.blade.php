@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -10,8 +10,38 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     <title>@yield('title', '🌸 Cửa Hàng Hoa Tươi')</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Be+Vietnam+Pro:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-    
+    <style>
+        #catNav .nav-dropdown { position: relative; display: inline-block; }
+        #catNav .nav-dropdown .dropdown-toggle {
+            background: none; border: 0; cursor: pointer; font: inherit;
+            color: inherit; padding: 0;
+        }
+        #catNav .nav-dropdown .dropdown-menu {
+            display: none; position: absolute; top: 100%; left: 0;
+            background: #fff; border: 1px solid #eadbe1; border-radius: 10px;
+            box-shadow: 0 8px 24px rgba(142,53,85,.14);
+            min-width: 220px; padding: 8px; z-index: 1000; margin-top: 6px;
+        }
+        #catNav .nav-dropdown:hover .dropdown-menu { display: block; }
+        #catNav .nav-dropdown .dropdown-menu a {
+            display: block; padding: 10px 14px; color: #33282e;
+            text-decoration: none; border-radius: 6px; font-size: 14px;
+            white-space: nowrap;
+        }
+        #catNav .nav-dropdown .dropdown-menu a:hover {
+            background: #f8eef2; color: #8e3555;
+        }
 
+        /* ✅ Chấm đỏ thông báo chưa đọc */
+        .notification-item { position: relative; display: inline-block; }
+        .notif-dot {
+            position: absolute; top: -2px; right: -4px;
+            width: 8px; height: 8px; background: #e11d48;
+            border-radius: 50%; box-shadow: 0 0 0 2px #fff;
+            display: none;
+        }
+        .notif-dot.has-notif { display: block; }
+    </style>
     @yield('head-styles')
 </head>
 
@@ -19,7 +49,6 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
 
 <div id="page-transition">🌸</div>
 
-{{-- TOP BAR --}}
 {{-- TOP BAR --}}
 <div class="topbar">
     <div class="topbar-left">
@@ -45,184 +74,126 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     </a>
 
     <div class="search-wrap">
-    <input
-        type="text"
-        id="searchInput"
-        placeholder="Tìm sản phẩm... "
-    >
+        <input type="text" id="searchInput" placeholder="Tìm sản phẩm... ">
+        <button type="button" class="search-btn" onclick="handleSearch()">Tìm kiếm</button>
+    </div>
 
-    <button
-        type="button"
-        class="search-btn"
-        onclick="handleSearch()"
-    >
-        Tìm kiếm
-    </button>
-</div>
+        @php
+        // ✅ Đếm số lượng item trong cả 2 giỏ
+        $soItemGioHang  = count(session('gio_hang', []));
+        $soItemGioBoHoa = count(session('gio_bo_hoa', []));
+        $tongItemGio    = $soItemGioHang + $soItemGioBoHoa;
+    @endphp
 
     <div class="header-right">
-        <!-- <a href="https://www.facebook.com/duong.manh.19423" target="_blank" class="header-icon">
-            <span class="icon">📘</span>
-            <span>Facebook</span>
-        </a> -->
-
-        <!-- <a href="https://zalo.me/0357634696" target="_blank" class="header-icon">
-            <span class="icon">💬</span>
-            <span>Zalo</span>
-        </a> -->
-
         @auth
-            <!-- <a href="{{ route('customer.thong-bao') }}" class="header-icon">
-                <span class="icon">🔔</span>
-            </a>
-
-            <div class="cart-dropdown-wrapper">
-    <button class="cart-icon-btn" id="cartDropdownBtn">
-        <span class="icon">🛒</span>
-        <span class="cart-badge" id="cartBadge">
-            {{ count(session('gio_hang', [])) }}
-        </span>
-    </button>
-
-    <div class="cart-dropdown-menu" id="cartDropdownMenu">
-        <a href="{{ route('customer.gio-hang') }}">🛒 Xem giỏ hàng</a>
-        <a href="{{ route('customer.thanh-toan') }}">💳 Thanh toán</a>
-    </div>
-</div>
-                    </span>
-                </button>
-
-                <div class="cart-dropdown-menu" id="cartDropdownMenu">
-                    <a href="{{ route('customer.gio-hang') }}">🛒 Xem giỏ hàng</a>
-                    <a href="{{ route('customer.thanh-toan') }}">💳 Thanh toán</a>
-                </div>
-            </div>
-
-            <a href="{{ route('customer.profile.edit') }}" class="user-profile-link">
-    <span class="user-avatar">👤</span>
-
-    <div class="user-info">
-        <span>Xin chào,</span>
-        <strong>
-            {{ $user->ten_dang_nhap ?? auth()->user()->ten_dang_nhap ?? '' }}
-        </strong>
-    </div>
-</a>
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="logout-btn">Đăng xuất</button>
-            </form> -->
             <div class="header-actions">
 
-    <div class="header-action-item">
-    <a href="{{ route('customer.thong-bao') }}" class="notification-item">
-        <i class="fa-regular fa-bell"></i>
-    </a>
-</div>
+                <div class="header-action-item">
+                    <a href="{{ route('customer.thong-bao') }}" class="notification-item">
+                        <i class="fa-regular fa-bell"></i>
+                        <span class="notif-dot" id="notifDot"></span>
+                    </a>
+                </div>
 
-    <div class="header-action-item">
-        <div class="cart-dropdown-wrapper">
-            <button class="cart-icon-btn" id="cartDropdownBtn">
-                <span class="icon">🛒</span>
-                <span class="cart-badge" id="cartBadge">
-                    {{ session('gio_hang') ? count(session('gio_hang')) : 0 }}
-                </span>
-            </button>
+                <div class="header-action-item">
+                    <div class="cart-dropdown-wrapper">
+                        <button class="cart-icon-btn" id="cartDropdownBtn">
+                            <span class="icon">🛒</span>
+                            <span class="cart-badge" id="cartBadge">{{ $tongItemGio }}</span>
+                        </button>
 
-            <div class="cart-dropdown-menu" id="cartDropdownMenu">
-                <a href="{{ route('customer.gio-hang') }}">🛒 Xem giỏ hàng</a>
-                <a href="{{ route('customer.thanh-toan') }}">💳 Thanh toán</a>
-            </div>
-        </div>
-    </div>
+                        <div class="cart-dropdown-menu" id="cartDropdownMenu">
+    <a href="{{ route('customer.gio-hang') }}">🛒 Xem giỏ hàng</a>
 
-    <div class="header-action-item">
-        <a href="{{ route('customer.profile.edit') }}" class="user-profile-link">
-            <span class="user-avatar">👤</span>
-
-            <div class="user-info">
-                <span>Xin chào,</span>
-                <strong>{{ $user->ten_dang_nhap ?? auth()->user()->ten_dang_nhap ?? '' }}</strong>
-            </div>
+    @if($soItemGioBoHoa > 0)
+        <a href="{{ route('customer.bo-hoa.gio.index') }}">
+            💐 Giỏ bó hoa ({{ $soItemGioBoHoa }})
         </a>
-    </div>
-
-    <form method="POST" action="{{ route('logout') }}" class="logout-form">
-        @csrf
-        <button type="submit" class="logout-btn">Đăng xuất</button>
-    </form>
-
+    @endif
 </div>
-       @else
-<div class="guest-actions">
-    <a href="{{ route('login') }}" class="login-btn">
-        Đăng nhập
-    </a>
+                    </div>
+                </div>
 
-    <a href="{{ route('register') }}" class="register-btn">
-        Đăng ký
-    </a>
-</div>
-@endauth
+                <div class="header-action-item">
+                    <a href="{{ route('customer.profile.edit') }}" class="user-profile-link">
+                        <span class="user-avatar">👤</span>
+                        <div class="user-info">
+                            <span>Xin chào,</span>
+                            <strong>{{ $user->ten_dang_nhap ?? auth()->user()->ten_dang_nhap ?? '' }}</strong>
+                        </div>
+                    </a>
+                </div>
+
+                <form method="POST" action="{{ route('logout') }}" class="logout-form">
+                    @csrf
+                    <button type="submit" class="logout-btn">Đăng xuất</button>
+                </form>
+
+            </div>
+        @else
+            <div class="guest-actions">
+                <a href="{{ route('login') }}" class="login-btn">Đăng nhập</a>
+                <a href="{{ route('register') }}" class="register-btn">Đăng ký</a>
+            </div>
+        @endauth
     </div>
 </header>
 
 {{-- MAIN NAV --}}
 <nav class="cat-nav" id="catNav">
-<a href="{{ route('customer.dashboard') }}"
-   class="cat-link {{ request()->routeIs('customer.dashboard') ? 'active' : '' }}">
-   TRANG CHỦ
-</a>
-       <a href="{{ route('customer.hoa-tuoi') }}"
-   class="cat-link {{ request()->routeIs('customer.hoa-tuoi') ? 'active' : '' }}">
-   HOA TƯƠI
-</a>
+    <a href="{{ route('customer.dashboard') }}"
+       class="cat-link {{ request()->routeIs('customer.dashboard') ? 'active' : '' }}">
+        TRANG CHỦ
+    </a>
 
-        <!-- <div class="dropdown-menu">
-            <button class="dropdown-cat" data-cat="HOA_TUOI"> Hoa tươi</button>
-            <button class="dropdown-cat" data-cat="CHAU_HOA_TUOI"> Chậu tươi</button>
+    <a href="{{ route('customer.hoa-tuoi') }}"
+       class="cat-link {{ request()->routeIs('customer.hoa-tuoi') ? 'active' : '' }}">
+        HOA TƯƠI
+    </a>
+
+    <div class="nav-dropdown">
+        <button type="button"
+                class="cat-link dropdown-toggle {{ request()->routeIs('customer.bo-hoa.*','customer.mau-bo-hoa.*','customer.bo-hoa-tu-tao.*','customer.bo-hoa.gio.*') ? 'active' : '' }}">
+            Mua bó hoa ▾
+        </button>
+        <div class="dropdown-menu">
+            <a href="{{ route('customer.bo-hoa.he-thong') }}" class="dropdown-cat">💐 Bó hoa đề xuất</a>
+            <a href="{{ route('customer.bo-hoa.tu-tao') }}" class="dropdown-cat">✿ Tự tạo bó hoa</a>
+            @auth
+                @if($soItemGioBoHoa > 0)
+                    <a href="{{ route('customer.bo-hoa.gio.index') }}" class="dropdown-cat">
+                        🛒 Giỏ bó hoa ({{ $soItemGioBoHoa }})
+                    </a>
+                @endif
+            @endauth
         </div>
     </div>
 
-    <div class="nav-dropdown">
-        <button type="button" class="cat-link dropdown-toggle" data-cat="HOA_GIA">
-            Hoa giả ▾
-        </button>
-
-        <div class="dropdown-menu">
-            <button class="dropdown-cat" data-cat="HOA_GIA"> Hoa giả</button>
-            <button class="dropdown-cat" data-cat="CHAU_HOA_GIA"> Chậu giả</button>
-        </div>
-    </div> -->
-
-    <!-- <button class="cat-link" data-cat="HOA_SAP">Hoa sáp</button>
-    <button class="cat-link" data-cat="HOA_GIAY_NHUN">Hoa giấy</button>
-    <button class="cat-link" data-cat="TERRARIUM">Terrarium</button>
-    <button class="cat-link" data-cat="SAN_PHAM_PREMIUM">Premium</button>
-    <button class="cat-link" data-cat="CAY_CANH">Cây cảnh</button> -->
     <a href="{{ route('customer.phu-kien') }}"
-   class="cat-link {{ request()->routeIs('customer.phu-kien') ? 'active' : '' }}">
-    PHỤ KIỆN
-</a>
+       class="cat-link {{ request()->routeIs('customer.phu-kien') ? 'active' : '' }}">
+        PHỤ KIỆN
+    </a>
+
     <a href="{{ route('customer.qua-tang') }}"
-   class="cat-link {{ request()->routeIs('customer.qua-tang') ? 'active' : '' }}">
-    Quà tặng
-</a>
+       class="cat-link {{ request()->routeIs('customer.qua-tang') ? 'active' : '' }}">
+        Quà tặng
+    </a>
+
     <a href="{{ route('customer.gioi-thieu') }}"
        class="cat-link {{ request()->routeIs('customer.gioi-thieu') ? 'active' : '' }}">
         Giới thiệu
     </a>
+
     <a href="{{ route('customer.tin-tuc') }}"
        class="cat-link {{ request()->routeIs('customer.tin-tuc') || request()->routeIs('customer.tin-tuc.chi-tiet') ? 'active' : '' }}">
         TIN TỨC
     </a>
-<a href="{{ route('customer.lien-he') }}"
-   class="cat-link {{ request()->routeIs('customer.lien-he') ? 'active' : '' }}">
-    LIÊN HỆ
-</a>
 
-
-
+    <a href="{{ route('customer.lien-he') }}"
+       class="cat-link {{ request()->routeIs('customer.lien-he') ? 'active' : '' }}">
+        LIÊN HỆ
+    </a>
 </nav>
 
 @yield('content')
@@ -294,14 +265,10 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     </div>
 </footer>
 
-<!-- <div class="toast" id="toast">
-    <span id="toastMsg">✅ Thông báo</span>
-</div> -->
-
 <script>
-    const PAGE       = document.body.dataset.page; 
-    const DASH_URL   = "{{ route('customer.dashboard') }}";
-    const overlay    = document.getElementById('page-transition');
+    const PAGE     = document.body.dataset.page;
+    const DASH_URL = "{{ route('customer.dashboard') }}";
+    const overlay  = document.getElementById('page-transition');
 
     function navigateTo(url) {
         overlay.classList.add('active');
@@ -320,6 +287,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
             navigateTo(DASH_URL);
         }
     });
+
     document.getElementById('footerLogo').addEventListener('click', e => {
         if (PAGE === 'dashboard') {
             e.preventDefault();
@@ -333,58 +301,58 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         }
     });
 
-    
-document.querySelectorAll('#catNav [data-cat]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        e.preventDefault();
+    document.querySelectorAll('#catNav [data-cat]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
 
-        const cat = btn.dataset.cat;
+            const cat = btn.dataset.cat;
 
-        if (PAGE === 'dashboard') {
-            document.querySelectorAll('#catNav [data-cat]')
-                .forEach(b => b.classList.remove('active'));
+            if (PAGE === 'dashboard') {
+                document.querySelectorAll('#catNav [data-cat]')
+                    .forEach(b => b.classList.remove('active'));
 
-            btn.classList.add('active');
+                btn.classList.add('active');
 
-            if (typeof filterCat === 'function') {
-                filterCat(cat, null);
+                if (typeof filterCat === 'function') {
+                    filterCat(cat, null);
+                }
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                navigateTo(DASH_URL + '?cat=' + encodeURIComponent(cat));
             }
-
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        } else {
-            navigateTo(DASH_URL + '?cat=' + encodeURIComponent(cat));
-        }
+        });
     });
-});
 
     function handleSearch() {
-    const input = document.getElementById('searchInput');
-    const val = input ? input.value.trim() : '';
+        const input = document.getElementById('searchInput');
+        const val   = input ? input.value.trim() : '';
 
-    window.location.href = val
-        ? DASH_URL + '?q=' + encodeURIComponent(val)
-        : DASH_URL;
-}
+        window.location.href = val
+            ? DASH_URL + '?q=' + encodeURIComponent(val)
+            : DASH_URL;
+    }
 
-const searchInput = document.getElementById('searchInput');
-
-if (searchInput) {
-    searchInput.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            handleSearch();
-        }
-    });
-}
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSearch();
+            }
+        });
+    }
 
     function showToast(msg) {
         const toast = document.getElementById('toast');
-        document.getElementById('toastMsg').textContent = msg;
+        if (!toast) return;
+        const msgEl = document.getElementById('toastMsg');
+        if (msgEl) msgEl.textContent = msg;
         toast.classList.add('show');
         setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    const cartBtn = document.getElementById('cartDropdownBtn');
+    const cartBtn  = document.getElementById('cartDropdownBtn');
     const cartMenu = document.getElementById('cartDropdownMenu');
     if (cartBtn && cartMenu) {
         cartBtn.addEventListener('click', (e) => {
@@ -398,28 +366,22 @@ if (searchInput) {
         });
     }
 
-    window.updateCartBadge = function(count) {
+    window.updateCartBadge = function (count) {
         const badge = document.getElementById('cartBadge');
         if (badge) {
-            badge.textContent = count;
-            if (count === 0) badge.textContent = '0';
+            badge.textContent = count || 0;
         }
     };
 
     function showSuccessToast(message) {
-    const toast = document.getElementById('success-toast');
+        const toast = document.getElementById('success-toast');
+        if (!toast) return;
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
 
-    if (!toast) return;
-
-    toast.textContent = message;
-
-    toast.classList.add('show');
-
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 3000);
-}
-    // Kiểm tra thông báo chưa đọc → hiện chấm đỏ trên chuông
+    // ✅ Kiểm tra thông báo chưa đọc → hiện chấm đỏ trên chuông
     @auth
     (function checkNotifDot() {
         fetch('/customer/thong-bao/so-chua-doc', {
@@ -435,10 +397,11 @@ if (searchInput) {
     @endauth
 </script>
 
-
 @yield('scripts')
+
 <div id="success-toast" class="success-toast">
     ✅ Đã thêm sản phẩm vào giỏ hàng thành công
 </div>
+
 </body>
 </html>

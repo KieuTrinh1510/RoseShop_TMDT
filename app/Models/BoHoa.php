@@ -17,28 +17,35 @@ class BoHoa extends Model
 
     protected $keyType = 'int';
 
-    // Bảng bo_hoa đã có created_at/updated_at (cần cho FIFO xóa DRAFT cũ nhất)
     public $timestamps = true;
 
     protected $fillable = [
         'ma_khach_hang',
         'ma_mau_bo_hoa',
+        'ma_hoa_don',
         'ten_bo_hoa',
         'so_luong',
+        'gia_ban',
         'loai_bo_hoa',
         'kieu_bo_hoa',
         'size',
         'concept',
         'loi_nhan',
+        'hinh_anh',
         'trang_thai',
     ];
 
     protected $casts = [
-        'so_luong'     => 'integer',
-        'loai_bo_hoa'  => 'string',
-        'kieu_bo_hoa'  => 'string',
-        'size'         => 'string',
-        'trang_thai'   => 'string',
+        'ma_khach_hang' => 'integer',
+        'ma_mau_bo_hoa' => 'integer',
+        'ma_hoa_don'    => 'integer',
+        'so_luong'      => 'integer',
+        'gia_ban'       => 'decimal:2',
+        'loai_bo_hoa'   => 'string',
+        'kieu_bo_hoa'   => 'string',
+        'size'          => 'string',
+        'concept'       => 'string',
+        'trang_thai'    => 'string',
     ];
 
     public function khachHang()
@@ -56,6 +63,15 @@ class BoHoa extends Model
             MauBoHoa::class,
             'ma_mau_bo_hoa',
             'ma_mau_bo_hoa'
+        );
+    }
+
+    public function hoaDon()
+    {
+        return $this->belongsTo(
+            HoaDon::class,
+            'ma_hoa_don',
+            'ma_hoa_don'
         );
     }
 

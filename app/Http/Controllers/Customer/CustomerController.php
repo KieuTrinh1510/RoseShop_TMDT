@@ -9,31 +9,48 @@ use Illuminate\Support\Facades\Auth;
 
 class CustomerController extends Controller
 {
+    /**
+     * Các loại KHÔNG BAO GIỜ được hiển thị trên trang chủ khách hàng.
+     * Đây là nguyên vật liệu nội bộ — chỉ dùng để tạo bó hoa, không bán trực tiếp.
+     * Dù ở trạng thái DANG_BAN (Hiện) hay NGUNG_BAN (Ẩn), khách đều không thấy.
+     */
+    private const MA_LOAI_NGUYEN_LIEU = [
+        'GIAY_GOI',
+        'RUY_BANG',
+        'PHU_KIEN_TRANG_TRI',
+        'THIEP',
+        'MIENG_XOP',
+    ];
+
     public function dashboard(Request $request)
     {
         $user = auth()->check() ? Auth::user()->load('khachHang') : null;
 
-       $keyword = trim($request->get('q', ''));
+        $keyword = trim($request->get('q', ''));
 
-$sanPhams = SanPham::where('trang_thai', 'DANG_BAN')
-    ->with(['chiTietNhaps' => function ($q) {
-        $q->where('so_luong_con_lai', '>', 0)
-            ->whereHas('phieuNhap', fn($q2) => $q2->where('trang_thai', 'CONFIRMED'))
-            ->orderBy('gia_ban', 'asc');
-    }])
-    ->when($keyword, function ($query) use ($keyword) {
-        $query->where(function ($sub) use ($keyword) {
-            $sub->where('ten_san_pham', 'like', "%{$keyword}%")
-                ->orWhere('loai_san_pham', 'like', "%{$keyword}%");
+        // Tìm kiếm: chặn nguyên vật liệu — chỉ sản phẩm bán ra mới lên trang chủ.
+        $sanPhams = SanPham::where('trang_thai', 'DANG_BAN')
+            ->whereNotIn('loai_san_pham', self::MA_LOAI_NGUYEN_LIEU)
+            ->with(['chiTietNhaps' => function ($q) {
+                $q->where('so_luong_con_lai', '>', 0)
+                    ->whereHas('phieuNhap', fn($q2) => $q2->where('trang_thai', 'CONFIRMED'))
+                    ->orderBy('gia_ban', 'asc');
+            }])
+            ->when($keyword, function ($query) use ($keyword) {
+                $query->where(function ($sub) use ($keyword) {
+                    $sub->where('ten_san_pham', 'like', "%{$keyword}%")
+                        ->orWhere('loai_san_pham', 'like', "%{$keyword}%");
+                });
+            })
+            ->orderBy('ma_san_pham', 'desc')
+            ->get();
 
-            // nếu có cột mo_ta mới để dòng này
-            // ->orWhere('mo_ta', 'like', "%{$keyword}%");
-        });
-    })
-    ->orderBy('ma_san_pham', 'desc')
-    ->get();
+        // Block "Hoa tươi bán chạy": loại bỏ nguyên vật liệu + phụ kiện + quà tặng.
         $hoaTuoiBanChay = SanPham::where('trang_thai', 'DANG_BAN')
-            ->whereNotIn('loai_san_pham', ['PHU_KIEN', 'QUA_TANG'])
+            ->whereNotIn('loai_san_pham', array_merge(
+                self::MA_LOAI_NGUYEN_LIEU,
+                ['PHU_KIEN', 'QUA_TANG']
+            ))
             ->with(['chiTietNhaps' => function ($q) {
                 $q->where('so_luong_con_lai', '>', 0)
                     ->whereHas('phieuNhap', fn($q2) => $q2->where('trang_thai', 'CONFIRMED'))
@@ -75,7 +92,11 @@ $sanPhams = SanPham::where('trang_thai', 'DANG_BAN')
     {
         $user = auth()->check() ? Auth::user()->load('khachHang') : null;
 
-        $excludedTypes = ['PHU_KIEN', 'QUA_TANG'];
+        // Loại bỏ nguyên vật liệu + phụ kiện + quà tặng khỏi trang "Hoa tươi".
+        $excludedTypes = array_merge(
+            self::MA_LOAI_NGUYEN_LIEU,
+            ['PHU_KIEN', 'QUA_TANG']
+        );
 
         $query = SanPham::where('trang_thai', 'DANG_BAN')
             ->whereNotIn('loai_san_pham', $excludedTypes)
@@ -93,6 +114,7 @@ $sanPhams = SanPham::where('trang_thai', 'DANG_BAN')
 
         $hoaTuois = $query->orderBy('ma_san_pham', 'desc')->get();
 
+        // Categories cho filter sidebar — cũng phải loại bỏ nguyên vật liệu + phụ kiện + quà tặng.
         $categories = SanPham::where('trang_thai', 'DANG_BAN')
             ->whereNotIn('loai_san_pham', $excludedTypes)
             ->select('loai_san_pham')
@@ -149,45 +171,45 @@ $sanPhams = SanPham::where('trang_thai', 'DANG_BAN')
             'quaTangs'
         ));
     }
+
     public function gioiThieu()
-{
-    $user = auth()->check() ? Auth::user()->load('khachHang') : null;
+    {
+        $user = auth()->check() ? Auth::user()->load('khachHang') : null;
 
-    return view('customer.GioiThieu', compact('user'));
-}
-public function lienHe()
-{
-    $user = auth()->check() ? Auth::user()->load('khachHang') : null;
-
-    return view('customer.LienHe', compact('user'));
-}
-
-    private function applyPriceFilter($query, Request $request): void
-{
-    if (!$request->filled('price')) {
-        return;
+        return view('customer.GioiThieu', compact('user'));
     }
 
-    $query->where(function ($sub) use ($request) {
+    public function lienHe()
+    {
+        $user = auth()->check() ? Auth::user()->load('khachHang') : null;
 
-        foreach ($request->price as $price) {
+        return view('customer.LienHe', compact('user'));
+    }
 
-            if ($price === 'duoi_20000') {
-                $sub->orWhere('gia_ban_hien_tai', '<', 20000);
-            }
-
-            if ($price === '20000_50000') {
-                $sub->orWhereBetween('gia_ban_hien_tai', [20000, 50000]);
-            }
-
-            if ($price === '50000_100000') {
-                $sub->orWhereBetween('gia_ban_hien_tai', [50000, 100000]);
-            }
-
-            if ($price === 'tren_100000') {
-                $sub->orWhere('gia_ban_hien_tai', '>', 100000);
-            }
+    private function applyPriceFilter($query, Request $request): void
+    {
+        if (!$request->filled('price')) {
+            return;
         }
-    });
-}
+
+        $query->where(function ($sub) use ($request) {
+            foreach ($request->price as $price) {
+                if ($price === 'duoi_20000') {
+                    $sub->orWhere('gia_ban_hien_tai', '<', 20000);
+                }
+
+                if ($price === '20000_50000') {
+                    $sub->orWhereBetween('gia_ban_hien_tai', [20000, 50000]);
+                }
+
+                if ($price === '50000_100000') {
+                    $sub->orWhereBetween('gia_ban_hien_tai', [50000, 100000]);
+                }
+
+                if ($price === 'tren_100000') {
+                    $sub->orWhere('gia_ban_hien_tai', '>', 100000);
+                }
+            }
+        });
+    }
 }
