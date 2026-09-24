@@ -1,34 +1,46 @@
-const pool = require('../config/database');
+// src/models/KhachHang.js
 
-class KhachHang {
-    constructor(row = {}) {
-        this.ma_khach_hang = row.ma_khach_hang;
-        this.ten_khach_hang = row.ten_khach_hang;
-        this.so_dien_thoai = row.so_dien_thoai;
-        this.email = row.email;
-        this.dia_chi = row.dia_chi;
-        this.diem_tich_luy = row.diem_tich_luy;
-    }
+const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
+class KhachHang extends Model {
+
+    // Tìm theo mã (giữ tên cũ để tương thích với code gọi nó)
     static async findById(ma_khach_hang) {
-        const [rows] = await pool.query(
-            ' SELECT * FROM khach_hang WHERE ma_khach_hang=?',
-            [ma_khach_hang]
-        );
-        if (rows.length === 0) return null;
-        return new KhachHang(row[0]);
-
+        return KhachHang.findByPk(ma_khach_hang);
     }
+
     // Cộng điểm (shipper giao trễ → hệ thống cộng điểm xin lỗi)
     async congDiem(soDiem) {
-        const [result] = await pool.query(
-            ' UPDATE khach_hang SET diem_tich_luy =diem_tich_luy + ? WHERE ma_khach_hang =?',
-            [soDiem, this.ma_khach_hang]
-        );
-        if (result.affectedRows > 0) {
-            this.diem_tich_luy = (this.diem_tich_luy || 0) + soDiem;
-        }
-        return result.affectedRows > 0;
+        const truoc = this.diem_tich_luy || 0;
+        const [affectedRows] = await KhachHang.increment('diem_tich_luy', {
+            by: soDiem,
+            where: { ma_khach_hang: this.ma_khach_hang },
+        });
+        this.diem_tich_luy = truoc + soDiem;
+        return true;
     }
 }
+
+KhachHang.init({
+    ma_khach_hang: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+    },
+    ten_khach_hang: DataTypes.STRING,
+    so_dien_thoai: DataTypes.STRING(20),
+    email: DataTypes.STRING,
+    dia_chi: DataTypes.TEXT,
+    diem_tich_luy: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+    },
+}, {
+    sequelize,
+    modelName: 'KhachHang',
+    tableName: 'khach_hang',
+    timestamps: false,
+});
+
 module.exports = KhachHang;

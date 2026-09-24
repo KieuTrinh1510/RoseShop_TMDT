@@ -1,18 +1,36 @@
-const mysql = require("mysql2/promise");
-const fs = require("fs");
-const pool = mysql.createPool({
-    host: process.env.DB_HOST,
-    port: Number(process.env.DB_PORT),
-    user: process.env.DB_USERNAME,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_DATABASE,
+// src/config/database.js
+// Kết nối Sequelize (thay cho mysql2 pool)
 
-    ssl: {
-        ca: fs.readFileSync(process.env.MYSQL_ATTR_SSL_CA)
-    },
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
-})
+const { Sequelize } = require('sequelize');
+const fs = require('fs');
 
-module.exports = pool;
+const sequelize = new Sequelize(
+    process.env.DB_DATABASE,
+    process.env.DB_USERNAME,
+    process.env.DB_PASSWORD,
+    {
+        host: process.env.DB_HOST,
+        port: Number(process.env.DB_PORT),
+        dialect: 'mysql',
+        dialectOptions: process.env.MYSQL_ATTR_SSL_CA
+            ? {
+                ssl: {
+                    ca: fs.readFileSync(process.env.MYSQL_ATTR_SSL_CA),
+                },
+            }
+            : {},
+        pool: {
+            max: 10,
+            min: 0,
+            idle: 10000,
+        },
+        logging: false, // đổi thành console.log nếu cần debug SQL
+        define: {
+            // Các bảng trong DB dùng snake_case, không có createdAt/updatedAt
+            timestamps: false,
+            underscored: true,
+        },
+    }
+);
+
+module.exports = sequelize;

@@ -1,10 +1,12 @@
 // src/models/ChiTietMauBoHoa.js
 // Chi tiết thành phần của 1 mẫu bó hoa
 
-const pool = require('../config/database');
+const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 const SanPham = require('./SanPham');
+const MauBoHoa = require('./MauBoHoa');
 
-class ChiTietMauBoHoa {
+class ChiTietMauBoHoa extends Model {
 
     // Hằng số vai trò (giống ChiTietBoHoa)
     static VAI_TRO_HOA_CHINH = 'HOA_CHINH';
@@ -25,56 +27,26 @@ class ChiTietMauBoHoa {
         ChiTietMauBoHoa.VAI_TRO_XOP,
     ];
 
-    constructor(row = {}) {
-        this.ma_chi_tiet_mau = row.ma_chi_tiet_mau;
-        this.ma_mau_bo_hoa = row.ma_mau_bo_hoa;
-        this.ma_san_pham = row.ma_san_pham;
-        this.vai_tro = row.vai_tro;
-        this.so_luong = row.so_luong;
-
-        // Thuộc tính "ảo" khi JOIN
-        if (row.ten_san_pham) {
-            this.sanPham = new SanPham({
-                ma_san_pham: row.ma_san_pham,
-                ten_san_pham: row.ten_san_pham,
-                loai_san_pham: row.loai_san_pham,
-                hinh_anh: row.hinh_anh,
-            });
-        }
-    }
-
     // Lấy tất cả chi tiết của 1 mẫu
     static async findByMauBoHoa(ma_mau_bo_hoa) {
-        const [rows] = await pool.query(
-            'SELECT * FROM chi_tiet_mau_bo_hoa WHERE ma_mau_bo_hoa = ?',
-            [ma_mau_bo_hoa]
-        );
-        return rows.map(row => new ChiTietMauBoHoa(row));
+        return ChiTietMauBoHoa.findAll({ where: { ma_mau_bo_hoa } });
     }
 
     // Lấy chi tiết + JOIN sản phẩm
     static async findByMauBoHoaWithSanPham(ma_mau_bo_hoa) {
-        const [rows] = await pool.query(
-            `SELECT ct.*,
-              sp.ten_san_pham,
-              sp.loai_san_pham,
-              sp.hinh_anh
-       FROM chi_tiet_mau_bo_hoa ct
-       LEFT JOIN san_pham sp ON sp.ma_san_pham = ct.ma_san_pham
-       WHERE ct.ma_mau_bo_hoa = ?`,
-            [ma_mau_bo_hoa]
-        );
-        return rows.map(row => new ChiTietMauBoHoa(row));
+        return ChiTietMauBoHoa.findAll({
+            where: { ma_mau_bo_hoa },
+            include: [{
+                model: SanPham,
+                as: 'sanPham',
+                attributes: ['ma_san_pham', 'ten_san_pham', 'loai_san_pham', 'hinh_anh'],
+            }],
+        });
     }
 
     // Lọc theo vai trò
     static async findByMauVaVaiTro(ma_mau_bo_hoa, vai_tro) {
-        const [rows] = await pool.query(
-            `SELECT * FROM chi_tiet_mau_bo_hoa
-       WHERE ma_mau_bo_hoa = ? AND vai_tro = ?`,
-            [ma_mau_bo_hoa, vai_tro]
-        );
-        return rows.map(row => new ChiTietMauBoHoa(row));
+        return ChiTietMauBoHoa.findAll({ where: { ma_mau_bo_hoa, vai_tro } });
     }
 
     // Lấy xốp của mẫu
@@ -85,29 +57,9 @@ class ChiTietMauBoHoa {
         );
     }
 
-    // Tạo chi tiết mới
-    static async create(data) {
-        const [result] = await pool.query(
-            `INSERT INTO chi_tiet_mau_bo_hoa
-        (ma_mau_bo_hoa, ma_san_pham, vai_tro, so_luong)
-       VALUES (?, ?, ?, ?)`,
-            [
-                data.ma_mau_bo_hoa,
-                data.ma_san_pham,
-                data.vai_tro,
-                data.so_luong ?? 1,
-            ]
-        );
-        return result.insertId;
-    }
-
     // Xóa hết chi tiết của 1 mẫu
     static async xoaHetCuaMau(ma_mau_bo_hoa) {
-        const [result] = await pool.query(
-            'DELETE FROM chi_tiet_mau_bo_hoa WHERE ma_mau_bo_hoa = ?',
-            [ma_mau_bo_hoa]
-        );
-        return result.affectedRows;
+        return ChiTietMauBoHoa.destroy({ where: { ma_mau_bo_hoa } });
     }
 
     // Getter
@@ -117,7 +69,30 @@ class ChiTietMauBoHoa {
     get tenHienThi() {
         return this.sanPham?.ten_san_pham || `Sản phẩm #${this.ma_san_pham}`;
     }
-
 }
+
+ChiTietMauBoHoa.init({
+    ma_chi_tiet_mau: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+    },
+    ma_mau_bo_hoa: DataTypes.INTEGER,
+    ma_san_pham: DataTypes.INTEGER,
+    vai_tro: DataTypes.STRING,
+    so_luong: {
+        type: DataTypes.INTEGER,
+        defaultValue: 1,
+    },
+}, {
+    sequelize,
+    modelName: 'ChiTietMauBoHoa',
+    tableName: 'chi_tiet_mau_bo_hoa',
+    timestamps: false,
+});
+
+ChiTietMauBoHoa.belongsTo(SanPham, { foreignKey: 'ma_san_pham', as: 'sanPham' });
+ChiTietMauBoHoa.belongsTo(MauBoHoa, { foreignKey: 'ma_mau_bo_hoa', as: 'mauBoHoa' });
+MauBoHoa.hasMany(ChiTietMauBoHoa, { foreignKey: 'ma_mau_bo_hoa', as: 'chiTiet' });
 
 module.exports = ChiTietMauBoHoa;

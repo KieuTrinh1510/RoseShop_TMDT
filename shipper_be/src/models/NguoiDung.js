@@ -1,63 +1,33 @@
-const pool = require('../config/database');
+const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-class NguoiDung {
-
-    // Hàm khởi tạo: nhận 1 dòng từ DB, gán vào this
-
-    constructor(row = {}) {
-        this.ma_nguoi_dung = row.ma_nguoi_dung;
-        this.ten_dang_nhap = row.ten_dang_nhap;
-        this.mat_khau = row.mat_khau;
-        this.vai_tro = row.vai_tro;
-    }
+class NguoiDung extends Model {
 
     // Tìm theo mã, trả về instance NguoiDung hoặc null
     static async findById(ma_nguoi_dung) {
-        const [rows] = await pool.query(
-            'SELECT *FROM nguoi_dung WHERE ma_nguoi_dung=?',
-            [ma_nguoi_dung]
-        );
-        if (rows.length === 0) return null
-        return new NguoiDung(row[0]);
+        return NguoiDung.findByPk(ma_nguoi_dung);
     }
 
     // Tìm theo tên đăng nhập (dùng khi login)
     static async findByUsername(ten_dang_nhap) {
-        const [rows] = await pool.query(
-            'SELECT * FROM nguoi_dung WHERE ten_dang_nhap=?',
-            [ten_dang_nhap]
-        );
-        if (rows.length === 0) return null;
-        return new NguoiDung(rows[0]);
+        return NguoiDung.findOne({ where: { ten_dang_nhap } });
+    }
 
-    }
-    //Static = hỏi Class "hãy tìm/tạo cho tôi một object". dùng khi CHƯA có object cụ thể
-    //Không static = hỏi Object "hãy làm gì đó với chính mày" dùng khi ĐÃ có object cụ thể
-    // Tạo tài khoản mới, trả về instance vừa tạo
-    static async create({ ten_dang_nhap, mat_khau, vai_tro }) {
-        const [result] = await pool.query(
-            `INSERT INTO nguoi_dung(ten_dang_nhap,mat_khau,vai_tro
-            VALUES(?,?,?)
-            `,
-            [ten_dang_nhap, mat_khau, vai_tro]
-        );
-        return NguoiDung.findById(result.insertId);
-    }
+    // Static = hỏi Class "hãy tìm/tạo cho tôi một object". dùng khi CHƯA có object cụ thể
+    // Không static = hỏi Object "hãy làm gì đó với chính mày" dùng khi ĐÃ có object cụ thể
+    // Tạo tài khoản mới: dùng thẳng NguoiDung.create({ ten_dang_nhap, mat_khau, vai_tro })
+    // (Sequelize đã có sẵn static create() — không override lại để tránh đè mất hàm gốc)
+
     // Cập nhật mật khẩu
     async updatePassword(mat_khauMoi) {
-        const [result] = await pool.query(
-            'UPDATE nguoi_dung SET mat_khau=? WHERE ma_nguoi_dung =?',
-            [mat_khauMoi, this.ma_nguoi_dung]
-        );
-        if (result.affectedRows > 0) {
-            this.mat_khau = mat_khauMoi; // cap nhat trong object o tren
-        }
-        return result.affectedRows > 0;
+        this.mat_khau = mat_khauMoi;
+        await this.save({ fields: ['mat_khau'] });
+        return true;
     }
+
     // Kiểm tra vai trò (tiện dùng ở middleware)
     isShipper() {
         return this.vai_tro === 'SHIPPER';
-
     }
     isAdmin() {
         return this.vai_tro === 'ADMIN';
@@ -69,4 +39,24 @@ class NguoiDung {
         return this.vai_tro === 'KHACH_HANG';
     }
 }
+
+NguoiDung.init({
+    ma_nguoi_dung: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+    },
+    ten_dang_nhap: {
+        type: DataTypes.STRING,
+        unique: true,
+    },
+    mat_khau: DataTypes.STRING,
+    vai_tro: DataTypes.STRING,
+}, {
+    sequelize,
+    modelName: 'NguoiDung',
+    tableName: 'nguoi_dung',
+    timestamps: false,
+});
+
 module.exports = NguoiDung;

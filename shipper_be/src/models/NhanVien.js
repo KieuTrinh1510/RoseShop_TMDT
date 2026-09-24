@@ -1,64 +1,67 @@
 // src/models/NhanVien.js
-const pool = require('../config/database');  // ← bỏ require('express') thừa
+const { Model, DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
+const NguoiDung = require('./NguoiDung');
 
-class NhanVien {
+class NhanVien extends Model {
 
-    constructor(row = {}) {
-        this.ma_nhan_vien = row.ma_nhan_vien;
-        this.ten_nhan_vien = row.ten_nhan_vien;
-        this.email = row.email;
-        this.so_dien_thoai = row.so_dien_thoai;
-        this.chuc_vu = row.chuc_vu;
-        this.cong_viec = row.cong_viec;
-        this.luong = row.luong;
-    }
-
-    // ─── Sửa lỗi 3.1 + 3.2 ───
     static async findById(ma_nhan_vien) {
-        const [rows] = await pool.query(       // ← const [rows] (số nhiều)
-            'SELECT * FROM nhan_vien WHERE ma_nhan_vien = ?',  // ← thêm dấu phẩy
-            [ma_nhan_vien]
-        );
-        if (rows.length === 0) return null;
-        return new NhanVien(rows[0]);          // ← rows[0]
+        return NhanVien.findByPk(ma_nhan_vien);
     }
 
-    // ─── Sửa lỗi 3.3: thêm tham số ma_nhan_vien ───
+    // Lấy nhân viên kèm tài khoản đăng nhập (nd.ma_nguoi_dung = nv.ma_nhan_vien)
     static async findWithNguoiDung(ma_nhan_vien) {
-        const [rows] = await pool.query(       // ← const [rows]
-            `SELECT nv.*, nd.ten_dang_nhap, nd.vai_tro
-             FROM nhan_vien nv
-             JOIN nguoi_dung nd ON nd.ma_nguoi_dung = nv.ma_nhan_vien
-             WHERE nv.ma_nhan_vien = ?`,
-            [ma_nhan_vien]
-        );
-        if (rows.length === 0) return null;
+        const nv = await NhanVien.findByPk(ma_nhan_vien, {
+            include: [{
+                model: NguoiDung,
+                as: 'nguoiDung',
+                attributes: ['ten_dang_nhap', 'vai_tro'],
+            }],
+        });
+        if (!nv) return null;
 
-        const nv = new NhanVien(rows[0]);
-        nv.ten_dang_nhap = rows[0].ten_dang_nhap;
-        nv.vai_tro = rows[0].vai_tro;
+        if (nv.nguoiDung) {
+            nv.ten_dang_nhap = nv.nguoiDung.ten_dang_nhap;
+            nv.vai_tro = nv.nguoiDung.vai_tro;
+        }
         return nv;
     }
 
-    // ─── Sửa lỗi 3.4 + 3.5 ───
     async updateProfile({ ten_nhan_vien, so_dien_thoai, email }) {
-        const [result] = await pool.query(
-            `UPDATE nhan_vien
-             SET ten_nhan_vien = ?, so_dien_thoai = ?, email = ?
-             WHERE ma_nhan_vien = ?`,
-            [ten_nhan_vien, so_dien_thoai, email, this.ma_nhan_vien]  // ← thêm this.ma_nhan_vien
-        );
-        if (result.affectedRows > 0) {   // ← affectedRows (số nhiều)
-            this.ten_nhan_vien = ten_nhan_vien;
-            this.so_dien_thoai = so_dien_thoai;
-            this.email = email;
-        }
-        return result.affectedRows > 0;
+        await this.update({ ten_nhan_vien, so_dien_thoai, email });
+        return true;
     }
 
     get chuCaiDau() {
         return (this.ten_nhan_vien || '?').charAt(0).toUpperCase();
     }
 }
+
+NhanVien.init({
+    ma_nhan_vien: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+    },
+    ten_nhan_vien: DataTypes.STRING,
+    email: DataTypes.STRING,
+    so_dien_thoai: DataTypes.STRING(20),
+    chuc_vu: DataTypes.STRING,
+    cong_viec: DataTypes.STRING,
+    luong: DataTypes.DECIMAL(12, 2),
+}, {
+    sequelize,
+    modelName: 'NhanVien',
+    tableName: 'nhan_vien',
+    timestamps: false,
+});
+
+// nv.ma_nhan_vien dùng chung giá trị với nd.ma_nguoi_dung (thiết kế gốc)
+NhanVien.belongsTo(NguoiDung, {
+    foreignKey: 'ma_nhan_vien',
+    targetKey: 'ma_nguoi_dung',
+    as: 'nguoiDung',
+    constraints: false,
+});
 
 module.exports = NhanVien;
