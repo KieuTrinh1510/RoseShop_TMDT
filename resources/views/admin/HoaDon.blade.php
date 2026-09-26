@@ -2,6 +2,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/Admin/HoaDon.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=IM+Fell+English:ital@0;1&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 @endpush
 
 @section('content')
@@ -292,7 +293,7 @@
                 // Dùng ma_san_pham làm key group (đáng tin cậy hơn tên sản phẩm,
                 // tránh gộp nhầm nếu nhiều sản phẩm khác nhau bị xóa cùng hiện "(Đã xóa)").
                 // Nếu backend cũ chưa trả ma_san_pham, tự động fallback về tên sản phẩm.
-                const key = (ct.ma_san_pham !== undefined && ct.ma_san_pham !== null)
+                const key = ct.ma_bo_hoa ? 'bo_' + ct.ma_bo_hoa : (ct.ma_san_pham !== undefined && ct.ma_san_pham !== null)
                     ? 'sp_' + ct.ma_san_pham
                     : 'ten_' + (ct.san_pham?.ten_san_pham ?? 'unknown');
 
@@ -315,7 +316,7 @@
                 grandTotal += g.thanh_tien;
                 productsHtml += `
                 <tr>
-                    <td>${g.ten_san_pham}</td>
+                    <td>${String(g.ten_san_pham).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}</td>
                     <td style="text-align:center">${g.so_luong}</td>
                     <td style="text-align:right">${fmt(g.gia_ban_snapshot)}</td>
                     <td style="text-align:right;font-weight:700">${fmt(g.thanh_tien)}</td>

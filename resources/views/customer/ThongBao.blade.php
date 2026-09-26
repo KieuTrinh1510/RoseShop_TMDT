@@ -9,7 +9,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
 </head>
 <body>
 
@@ -46,6 +45,10 @@
         <button class="tab-btn {{ $activeTab === 'lich-su' ? 'active' : '' }}"
                 id="tab-lich-su-btn" onclick="switchTab('lich-su')">
             <i class="fas fa-history"></i> Lịch sử
+        </button>
+        <button class="tab-btn {{ $activeTab === 'bo-hoa-da-luu' ? 'active' : '' }}"
+                id="tab-bo-hoa-da-luu-btn" onclick="switchTab('bo-hoa-da-luu')">
+            <i class="fas fa-heart"></i> Bó hoa đã lưu
         </button>
     </div>
 
@@ -135,7 +138,6 @@
     ════════════════════════════════════ --}}
     <div class="tab-pane {{ $activeTab === 'don-hien-tai' ? 'active' : '' }}" id="tab-don-hien-tai">
 
-        {{-- Filter chips --}}
         <div class="filter-bar">
             <button class="filter-chip active" data-filter="all" onclick="filterDon(this, 'all')">
                 Tất cả
@@ -160,6 +162,7 @@
                         'SHIPPING'  => ['Đang giao',     'pill-shipping',  'fa-motorcycle'],
                     ];
                     $st = $stMap[$hd->trang_thai] ?? [$hd->trang_thai, 'pill-pending', 'fa-circle'];
+                    $boLines = $boTheoDon->get($hd->ma_hoa_don, collect());
                 @endphp
                 <div class="order-card" id="don-{{ $hd->ma_hoa_don }}" data-status="{{ $hd->trang_thai }}">
                     <div class="order-card-header" onclick="toggleOrder('don-{{ $hd->ma_hoa_don }}')">
@@ -167,6 +170,7 @@
                             <div class="order-id">
                                 <i class="fas fa-receipt" style="font-size:.8rem"></i>
                                 #HD-{{ str_pad($hd->ma_hoa_don, 4, '0', STR_PAD_LEFT) }}
+                                @if($boLines->isNotEmpty()) <span class="pill pill-confirmed">Bó hoa</span> @endif
                                 <span class="pill {{ $st[1] }}">
                                     <i class="fas {{ $st[2] }}"></i> {{ $st[0] }}
                                 </span>
@@ -206,20 +210,17 @@
                     <div class="order-detail">
                         <div class="order-detail-inner">
 
-                            {{-- Thanh tiến trình --}}
                             <div class="detail-section">
                                 <div class="detail-section-title">
                                     <i class="fas fa-route"></i> Tiến trình đơn hàng
                                 </div>
                                 <div class="progress-steps">
-                                    {{-- Bước 1: Đặt hàng --}}
                                     <div class="step">
                                         <div class="step-dot done"><i class="fas fa-check"></i></div>
                                         <div class="step-lbl done">Đặt<br>hàng</div>
                                     </div>
                                     <div class="step-line {{ in_array($hd->trang_thai, ['CONFIRMED','SHIPPING','DELIVERED']) ? 'done' : '' }}"></div>
 
-                                    {{-- Bước 2: Xác nhận --}}
                                     <div class="step">
                                         @php $confirmed = in_array($hd->trang_thai, ['CONFIRMED','SHIPPING','DELIVERED']); @endphp
                                         <div class="step-dot {{ $confirmed ? 'done' : ($hd->trang_thai === 'PENDING' ? 'active' : '') }}">
@@ -235,7 +236,6 @@
                                     </div>
                                     <div class="step-line {{ in_array($hd->trang_thai, ['SHIPPING','DELIVERED']) ? 'done' : '' }}"></div>
 
-                                    {{-- Bước 3: Đang giao --}}
                                     <div class="step">
                                         @php $shipping = in_array($hd->trang_thai, ['SHIPPING','DELIVERED']); @endphp
                                         <div class="step-dot {{ $shipping ? ($hd->trang_thai === 'SHIPPING' ? 'active' : 'done') : '' }}">
@@ -251,7 +251,6 @@
                                     </div>
                                     <div class="step-line {{ $hd->trang_thai === 'DELIVERED' ? 'done' : '' }}"></div>
 
-                                    {{-- Bước 4: Hoàn thành --}}
                                     <div class="step">
                                         <div class="step-dot {{ $hd->trang_thai === 'DELIVERED' ? 'done' : '' }}">
                                             @if($hd->trang_thai === 'DELIVERED')
@@ -267,7 +266,6 @@
                                 </div>
                             </div>
 
-                            {{-- Thông tin giao hàng --}}
                             <div class="detail-section">
                                 <div class="detail-section-title">
                                     <i class="fas fa-map-marker-alt"></i> Thông tin giao hàng
@@ -305,7 +303,6 @@
                                 @endif
                             </div>
 
-                            {{-- Sản phẩm --}}
                             <div class="detail-section">
                                 <div class="detail-section-title">
                                     <i class="fas fa-box-open"></i> Sản phẩm đặt
@@ -319,13 +316,30 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach($hd->chiTietHoaDon as $ct)
-                                        <tr>
-                                            <td>{{ $ct->sanPham->ten_san_pham ?? '#' . $ct->ma_san_pham }}</td>
-                                            <td class="text-center">×{{ $ct->so_luong }}</td>
-                                            <td class="text-right">{{ number_format($ct->gia_ban_snapshot, 0, ',', '.') }} đ</td>
-                                        </tr>
-                                        @endforeach
+                                        @if($boLines->isNotEmpty())
+                                            @foreach($boLines as $bo)
+                                            <tr>
+                                                <td>
+                                                    {{ $bo->ten_bo_hoa }} · {{ $bo->size }}
+                                                    @if($bo->loi_nhan)
+                                                        <div style="font-size:.8rem;color:#888;margin-top:4px;">
+                                                            <i class="fas fa-comment"></i> Lời nhắn: {{ $bo->loi_nhan }}
+                                                        </div>
+                                                    @endif
+                                                </td>
+                                                <td class="text-center">×{{ $bo->so_luong }}</td>
+                                                <td class="text-right">{{ number_format($bo->gia_ban, 0, ',', '.') }} đ</td>
+                                            </tr>
+                                            @endforeach
+                                        @else
+                                            @foreach($hd->chiTietHoaDon as $ct)
+                                            <tr>
+                                                <td>{{ $ct->sanPham->ten_san_pham ?? '#' . $ct->ma_san_pham }}</td>
+                                                <td class="text-center">×{{ $ct->so_luong }}</td>
+                                                <td class="text-right">{{ number_format($ct->gia_ban_snapshot, 0, ',', '.') }} đ</td>
+                                            </tr>
+                                            @endforeach
+                                        @endif
                                     </tbody>
                                 </table>
                                 <div style="margin-top:10px">
@@ -378,6 +392,7 @@
                         'CANCELLED' => ['Đã hủy',   'pill-cancelled', 'fa-times-circle'],
                     ];
                     $st2 = $stMap2[$hd->trang_thai] ?? [$hd->trang_thai, 'pill-pending', 'fa-circle'];
+                    $boLinesLs = $boTheoDonLichSu->get($hd->ma_hoa_don, collect());
                 @endphp
                 <div class="order-card" id="ls-{{ $hd->ma_hoa_don }}" data-status="{{ $hd->trang_thai }}">
                     <div class="order-card-header" onclick="toggleOrder('ls-{{ $hd->ma_hoa_don }}')">
@@ -410,7 +425,6 @@
                     <div class="order-detail">
                         <div class="order-detail-inner">
 
-                            {{-- Thông tin --}}
                             <div class="detail-section">
                                 <div class="detail-section-title">
                                     <i class="fas fa-info-circle"></i> Thông tin đơn hàng
@@ -453,7 +467,6 @@
                                 </div>
                             </div>
 
-                            {{-- Sản phẩm --}}
                             <div class="detail-section">
                                 <div class="detail-section-title">
                                     <i class="fas fa-box-open"></i> Chi tiết sản phẩm
@@ -468,14 +481,32 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach($hd->chiTietHoaDon as $ct)
-                                        <tr>
-                                            <td>{{ $ct->sanPham->ten_san_pham ?? '#' . $ct->ma_san_pham }}</td>
-                                            <td class="text-center">×{{ $ct->so_luong }}</td>
-                                            <td class="text-right">{{ number_format($ct->gia_ban_snapshot, 0, ',', '.') }} đ</td>
-                                            <td class="text-right">{{ number_format($ct->gia_ban_snapshot * $ct->so_luong, 0, ',', '.') }} đ</td>
-                                        </tr>
-                                        @endforeach
+                                        @if($boLinesLs->isNotEmpty())
+                                            @foreach($boLinesLs as $bo)
+                                            <tr>
+                                                <td>
+                                                    {{ $bo->ten_bo_hoa }} · {{ $bo->size }}
+                                                    @if($bo->loi_nhan)
+                                                        <div style="font-size:.8rem;color:#888;margin-top:4px;">
+                                                            <i class="fas fa-comment"></i> Lời nhắn: {{ $bo->loi_nhan }}
+                                                        </div>
+                                                    @endif
+                                                </td>
+                                                <td class="text-center">×{{ $bo->so_luong }}</td>
+                                                <td class="text-right">{{ number_format($bo->gia_ban, 0, ',', '.') }} đ</td>
+                                                <td class="text-right">{{ number_format($bo->gia_ban * $bo->so_luong, 0, ',', '.') }} đ</td>
+                                            </tr>
+                                            @endforeach
+                                        @else
+                                            @foreach($hd->chiTietHoaDon as $ct)
+                                            <tr>
+                                                <td>{{ $ct->sanPham->ten_san_pham ?? '#' . $ct->ma_san_pham }}</td>
+                                                <td class="text-center">×{{ $ct->so_luong }}</td>
+                                                <td class="text-right">{{ number_format($ct->gia_ban_snapshot, 0, ',', '.') }} đ</td>
+                                                <td class="text-right">{{ number_format($ct->gia_ban_snapshot * $ct->so_luong, 0, ',', '.') }} đ</td>
+                                            </tr>
+                                            @endforeach
+                                        @endif
                                     </tbody>
                                 </table>
                                 <div style="margin-top:10px">
@@ -499,6 +530,141 @@
         </div>
     </div>
 
+    {{-- ════════════════════════════════════
+         TAB 4: BÓ HOA ĐÃ LƯU (bản nháp tự tạo)
+    ════════════════════════════════════ --}}
+    <div class="tab-pane {{ $activeTab === 'bo-hoa-da-luu' ? 'active' : '' }}" id="tab-bo-hoa-da-luu">
+        <div class="detail-section-title">
+            <i class="fas fa-heart"></i> Các thiết kế bó hoa đã lưu
+        </div>
+        <p style="font-size:.82rem; color:var(--muted); margin:8px 0 16px;">
+            Ấn vào thẻ để xem chi tiết. Bấm <strong>"Tiếp tục thiết kế này"</strong> để mở lại form với dữ liệu đã điền sẵn.
+        </p>
+
+        @forelse($boHoaDaLuu as $bo)
+            @php
+                $sizeBong = \App\Http\Controllers\Admin\BoHoaController::SO_BONG[$bo->size] ?? null;
+                $kieuText = \App\Http\Controllers\Admin\BoHoaController::KIEU_DANG[$bo->kieu_bo_hoa] ?? $bo->kieu_bo_hoa;
+                $conceptText = \App\Http\Controllers\Admin\BoHoaController::CONCEPT[$bo->concept] ?? $bo->concept;
+            @endphp
+            <div class="order-card" id="draft-{{ $bo->ma_bo_hoa }}" style="margin-top:12px">
+                <div class="order-card-header" onclick="toggleOrder('draft-{{ $bo->ma_bo_hoa }}')">
+                    <div>
+                        <div class="order-id">
+                            <i class="fas fa-seedling" style="font-size:.8rem"></i>
+                            {{ $bo->ten_bo_hoa }}
+                            <span class="pill pill-pending">Bản nháp</span>
+                        </div>
+                        <div class="order-date">
+                            <i class="fas fa-tag"></i>
+                            {{ $bo->size }} · {{ $kieuText }} · {{ $bo->so_luong }} bó
+                        </div>
+                    </div>
+                    <div class="order-header-right">
+                        <i class="fas fa-chevron-down chevron"></i>
+                    </div>
+                </div>
+
+                <div class="order-detail">
+                    <div class="order-detail-inner">
+
+                        <div class="detail-section">
+                            <div class="detail-section-title">
+                                <i class="fas fa-info-circle"></i> Thông tin thiết kế
+                            </div>
+                            <div class="info-row">
+                                <span class="info-lbl">Tên bó hoa</span>
+                                <span class="info-val">{{ $bo->ten_bo_hoa }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-lbl">Size</span>
+                                <span class="info-val">
+                                    {{ $bo->size }}@if($sizeBong) ({{ $sizeBong }} bông)@endif
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-lbl">Kiểu dáng</span>
+                                <span class="info-val">{{ $kieuText }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-lbl">Concept</span>
+                                <span class="info-val">{{ $conceptText }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-lbl">Số bó</span>
+                                <span class="info-val">{{ $bo->so_luong }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-lbl">Lưu lúc</span>
+                                <span class="info-val">
+                                    {{ optional($bo->created_at)->format('d/m/Y H:i') ?? '—' }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="detail-section">
+                            <div class="detail-section-title">
+                                <i class="fas fa-box-open"></i> Thành phần bó hoa
+                            </div>
+                            @php $theoVaiTro = $bo->chiTietBoHoa->groupBy('vai_tro'); @endphp
+                            <table class="product-list">
+                                <thead>
+                                    <tr>
+                                        <th>Vai trò / Nguyên liệu</th>
+                                        <th class="text-center">SL</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($theoVaiTro as $vaiTro => $items)
+                                        <tr>
+                                            <td>
+                                                <div style="font-weight:600; color:var(--brand); margin-bottom:2px;">
+                                                    {{ \App\Http\Controllers\Admin\BoHoaController::VAI_TRO[$vaiTro] ?? $vaiTro }}
+                                                </div>
+                                                @foreach($items as $i)
+                                                    <div style="font-size:.85rem; color:#555;">
+                                                        • {{ $i->sanPham->ten_san_pham ?? 'Nguyên liệu #'.$i->ma_san_pham }}
+                                                        @if($i->sanPham?->don_vi_tinh_text)
+                                                            <span style="color:#999;">({{ $i->sanPham->don_vi_tinh_text }})</span>
+                                                        @endif
+                                                    </div>
+                                                @endforeach
+                                            </td>
+                                            <td class="text-center" style="vertical-align:top;">
+                                                {{ $items->sum('so_luong') }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                            <p class="order-date" style="margin-top:10px;">
+                                <i class="fas fa-info-circle"></i>
+                                Bản nháp chỉ để xem lại / đặt lại thiết kế, <strong>không giữ tồn kho</strong>.
+                            </p>
+                        </div>
+
+                        <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+                            <a href="{{ route('customer.bo-hoa.tu-tao.tiep-tuc', $bo->ma_bo_hoa) }}"
+                               style="background:var(--brand,#e75480); color:#fff; padding:11px 22px;
+                                      border-radius:8px; text-decoration:none; font-weight:600;
+                                      display:inline-flex; align-items:center; gap:8px;
+                                      box-shadow:0 2px 8px rgba(231,84,128,.25);"
+                               onclick="event.stopPropagation();">
+                                <i class="fas fa-redo"></i> Tiếp tục thiết kế này
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        @empty
+            <div class="empty-state">
+                <i class="fas fa-heart-broken"></i>
+                <p>Chưa có bó hoa tự tạo nào được lưu.</p>
+                <small>Hãy vào <a href="{{ route('customer.bo-hoa.tu-tao') }}">Tự tạo bó hoa</a> để bắt đầu thiết kế.</small>
+            </div>
+        @endforelse
+    </div>
 </div>
 
 <div id="toast"></div>
@@ -539,7 +705,6 @@ function filterDon(btn, status) {
     });
 }
 
-/* ── FILTER LỊCH SỬ ── */
 function filterLichSu(btn, status) {
     document.querySelectorAll('#tab-lich-su .filter-chip').forEach(c => c.classList.remove('active'));
     btn.classList.add('active');
@@ -552,7 +717,6 @@ function filterLichSu(btn, status) {
     });
 }
 
-/* ── XÓA THÔNG BÁO ── */
 function xoaThongBao(id) {
     const card = document.getElementById('notif-' + id);
     if (!card) return;

@@ -2,18 +2,24 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/Admin/DonHang.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=IM+Fell+English:ital@0;1&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 @endpush
 
 @section('content')
 
 <div class="don-hang-container">
+{{-- resources/views/DonHang.blade.php --}}
 
-    <div class="rs-page-header">
-        <div class="rs-page-header-text">
-            <h1 class="rs-page-title">Quản lý đơn hàng</h1>
-            <p class="rs-page-subtitle">Theo dõi, xác nhận đơn hàng và chỉ định shipper giao hàng.</p>
-        </div>
+
+
+
+<div class="rs-page-header">
+    <div class="rs-page-header-text">
+        <h1 class="rs-page-title">Quản lý đơn hàng</h1>
+        <p class="rs-page-subtitle">Theo dõi, xác nhận đơn hàng và chỉ định shipper giao hàng.</p>
     </div>
+</div>
+
 
 <div class="page-body">
 
@@ -120,6 +126,10 @@
                             {{-- Mã đơn hàng --}}
                             <td class="td-mono">
                                 HD-{{ str_pad($dh->ma_hoa_don, 4, '0', STR_PAD_LEFT) }}
+                                @foreach($boTheoDon->get($dh->ma_hoa_don, collect()) as $bo)
+                                    <small style="display:block;white-space:normal">{{ $bo->ten_bo_hoa }} × {{ $bo->so_luong }} · {{ $bo->size }} · {{ $bo->concept }}</small>
+                                    @if($bo->loi_nhan)<small style="display:block;white-space:normal">Lời nhắn: {{ $bo->loi_nhan }}</small>@endif
+                                @endforeach
                             </td>
 
                             {{-- Tên khách hàng --}}
@@ -237,6 +247,7 @@
             Hành động này không thể hoàn tác.
         </p>
         <div class="dialog-actions">
+            <label>Lý do từ chối (không bắt buộc)<textarea id="cancelReason" maxlength="1000"></textarea></label>
             <button class="btn btn-ghost" onclick="closeCancelDialog()">Hủy bỏ</button>
             <button class="btn btn-danger" id="cancelOkBtn">✕ Xác nhận từ chối</button>
         </div>
@@ -316,6 +327,7 @@
 
    
     function openCancelDialog(id, label) {
+        document.getElementById('cancelReason').value = '';
         currentCancelId = id;
         document.getElementById('cancelMsg').innerHTML =
             `Bạn có chắc muốn từ chối <strong>${label}</strong>?<br>
@@ -338,6 +350,7 @@
 
         fetch(`/don-hang/${id}/cancel`, {
             method:  'POST',
+            body: new URLSearchParams({ly_do: document.getElementById('cancelReason').value}),
             headers: {
                 'X-CSRF-TOKEN':    CSRF,
                 'Accept':          'application/json',

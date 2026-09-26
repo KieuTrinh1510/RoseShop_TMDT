@@ -8,6 +8,233 @@
 @endsection
 
 @section('content')
+@if(isset($dsBoHoa) && count($dsBoHoa) > 0)
+@php
+    $diaChiKH = optional($user->khachHang)->dia_chi ?? '';
+    $parts    = array_map('trim', explode(',', $diaChiKH));
+    if (count($parts) >= 1 && strtolower(end($parts)) === 'hà nội') array_pop($parts);
+    $ttQuan    = old('quan_huyen',        count($parts) >= 2 ? $parts[count($parts)-1] : '');
+    $ttPhuong  = old('xa_phuong',         count($parts) >= 3 ? $parts[count($parts)-2] : '');
+    $ttChiTiet = old('dia_chi_chi_tiet',  count($parts) >= 1 ? implode(', ', array_slice($parts, 0, count($parts)-2)) : $diaChiKH);
+@endphp
+<div class="checkout-page">
+    <div class="checkout-heading">💳 Thanh Toán</div>
+
+    <div class="checkout-steps">
+        <span class="step-done">Chọn bó hoa</span>
+        <span class="sep">›</span>
+        <span class="step-active">💳 Thông tin thanh toán</span>
+        <span class="sep">›</span>
+        <span>📦 Hoàn tất</span>
+    </div>
+
+    @if(session('error'))
+        <div class="alert-checkout error">❌ {{ session('error') }}</div>
+    @endif
+
+    <form method="POST" action="{{ route('customer.thanh-toan.store') }}" id="checkoutForm">
+        @csrf
+        <div class="checkout-layout">
+
+            {{-- LEFT: Thông tin --}}
+            <div class="checkout-panel">
+                <h3>📋 Thông Tin Giao Hàng</h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tên người nhận <span>*</span></label>
+                        <input type="text" name="ten_nguoi_nhan"
+                               value="{{ old('ten_nguoi_nhan', optional($user->khachHang)->ten_khach_hang) }}"
+                               placeholder="Họ và tên"
+                               class="{{ $errors->has('ten_nguoi_nhan') ? 'input-error' : '' }}">
+                        @error('ten_nguoi_nhan')<div class="error-msg">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="form-group">
+                        <label>Số điện thoại <span>*</span></label>
+                        <input type="text" name="so_dien_thoai"
+                               value="{{ old('so_dien_thoai', optional($user->khachHang)->so_dien_thoai) }}"
+                               placeholder="0xxxxxxxxx"
+                               class="{{ $errors->has('so_dien_thoai') ? 'input-error' : '' }}">
+                        @error('so_dien_thoai')<div class="error-msg">{{ $message }}</div>@enderror
+                    </div>
+                </div>
+
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label>Tỉnh/Thành phố</label>
+                        <input type="text" value="Hà Nội" readonly
+                               style="background:#f9fafb;color:#9ca3af;cursor:not-allowed;">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Quận/Huyện <span>*</span></label>
+                        <select id="tt_quan_huyen" name="quan_huyen"
+                                class="{{ $errors->has('quan_huyen') ? 'input-error' : '' }}" required>
+                            <option value="">Chọn quận/huyện</option>
+                        </select>
+                        @error('quan_huyen')<div class="error-msg">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="form-group">
+                        <label>Xã/Phường <span>*</span></label>
+                        <select id="tt_xa_phuong" name="xa_phuong"
+                                class="{{ $errors->has('xa_phuong') ? 'input-error' : '' }}" required>
+                            <option value="">Chọn xã/phường</option>
+                        </select>
+                        @error('xa_phuong')<div class="error-msg">{{ $message }}</div>@enderror
+                    </div>
+                </div>
+
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label>Địa chỉ chi tiết <span>*</span></label>
+                        <input type="text" name="dia_chi_chi_tiet"
+                               value="{{ $ttChiTiet }}"
+                               placeholder="Số nhà, tên đường, ngõ..."
+                               class="{{ $errors->has('dia_chi_chi_tiet') ? 'input-error' : '' }}" required>
+                        @error('dia_chi_chi_tiet')<div class="error-msg">{{ $message }}</div>@enderror
+                        <div class="field-note">📍 Giao hàng nhanh trong 60 phút nội thành Hà Nội</div>
+                    </div>
+                </div>
+
+                {{-- Phương thức thanh toán --}}
+                <div style="margin-top: 8px;">
+                    <h3 style="margin-top: 0;">💳 Phương Thức Thanh Toán</h3>
+                    @error('phuong_thuc_thanh_toan')<div class="error-msg" style="margin-bottom:10px;">{{ $message }}</div>@enderror
+
+                    <div class="payment-option {{ old('phuong_thuc_thanh_toan', 'NGAN_HANG') === 'NGAN_HANG' ? 'selected' : '' }}"
+                         onclick="selectPayment('NGAN_HANG', this)">
+                        <input type="radio" name="phuong_thuc_thanh_toan" value="NGAN_HANG"
+                               id="pay_vnpay" {{ old('phuong_thuc_thanh_toan', 'NGAN_HANG') === 'NGAN_HANG' ? 'checked' : '' }}>
+                        <div class="payment-option-info">
+                            <div class="payment-option-title">💳 Thanh toán qua VNPay</div>
+                            <div class="payment-option-desc">
+                                Bạn sẽ được chuyển tới cổng thanh toán VNPay để hoàn tất giao dịch.
+                                Đơn hàng chỉ được đánh dấu <strong>đã thanh toán</strong> sau khi VNPay xác nhận thành công.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bank-info {{ old('phuong_thuc_thanh_toan', 'NGAN_HANG') === 'NGAN_HANG' ? 'show' : '' }}"
+                         id="vnpayInfoBox">
+                        <p>💳 <strong>Cổng thanh toán:</strong> VNPay (hỗ trợ thẻ ATM nội địa, Internet Banking, quét mã QR, Visa/Master/JCB).</p>
+                        <p>🔒 <strong>Bảo mật:</strong> Bạn nhập thông tin thanh toán trực tiếp trên trang của VNPay, shop không lưu thông tin thẻ/tài khoản của bạn.</p>
+                        <p>⏱️ <strong>Lưu ý:</strong> Sau khi bấm "Đặt hàng", bạn có 15 phút để hoàn tất thanh toán trước khi phiên giao dịch hết hạn.</p>
+                    </div>
+
+                    <div class="payment-option {{ old('phuong_thuc_thanh_toan') === 'COD' ? 'selected' : '' }}"
+                         onclick="selectPayment('COD', this)">
+                        <input type="radio" name="phuong_thuc_thanh_toan" value="COD"
+                               id="pay_cod" {{ old('phuong_thuc_thanh_toan') === 'COD' ? 'checked' : '' }}>
+                        <div class="payment-option-info">
+                            <div class="payment-option-title">💵 Thanh toán khi nhận hàng (COD)</div>
+                            <div class="payment-option-desc">Thanh toán trực tiếp cho shipper khi nhận được hoa.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- RIGHT: Bó hoa --}}
+                        <div class="order-summary-panel">
+                <h3>💐 Bó Hoa Đã Chọn</h3>
+
+                @php
+                    $tongGocBoHoa = 0;
+                    foreach ($dsBoHoa as $bo) $tongGocBoHoa += (float) $bo['quote']['tong_tien'];
+                @endphp
+
+                <div class="order-items">
+                    @foreach($dsBoHoa as $idx => $bo)
+                        <div class="order-item" style="align-items:flex-start;">
+                            <div class="order-item-left" style="flex:1;">
+                                <div class="order-item-placeholder">💐</div>
+                                <div>
+                                    <div class="order-item-name">{{ $bo['ten'] }}</div>
+                                    <div class="order-item-qty">
+                                        × {{ $bo['so_luong'] }} bó ·
+                                        {{ number_format($bo['quote']['gia_moi_bo'], 0, ',', '.') }}₫/bó
+                                    </div>
+                                    @if(!empty($bo['thiep']))
+                                        <div style="font-size:12px;color:#8e3555;margin-top:4px;">
+                                            💌 Kèm thiệp: {{ $bo['thiep']->ten_san_pham }}
+                                        </div>
+                                    @endif
+                                    @if(!empty($bo['key']))
+                                        <a href="javascript:void(0)" onclick="xoaBoHoaTrongThanhToan('{{ $bo['key'] }}')"
+                                           style="font-size:12px;color:#c66;text-decoration:underline;">
+                                            Xóa
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="order-item-price" style="margin-left:12px;white-space:nowrap;">
+                                {{ number_format($bo['quote']['tong_tien'], 0, ',', '.') }}₫
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                <div class="order-totals">
+                    <div class="total-row">
+                        <span>Tạm tính</span>
+                        <span class="val">{{ number_format($tongGocBoHoa, 0, ',', '.') }}₫</span>
+                    </div>
+                    <div class="total-row">
+                        <span>Vận chuyển</span>
+                        <span class="ship-free">Miễn phí</span>
+                    </div>
+
+                    @auth
+                    @php $diemHienCo = optional($user->khachHang)->diem_tich_luy ?? 0; @endphp
+                    @if($diemHienCo > 0)
+                    <div class="points-box" id="pointsBox">
+                        <div class="points-box-header">
+                            <span>⭐ Điểm tích lũy của bạn: <strong>{{ number_format($diemHienCo) }} điểm</strong></span>
+                            <span class="points-equiv">(≡ {{ number_format($diemHienCo * 1000, 0, ',', '.') }}₫)</span>
+                        </div>
+                        <div class="points-input-row">
+                            <input type="number" id="diemNhap" min="0" max="{{ $diemHienCo }}"
+                                   value="{{ $diemSuDung > 0 ? $diemSuDung : '' }}"
+                                   placeholder="Nhập số điểm muốn dùng">
+                            <button type="button" onclick="apDiemBoHoa()">Áp dụng</button>
+                        </div>
+                        <div id="pointsMsg" class="points-msg"></div>
+                    </div>
+                    @endif
+                    @endauth
+
+                    <div class="total-row" id="rowGiamGia" style="{{ $diemSuDung > 0 ? '' : 'display:none;' }}">
+                        <span id="lblGiamGia">Giảm giá ({{ number_format($diemSuDung) }} điểm)</span>
+                        <span class="discount-val" id="valGiamGia">−{{ number_format($diemSuDung * 1000, 0, ',', '.') }}₫</span>
+                    </div>
+                    <div class="total-row grand">
+                        <span><strong>Tổng</strong></span>
+                        <span class="val" id="valTongCuoi">
+                            {{ number_format(max(0, $tongGocBoHoa - $diemSuDung * 1000), 0, ',', '.') }}₫
+                        </span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-place-order" id="btnOrder">
+                    {{ old('phuong_thuc_thanh_toan', 'NGAN_HANG') === 'NGAN_HANG' ? '💳 Đặt Hàng & Thanh Toán VNPay' : '🛍️ Đặt Hàng (COD)' }}
+                </button>
+
+                @if(session()->has('gio_bo_hoa'))
+                    <a href="{{ route('customer.bo-hoa.gio.index') }}" class="btn-back-cart">
+                        ← Quay lại giỏ bó hoa
+                    </a>
+                @else
+                    <a href="{{ route('customer.bo-hoa.he-thong') }}" class="btn-back-cart">
+                        ← Quay lại chọn bó hoa
+                    </a>
+                @endif
+            </div>
+
+        </div>
+    </form>
+</div>
+@else
 <div class="checkout-page">
 
     <div class="checkout-heading">💳 Thanh Toán</div>
@@ -217,21 +444,18 @@
                 <a href="{{ route('customer.gio-hang') }}" class="btn-back-cart">
                     ← Quay lại giỏ hàng
                 </a>
-
-                <!-- <div class="privacy-note">
-                    Thông tin của bạn được bảo mật an toàn. Bằng việc đặt hàng, bạn đồng ý với điều khoản sử dụng của chúng tôi.
-                </div> -->
             </div>
 
         </div>
     </form>
 
 </div>
+@endif
 @endsection
 
 @section('scripts')
 <script>
-// ── Quận/Huyện & Xã/Phường ──────────────────────────────────────────────────
+// ── Quận/Huyện & Xã/Phường (dùng chung cho cả 2 nhánh) ──────────────────────
 const hanoiData = {
     "Ba Đình": ["Phúc Xá","Trúc Bạch","Vĩnh Phúc","Cống Vị","Liễu Giai","Nguyễn Trung Trực","Quán Thánh","Ngọc Hà","Điện Biên","Đội Cấn","Ngọc Khánh","Kim Mã","Giảng Võ","Thành Công"],
     "Hoàn Kiếm": ["Phúc Tân","Đồng Xuân","Hàng Mã","Hàng Buồm","Hàng Đào","Hàng Bồ","Cửa Đông","Lý Thái Tổ","Hàng Bạc","Hàng Gai","Chương Dương","Hàng Trống","Cửa Nam","Hàng Bông","Tràng Tiền","Trần Hưng Đạo","Phan Chu Trinh","Hàng Bài"],
@@ -257,7 +481,7 @@ const hanoiData = {
 const selQuan   = document.getElementById('tt_quan_huyen');
 const selPhuong = document.getElementById('tt_xa_phuong');
 
-if (selQuan) {
+if (selQuan && selPhuong) {
     Object.keys(hanoiData).sort().forEach(q => {
         const opt = document.createElement('option');
         opt.value = q; opt.textContent = q;
@@ -276,8 +500,8 @@ if (selQuan) {
 
     selQuan.addEventListener('change', () => updateTTPhuong(''));
 
-    const initQuan   = "{{ $ttQuan }}";
-    const initPhuong = "{{ $ttPhuong }}";
+    const initQuan   = "{{ $ttQuan ?? '' }}";
+    const initPhuong = "{{ $ttPhuong ?? '' }}";
     if (initQuan) {
         selQuan.value = initQuan;
         updateTTPhuong(initPhuong);
@@ -291,37 +515,44 @@ function selectPayment(value, el) {
     el.querySelector('input[type=radio]').checked = true;
 
     const vnpayBox = document.getElementById('vnpayInfoBox');
-    if (value === 'NGAN_HANG') vnpayBox.classList.add('show');
-    else vnpayBox.classList.remove('show');
+    if (vnpayBox) {
+        if (value === 'NGAN_HANG') vnpayBox.classList.add('show');
+        else vnpayBox.classList.remove('show');
+    }
 
     updateOrderButtonLabel(value);
 }
 
 function updateOrderButtonLabel(value) {
     const btn = document.getElementById('btnOrder');
-    if (!btn || btn.disabled) return; // không đổi chữ nếu đã đang submit
+    if (!btn || btn.disabled) return;
     btn.textContent = value === 'NGAN_HANG'
         ? '💳 Đặt Hàng & Thanh Toán VNPay'
         : '🛍️ Đặt Hàng (COD)';
 }
 
-// ── Áp điểm tích lũy ────────────────────────────────────────────────────────
+@if(!isset($boHoaCheckout))
+// ── Áp điểm tích lũy (chỉ cho đơn sản phẩm thường) ──────────────────────────
 const DIEM_QUY_DOI = 1000;
 const tongTienGoc  = {{ collect($gioHang)->sum(fn($i) => $i['gia_ban'] * $i['so_luong']) }};
 let   diemDangDung = {{ $diemSuDung }};
+
+function formatVND(n) {
+    return n.toLocaleString('vi-VN');
+}
 
 function renderTotals(diem) {
     const giamGia  = diem * DIEM_QUY_DOI;
     const tongCuoi = Math.max(0, tongTienGoc - giamGia);
 
-    document.getElementById('rowGiamGia').style.display = diem > 0 ? 'flex' : 'none';
-    document.getElementById('valGiamGia').textContent   = '−' + formatVND(giamGia) + '₫';
-    document.getElementById('lblGiamGia').textContent   = 'Giảm giá (' + diem.toLocaleString('vi') + ' điểm)';
-    document.getElementById('valTongCuoi').textContent  = formatVND(tongCuoi) + '₫';
-}
-
-function formatVND(n) {
-    return n.toLocaleString('vi-VN');
+    const rowGG = document.getElementById('rowGiamGia');
+    if (rowGG) rowGG.style.display = diem > 0 ? 'flex' : 'none';
+    const valGG = document.getElementById('valGiamGia');
+    if (valGG) valGG.textContent = '−' + formatVND(giamGia) + '₫';
+    const lblGG = document.getElementById('lblGiamGia');
+    if (lblGG) lblGG.textContent = 'Giảm giá (' + diem.toLocaleString('vi') + ' điểm)';
+    const valTC = document.getElementById('valTongCuoi');
+    if (valTC) valTC.textContent = formatVND(tongCuoi) + '₫';
 }
 
 function apDiem() {
@@ -367,14 +598,99 @@ function apDiem() {
     });
 }
 
-// Khởi tạo tổng khi tải trang (nếu đã có điểm từ session)
 renderTotals(diemDangDung);
+@endif
 
 // ── Prevent double submit ────────────────────────────────────────────────────
-document.getElementById('checkoutForm').addEventListener('submit', function() {
-    const btn = document.getElementById('btnOrder');
-    btn.disabled    = true;
-    btn.textContent = '⏳ Đang xử lý...';
-});
+const checkoutForm = document.getElementById('checkoutForm');
+if (checkoutForm) {
+    checkoutForm.addEventListener('submit', function() {
+        const btn = document.getElementById('btnOrder');
+        if (btn) {
+            btn.disabled    = true;
+            btn.textContent = '⏳ Đang xử lý...';
+        }
+    });
+}
+// ── Áp điểm cho nhánh bó hoa (nhiều bó) ─────────────────────────────────
+@if(isset($dsBoHoa) && count($dsBoHoa) > 0)
+const DIEM_QUY_DOI_BH = 1000;
+const tongGocBH       = {{ collect($dsBoHoa)->sum(fn($b) => (float) $b['quote']['tong_tien']) }};
+let   diemDangDungBH  = {{ $diemSuDung }};
+
+function renderTotalsBH(diem) {
+    const giamGia  = diem * DIEM_QUY_DOI_BH;
+    const tongCuoi = Math.max(0, tongGocBH - giamGia);
+
+    const rowGG = document.getElementById('rowGiamGia');
+    if (rowGG) rowGG.style.display = diem > 0 ? 'flex' : 'none';
+    const valGG = document.getElementById('valGiamGia');
+    if (valGG) valGG.textContent = '−' + giamGia.toLocaleString('vi-VN') + '₫';
+    const lblGG = document.getElementById('lblGiamGia');
+    if (lblGG) lblGG.textContent = 'Giảm giá (' + diem.toLocaleString('vi-VN') + ' điểm)';
+    const valTC = document.getElementById('valTongCuoi');
+    if (valTC) valTC.textContent = tongCuoi.toLocaleString('vi-VN') + '₫';
+}
+
+function apDiemBoHoa() {
+    const input   = document.getElementById('diemNhap');
+    const msg     = document.getElementById('pointsMsg');
+    const diemMax = parseInt(input.max) || 0;
+    let   diem    = parseInt(input.value) || 0;
+
+    if (diem < 0) diem = 0;
+    if (diem > diemMax) {
+        msg.textContent = `Bạn chỉ có ${diemMax.toLocaleString('vi-VN')} điểm.`;
+        msg.className   = 'points-msg err';
+        return;
+    }
+
+    fetch("{{ route('customer.gio-hang.apply-points') }}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content
+        },
+        body: JSON.stringify({ diem })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            diemDangDungBH = data.diem_su_dung;
+            renderTotalsBH(diemDangDungBH);
+            input.value     = diemDangDungBH > 0 ? diemDangDungBH : '';
+            msg.textContent = diemDangDungBH > 0
+                ? `✓ Đã áp dụng ${diemDangDungBH.toLocaleString('vi-VN')} điểm – giảm ${data.giam_gia.toLocaleString('vi-VN')}₫`
+                : '✓ Đã bỏ áp dụng điểm.';
+            msg.className   = 'points-msg ok';
+        } else {
+            msg.textContent = data.message || 'Có lỗi xảy ra.';
+            msg.className   = 'points-msg err';
+        }
+    })
+    .catch(() => {
+        msg.textContent = 'Không thể kết nối. Thử lại sau.';
+        msg.className   = 'points-msg err';
+    });
+}
+
+renderTotalsBH(diemDangDungBH);
+
+function xoaBoHoaTrongThanhToan(key) {
+    if (!confirm('Xóa bó hoa này khỏi giỏ?')) return;
+    fetch('{{ route("customer.bo-hoa.gio.remove") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ key })
+    })
+    .then(r => r.json())
+    .then(d => { if (d.success) location.reload(); })
+    .catch(() => alert('Có lỗi xảy ra.'));
+}
+@endif
 </script>
 @endsection
