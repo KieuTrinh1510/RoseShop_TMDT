@@ -57,5 +57,9 @@ ChiTietHoaDon.init({
 
 ChiTietHoaDon.belongsTo(SanPham, { foreignKey: 'ma_san_pham', as: 'sanPham' });
 ChiTietHoaDon.belongsTo(HoaDon, { foreignKey: 'ma_hoa_don', as: 'hoaDon' });
+HoaDon.hasMany(ChiTietHoaDon, {
+    foreignKey: 'ma_hoa_don',
+    as: 'chiTietHoaDon'
+});
 
 module.exports = ChiTietHoaDon;
