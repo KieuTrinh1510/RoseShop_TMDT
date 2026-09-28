@@ -51,9 +51,11 @@ class NguoiDungController extends Controller
         DB::beginTransaction();
         try {
             $user = NguoiDung::create([
-                'ten_dang_nhap' => $request->ten_dang_nhap,
-                'mat_khau' => $request->mat_khau,
-                'vai_tro' => $request->vai_tro,
+                'ten_dang_nhap'     => $request->ten_dang_nhap,
+                'mat_khau'          => $request->mat_khau,
+                'vai_tro'           => $request->vai_tro,
+                'trang_thai'        => NguoiDung::TRANG_THAI_HOAT_DONG,
+                'email_verified_at' => now(),
             ]);
 
             if ($request->vai_tro == 'KHACH_HANG') {

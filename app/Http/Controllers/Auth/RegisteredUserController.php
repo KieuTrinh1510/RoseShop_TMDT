@@ -3,21 +3,22 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\VerifyEmailMailable;
 use App\Models\KhachHang;
 use App\Models\NguoiDung;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 
 class RegisteredUserController extends Controller
 {
-    
     public function create()
     {
         return view('auth.register');
     }
 
-    
     public function store(Request $request)
     {
         $request->validate([
@@ -46,7 +47,22 @@ class RegisteredUserController extends Controller
             'mat_khau.confirmed'        => 'Xác nhận mật khẩu không khớp.',
         ]);
 
-       
+        // Kiểm tra tính duy nhất của email và trạng thái tài khoản liên quan
+        $existingKhachHang = KhachHang::with('nguoiDung')->where('email', $request->email)->first();
+        if ($existingKhachHang) {
+            $existingUser = $existingKhachHang->nguoiDung;
+            if ($existingUser && $existingUser->trang_thai === NguoiDung::TRANG_THAI_HOAT_DONG) {
+                return back()
+                    ->withErrors(['email' => 'Email đã được sử dụng.'])
+                    ->withInput();
+            } elseif ($existingUser && $existingUser->trang_thai === NguoiDung::TRANG_THAI_CHO_XAC_THUC) {
+                return back()
+                    ->with('status_warning', 'Email này đã được đăng ký nhưng tài khoản chưa được xác thực.')
+                    ->with('resend_email', $request->email)
+                    ->withInput();
+            }
+        }
+
         $diaChiDayDu = $request->dia_chi_chi_tiet
             . ', ' . $request->xa_phuong
             . ', ' . $request->quan_huyen
@@ -54,14 +70,14 @@ class RegisteredUserController extends Controller
 
         DB::beginTransaction();
         try {
-            
             $user = NguoiDung::create([
-                'ten_dang_nhap' => $request->ten_dang_nhap,
-                'mat_khau'      => $request->mat_khau,   
-                'vai_tro'       => 'KHACH_HANG',
+                'ten_dang_nhap'     => $request->ten_dang_nhap,
+                'mat_khau'          => $request->mat_khau,
+                'vai_tro'           => 'KHACH_HANG',
+                'trang_thai'        => NguoiDung::TRANG_THAI_CHO_XAC_THUC,
+                'email_verified_at' => null,
             ]);
 
-            
             KhachHang::create([
                 'ma_khach_hang'  => $user->ma_nguoi_dung,
                 'ten_khach_hang' => $request->ten_khach_hang,
@@ -73,15 +89,51 @@ class RegisteredUserController extends Controller
 
             DB::commit();
 
-            
-            Auth::login($user);
+            // KHÔNG tự động đăng nhập!
+            // Tạo link xác thực có chữ ký an toàn và gửi email
+            $expireMinutes = (int) config('auth.verification.expire', 60);
+            $verificationUrl = URL::temporarySignedRoute(
+                'verification.verify',
+                now()->addMinutes($expireMinutes),
+                [
+                    'id'   => $user->ma_nguoi_dung,
+                    'hash' => sha1($request->email),
+                ]
+            );
 
-            return redirect()->route('customer.dashboard');
+            try {
+                Mail::to($request->email)->send(
+                    new VerifyEmailMailable(
+                        $user,
+                        $verificationUrl,
+                        $request->ten_khach_hang,
+                        $expireMinutes
+                    )
+                );
+
+                if (config('mail.default') === 'log' || app()->environment('local')) {
+                    session()->flash('dev_verification_url', $verificationUrl);
+                }
+
+                return redirect()->route('verification.notice')
+                    ->with('email', $request->email)
+                    ->with('status', 'Tài khoản đã được tạo. Vui lòng kiểm tra email để xác thực tài khoản.');
+            } catch (\Throwable $mailError) {
+                Log::error('Lỗi gửi email xác thực tài khoản: ' . $mailError->getMessage());
+
+                if (config('mail.default') === 'log' || app()->environment('local')) {
+                    session()->flash('dev_verification_url', $verificationUrl);
+                }
+
+                return redirect()->route('verification.notice')
+                    ->with('email', $request->email)
+                    ->with('warning', 'Tài khoản đã được tạo (Chờ xác thực) nhưng hệ thống chưa thể gửi email lúc này. Quý khách có thể yêu cầu gửi lại sau.');
+            }
 
         } catch (\Exception $e) {
             DB::rollBack();
             return back()
-                ->withErrors(['general' => 'Đã xảy ra lỗi: ' . $e->getMessage()])
+                ->withErrors(['general' => 'Đã xảy ra lỗi khi tạo tài khoản: ' . $e->getMessage()])
                 ->withInput();
         }
     }

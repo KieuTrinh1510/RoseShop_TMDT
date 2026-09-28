@@ -45,6 +45,36 @@ class AuthenticatedSessionController extends Controller
         ])->onlyInput('ten_dang_nhap');
     }
 
+    $authenticatedUser = Auth::user();
+
+    // Chặn đăng nhập nếu tài khoản chưa được xác thực
+    if ($authenticatedUser->trang_thai === \App\Models\NguoiDung::TRANG_THAI_CHO_XAC_THUC) {
+        $email = $authenticatedUser->getEmailForVerification();
+
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login')
+            ->with('unverified', true)
+            ->with('unverified_email', $email)
+            ->withErrors([
+                'ten_dang_nhap' => 'Tài khoản chưa được xác thực. Vui lòng kiểm tra email để kích hoạt tài khoản.',
+            ])->onlyInput('ten_dang_nhap');
+    }
+
+    // Chặn đăng nhập nếu tài khoản bị khóa
+    if ($authenticatedUser->trang_thai === \App\Models\NguoiDung::TRANG_THAI_BI_KHOA) {
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login')
+            ->withErrors([
+                'ten_dang_nhap' => 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.',
+            ])->onlyInput('ten_dang_nhap');
+    }
+
     $request->session()->regenerate();
 
     // Khôi phục lại giỏ hàng sau khi regenerate session
