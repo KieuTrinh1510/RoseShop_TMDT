@@ -1,6 +1,31 @@
 <x-guest-layout>
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
+    @if (session('unverified'))
+        <div class="mb-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm space-y-2">
+            <div class="flex items-center gap-2 font-semibold text-amber-900">
+                <span>⚠️</span>
+                <span>Tài khoản chưa được kích hoạt</span>
+            </div>
+            <p class="text-xs text-amber-700 leading-relaxed">
+                Tài khoản của bạn đang ở trạng thái <strong>Chờ xác thực</strong>. Vui lòng kiểm tra email (bao gồm cả mục Thư rác/Spam) để kích hoạt tài khoản.
+            </p>
+            @if (session('unverified_email'))
+                <form method="POST" action="{{ route('verification.resend') }}" class="pt-1">
+                    @csrf
+                    <input type="hidden" name="email" value="{{ session('unverified_email') }}">
+                    <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                        🔄 Gửi lại email xác thực cho {{ session('unverified_email') }}
+                    </button>
+                </form>
+            @else
+                <a href="{{ route('verification.notice') }}" class="inline-block text-xs font-semibold text-rose-600 hover:underline pt-1">
+                    👉 Bấm vào đây để yêu cầu gửi lại email xác thực
+                </a>
+            @endif
+        </div>
+    @endif
+
     <form method="POST" action="{{ route('login') }}">
         @csrf
 
