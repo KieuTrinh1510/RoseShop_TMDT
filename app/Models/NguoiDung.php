@@ -123,4 +123,9 @@ class NguoiDung extends Authenticatable
     {
         return $this->hasMany(GioHang::class, 'ma_nguoi_dung', 'ma_nguoi_dung');
     }
+
+    public function yeuCauDatLaiMatKhaus(): HasMany
+    {
+        return $this->hasMany(YeuCauDatLaiMatKhau::class, 'ma_nguoi_dung', 'ma_nguoi_dung');
+    }
 }

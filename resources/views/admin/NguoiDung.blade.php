@@ -145,6 +145,7 @@
                         <td class="action-buttons">
                             @if(!$user->isKhachHang())
                                 <button class="btn btn-sm btn-secondary" onclick="editUser({{ $user->ma_nguoi_dung }})">Sửa</button>
+                                <button type="button" class="btn btn-sm" style="background:#f59e0b; color:#fff;" onclick="openResetPasswordModal({{ $user->ma_nguoi_dung }}, '{{ $user->ten_dang_nhap }}')">Đặt lại MK</button>
                             @endif
                             <button class="btn btn-sm btn-danger" onclick="deleteUser({{ $user->ma_nguoi_dung }})">Xóa</button>
                         </td>
@@ -332,5 +333,104 @@
             }
         }
     });
+
+    window.openResetPasswordModal = function(userId, username) {
+        document.getElementById('resetPwdUserId').value = userId;
+        document.getElementById('resetPwdUsername').textContent = username;
+        document.getElementById('modal_mat_khau').value = '';
+        document.getElementById('modal_mat_khau_confirmation').value = '';
+        document.getElementById('resetPwdError').style.display = 'none';
+        document.getElementById('resetPwdModal').style.display = 'flex';
+    };
+
+    window.closeResetPasswordModal = function() {
+        document.getElementById('resetPwdModal').style.display = 'none';
+    };
+
+    window.submitResetPassword = function(e) {
+        e.preventDefault();
+        const userId = document.getElementById('resetPwdUserId').value;
+        const pwd = document.getElementById('modal_mat_khau').value;
+        const confirmPwd = document.getElementById('modal_mat_khau_confirmation').value;
+        const errBox = document.getElementById('resetPwdError');
+        const submitBtn = document.getElementById('btnSubmitResetPwd');
+
+        if (pwd.length < 6) {
+            errBox.textContent = 'Mật khẩu phải có tối thiểu 6 ký tự.';
+            errBox.style.display = 'block';
+            return;
+        }
+
+        if (pwd !== confirmPwd) {
+            errBox.textContent = 'Xác nhận mật khẩu mới không khớp.';
+            errBox.style.display = 'block';
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Đang xử lý...';
+        errBox.style.display = 'none';
+
+        fetch(`/nguoi-dung/${userId}/reset-password`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                mat_khau: pwd,
+                mat_khau_confirmation: confirmPwd
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Xác nhận đặt lại';
+            if (data.success) {
+                closeResetPasswordModal();
+                alert('✓ ' + data.message);
+            } else {
+                errBox.textContent = data.message || 'Đặt lại mật khẩu thất bại.';
+                errBox.style.display = 'block';
+            }
+        })
+        .catch(err => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Xác nhận đặt lại';
+            errBox.textContent = 'Lỗi kết nối máy chủ: ' + err;
+            errBox.style.display = 'block';
+        });
+    };
 </script>
+
+<!-- Modal Đặt lại mật khẩu tài khoản nội bộ (Admin) -->
+<div id="resetPwdModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:12px; max-width:440px; width:90%; padding:24px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+        <h3 style="margin-top:0; font-size:18px; color:#1f2937; border-bottom:1px solid #eee; padding-bottom:10px;">
+            🔑 Đặt lại mật khẩu tài khoản nội bộ
+        </h3>
+        <p style="font-size:13px; color:#4b5563; margin-bottom:16px;">
+            Tài khoản: <strong id="resetPwdUsername" style="color:#e11d48;"></strong>
+        </p>
+        <div id="resetPwdError" style="display:none; padding:8px 12px; background:#fef2f2; color:#b91c1c; border-radius:6px; font-size:12px; margin-bottom:12px; border:1px solid #fecaca;"></div>
+
+        <form id="resetPwdForm" onsubmit="submitResetPassword(event)">
+            <input type="hidden" id="resetPwdUserId" value="">
+            <div style="margin-bottom:14px;">
+                <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:#374151;">Mật khẩu mới *</label>
+                <input type="password" id="modal_mat_khau" minlength="6" required style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; box-sizing:border-box;">
+                <small style="font-size:11px; color:#6b7280;">Tối thiểu 6 ký tự</small>
+            </div>
+            <div style="margin-bottom:18px;">
+                <label style="display:block; font-size:13px; font-weight:600; margin-bottom:4px; color:#374151;">Xác nhận mật khẩu mới *</label>
+                <input type="password" id="modal_mat_khau_confirmation" minlength="6" required style="width:100%; padding:8px 12px; border:1px solid #d1d5db; border-radius:6px; box-sizing:border-box;">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:8px;">
+                <button type="button" onclick="closeResetPasswordModal()" style="padding:8px 16px; border:1px solid #d1d5db; background:#f3f4f6; color:#374151; border-radius:6px; cursor:pointer;">Hủy</button>
+                <button type="submit" id="btnSubmitResetPwd" style="padding:8px 16px; border:none; background:#e11d48; color:#fff; border-radius:6px; font-weight:600; cursor:pointer;">Xác nhận đặt lại</button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection

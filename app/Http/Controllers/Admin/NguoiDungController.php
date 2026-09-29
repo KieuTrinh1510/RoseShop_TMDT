@@ -195,4 +195,47 @@ class NguoiDungController extends Controller
             'luong' => 'nullable|numeric|min:0',
         ]);
     }
+
+    /**
+     * Admin đặt lại mật khẩu mới cho tài khoản nội bộ (không xem hoặc phục hồi mật khẩu cũ).
+     */
+    public function resetPassword(Request $request, $id)
+    {
+        if (! auth()->user() || ! auth()->user()->isAdmin()) {
+            abort(403, 'Bạn không có quyền thực hiện thao tác này.');
+        }
+
+        $user = NguoiDung::findOrFail($id);
+
+        if ($user->isKhachHang()) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Chức năng này chỉ áp dụng cho tài khoản nội bộ. Khách hàng thực hiện qua luồng Quên mật khẩu email.',
+                ], 422);
+            }
+            return back()->withErrors('Chức năng này chỉ áp dụng cho tài khoản nội bộ.');
+        }
+
+        $request->validate([
+            'mat_khau' => ['required', 'string', 'min:6', 'confirmed'],
+        ], [
+            'mat_khau.required'  => 'Vui lòng nhập mật khẩu mới.',
+            'mat_khau.min'       => 'Mật khẩu mới phải có tối thiểu 6 ký tự.',
+            'mat_khau.confirmed' => 'Xác nhận mật khẩu mới không khớp.',
+        ]);
+
+        // Cập nhật mật khẩu mới, không đọc/giải mã mật khẩu cũ
+        $user->mat_khau = $request->mat_khau;
+        $user->save();
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Đặt lại mật khẩu cho tài khoản ' . $user->ten_dang_nhap . ' thành công!',
+            ]);
+        }
+
+        return redirect()->route('nguoi-dung.index')->with('success', 'Đặt lại mật khẩu cho tài khoản ' . $user->ten_dang_nhap . ' thành công!');
+    }
 }
