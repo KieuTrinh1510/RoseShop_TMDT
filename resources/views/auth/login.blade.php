@@ -50,20 +50,26 @@
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
-        <!-- Ghi nhớ -->
-        <div class="block mt-4">
+        <!-- Ghi nhớ & Quên mật khẩu -->
+        <div class="flex items-center justify-between mt-4">
             <label for="remember_me" class="inline-flex items-center">
                 <input id="remember_me" type="checkbox"
                     class="rounded border-gray-300 text-rose-600 shadow-sm focus:ring-rose-300"
                     name="remember">
                 <span class="ms-2 text-sm text-gray-600">{{ __('Ghi nhớ đăng nhập') }}</span>
             </label>
+
+            @if (Route::has('password.request'))
+                <a class="text-sm text-rose-600 hover:text-rose-800 hover:underline font-medium" href="{{ route('password.request') }}">
+                    {{ __('Quên mật khẩu?') }}
+                </a>
+            @endif
         </div>
 
-        <div class="flex items-center justify-between mt-4">
+        <div class="flex items-center justify-between mt-6">
             <!-- Nút đăng ký -->
             <a href="{{ route('register') }}"
-                class="text-sm text-rose-600 hover:text-rose-800 underline">
+                class="text-sm text-gray-600 hover:text-rose-600 underline">
                 {{ __('Chưa có tài khoản? Đăng ký') }}
             </a>
 
