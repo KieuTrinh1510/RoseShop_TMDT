@@ -17,12 +17,18 @@ class NguoiDung extends Authenticatable
     public $incrementing = true; 
     protected $keyType = 'int';
 
+    public const TRANG_THAI_CHO_XAC_THUC = 'CHO_XAC_THUC';
+    public const TRANG_THAI_HOAT_DONG    = 'HOAT_DONG';
+    public const TRANG_THAI_BI_KHOA      = 'BI_KHOA';
+
     public $timestamps = false;
 
     protected $fillable = [
         'ten_dang_nhap',
         'mat_khau',
         'vai_tro',
+        'trang_thai',
+        'email_verified_at',
     ];
 
     protected $hidden = [
@@ -30,7 +36,9 @@ class NguoiDung extends Authenticatable
     ];
 
     protected $casts = [
-        'vai_tro' => 'string',
+        'vai_tro'           => 'string',
+        'trang_thai'        => 'string',
+        'email_verified_at' => 'datetime',
     ];
 
     public function getAuthIdentifierName()
@@ -78,8 +86,46 @@ class NguoiDung extends Authenticatable
         $this->attributes['mat_khau'] = \Illuminate\Support\Facades\Hash::needsRehash($value) ? bcrypt($value) : $value;
     }
 
-public function cartItems(): HasMany
-{
-    return $this->hasMany(GioHang::class, 'ma_nguoi_dung', 'ma_nguoi_dung');
-}
+    public function getEmailForVerification(): ?string
+    {
+        if ($this->isKhachHang() && $this->khachHang) {
+            return $this->khachHang->email;
+        }
+        if ($this->isNhanVien() && $this->nhanVien) {
+            return $this->nhanVien->email;
+        }
+        return null;
+    }
+
+    public function hasVerifiedEmail(): bool
+    {
+        return ! is_null($this->email_verified_at) && $this->trang_thai === self::TRANG_THAI_HOAT_DONG;
+    }
+
+    public function markEmailAsVerified(): bool
+    {
+        $this->email_verified_at = $this->freshTimestamp();
+        $this->trang_thai = self::TRANG_THAI_HOAT_DONG;
+        return $this->save();
+    }
+
+    public function isChoXacThuc(): bool
+    {
+        return $this->trang_thai === self::TRANG_THAI_CHO_XAC_THUC;
+    }
+
+    public function isHoatDong(): bool
+    {
+        return $this->trang_thai === self::TRANG_THAI_HOAT_DONG;
+    }
+
+    public function cartItems(): HasMany
+    {
+        return $this->hasMany(GioHang::class, 'ma_nguoi_dung', 'ma_nguoi_dung');
+    }
+
+    public function yeuCauDatLaiMatKhaus(): HasMany
+    {
+        return $this->hasMany(YeuCauDatLaiMatKhau::class, 'ma_nguoi_dung', 'ma_nguoi_dung');
+    }
 }

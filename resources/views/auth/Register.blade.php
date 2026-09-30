@@ -13,6 +13,29 @@
         <h1 class="text-2xl font-bold text-rose-600">Đăng ký tài khoản</h1>
         </div>
 
+    {{-- Cảnh báo tài khoản đã đăng ký nhưng chờ xác thực --}}
+    @if (session('status_warning'))
+    <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5 text-sm text-amber-800 space-y-2">
+        <p class="font-medium">⚠️ {{ session('status_warning') }}</p>
+        @if (session('resend_email'))
+        <form method="POST" action="{{ route('verification.resend') }}" class="pt-1">
+            @csrf
+            <input type="hidden" name="email" value="{{ session('resend_email') }}">
+            <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition">
+                🔄 Bấm vào đây để gửi lại email xác thực
+            </button>
+        </form>
+        @endif
+    </div>
+    @endif
+
+    {{-- Thông báo thành công --}}
+    @if (session('status'))
+    <div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-5 text-sm text-green-800">
+        {{ session('status') }}
+    </div>
+    @endif
+
     {{-- Lỗi chung --}}
     @if ($errors->any())
     <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-5 text-sm text-red-700 space-y-1">

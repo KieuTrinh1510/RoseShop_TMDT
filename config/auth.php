@@ -109,4 +109,17 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Email Verification Link Expiration
+    |--------------------------------------------------------------------------
+    |
+    | Số phút link xác thực tài khoản có hiệu lực trước khi hết hạn.
+    | Có thể tùy chỉnh qua biến môi trường AUTH_VERIFICATION_EXPIRE.
+    |
+    */
+    'verification' => [
+        'expire' => (int) env('AUTH_VERIFICATION_EXPIRE', 60),
+    ],
+
 ];

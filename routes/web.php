@@ -138,6 +138,7 @@ Route::middleware(['auth', 'role:ADMIN'])->group(function () {
         Route::put('/{id}',          [NguoiDungController::class, 'update'])->name('update');
         Route::delete('/{id}',       [NguoiDungController::class, 'destroy'])->name('destroy');
         Route::get('/{id}/edit-data',[NguoiDungController::class, 'editData'])->name('edit-data');
+        Route::post('/{id}/reset-password', [NguoiDungController::class, 'resetPassword'])->name('reset-password');
     });
 
     // Quản lý Nhân viên (bao gồm trả tiền - admin only)
