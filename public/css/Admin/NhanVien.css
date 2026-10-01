@@ -302,57 +302,68 @@
 }
 
 /* ==========================================================================
-   Bảng cuộn đa hướng & Sticky Header
+   Bảng dữ liệu chuẩn hóa: Cuộn đa hướng (ngang + dọc) & Sticky Header cố định
    ========================================================================== */
 .rs-table-container {
-    max-height: 560px;
-    overflow-x: auto;
-    overflow-y: auto;
-    border: 1px solid #f1f5f9;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 540px !important;
+    border: 1px solid #e2e8f0;
     border-radius: 12px;
-    position: relative;
     background: #ffffff;
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+    position: relative;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f8fafc;
+    -webkit-overflow-scrolling: touch;
 }
 
-/* Custom scrollbar mượt mà */
+/* Thanh cuộn đa hướng mượt mà, chuẩn thẩm mỹ RoseShop */
 .rs-table-container::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 7px !important;
+    height: 8px !important;
 }
 
 .rs-table-container::-webkit-scrollbar-track {
-    background: #f8fafc;
-}
-
-.rs-table-container::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: #f8fafc !important;
     border-radius: 4px;
 }
 
+.rs-table-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1 !important;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
 .rs-table-container::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: #f43f5e !important;
 }
 
 .rs-table {
     width: 100% !important;
-    min-width: 980px !important;
+    min-width: 1370px !important;
     border-collapse: separate !important;
     border-spacing: 0 !important;
     font-size: 13.5px !important;
     text-align: left;
+    table-layout: fixed !important;
 }
 
 .rs-table thead th {
     position: sticky !important;
     top: 0 !important;
-    z-index: 10 !important;
+    z-index: 20 !important;
     background-color: #fff1f2 !important;
     color: #475467 !important;
     font-weight: 600 !important;
     padding: 14px 16px !important;
-    border-bottom: 1px solid #ffe4e6 !important;
+    border-bottom: 2px solid #fecdd3 !important;
     border-top: none !important;
     white-space: nowrap !important;
+    vertical-align: middle !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
 }
 
 .rs-table tbody td {
@@ -361,6 +372,7 @@
     border-top: none !important;
     color: #334155 !important;
     vertical-align: middle !important;
+    word-break: break-word;
 }
 
 .rs-table tbody tr:hover td {
@@ -691,6 +703,19 @@
 .rs-form-control:focus {
     border-color: #f43f5e !important;
     box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.12) !important;
+}
+
+select.rs-form-control {
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    background-color: #ffffff !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: calc(100% - 12px) center !important;
+    background-size: 16px !important;
+    padding-right: 36px !important;
+    cursor: pointer !important;
 }
 
 .rs-modal-footer {

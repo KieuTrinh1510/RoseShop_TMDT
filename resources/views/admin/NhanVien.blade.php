@@ -190,19 +190,31 @@
 
         </form>
 
-        {{-- 4. BẢNG DỮ LIỆU CUỘN ĐA HƯỚNG CỐ ĐỊNH HEADER --}}
+        {{-- 4. BẢNG DỮ LIỆU CHUẨN HÓA VỚI THANH CUỘN NGANG --}}
         <div class="rs-table-container">
             <table class="rs-table">
+                <colgroup>
+                    <col style="width: 60px;">
+                    <col style="width: 210px;">
+                    <col style="width: 135px;">
+                    <col style="width: 210px;">
+                    <col style="width: 135px;">
+                    <col style="width: 190px;">
+                    <col style="width: 145px;">
+                    <col style="width: 145px;">
+                    <col style="width: 140px;">
+                </colgroup>
                 <thead>
                     <tr>
-                        <th width="50" style="text-align: center;">#</th>
+                        <th style="text-align: center;">#</th>
                         <th>Tên nhân viên</th>
                         <th>Số điện thoại</th>
                         <th>Email</th>
                         <th>Chức vụ</th>
-                        <th>Công việc / Lương</th>
+                        <th>Công việc</th>
+                        <th style="text-align: right;">Mức lương</th>
                         <th style="text-align: center;">Trạng thái</th>
-                        <th width="130" style="text-align: center;">Thao tác</th>
+                        <th style="text-align: center;">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -212,7 +224,6 @@
                             $user = $nv->nguoiDung;
                             $isActive = $user ? ($user->trang_thai === 'HOAT_DONG') : true;
                             $isShipper = ($nv->chuc_vu === 'SHIPPER');
-                            $debt = $shipperDebts[$nv->ma_nhan_vien] ?? 0;
                         @endphp
                         <tr>
                             <td style="text-align: center; color: #94a3b8; font-weight: 500;">
@@ -220,43 +231,30 @@
                             </td>
                             <td>
                                 <span class="rs-text-bold">{{ $nv->ten_nhan_vien }}</span>
-                                @if($isShipper)
-                                    <div class="rs-shipper-cod-row">
-                                        <span class="rs-debt-badge {{ $debt > 0 ? 'unpaid' : 'paid' }}" id="debt-badge-{{ $nv->ma_nhan_vien }}">
-                                            COD: {{ $debt > 0 ? number_format($debt, 0, ',', '.') . ' đ' : '✓ 0 đ' }}
-                                        </span>
-                                        @if($debt > 0)
-                                            <button type="button"
-                                                    class="rs-btn-cod-collect"
-                                                    title="Xác nhận shipper nộp tiền COD"
-                                                    onclick="openPaybackModal({{ $nv->ma_nhan_vien }}, '{{ addslashes($nv->ten_nhan_vien) }}', {{ $debt }})">
-                                                Thu tiền
-                                            </button>
-                                        @endif
-                                    </div>
-                                @endif
                             </td>
-                            <td>{{ $nv->so_dien_thoai ?: '—' }}</td>
+                            <td style="white-space: nowrap;">{{ $nv->so_dien_thoai ?: '—' }}</td>
                             <td>{{ $nv->email ?: '—' }}</td>
-                            <td>
+                            <td style="white-space: nowrap;">
                                 <span class="rs-role-badge {{ $isShipper ? 'shipper' : '' }}">
                                     {{ $chucVus[$nv->chuc_vu] ?? $nv->chuc_vu }}
                                 </span>
                             </td>
-                            <td>
-                                <div style="font-weight: 500;">{{ $nv->cong_viec ?: 'Nhân viên hệ thống' }}</div>
+                            <td>{{ $nv->cong_viec ?: '—' }}</td>
+                            <td style="text-align: right; white-space: nowrap;">
                                 @if($nv->luong > 0)
-                                    <small style="color: #64748b;">Lương: {{ number_format($nv->luong, 0, ',', '.') }} đ</small>
+                                    <span style="font-weight: 600; color: #0f172a;">{{ number_format($nv->luong, 0, ',', '.') }} đ</span>
+                                @else
+                                    <span style="color: #94a3b8;">Chưa cập nhật</span>
                                 @endif
                             </td>
-                            <td style="text-align: center;">
+                            <td style="text-align: center; white-space: nowrap;">
                                 @if($isActive)
                                     <span class="rs-status-badge active">Hoạt động</span>
                                 @else
                                     <span class="rs-status-badge locked">Bị khóa</span>
                                 @endif
                             </td>
-                            <td>
+                            <td style="text-align: center; white-space: nowrap;">
                                 <div class="rs-action-group">
                                     {{-- Nút Sửa --}}
                                     <button type="button"
@@ -277,51 +275,62 @@
                                         </svg>
                                     </button>
 
-                                    {{-- Nút Khóa / Mở khóa --}}
-                                    <form action="{{ route('nhan-vien.toggle-status', $nv->ma_nhan_vien) }}" method="POST" style="display:inline;">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit"
-                                                class="rs-action-btn lock"
-                                                title="{{ $isActive ? 'Khóa tài khoản' : 'Mở khóa tài khoản' }}"
-                                                onclick="return confirm('Bạn có chắc muốn {{ $isActive ? 'khóa' : 'mở khóa' }} tài khoản của {{ $nv->ten_nhan_vien }}?')">
-                                            @if($isActive)
-                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
-                                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                                                </svg>
-                                            @else
-                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
-                                                    <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
-                                                </svg>
-                                            @endif
-                                        </button>
-                                    </form>
+                                    {{-- Nút Khóa / Mở hoạt động (Mở Modal hiển thị thông tin xác nhận theo đặc tả) --}}
+                                    <button type="button"
+                                            class="rs-action-btn lock"
+                                            title="{{ $isActive ? 'Ngừng hoạt động (Khóa tài khoản)' : 'Mở lại hoạt động' }}"
+                                            onclick="openStatusModal({{ $nv->ma_nhan_vien }}, '{{ addslashes($nv->ten_nhan_vien) }}', '{{ $chucVus[$nv->chuc_vu] ?? $nv->chuc_vu }}', '{{ addslashes($nv->email ?? '—') }}', {{ $isActive ? 'true' : 'false' }})">
+                                        @if($isActive)
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                            </svg>
+                                        @else
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                                                <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+                                            </svg>
+                                        @endif
+                                    </button>
 
-                                    {{-- Nút Xóa --}}
-                                    <form action="{{ route('nhan-vien.destroy', $nv->ma_nhan_vien) }}" method="POST" style="display:inline;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
+                                    {{-- Nút Xóa (BẢO TOÀN HỒ SƠ: Chặn xóa nếu đã phát sinh nghiệp vụ) --}}
+                                    @php $hasHistory = in_array($nv->ma_nhan_vien, $hasBusinessIds ?? []); @endphp
+                                    @if($hasHistory)
+                                        <button type="button"
                                                 class="rs-action-btn delete"
-                                                title="Xóa nhân viên"
-                                                onclick="return confirm('Bạn có chắc chắn muốn xóa nhân viên \'{{ $nv->ten_nhan_vien }}\'? Thao tác này cũng sẽ xóa tài khoản hệ thống liên quan.')">
+                                                style="opacity: 0.45; cursor: not-allowed;"
+                                                title="Bảo toàn hồ sơ: Nhân viên đã phát sinh nghiệp vụ (hóa đơn / phiếu nhập), không thể xóa vật lý."
+                                                onclick="alert('Bảo toàn hồ sơ: Nhân viên \'{{ addslashes($nv->ten_nhan_vien) }}\' đã phát sinh nghiệp vụ trong hệ thống, không được phép xóa vật lý! Vui lòng chọn Ngừng hoạt động.')">
                                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <path d="M3 6h18"/>
                                                 <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
                                                 <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
                                             </svg>
                                         </button>
-                                    </form>
+                                    @else
+                                        <form action="{{ route('nhan-vien.destroy', $nv->ma_nhan_vien) }}" method="POST" style="display:inline;">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    class="rs-action-btn delete"
+                                                    title="Xóa nhân viên chưa có nghiệp vụ"
+                                                    onclick="return confirm('Bạn có chắc chắn muốn xóa nhân viên \'{{ $nv->ten_nhan_vien }}\'? Thao tác này sẽ xóa tài khoản hệ thống liên quan.')">
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M3 6h18"/>
+                                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" style="text-align: center; padding: 40px 20px; color: #94a3b8;">
+                            <td colspan="9" style="text-align: center; padding: 40px 20px; color: #94a3b8;">
                                 <div style="font-size: 32px; margin-bottom: 8px;">📋</div>
-                                <div>Không tìm thấy nhân viên nào phù hợp với điều kiện tìm kiếm.</div>
+                                <div style="font-size: 14px; font-weight: 500;">Không tìm thấy nhân viên nào phù hợp với điều kiện tìm kiếm.</div>
                             </td>
                         </tr>
                     @endforelse
@@ -405,8 +414,8 @@
                     </div>
 
                     <div class="rs-form-group">
-                        <label class="rs-form-label">Số điện thoại</label>
-                        <input type="text" name="so_dien_thoai" class="rs-form-control" placeholder="0987654321">
+                        <label class="rs-form-label">Số điện thoại <span style="color:#e11d48;">*</span></label>
+                        <input type="text" name="so_dien_thoai" class="rs-form-control" placeholder="0987654321" required>
                     </div>
 
                     <div class="rs-form-group">
@@ -470,8 +479,8 @@
                     </div>
 
                     <div class="rs-form-group">
-                        <label class="rs-form-label">Số điện thoại</label>
-                        <input type="text" name="so_dien_thoai" id="edit_so_dien_thoai" class="rs-form-control">
+                        <label class="rs-form-label">Số điện thoại <span style="color:#e11d48;">*</span></label>
+                        <input type="text" name="so_dien_thoai" id="edit_so_dien_thoai" class="rs-form-control" required>
                     </div>
 
                     <div class="rs-form-group">
@@ -508,32 +517,45 @@
     </div>
 </div>
 
+
 {{-- ==========================================================================
-   MODAL 3: XÁC NHẬN TRẢ TIỀN COD CHO SHIPPER
+   MODAL 4: XÁC NHẬN KHÓA / NGỪNG HOẠT ĐỘNG HOẶC MỞ LẠI NHÂN VIÊN
    ========================================================================== --}}
-<div class="rs-modal" id="paybackModal">
-    <div class="rs-modal-dialog" style="max-width: 480px;">
-        <div class="rs-modal-header">
-            <h3 class="rs-modal-title" style="color: #059669;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="m9 12 2 2 4-4"/>
-                </svg>
-                Xác nhận nộp tiền COD
-            </h3>
-            <button type="button" class="rs-modal-close" onclick="closePaybackModal()">&times;</button>
-        </div>
-        <div class="rs-modal-body" style="font-size: 14px; line-height: 1.6; color: #334155;">
-            Shipper <strong id="payback_shipper_name" style="color:#0f172a;"></strong> đã nộp số tiền COD:
-            <div style="font-size: 20px; font-weight: 700; color: #059669; margin: 10px 0;" id="payback_amount">0 đ</div>
-            Thao tác này sẽ đánh dấu các đơn hàng COD đã giao của shipper này là <strong>ĐÃ NỘP</strong> về công ty.
-        </div>
-        <div class="rs-modal-footer">
-            <button type="button" class="rs-btn-cancel" onclick="closePaybackModal()">Hủy</button>
-            <button type="button" class="rs-btn-submit" id="confirmPaybackBtn" style="background:#059669;">
-                Xác nhận đã thu tiền
-            </button>
-        </div>
+<div class="rs-modal" id="statusModal">
+    <div class="rs-modal-dialog" style="max-width: 520px;">
+        <form method="POST" action="" id="statusForm">
+            @csrf
+            @method('PATCH')
+            <input type="hidden" name="target_status" id="status_target_input" value="">
+
+            <div class="rs-modal-header">
+                <h3 class="rs-modal-title" id="status_modal_title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                    Xác nhận thay đổi trạng thái
+                </h3>
+                <button type="button" class="rs-modal-close" onclick="closeStatusModal()">&times;</button>
+            </div>
+
+            <div class="rs-modal-body">
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; margin-bottom: 14px;">
+                    <div style="font-size: 14px; margin-bottom: 6px;"><strong>Họ và tên:</strong> <span id="status_emp_name">—</span></div>
+                    <div style="font-size: 13.5px; color: #475467; margin-bottom: 4px;"><strong>Chức vụ:</strong> <span id="status_emp_role">—</span></div>
+                    <div style="font-size: 13.5px; color: #475467;"><strong>Email:</strong> <span id="status_emp_email">—</span></div>
+                </div>
+
+                <div id="status_modal_warning" style="font-size: 13.5px; line-height: 1.5; color: #b45309; background: #fffbeb; border: 1px solid #fef3c7; border-radius: 8px; padding: 12px;">
+                    <!-- Cập nhật bằng JS -->
+                </div>
+            </div>
+
+            <div class="rs-modal-footer">
+                <button type="button" class="rs-btn-cancel" onclick="closeStatusModal()">Hủy</button>
+                <button type="submit" class="rs-btn-submit" id="status_confirm_btn">Xác nhận</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -566,50 +588,46 @@
         document.getElementById('editModal').classList.remove('show');
     }
 
-    // Xử lý Modal Trả tiền COD
-    let currentPaybackId = null;
-    function openPaybackModal(id, name, amount) {
-        currentPaybackId = id;
-        document.getElementById('payback_shipper_name').textContent = name;
-        document.getElementById('payback_amount').textContent = new Intl.NumberFormat('vi-VN').format(amount) + ' đ';
-        document.getElementById('paybackModal').classList.add('show');
+    // Xử lý Modal Khóa / Ngừng hoạt động (Hiển thị thông tin + xác nhận theo đặc tả)
+    function openStatusModal(id, name, role, email, isActive) {
+        const form = document.getElementById('statusForm');
+        form.action = `/nhan-vien/${id}/toggle-status`;
+        
+        document.getElementById('status_emp_name').textContent = name;
+        document.getElementById('status_emp_role').textContent = role;
+        document.getElementById('status_emp_email').textContent = email;
+
+        const titleEl     = document.getElementById('status_modal_title');
+        const warningEl   = document.getElementById('status_modal_warning');
+        const submitBtn   = document.getElementById('status_confirm_btn');
+        const targetInput = document.getElementById('status_target_input');
+
+        if (isActive) {
+            targetInput.value = 'BI_KHOA';
+            titleEl.innerHTML = '<span style="color:#e11d48;">⚠️ Xác nhận ngừng hoạt động nhân viên</span>';
+            warningEl.style.color = '#991b1b';
+            warningEl.style.background = '#fef2f2';
+            warningEl.style.borderColor = '#fee2e2';
+            warningEl.innerHTML = '<strong>Lưu ý:</strong> Nhân viên sẽ bị khóa quyền truy cập hệ thống ngay lập tức và không thể tiếp tục thực hiện công việc. Hồ sơ, lịch sử giao hàng và nghiệp vụ của nhân viên vẫn được <strong>bảo toàn nguyên vẹn</strong>.';
+            submitBtn.textContent = 'Xác nhận ngừng hoạt động';
+            submitBtn.style.background = '#e11d48';
+        } else {
+            targetInput.value = 'HOAT_DONG';
+            titleEl.innerHTML = '<span style="color:#059669;">✓ Xác nhận mở lại hoạt động</span>';
+            warningEl.style.color = '#166534';
+            warningEl.style.background = '#f0fdf4';
+            warningEl.style.borderColor = '#dcfce7';
+            warningEl.innerHTML = 'Nhân viên sẽ được kích hoạt mở khóa tài khoản để tiếp tục đăng nhập và làm việc trên hệ thống bình thường.';
+            submitBtn.textContent = 'Mở lại hoạt động';
+            submitBtn.style.background = '#059669';
+        }
+
+        document.getElementById('statusModal').classList.add('show');
     }
-    function closePaybackModal() {
-        document.getElementById('paybackModal').classList.remove('show');
+    function closeStatusModal() {
+        document.getElementById('statusModal').classList.remove('show');
     }
 
-    document.getElementById('confirmPaybackBtn').addEventListener('click', function() {
-        if (!currentPaybackId) return;
-        const btn = this;
-        btn.disabled = true;
-        btn.textContent = 'Đang xử lý...';
-
-        fetch(`/nhan-vien/${currentPaybackId}/tra-tien`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                closePaybackModal();
-                alert(data.message);
-                location.reload();
-            } else {
-                alert('Lỗi: ' + data.message);
-                btn.disabled = false;
-                btn.textContent = 'Xác nhận đã thu tiền';
-            }
-        })
-        .catch(err => {
-            alert('Lỗi kết nối máy chủ: ' + err);
-            btn.disabled = false;
-            btn.textContent = 'Xác nhận đã thu tiền';
-        });
-    });
 
     // Đóng modal khi bấm ra ngoài nền mờ
     window.addEventListener('click', function(e) {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\NhanVien;
 use App\Models\NguoiDung;
 use App\Models\HoaDon;
+use App\Models\PhieuNhap;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -25,7 +26,7 @@ class NhanVienController extends Controller
             });
         }
 
-        // Lọc theo chức vụ
+        // Lọc theo chức vụ (Đặc tả R2.2)
         if ($request->filled('chuc_vu')) {
             $query->where('chuc_vu', $request->chuc_vu);
         }
@@ -38,14 +39,14 @@ class NhanVienController extends Controller
             });
         }
 
-        // Sắp xếp
+        // Sắp xếp theo mức lương (Đặc tả R2.2)
         $sort = $request->get('sort', '');
         if ($sort === 'luong_desc') {
             $query->orderBy('luong', 'desc');
         } elseif ($sort === 'luong_asc') {
             $query->orderBy('luong', 'asc');
         } else {
-            $query->orderBy('ma_nhan_vien', 'asc');
+            $query->orderBy('ma_nhan_vien', 'desc');
         }
 
         // Số lượng bản ghi trên một trang: 10 (mặc định), 20, 50, 100
@@ -79,6 +80,12 @@ class NhanVienController extends Controller
             ->groupBy('ma_nhan_vien_giao')
             ->pluck('tong_can_tra', 'ma_nhan_vien_giao');
 
+        // Danh sách ID nhân viên đã phát sinh nghiệp vụ (để bảo toàn hồ sơ, chặn xóa vật lý)
+        $hasBusinessIds = array_unique(array_merge(
+            HoaDon::whereNotNull('ma_nhan_vien_giao')->pluck('ma_nhan_vien_giao')->toArray(),
+            PhieuNhap::pluck('ma_nhan_vien')->toArray()
+        ));
+
         return view('admin.NhanVien', compact(
             'nhanViens',
             'chucVus',
@@ -87,7 +94,8 @@ class NhanVienController extends Controller
             'soNhanVien',
             'soShipper',
             'dangHoatDong',
-            'perPage'
+            'perPage',
+            'hasBusinessIds'
         ));
     }
 
@@ -98,7 +106,7 @@ class NhanVienController extends Controller
             'mat_khau'      => 'required|string|min:6',
             'ten_nhan_vien' => 'required|string|max:100',
             'email'         => 'nullable|email|max:100',
-            'so_dien_thoai' => 'nullable|string|max:15',
+            'so_dien_thoai' => 'required|string|max:15',
             'chuc_vu'       => 'required|in:CSKH,VAN_HANH,THIET_KE,ONLINE,SHIPPER,KHAC',
             'cong_viec'     => 'nullable|string',
             'luong'         => 'nullable|numeric|min:0',
@@ -138,7 +146,7 @@ class NhanVienController extends Controller
         $request->validate([
             'ten_nhan_vien' => 'required|string|max:100',
             'email'         => 'nullable|email|max:100',
-            'so_dien_thoai' => 'nullable|string|max:15',
+            'so_dien_thoai' => 'required|string|max:15',
             'chuc_vu'       => 'required|in:CSKH,VAN_HANH,THIET_KE,ONLINE,SHIPPER,KHAC',
             'cong_viec'     => 'nullable|string',
             'luong'         => 'nullable|numeric|min:0',
@@ -153,28 +161,55 @@ class NhanVienController extends Controller
                          ->with('success', 'Cập nhật nhân viên thành công!');
     }
 
-    public function toggleStatus($ma_nhan_vien)
+    public function toggleStatus(Request $request, $ma_nhan_vien)
     {
         $nhanVien = NhanVien::findOrFail($ma_nhan_vien);
         $user = NguoiDung::find($nhanVien->ma_nhan_vien);
 
-        if ($user) {
-            $user->trang_thai = ($user->trang_thai === NguoiDung::TRANG_THAI_BI_KHOA)
-                ? NguoiDung::TRANG_THAI_HOAT_DONG
-                : NguoiDung::TRANG_THAI_BI_KHOA;
-            $user->save();
-
-            $statusText = ($user->trang_thai === NguoiDung::TRANG_THAI_HOAT_DONG) ? 'Mở khóa' : 'Khóa';
-            return back()->with('success', "Đã {$statusText} tài khoản của nhân viên \"{$nhanVien->ten_nhan_vien}\" thành công!");
+        if (!$user) {
+            return back()->with('error', 'Không tìm thấy tài khoản người dùng tương ứng.');
         }
 
-        return back()->with('error', 'Không tìm thấy tài khoản người dùng tương ứng.');
+        $targetStatus = $request->input('target_status');
+
+        if ($targetStatus === 'BI_KHOA') {
+            // Chặn thao tác trùng
+            if ($user->trang_thai === NguoiDung::TRANG_THAI_BI_KHOA) {
+                return back()->with('error', "Nhân viên \"{$nhanVien->ten_nhan_vien}\" đã ở trạng thái ngừng hoạt động, không thể thực hiện lại!");
+            }
+            $user->trang_thai = NguoiDung::TRANG_THAI_BI_KHOA;
+            $user->save();
+            return back()->with('success', "Đã ngừng hoạt động (khóa tài khoản) nhân viên \"{$nhanVien->ten_nhan_vien}\" thành công!");
+        } elseif ($targetStatus === 'HOAT_DONG') {
+            // Chặn thao tác trùng
+            if ($user->trang_thai === NguoiDung::TRANG_THAI_HOAT_DONG) {
+                return back()->with('error', "Nhân viên \"{$nhanVien->ten_nhan_vien}\" đang hoạt động bình thường!");
+            }
+            $user->trang_thai = NguoiDung::TRANG_THAI_HOAT_DONG;
+            $user->save();
+            return back()->with('success', "Đã mở lại hoạt động cho nhân viên \"{$nhanVien->ten_nhan_vien}\" thành công!");
+        } else {
+            // Đổi trạng thái nếu không truyền target_status
+            $isLocking = ($user->trang_thai === NguoiDung::TRANG_THAI_HOAT_DONG);
+            $user->trang_thai = $isLocking ? NguoiDung::TRANG_THAI_BI_KHOA : NguoiDung::TRANG_THAI_HOAT_DONG;
+            $user->save();
+            $msg = $isLocking ? 'ngừng hoạt động (khóa)' : 'mở lại hoạt động cho';
+            return back()->with('success', "Đã {$msg} nhân viên \"{$nhanVien->ten_nhan_vien}\" thành công!");
+        }
     }
 
     public function destroy($ma_nhan_vien)
     {
         $nhanVien    = NhanVien::findOrFail($ma_nhan_vien);
         $maNguoiDung = $nhanVien->ma_nhan_vien;
+
+        // BẢO TOÀN HỒ SƠ NHÂN VIÊN: Chặn xóa vật lý nếu nhân viên đã phát sinh nghiệp vụ
+        $hasInvoices = HoaDon::where('ma_nhan_vien_giao', $ma_nhan_vien)->exists();
+        $hasImports  = PhieuNhap::where('ma_nhan_vien', $ma_nhan_vien)->exists();
+
+        if ($hasInvoices || $hasImports) {
+            return back()->with('error', "Bảo toàn hồ sơ: Nhân viên \"{$nhanVien->ten_nhan_vien}\" đã phát sinh nghiệp vụ trong hệ thống (giao hàng / nhập hàng), không được phép xóa vật lý! Vui lòng sử dụng tính năng \"Ngừng hoạt động / Khóa\".");
+        }
 
         DB::transaction(function () use ($nhanVien, $maNguoiDung) {
             $nhanVien->delete();
