@@ -90,36 +90,50 @@
                         </select>
                     </div>
 
-                    {{-- Tên nhà cung cấp --}}
+                    {{-- Tên nhà cung cấp (Dropdown) --}}
                     <div class="col-md-3">
-                        <label class="form-label">Tên nhà cung cấp</label>
-                        <input type="text" name="ten_nha_cung_cap" id="inp_ncc"
-                               class="form-control" value="{{ old('ten_nha_cung_cap') }}"
-                               placeholder="VD: NCC Hoa Đà Lạt">
+                        <label class="form-label d-flex justify-content-between">
+                            <span>Nhà cung cấp <span class="text-danger">*</span></span>
+                            <a href="{{ route('admin.nha-cung-cap.create') }}" target="_blank" class="text-decoration-none" style="font-size:0.78rem;">
+                                <i class="bi bi-plus-circle me-1"></i>Thêm mới
+                            </a>
+                        </label>
+                        <select name="ma_nha_cung_cap" id="inp_ncc" class="form-select" required>
+                            <option value="">-- Chọn nhà cung cấp --</option>
+                            @foreach($danhSachNhaCungCap as $ncc)
+                                <option value="{{ $ncc->ma_nha_cung_cap }}"
+                                        data-sdt="{{ $ncc->so_dien_thoai }}"
+                                        data-email="{{ $ncc->email }}"
+                                        data-diachi="{{ $ncc->dia_chi }}"
+                                        {{ old('ma_nha_cung_cap', $selectedNccId ?? null) == $ncc->ma_nha_cung_cap ? 'selected' : '' }}>
+                                    {{ $ncc->ten_nha_cung_cap }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
 
                     {{-- Số điện thoại NCC --}}
                     <div class="col-md-3">
                         <label class="form-label">Số điện thoại NCC</label>
-                        <input type="text" name="so_dien_thoai_ncc" id="inp_sdt_ncc"
-                               class="form-control" value="{{ old('so_dien_thoai_ncc') }}"
-                               placeholder="10 chữ số" maxlength="10">
+                        <input type="text" id="inp_sdt_ncc"
+                               class="form-control bg-light"
+                               placeholder="Tự điền khi chọn NCC" readonly>
                     </div>
 
                     {{-- Email NCC --}}
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">Email NCC</label>
-                        <input type="email" name="email_ncc" id="inp_email_ncc"
-                               class="form-control" value="{{ old('email_ncc') }}"
-                               placeholder="ncc@example.com">
+                        <input type="email" id="inp_email_ncc"
+                               class="form-control bg-light"
+                               placeholder="Tự điền khi chọn NCC" readonly>
                     </div>
 
                     {{-- Địa chỉ NCC --}}
-                    <div class="col-md-8">
+                    <div class="col-md-3">
                         <label class="form-label">Địa chỉ NCC</label>
-                        <input type="text" name="dia_chi_ncc" id="inp_dia_chi_ncc"
-                               class="form-control" value="{{ old('dia_chi_ncc') }}"
-                               placeholder="VD: Đà Lạt, Lâm Đồng">
+                        <input type="text" id="inp_dia_chi_ncc"
+                               class="form-control bg-light"
+                               placeholder="Tự điền khi chọn NCC" readonly>
                     </div>
 
                 </div>
@@ -297,9 +311,9 @@
 
                             <td>{{ $pn->nhanVien ? $pn->nhanVien->ten_nhan_vien : '—' }}</td>
 
-                            <td>{{ $pn->ten_nha_cung_cap ?? '—' }}</td>
+                            <td>{{ $pn->nhaCungCap->ten_nha_cung_cap ?? $pn->ten_nha_cung_cap ?? '—' }}</td>
 
-                            <td>{{ $pn->so_dien_thoai_ncc ?? '—' }}</td>
+                            <td>{{ $pn->nhaCungCap->so_dien_thoai ?? $pn->so_dien_thoai_ncc ?? '—' }}</td>
 
                             {{-- Trạng thái --}}
                             <td>
@@ -471,10 +485,25 @@
                 document.getElementById('inp_ngay_nhap').value   = pn.ngay_nhap
                     ? pn.ngay_nhap.replace(' ', 'T').substring(0, 16) : '';
                 document.getElementById('inp_nhan_vien').value   = pn.ma_nhan_vien ?? '';
-                document.getElementById('inp_ncc').value         = pn.ten_nha_cung_cap ?? '';
-                document.getElementById('inp_sdt_ncc').value     = pn.so_dien_thoai_ncc ?? '';
-                document.getElementById('inp_email_ncc').value   = pn.email_ncc ?? '';
-                document.getElementById('inp_dia_chi_ncc').value = pn.dia_chi_ncc ?? '';
+                const nccSelect = document.getElementById('inp_ncc');
+                const nccId = pn.ma_nha_cung_cap ?? '';
+                if (nccId) {
+                    let optExists = Array.from(nccSelect.options).some(o => o.value == nccId);
+                    if (!optExists && pn.ten_nha_cung_cap) {
+                        const opt = new Option(`${pn.ten_nha_cung_cap} (Đang ngừng hợp tác)`, nccId, true, true);
+                        opt.setAttribute('data-sdt', pn.so_dien_thoai_ncc ?? '');
+                        opt.setAttribute('data-email', pn.email_ncc ?? '');
+                        opt.setAttribute('data-diachi', pn.dia_chi_ncc ?? '');
+                        nccSelect.add(opt);
+                    }
+                    nccSelect.value = nccId;
+                } else {
+                    nccSelect.value = '';
+                }
+
+                document.getElementById('inp_sdt_ncc').value     = pn.so_dien_thoai_ncc ?? (pn.nha_cung_cap ? pn.nha_cung_cap.so_dien_thoai : '') ?? '';
+                document.getElementById('inp_email_ncc').value   = pn.email_ncc ?? (pn.nha_cung_cap ? pn.nha_cung_cap.email : '') ?? '';
+                document.getElementById('inp_dia_chi_ncc').value = pn.dia_chi_ncc ?? (pn.nha_cung_cap ? pn.nha_cung_cap.dia_chi : '') ?? '';
 
                 const container = document.getElementById('danhSachDongChiTiet');
                 container.innerHTML = '';
@@ -586,6 +615,9 @@
         demDong = 1;
 
         document.getElementById('formChung').reset();
+        document.getElementById('inp_sdt_ncc').value = '';
+        document.getElementById('inp_email_ncc').value = '';
+        document.getElementById('inp_dia_chi_ncc').value = '';
         document.getElementById('formChung').action = '{{ route('phieu-nhap.store') }}';
         document.getElementById('methodField').innerHTML = '';
 
@@ -656,10 +688,10 @@
                             <strong>Trạng thái:</strong> ${trangThaiHtml}
                         </div>
                         <div class="col-md-6">
-                            <strong>Nhà cung cấp:</strong> ${pn.ten_nha_cung_cap ?? '—'}<br>
-                            <strong>SĐT NCC:</strong> ${pn.so_dien_thoai_ncc ?? '—'}<br>
-                            <strong>Email NCC:</strong> ${pn.email_ncc ?? '—'}<br>
-                            <strong>Địa chỉ NCC:</strong> ${pn.dia_chi_ncc ?? '—'}
+                            <strong>Nhà cung cấp:</strong> ${pn.nha_cung_cap ? pn.nha_cung_cap.ten_nha_cung_cap : (pn.ten_nha_cung_cap ?? '—')}<br>
+                            <strong>SĐT NCC:</strong> ${pn.nha_cung_cap ? (pn.nha_cung_cap.so_dien_thoai ?? pn.so_dien_thoai_ncc ?? '—') : (pn.so_dien_thoai_ncc ?? '—')}<br>
+                            <strong>Email NCC:</strong> ${pn.nha_cung_cap ? (pn.nha_cung_cap.email ?? pn.email_ncc ?? '—') : (pn.email_ncc ?? '—')}<br>
+                            <strong>Địa chỉ NCC:</strong> ${pn.nha_cung_cap ? (pn.nha_cung_cap.dia_chi ?? pn.dia_chi_ncc ?? '—') : (pn.dia_chi_ncc ?? '—')}
                         </div>
                     </div>
 
@@ -693,6 +725,30 @@
                     '<div class="text-danger text-center py-3"><i class="bi bi-exclamation-triangle me-2"></i>Không thể tải dữ liệu!</div>';
             });
     }
+
+    // Tự động điền SĐT, Email, Địa chỉ khi chọn Nhà cung cấp
+    document.getElementById('inp_ncc')?.addEventListener('change', function() {
+        const opt = this.options[this.selectedIndex];
+        if (opt && opt.value) {
+            document.getElementById('inp_sdt_ncc').value     = opt.getAttribute('data-sdt') || '';
+            document.getElementById('inp_email_ncc').value   = opt.getAttribute('data-email') || '';
+            document.getElementById('inp_dia_chi_ncc').value = opt.getAttribute('data-diachi') || '';
+        } else {
+            document.getElementById('inp_sdt_ncc').value     = '';
+            document.getElementById('inp_email_ncc').value   = '';
+            document.getElementById('inp_dia_chi_ncc').value = '';
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const inpNcc = document.getElementById('inp_ncc');
+        if (inpNcc && inpNcc.value) {
+            inpNcc.dispatchEvent(new Event('change'));
+        }
+        @if(!empty($selectedNccId))
+            document.getElementById('cardForm')?.scrollIntoView({ behavior: 'smooth' });
+        @endif
+    });
 
 </script>
 @endpush
