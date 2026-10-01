@@ -174,9 +174,12 @@ Route::middleware(['auth', 'role:ADMIN,NHAN_VIEN'])->group(function () {
 
     // Quản lý Khách hàng
     Route::prefix('khach-hang')->name('khach-hang.')->group(function () {
-        Route::get('/',        [KhachHangController::class, 'index'])->name('index');
-        Route::put('/{id}',    [KhachHangController::class, 'update'])->name('update');
-        Route::delete('/{id}', [KhachHangController::class, 'destroy'])->name('destroy');
+        Route::get('/',                     [KhachHangController::class, 'index'])->name('index');
+        Route::put('/{id}',                 [KhachHangController::class, 'update'])->name('update');
+        Route::patch('/{id}/toggle-status', [KhachHangController::class, 'toggleStatus'])->name('toggle-status');
+        Route::patch('/{id}/limit-cod',     [KhachHangController::class, 'limitCod'])->name('limit-cod');
+        Route::patch('/{id}/restore-cod',   [KhachHangController::class, 'restoreCod'])->name('restore-cod');
+        Route::delete('/{id}',              [KhachHangController::class, 'destroy'])->name('destroy');
     });
 
     // Sản phẩm
