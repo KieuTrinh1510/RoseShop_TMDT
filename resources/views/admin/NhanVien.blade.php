@@ -20,11 +20,11 @@
         </div>
         <div>
             <h1 class="rs-header-title">Quản lý nhân viên</h1>
-            <p class="rs-header-subtitle">Theo dõi, quản lý thông tin nhân viên và phân quyền hệ thống</p>
+            <p class="rs-header-subtitle">Theo dõi, quản lý hồ sơ nhân viên, phân quyền và kiểm soát nghiệp vụ hệ thống</p>
         </div>
     </div>
 
-    {{-- THÔNG BÁO --}}
+    {{-- THÔNG BÁO FLASH --}}
     @if(session('success'))
         <div style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; border-radius:10px; padding:12px 18px; margin-bottom:18px; font-size:13.5px; font-weight:500;">
             ✓ {{ session('success') }}
@@ -72,7 +72,7 @@
                 </svg>
             </div>
             <div class="rs-kpi-info">
-                <span class="rs-kpi-label">Nhân viên</span>
+                <span class="rs-kpi-label">Nhân viên nội bộ</span>
                 <span class="rs-kpi-value">{{ $soNhanVien }}</span>
             </div>
         </div>
@@ -88,7 +88,7 @@
                 </svg>
             </div>
             <div class="rs-kpi-info">
-                <span class="rs-kpi-label">Shipper</span>
+                <span class="rs-kpi-label">Shipper giao hàng</span>
                 <span class="rs-kpi-value">{{ $soShipper }}</span>
             </div>
         </div>
@@ -126,11 +126,11 @@
                            name="keyword"
                            value="{{ request('keyword') }}"
                            class="rs-input-search"
-                           placeholder="Tìm kiếm theo tên, email, SĐT...">
+                           placeholder="Tìm tên, mã NV, email, SĐT...">
                 </div>
 
                 {{-- Lọc theo chức vụ (Đặc tả R2.2) --}}
-                <select name="chuc_vu" class="rs-select-filter">
+                <select name="chuc_vu" class="rs-select-filter" onchange="document.getElementById('nhanVienFilterForm').submit()">
                     <option value="">Tất cả chức vụ</option>
                     @foreach($chucVus as $val => $lbl)
                         <option value="{{ $val }}" {{ request('chuc_vu') == $val ? 'selected' : '' }}>
@@ -140,14 +140,14 @@
                 </select>
 
                 {{-- Sắp xếp theo mức lương (Đặc tả R2.2) --}}
-                <select name="sort" class="rs-select-filter">
+                <select name="sort" class="rs-select-filter" onchange="document.getElementById('nhanVienFilterForm').submit()">
                     <option value="">Sắp xếp mức lương</option>
                     <option value="luong_desc" {{ request('sort') == 'luong_desc' ? 'selected' : '' }}>Lương cao → thấp</option>
                     <option value="luong_asc" {{ request('sort') == 'luong_asc' ? 'selected' : '' }}>Lương thấp → cao</option>
                 </select>
 
                 {{-- Lọc theo trạng thái tài khoản --}}
-                <select name="trang_thai" class="rs-select-filter">
+                <select name="trang_thai" class="rs-select-filter" onchange="document.getElementById('nhanVienFilterForm').submit()">
                     <option value="">Tất cả trạng thái</option>
                     <option value="HOAT_DONG" {{ request('trang_thai') == 'HOAT_DONG' ? 'selected' : '' }}>Hoạt động</option>
                     <option value="BI_KHOA" {{ request('trang_thai') == 'BI_KHOA' ? 'selected' : '' }}>Bị khóa</option>
@@ -174,7 +174,7 @@
                 </button>
             </div>
 
-            {{-- Bộ chọn số lượng hiển thị (STT/trang) --}}
+            {{-- Bộ chọn số lượng hiển thị (STT/trang) ở góc trên bên phải --}}
             <div class="rs-sub-toolbar">
                 <div class="rs-per-page-box">
                     <span>Hiển thị</span>
@@ -190,49 +190,54 @@
 
         </form>
 
-        {{-- 4. BẢNG DỮ LIỆU CHUẨN HÓA VỚI THANH CUỘN NGANG --}}
+        {{-- 4. BẢNG DỮ LIỆU CHUẨN HÓA VỚI THANH CUỘN NGANG & CỘT MÃ NHÂN VIÊN --}}
         <div class="rs-table-container">
             <table class="rs-table">
                 <colgroup>
-                    <col style="width: 60px;">
-                    <col style="width: 210px;">
-                    <col style="width: 135px;">
-                    <col style="width: 210px;">
-                    <col style="width: 135px;">
-                    <col style="width: 190px;">
-                    <col style="width: 145px;">
-                    <col style="width: 145px;">
+                    <col style="width: 100px;">
+                    <col style="width: 180px;">
+                    <col style="width: 130px;">
+                    <col style="width: 200px;">
+                    <col style="width: 120px;">
+                    <col style="width: 180px;">
+                    <col style="width: 130px;">
+                    <col style="width: 125px;">
                     <col style="width: 140px;">
+                    <col style="width: 120px;">
                 </colgroup>
                 <thead>
                     <tr>
-                        <th style="text-align: center;">#</th>
-                        <th>Tên nhân viên</th>
+                        <th style="text-align: center;">Mã NV</th>
+                        <th>Họ tên</th>
                         <th>Số điện thoại</th>
                         <th>Email</th>
                         <th>Chức vụ</th>
                         <th>Công việc</th>
                         <th style="text-align: right;">Mức lương</th>
                         <th style="text-align: center;">Trạng thái</th>
+                        <th style="text-align: right;">Tiền COD cần nộp</th>
                         <th style="text-align: center;">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($nhanViens as $nv)
                         @php
-                            $stt = ($nhanViens->currentPage() - 1) * $nhanViens->perPage() + $loop->iteration;
                             $user = $nv->nguoiDung;
                             $isActive = $user ? ($user->trang_thai === 'HOAT_DONG') : true;
                             $isShipper = ($nv->chuc_vu === 'SHIPPER');
+                            $debt = $shipperDebts[$nv->ma_nhan_vien] ?? 0;
+                            $inProg = $inProgressOrderCounts[$nv->ma_nhan_vien] ?? 0;
+                            $hasHistory = in_array($nv->ma_nhan_vien, $hasBusinessIds ?? []);
                         @endphp
                         <tr>
-                            <td style="text-align: center; color: #94a3b8; font-weight: 500;">
-                                {{ $stt }}
+                            {{-- CỘT MÃ NHÂN VIÊN RIÊNG BIỆT --}}
+                            <td style="text-align: center; font-weight: 700; color: #f43f5e; font-family: monospace; font-size: 13px;">
+                                NV-{{ str_pad($nv->ma_nhan_vien, 4, '0', STR_PAD_LEFT) }}
                             </td>
                             <td>
                                 <span class="rs-text-bold">{{ $nv->ten_nhan_vien }}</span>
                             </td>
-                            <td style="white-space: nowrap;">{{ $nv->so_dien_thoai ?: '—' }}</td>
+                            <td style="white-space: nowrap; font-family: monospace; font-size: 13px;">{{ $nv->so_dien_thoai ?: '—' }}</td>
                             <td>{{ $nv->email ?: '—' }}</td>
                             <td style="white-space: nowrap;">
                                 <span class="rs-role-badge {{ $isShipper ? 'shipper' : '' }}">
@@ -254,6 +259,16 @@
                                     <span class="rs-status-badge locked">Bị khóa</span>
                                 @endif
                             </td>
+                            {{-- CỘT TIỀN COD CẦN NỘP (Xem ✓, Sửa ✗ - Hệ thống tự tính) --}}
+                            <td style="text-align: right; white-space: nowrap;">
+                                @if($isShipper)
+                                    <strong style="color: {{ $debt > 0 ? '#e11d48' : '#15803d' }};">
+                                        {{ number_format($debt, 0, ',', '.') }} đ
+                                    </strong>
+                                @else
+                                    <span style="color: #94a3b8;">—</span>
+                                @endif
+                            </td>
                             <td style="text-align: center; white-space: nowrap;">
                                 <div class="rs-action-group">
                                     {{-- Nút Sửa --}}
@@ -262,12 +277,14 @@
                                             title="Sửa thông tin"
                                             onclick="openEditModal({
                                                 id: {{ $nv->ma_nhan_vien }},
+                                                ma_nv_formatted: 'NV-{{ str_pad($nv->ma_nhan_vien, 4, '0', STR_PAD_LEFT) }}',
                                                 ten: '{{ addslashes($nv->ten_nhan_vien) }}',
                                                 email: '{{ addslashes($nv->email ?? '') }}',
                                                 sdt: '{{ addslashes($nv->so_dien_thoai ?? '') }}',
                                                 chuc_vu: '{{ $nv->chuc_vu }}',
                                                 cong_viec: '{{ addslashes($nv->cong_viec ?? '') }}',
-                                                luong: {{ $nv->luong ?? 0 }}
+                                                luong: {{ $nv->luong ?? 0 }},
+                                                tien_cod: '{{ $isShipper ? number_format($debt, 0, ',', '.') . ' đ' : 'Không áp dụng' }}'
                                             })">
                                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
@@ -275,7 +292,7 @@
                                         </svg>
                                     </button>
 
-                                    {{-- Nút Khóa / Mở hoạt động (Mở Modal hiển thị thông tin xác nhận theo đặc tả) --}}
+                                    {{-- Nút Khóa / Mở hoạt động --}}
                                     <button type="button"
                                             class="rs-action-btn lock"
                                             title="{{ $isActive ? 'Ngừng hoạt động (Khóa tài khoản)' : 'Mở lại hoạt động' }}"
@@ -293,13 +310,12 @@
                                         @endif
                                     </button>
 
-                                    {{-- Nút Xóa (Mở Modal xác nhận xóa hoặc thông báo bảo toàn hồ sơ) --}}
-                                    @php $hasHistory = in_array($nv->ma_nhan_vien, $hasBusinessIds ?? []); @endphp
+                                    {{-- Nút Xóa (Kiểm tra đơn hàng chưa hoàn tất & bảo toàn hồ sơ) --}}
                                     <button type="button"
                                             class="rs-action-btn delete"
-                                            style="{{ $hasHistory ? 'opacity: 0.6;' : '' }}"
-                                            title="{{ $hasHistory ? 'Bảo toàn hồ sơ: Nhân viên đã phát sinh nghiệp vụ' : 'Xóa nhân viên' }}"
-                                            onclick="openDeleteModal({{ $nv->ma_nhan_vien }}, '{{ addslashes($nv->ten_nhan_vien) }}', {{ $hasHistory ? 'true' : 'false' }})">
+                                            style="{{ ($inProg > 0 || $hasHistory) ? 'opacity: 0.8;' : '' }}"
+                                            title="{{ $inProg > 0 ? 'Nhân viên đang phụ trách đơn hàng chưa hoàn tất' : ($hasHistory ? 'Bảo toàn hồ sơ' : 'Xóa nhân viên') }}"
+                                            onclick="openDeleteModal({{ $nv->ma_nhan_vien }}, '{{ addslashes($nv->ten_nhan_vien) }}', {{ $hasHistory ? 'true' : 'false' }}, {{ $inProg }})">
                                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M3 6h18"/>
                                             <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
@@ -311,7 +327,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" style="text-align: center; padding: 40px 20px; color: #94a3b8;">
+                            <td colspan="11" style="text-align: center; padding: 40px 20px; color: #94a3b8;">
                                 <div style="font-size: 32px; margin-bottom: 8px;">📋</div>
                                 <div style="font-size: 14px; font-weight: 500;">Không tìm thấy nhân viên nào phù hợp với điều kiện tìm kiếm.</div>
                             </td>
@@ -329,14 +345,12 @@
 
             <div class="rs-footer-pagination">
                 <ul class="rs-pagination">
-                    {{-- Nút trang trước (<) --}}
                     @if ($nhanViens->onFirstPage())
                         <li class="page-item disabled"><span class="page-link">&lsaquo;</span></li>
                     @else
                         <li class="page-item"><a class="page-link" href="{{ $nhanViens->previousPageUrl() }}" rel="prev">&lsaquo;</a></li>
                     @endif
 
-                    {{-- Các nút số trang (1, 2, 3...) --}}
                     @for ($p = 1; $p <= $nhanViens->lastPage(); $p++)
                         @if ($p == $nhanViens->currentPage())
                             <li class="page-item active"><span class="page-link">{{ $p }}</span></li>
@@ -345,7 +359,6 @@
                         @endif
                     @endfor
 
-                    {{-- Nút trang sau (>) --}}
                     @if ($nhanViens->hasMorePages())
                         <li class="page-item"><a class="page-link" href="{{ $nhanViens->nextPageUrl() }}" rel="next">&rsaquo;</a></li>
                     @else
@@ -360,11 +373,11 @@
 </div>
 
 {{-- ==========================================================================
-   MODAL 1: THÊM NHÂN VIÊN MỚI
+   MODAL 1: THÊM NHÂN VIÊN MỚI (Tuân thủ quy tắc dữ liệu & validation)
    ========================================================================== --}}
 <div class="rs-modal" id="createModal">
     <div class="rs-modal-dialog">
-        <form method="POST" action="{{ route('nhan-vien.store') }}">
+        <form method="POST" action="{{ route('nhan-vien.store') }}" id="createEmployeeForm" onsubmit="return validateCreateEmployee(event)">
             @csrf
             <div class="rs-modal-header">
                 <h3 class="rs-modal-title">
@@ -381,48 +394,62 @@
 
             <div class="rs-modal-body">
                 <div class="rs-form-grid">
-                    <div class="rs-form-group">
-                        <label class="rs-form-label">Tên đăng nhập <span style="color:#e11d48;">*</span></label>
-                        <input type="text" name="ten_dang_nhap" class="rs-form-control" required placeholder="VD: nv_linh">
-                    </div>
-
-                    <div class="rs-form-group">
-                        <label class="rs-form-label">Mật khẩu <span style="color:#e11d48;">*</span></label>
-                        <input type="password" name="mat_khau" class="rs-form-control" required minlength="6" placeholder="Tối thiểu 6 ký tự">
+                    <div class="rs-form-group col-span-2">
+                        <label class="rs-form-label">Mã nhân viên</label>
+                        <input type="text" class="rs-form-control rs-readonly-input" value="NV-xxxx (Tự động)" readonly>
                     </div>
 
                     <div class="rs-form-group col-span-2">
                         <label class="rs-form-label">Họ và tên nhân viên <span style="color:#e11d48;">*</span></label>
-                        <input type="text" name="ten_nhan_vien" class="rs-form-control" required placeholder="VD: Nguyễn Văn An">
+                        <input type="text" name="ten_nhan_vien" id="create_ten_nhan_vien" class="rs-form-control" placeholder="VD: Nguyễn Văn An" oninput="clearError('create_ten_nhan_vien')">
+                        <div class="rs-field-error" id="err_create_ten_nhan_vien"></div>
+                    </div>
+
+                    <div class="rs-form-group">
+                        <label class="rs-form-label">Email <span style="color:#e11d48;">*</span></label>
+                        <input type="email" name="email" id="create_email" class="rs-form-control" placeholder="nhanvien@example.com" oninput="clearError('create_email')">
+                        <div class="rs-field-error" id="err_create_email"></div>
                     </div>
 
                     <div class="rs-form-group">
                         <label class="rs-form-label">Số điện thoại <span style="color:#e11d48;">*</span></label>
-                        <input type="text" name="so_dien_thoai" class="rs-form-control" placeholder="0987654321" required>
-                    </div>
-
-                    <div class="rs-form-group">
-                        <label class="rs-form-label">Email</label>
-                        <input type="email" name="email" class="rs-form-control" placeholder="nhanvien@example.com">
+                        <input type="text" name="so_dien_thoai" id="create_so_dien_thoai" class="rs-form-control" placeholder="0987654321" oninput="clearError('create_so_dien_thoai')">
+                        <div class="rs-field-error" id="err_create_so_dien_thoai"></div>
                     </div>
 
                     <div class="rs-form-group">
                         <label class="rs-form-label">Chức vụ <span style="color:#e11d48;">*</span></label>
-                        <select name="chuc_vu" class="rs-form-control" required>
+                        <select name="chuc_vu" id="create_chuc_vu" class="rs-form-control" onchange="clearError('create_chuc_vu')">
+                            <option value="">-- Chọn chức vụ --</option>
                             @foreach($chucVus as $val => $lbl)
                                 <option value="{{ $val }}">{{ $lbl }}</option>
                             @endforeach
                         </select>
+                        <div class="rs-field-error" id="err_create_chuc_vu"></div>
                     </div>
 
                     <div class="rs-form-group">
-                        <label class="rs-form-label">Mức lương (VNĐ)</label>
-                        <input type="number" name="luong" class="rs-form-control" step="100000" min="0" placeholder="VD: 8000000">
+                        <label class="rs-form-label">Mức lương (VNĐ) <span style="color:#e11d48;">*</span></label>
+                        <input type="number" name="luong" id="create_luong" class="rs-form-control" step="100000" min="1" placeholder="VD: 8000000" oninput="clearError('create_luong')">
+                        <div class="rs-field-error" id="err_create_luong"></div>
                     </div>
 
                     <div class="rs-form-group col-span-2">
-                        <label class="rs-form-label">Mô tả công việc</label>
-                        <input type="text" name="cong_viec" class="rs-form-control" placeholder="VD: Phụ trách tư vấn & CSKH fanpage">
+                        <label class="rs-form-label">Công việc phụ trách <span style="color:#e11d48;">*</span></label>
+                        <input type="text" name="cong_viec" id="create_cong_viec" class="rs-form-control" placeholder="VD: Phụ trách tư vấn & CSKH fanpage" oninput="clearError('create_cong_viec')">
+                        <div class="rs-field-error" id="err_create_cong_viec"></div>
+                    </div>
+
+                    <div class="rs-form-group">
+                        <label class="rs-form-label">Mật khẩu ban đầu <span style="color:#e11d48;">*</span></label>
+                        <input type="password" name="mat_khau" id="create_mat_khau" class="rs-form-control" minlength="6" placeholder="Tối thiểu 6 ký tự" oninput="clearError('create_mat_khau')">
+                        <div class="rs-field-error" id="err_create_mat_khau"></div>
+                    </div>
+
+                    <div class="rs-form-group">
+                        <label class="rs-form-label">Xác nhận mật khẩu <span style="color:#e11d48;">*</span></label>
+                        <input type="password" name="xac_nhan_mat_khau" id="create_xac_nhan_mat_khau" class="rs-form-control" placeholder="Nhập lại mật khẩu" oninput="clearError('create_xac_nhan_mat_khau')">
+                        <div class="rs-field-error" id="err_create_xac_nhan_mat_khau"></div>
                     </div>
                 </div>
             </div>
@@ -440,7 +467,7 @@
    ========================================================================== --}}
 <div class="rs-modal" id="editModal">
     <div class="rs-modal-dialog">
-        <form method="POST" action="" id="editForm">
+        <form method="POST" action="" id="editForm" onsubmit="return validateEditEmployee(event)">
             @csrf
             @method('PUT')
             <div class="rs-modal-header">
@@ -456,38 +483,56 @@
 
             <div class="rs-modal-body">
                 <div class="rs-form-grid">
+                    {{-- Mã nhân viên: Xem ✓, Sửa ✗ --}}
+                    <div class="rs-form-group">
+                        <label class="rs-form-label">Mã nhân viên</label>
+                        <input type="text" id="edit_ma_nhan_vien" class="rs-form-control rs-readonly-input" readonly>
+                    </div>
+
+                    {{-- Số tiền cần nộp / đối soát: Xem ✓, Sửa ✗ --}}
+                    <div class="rs-form-group">
+                        <label class="rs-form-label">Tiền COD cần nộp</label>
+                        <input type="text" id="edit_tien_cod" class="rs-form-control rs-readonly-input" readonly>
+                    </div>
+
                     <div class="rs-form-group col-span-2">
                         <label class="rs-form-label">Họ và tên nhân viên <span style="color:#e11d48;">*</span></label>
-                        <input type="text" name="ten_nhan_vien" id="edit_ten_nhan_vien" class="rs-form-control" required>
+                        <input type="text" name="ten_nhan_vien" id="edit_ten_nhan_vien" class="rs-form-control" oninput="clearError('edit_ten_nhan_vien')">
+                        <div class="rs-field-error" id="err_edit_ten_nhan_vien"></div>
                     </div>
 
                     <div class="rs-form-group">
                         <label class="rs-form-label">Số điện thoại <span style="color:#e11d48;">*</span></label>
-                        <input type="text" name="so_dien_thoai" id="edit_so_dien_thoai" class="rs-form-control" required>
+                        <input type="text" name="so_dien_thoai" id="edit_so_dien_thoai" class="rs-form-control" oninput="clearError('edit_so_dien_thoai')">
+                        <div class="rs-field-error" id="err_edit_so_dien_thoai"></div>
                     </div>
 
                     <div class="rs-form-group">
-                        <label class="rs-form-label">Email</label>
-                        <input type="email" name="email" id="edit_email" class="rs-form-control">
+                        <label class="rs-form-label">Email <span style="color:#e11d48;">*</span></label>
+                        <input type="email" name="email" id="edit_email" class="rs-form-control" oninput="clearError('edit_email')">
+                        <div class="rs-field-error" id="err_edit_email"></div>
                     </div>
 
                     <div class="rs-form-group">
                         <label class="rs-form-label">Chức vụ <span style="color:#e11d48;">*</span></label>
-                        <select name="chuc_vu" id="edit_chuc_vu" class="rs-form-control" required>
+                        <select name="chuc_vu" id="edit_chuc_vu" class="rs-form-control" onchange="clearError('edit_chuc_vu')">
                             @foreach($chucVus as $val => $lbl)
                                 <option value="{{ $val }}">{{ $lbl }}</option>
                             @endforeach
                         </select>
+                        <div class="rs-field-error" id="err_edit_chuc_vu"></div>
                     </div>
 
                     <div class="rs-form-group">
-                        <label class="rs-form-label">Mức lương (VNĐ)</label>
-                        <input type="number" name="luong" id="edit_luong" class="rs-form-control" step="100000" min="0">
+                        <label class="rs-form-label">Mức lương (VNĐ) <span style="color:#e11d48;">*</span></label>
+                        <input type="number" name="luong" id="edit_luong" class="rs-form-control" step="100000" min="1" oninput="clearError('edit_luong')">
+                        <div class="rs-field-error" id="err_edit_luong"></div>
                     </div>
 
                     <div class="rs-form-group col-span-2">
-                        <label class="rs-form-label">Mô tả công việc</label>
-                        <input type="text" name="cong_viec" id="edit_cong_viec" class="rs-form-control">
+                        <label class="rs-form-label">Công việc phụ trách <span style="color:#e11d48;">*</span></label>
+                        <input type="text" name="cong_viec" id="edit_cong_viec" class="rs-form-control" oninput="clearError('edit_cong_viec')">
+                        <div class="rs-field-error" id="err_edit_cong_viec"></div>
                     </div>
                 </div>
             </div>
@@ -500,50 +545,98 @@
     </div>
 </div>
 
-
 {{-- ==========================================================================
-   MODAL 3: XÁC NHẬN XÓA / THÔNG BÁO BẢO TOÀN HỒ SƠ NHÂN VIÊN
+   MODAL 3: XÁC NHẬN XÓA / CHẶN XÓA ĐƠN HÀNG CHƯA HOÀN TẤT & BẢO TOÀN HỒ SƠ
    ========================================================================== --}}
 <div class="rs-modal" id="deleteModal">
-    <div class="rs-modal-dialog" style="max-width: 500px;">
-        <form method="POST" action="" id="deleteForm">
-            @csrf
-            @method('DELETE')
+    <div class="rs-modal-dialog" style="max-width: 480px;">
 
+        {{-- TRƯỜNG HỢP 1: NHÂN VIÊN ĐANG CÓ ĐƠN HÀNG CHƯA HOÀN TẤT --}}
+        <div id="deleteBlockedInProgress" style="display:none; padding: 24px; text-align: center;">
+            <div style="width: 52px; height: 52px; border-radius: 50%; background: #fee2e2; color: #e11d48; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+            </div>
+            <h3 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0 0 12px;">Không thể xóa</h3>
+            <p style="font-size: 14px; color: #334155; line-height: 1.6; margin: 0 0 8px;">
+                Nhân viên đang phụ trách <strong style="color:#e11d48;" id="deleteInProgressCount">0</strong> đơn hàng chưa hoàn tất.
+            </p>
+            <p style="font-size: 13.5px; color: #64748b; line-height: 1.5; margin: 0 0 24px;">
+                Vui lòng hoàn tất/điều phối các đơn trước khi thực hiện xóa.
+            </p>
+            <div style="display: flex; justify-content: center;">
+                <button type="button" class="rs-btn-submit" onclick="closeDeleteModal()" style="min-width: 140px; background: #64748b;">
+                    Đã hiểu
+                </button>
+            </div>
+        </div>
+
+        {{-- TRƯỜNG HỢP 2: NHÂN VIÊN ĐÃ PHÁT SINH NGHIỆP VỤ (BẢO TOÀN HỒ SƠ) --}}
+        <div id="deleteBlockedHistory" style="display:none;">
             <div class="rs-modal-header">
-                <h3 class="rs-modal-title" id="delete_modal_title">
+                <h3 class="rs-modal-title" style="color: #b45309;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 6h18"/>
-                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                        <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                     </svg>
-                    Xác nhận xóa nhân viên
+                    Bảo toàn hồ sơ nhân viên
                 </h3>
                 <button type="button" class="rs-modal-close" onclick="closeDeleteModal()">&times;</button>
             </div>
-
             <div class="rs-modal-body">
                 <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; margin-bottom: 14px;">
-                    <div style="font-size: 14px;"><strong>Nhân viên:</strong> <span id="delete_emp_name">—</span></div>
+                    <div style="font-size: 14px;"><strong>Nhân viên:</strong> <span id="deleteHistoryName">—</span></div>
                 </div>
-
-                <div id="delete_modal_warning" style="font-size: 13.5px; line-height: 1.5; border-radius: 8px; padding: 12px;">
-                    <!-- JS cập nhật nội dung cảnh báo -->
+                <div style="font-size: 13.5px; line-height: 1.5; color: #92400e; background: #fef3c7; border: 1px solid #fde68a; border-radius: 8px; padding: 12px;">
+                    Nhân viên này đã phát sinh nghiệp vụ trong hệ thống (đơn hàng đã hoàn tất hoặc phiếu nhập kho).<br><br>
+                    Để tránh sai lệch lịch sử kế toán, hệ thống <strong>không cho phép xóa vật lý</strong>. Vui lòng sử dụng tính năng <strong>"Ngừng hoạt động / Khóa tài khoản"</strong>.
                 </div>
             </div>
-
             <div class="rs-modal-footer">
-                <button type="button" class="rs-btn-cancel" onclick="closeDeleteModal()">Hủy</button>
-                <button type="submit" class="rs-btn-submit" id="delete_confirm_btn" style="background: #e11d48;">
-                    Xác nhận xóa
-                </button>
+                <button type="button" class="rs-btn-cancel" onclick="closeDeleteModal()">Đóng</button>
+            </div>
+        </div>
+
+        {{-- TRƯỜNG HỢP 3: NHÂN VIÊN MỚI CHƯA CÓ NGHIỆP VỤ (CHO PHÉP XÓA) --}}
+        <form method="POST" action="" id="deleteForm">
+            @csrf
+            @method('DELETE')
+            <div id="deleteAllowedContainer" style="display:none;">
+                <div class="rs-modal-header">
+                    <h3 class="rs-modal-title" style="color: #e11d48;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 6h18"/>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                        </svg>
+                        Xác nhận xóa nhân viên
+                    </h3>
+                    <button type="button" class="rs-modal-close" onclick="closeDeleteModal()">&times;</button>
+                </div>
+                <div class="rs-modal-body">
+                    <p style="font-size: 14px; margin: 0 0 10px;">
+                        Bạn có chắc chắn muốn xóa nhân viên <strong id="deleteAllowedName">—</strong>?
+                    </p>
+                    <div style="font-size: 13px; color: #991b1b; background: #fef2f2; border: 1px solid #fee2e2; border-radius: 8px; padding: 10px 14px;">
+                        ⚠️ Thao tác này sẽ xóa vĩnh viễn hồ sơ nhân viên và tài khoản người dùng tương ứng.
+                    </div>
+                </div>
+                <div class="rs-modal-footer">
+                    <button type="button" class="rs-btn-cancel" onclick="closeDeleteModal()">Hủy</button>
+                    <button type="submit" class="rs-btn-submit" style="background: #e11d48;">
+                        Xác nhận xóa
+                    </button>
+                </div>
             </div>
         </form>
+
     </div>
 </div>
 
 {{-- ==========================================================================
-   MODAL 4: XÁC NHẬN KHÓA / NGỪNG HOẠT ĐỘNG HOẶC MỞ LẠI NHÂN VIÊN
+   MODAL 4: XÁC NHẬN KHÓA / MỞ LẠI TÀI KHOẢN NHÂN VIÊN
    ========================================================================== --}}
 <div class="rs-modal" id="statusModal">
     <div class="rs-modal-dialog" style="max-width: 520px;">
@@ -587,8 +680,174 @@
 
 @push('scripts')
 <script>
+    // Hàm hiển thị & xóa lỗi inline
+    function showError(fieldId, msg) {
+        const input = document.getElementById(fieldId);
+        const errDiv = document.getElementById('err_' + fieldId);
+        if (input) input.classList.add('is-invalid');
+        if (errDiv) {
+            errDiv.textContent = '⚠ ' + msg;
+            errDiv.classList.add('show');
+        }
+    }
+
+    function clearError(fieldId) {
+        const input = document.getElementById(fieldId);
+        const errDiv = document.getElementById('err_' + fieldId);
+        if (input) input.classList.remove('is-invalid');
+        if (errDiv) {
+            errDiv.textContent = '';
+            errDiv.classList.remove('show');
+        }
+    }
+
+    function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function isValidPhone(phone) {
+        return /^\d{10,11}$/.test(phone);
+    }
+
+    // Validate Form Thêm nhân viên
+    function validateCreateEmployee(e) {
+        let valid = true;
+        const ten      = document.getElementById('create_ten_nhan_vien').value.trim();
+        const email    = document.getElementById('create_email').value.trim();
+        const sdt      = document.getElementById('create_so_dien_thoai').value.trim();
+        const chucVu   = document.getElementById('create_chuc_vu').value;
+        const congViec = document.getElementById('create_cong_viec').value.trim();
+        const luong    = document.getElementById('create_luong').value.trim();
+        const pass     = document.getElementById('create_mat_khau').value;
+        const confirm  = document.getElementById('create_xac_nhan_mat_khau').value;
+
+        if (!ten) {
+            showError('create_ten_nhan_vien', 'Vui lòng nhập họ và tên.');
+            valid = false;
+        }
+
+        if (!email) {
+            showError('create_email', 'Vui lòng nhập email.');
+            valid = false;
+        } else if (!isValidEmail(email)) {
+            showError('create_email', 'Email không đúng định dạng.');
+            valid = false;
+        }
+
+        if (!sdt) {
+            showError('create_so_dien_thoai', 'Vui lòng nhập số điện thoại.');
+            valid = false;
+        } else if (!isValidPhone(sdt)) {
+            showError('create_so_dien_thoai', 'Số điện thoại chỉ được chứa chữ số và phải có độ dài hợp lệ.');
+            valid = false;
+        }
+
+        if (!chucVu) {
+            showError('create_chuc_vu', 'Vui lòng chọn chức vụ.');
+            valid = false;
+        }
+
+        if (!congViec) {
+            showError('create_cong_viec', 'Vui lòng nhập mô tả công việc.');
+            valid = false;
+        }
+
+        if (!luong) {
+            showError('create_luong', 'Vui lòng nhập mức lương.');
+            valid = false;
+        } else if (isNaN(luong)) {
+            showError('create_luong', 'Lương phải là số.');
+            valid = false;
+        } else if (parseFloat(luong) <= 0) {
+            showError('create_luong', 'Lương phải là số và lớn hơn 0.');
+            valid = false;
+        }
+
+        if (!pass) {
+            showError('create_mat_khau', 'Vui lòng nhập mật khẩu.');
+            valid = false;
+        } else if (pass.length < 6) {
+            showError('create_mat_khau', 'Mật khẩu phải có ít nhất 6 ký tự.');
+            valid = false;
+        }
+
+        if (!confirm) {
+            showError('create_xac_nhan_mat_khau', 'Vui lòng xác nhận mật khẩu.');
+            valid = false;
+        } else if (pass !== confirm) {
+            showError('create_xac_nhan_mat_khau', 'Mật khẩu xác nhận không khớp.');
+            valid = false;
+        }
+
+        if (!valid) {
+            e.preventDefault();
+            return false;
+        }
+        return true;
+    }
+
+    // Validate Form Sửa nhân viên
+    function validateEditEmployee(e) {
+        let valid = true;
+        const ten      = document.getElementById('edit_ten_nhan_vien').value.trim();
+        const email    = document.getElementById('edit_email').value.trim();
+        const sdt      = document.getElementById('edit_so_dien_thoai').value.trim();
+        const chucVu   = document.getElementById('edit_chuc_vu').value;
+        const congViec = document.getElementById('edit_cong_viec').value.trim();
+        const luong    = document.getElementById('edit_luong').value.trim();
+
+        if (!ten) {
+            showError('edit_ten_nhan_vien', 'Vui lòng nhập họ và tên.');
+            valid = false;
+        }
+
+        if (!email) {
+            showError('edit_email', 'Vui lòng nhập email.');
+            valid = false;
+        } else if (!isValidEmail(email)) {
+            showError('edit_email', 'Email không đúng định dạng.');
+            valid = false;
+        }
+
+        if (!sdt) {
+            showError('edit_so_dien_thoai', 'Vui lòng nhập số điện thoại.');
+            valid = false;
+        } else if (!isValidPhone(sdt)) {
+            showError('edit_so_dien_thoai', 'Số điện thoại chỉ được chứa chữ số và phải có độ dài hợp lệ.');
+            valid = false;
+        }
+
+        if (!chucVu) {
+            showError('edit_chuc_vu', 'Vui lòng chọn chức vụ.');
+            valid = false;
+        }
+
+        if (!congViec) {
+            showError('edit_cong_viec', 'Vui lòng nhập mô tả công việc.');
+            valid = false;
+        }
+
+        if (!luong) {
+            showError('edit_luong', 'Vui lòng nhập mức lương.');
+            valid = false;
+        } else if (isNaN(luong)) {
+            showError('edit_luong', 'Lương phải là số.');
+            valid = false;
+        } else if (parseFloat(luong) <= 0) {
+            showError('edit_luong', 'Lương phải là số và lớn hơn 0.');
+            valid = false;
+        }
+
+        if (!valid) {
+            e.preventDefault();
+            return false;
+        }
+        return true;
+    }
+
     // Xử lý Modal Thêm mới
     function openCreateModal() {
+        ['ten_nhan_vien', 'email', 'so_dien_thoai', 'chuc_vu', 'cong_viec', 'luong', 'mat_khau', 'xac_nhan_mat_khau'].forEach(f => clearError('create_' + f));
         document.getElementById('createModal').classList.add('show');
     }
     function closeCreateModal() {
@@ -597,8 +856,11 @@
 
     // Xử lý Modal Sửa
     function openEditModal(data) {
+        ['ten_nhan_vien', 'email', 'so_dien_thoai', 'chuc_vu', 'cong_viec', 'luong'].forEach(f => clearError('edit_' + f));
         const form = document.getElementById('editForm');
         form.action = `/nhan-vien/${data.id}`;
+        document.getElementById('edit_ma_nhan_vien').value  = data.ma_nv_formatted || ('NV-' + String(data.id).padStart(4, '0'));
+        document.getElementById('edit_tien_cod').value      = data.tien_cod || '0 đ';
         document.getElementById('edit_ten_nhan_vien').value = data.ten;
         document.getElementById('edit_email').value         = data.email || '';
         document.getElementById('edit_so_dien_thoai').value = data.sdt || '';
@@ -612,11 +874,11 @@
         document.getElementById('editModal').classList.remove('show');
     }
 
-    // Xử lý Modal Khóa / Ngừng hoạt động (Hiển thị thông tin + xác nhận theo đặc tả)
+    // Xử lý Modal Khóa / Ngừng hoạt động
     function openStatusModal(id, name, role, email, isActive) {
         const form = document.getElementById('statusForm');
         form.action = `/nhan-vien/${id}/toggle-status`;
-        
+
         document.getElementById('status_emp_name').textContent = name;
         document.getElementById('status_emp_role').textContent = role;
         document.getElementById('status_emp_email').textContent = email;
@@ -632,7 +894,7 @@
             warningEl.style.color = '#991b1b';
             warningEl.style.background = '#fef2f2';
             warningEl.style.borderColor = '#fee2e2';
-            warningEl.innerHTML = '<strong>Lưu ý:</strong> Nhân viên sẽ bị khóa quyền truy cập hệ thống ngay lập tức và không thể tiếp tục thực hiện công việc. Hồ sơ, lịch sử giao hàng và nghiệp vụ của nhân viên vẫn được <strong>bảo toàn nguyên vẹn</strong>.';
+            warningEl.innerHTML = '<strong>Lưu ý:</strong> Nhân viên sẽ bị khóa quyền truy cập hệ thống ngay lập tức và không thể tiếp tục thực hiện công việc. Hồ sơ và nghiệp vụ của nhân viên vẫn được <strong>bảo toàn nguyên vẹn</strong>.';
             submitBtn.textContent = 'Xác nhận ngừng hoạt động';
             submitBtn.style.background = '#e11d48';
         } else {
@@ -652,32 +914,30 @@
         document.getElementById('statusModal').classList.remove('show');
     }
 
+    // Xử lý Modal Xóa & Chặn xóa
+    function openDeleteModal(id, name, hasHistory, inProgressCount) {
+        const inProgBox    = document.getElementById('deleteBlockedInProgress');
+        const historyBox   = document.getElementById('deleteBlockedHistory');
+        const allowedBox   = document.getElementById('deleteAllowedContainer');
 
-    // Xử lý Modal Xóa
-    function openDeleteModal(id, name, hasHistory) {
-        const form = document.getElementById('deleteForm');
-        form.action = `/nhan-vien/${id}`;
+        inProgBox.style.display  = 'none';
+        historyBox.style.display = 'none';
+        allowedBox.style.display = 'none';
 
-        document.getElementById('delete_emp_name').textContent = name;
-
-        const titleEl   = document.getElementById('delete_modal_title');
-        const warningEl = document.getElementById('delete_modal_warning');
-        const submitBtn = document.getElementById('delete_confirm_btn');
-
-        if (hasHistory) {
-            titleEl.innerHTML = '<span style="color:#b45309;">⚠️ Không thể xóa nhân viên này</span>';
-            warningEl.style.color = '#92400e';
-            warningEl.style.background = '#fef3c7';
-            warningEl.style.border = '1px solid #fde68a';
-            warningEl.innerHTML = '<strong>Bảo toàn hồ sơ nhân viên:</strong> Nhân viên này đã phát sinh nghiệp vụ trong hệ thống (đơn hàng giao thành công hoặc phiếu nhập kho).<br><br>Theo quy định bảo toàn dữ liệu, <strong>không được phép xóa vật lý</strong> để tránh sai lệch dữ liệu lịch sử. Vui lòng sử dụng tính năng <strong>"Ngừng hoạt động / Khóa tài khoản"</strong>.';
-            submitBtn.style.display = 'none';
+        if (inProgressCount > 0) {
+            // Trường hợp 1: Có đơn hàng chưa hoàn tất -> Chặn hoàn toàn
+            document.getElementById('deleteInProgressCount').textContent = inProgressCount;
+            inProgBox.style.display = 'block';
+        } else if (hasHistory) {
+            // Trường hợp 2: Có lịch sử quá khứ -> Bảo toàn hồ sơ
+            document.getElementById('deleteHistoryName').textContent = name;
+            historyBox.style.display = 'block';
         } else {
-            titleEl.innerHTML = '<span style="color:#e11d48;">🗑️ Xác nhận xóa nhân viên</span>';
-            warningEl.style.color = '#991b1b';
-            warningEl.style.background = '#fef2f2';
-            warningEl.style.border = '1px solid #fee2e2';
-            warningEl.innerHTML = 'Bạn có chắc chắn muốn xóa nhân viên này khỏi hệ thống? Thao tác này sẽ <strong>xóa vĩnh viễn</strong> hồ sơ nhân viên và tài khoản người dùng tương ứng khỏi hệ thống.';
-            submitBtn.style.display = 'inline-flex';
+            // Trường hợp 3: Chưa có nghiệp vụ -> Cho phép xóa
+            const form = document.getElementById('deleteForm');
+            form.action = `/nhan-vien/${id}`;
+            document.getElementById('deleteAllowedName').textContent = name;
+            allowedBox.style.display = 'block';
         }
 
         document.getElementById('deleteModal').classList.add('show');
@@ -687,10 +947,15 @@
         document.getElementById('deleteModal').classList.remove('show');
     }
 
-    // Đóng modal khi bấm ra ngoài nền mờ
     window.addEventListener('click', function(e) {
         if (e.target.classList.contains('rs-modal')) {
             e.target.classList.remove('show');
+        }
+    });
+
+    window.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.rs-modal.show').forEach(m => m.classList.remove('show'));
         }
     });
 </script>
