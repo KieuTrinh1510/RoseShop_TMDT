@@ -293,36 +293,19 @@
                                         @endif
                                     </button>
 
-                                    {{-- Nút Xóa (BẢO TOÀN HỒ SƠ: Chặn xóa nếu đã phát sinh nghiệp vụ) --}}
+                                    {{-- Nút Xóa (Mở Modal xác nhận xóa hoặc thông báo bảo toàn hồ sơ) --}}
                                     @php $hasHistory = in_array($nv->ma_nhan_vien, $hasBusinessIds ?? []); @endphp
-                                    @if($hasHistory)
-                                        <button type="button"
-                                                class="rs-action-btn delete"
-                                                style="opacity: 0.45; cursor: not-allowed;"
-                                                title="Bảo toàn hồ sơ: Nhân viên đã phát sinh nghiệp vụ (hóa đơn / phiếu nhập), không thể xóa vật lý."
-                                                onclick="alert('Bảo toàn hồ sơ: Nhân viên \'{{ addslashes($nv->ten_nhan_vien) }}\' đã phát sinh nghiệp vụ trong hệ thống, không được phép xóa vật lý! Vui lòng chọn Ngừng hoạt động.')">
-                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M3 6h18"/>
-                                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                                            </svg>
-                                        </button>
-                                    @else
-                                        <form action="{{ route('nhan-vien.destroy', $nv->ma_nhan_vien) }}" method="POST" style="display:inline;">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit"
-                                                    class="rs-action-btn delete"
-                                                    title="Xóa nhân viên chưa có nghiệp vụ"
-                                                    onclick="return confirm('Bạn có chắc chắn muốn xóa nhân viên \'{{ $nv->ten_nhan_vien }}\'? Thao tác này sẽ xóa tài khoản hệ thống liên quan.')">
-                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M3 6h18"/>
-                                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                                                </svg>
-                                            </button>
-                                        </form>
-                                    @endif
+                                    <button type="button"
+                                            class="rs-action-btn delete"
+                                            style="{{ $hasHistory ? 'opacity: 0.6;' : '' }}"
+                                            title="{{ $hasHistory ? 'Bảo toàn hồ sơ: Nhân viên đã phát sinh nghiệp vụ' : 'Xóa nhân viên' }}"
+                                            onclick="openDeleteModal({{ $nv->ma_nhan_vien }}, '{{ addslashes($nv->ten_nhan_vien) }}', {{ $hasHistory ? 'true' : 'false' }})">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M3 6h18"/>
+                                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                        </svg>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -519,6 +502,47 @@
 
 
 {{-- ==========================================================================
+   MODAL 3: XÁC NHẬN XÓA / THÔNG BÁO BẢO TOÀN HỒ SƠ NHÂN VIÊN
+   ========================================================================== --}}
+<div class="rs-modal" id="deleteModal">
+    <div class="rs-modal-dialog" style="max-width: 500px;">
+        <form method="POST" action="" id="deleteForm">
+            @csrf
+            @method('DELETE')
+
+            <div class="rs-modal-header">
+                <h3 class="rs-modal-title" id="delete_modal_title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 6h18"/>
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                    </svg>
+                    Xác nhận xóa nhân viên
+                </h3>
+                <button type="button" class="rs-modal-close" onclick="closeDeleteModal()">&times;</button>
+            </div>
+
+            <div class="rs-modal-body">
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; margin-bottom: 14px;">
+                    <div style="font-size: 14px;"><strong>Nhân viên:</strong> <span id="delete_emp_name">—</span></div>
+                </div>
+
+                <div id="delete_modal_warning" style="font-size: 13.5px; line-height: 1.5; border-radius: 8px; padding: 12px;">
+                    <!-- JS cập nhật nội dung cảnh báo -->
+                </div>
+            </div>
+
+            <div class="rs-modal-footer">
+                <button type="button" class="rs-btn-cancel" onclick="closeDeleteModal()">Hủy</button>
+                <button type="submit" class="rs-btn-submit" id="delete_confirm_btn" style="background: #e11d48;">
+                    Xác nhận xóa
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- ==========================================================================
    MODAL 4: XÁC NHẬN KHÓA / NGỪNG HOẠT ĐỘNG HOẶC MỞ LẠI NHÂN VIÊN
    ========================================================================== --}}
 <div class="rs-modal" id="statusModal">
@@ -628,6 +652,40 @@
         document.getElementById('statusModal').classList.remove('show');
     }
 
+
+    // Xử lý Modal Xóa
+    function openDeleteModal(id, name, hasHistory) {
+        const form = document.getElementById('deleteForm');
+        form.action = `/nhan-vien/${id}`;
+
+        document.getElementById('delete_emp_name').textContent = name;
+
+        const titleEl   = document.getElementById('delete_modal_title');
+        const warningEl = document.getElementById('delete_modal_warning');
+        const submitBtn = document.getElementById('delete_confirm_btn');
+
+        if (hasHistory) {
+            titleEl.innerHTML = '<span style="color:#b45309;">⚠️ Không thể xóa nhân viên này</span>';
+            warningEl.style.color = '#92400e';
+            warningEl.style.background = '#fef3c7';
+            warningEl.style.border = '1px solid #fde68a';
+            warningEl.innerHTML = '<strong>Bảo toàn hồ sơ nhân viên:</strong> Nhân viên này đã phát sinh nghiệp vụ trong hệ thống (đơn hàng giao thành công hoặc phiếu nhập kho).<br><br>Theo quy định bảo toàn dữ liệu, <strong>không được phép xóa vật lý</strong> để tránh sai lệch dữ liệu lịch sử. Vui lòng sử dụng tính năng <strong>"Ngừng hoạt động / Khóa tài khoản"</strong>.';
+            submitBtn.style.display = 'none';
+        } else {
+            titleEl.innerHTML = '<span style="color:#e11d48;">🗑️ Xác nhận xóa nhân viên</span>';
+            warningEl.style.color = '#991b1b';
+            warningEl.style.background = '#fef2f2';
+            warningEl.style.border = '1px solid #fee2e2';
+            warningEl.innerHTML = 'Bạn có chắc chắn muốn xóa nhân viên này khỏi hệ thống? Thao tác này sẽ <strong>xóa vĩnh viễn</strong> hồ sơ nhân viên và tài khoản người dùng tương ứng khỏi hệ thống.';
+            submitBtn.style.display = 'inline-flex';
+        }
+
+        document.getElementById('deleteModal').classList.add('show');
+    }
+
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').classList.remove('show');
+    }
 
     // Đóng modal khi bấm ra ngoài nền mờ
     window.addEventListener('click', function(e) {
