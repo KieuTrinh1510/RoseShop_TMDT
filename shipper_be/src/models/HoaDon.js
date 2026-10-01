@@ -132,6 +132,12 @@ HoaDon.init({
     phuong_thuc_thanh_toan: DataTypes.STRING,
     dia_chi_giao: DataTypes.TEXT,
     so_dien_thoai: DataTypes.STRING(20),
+
+    ngay_bat_giao: DataTypes.DATE,
+    da_phat_tre: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
 }, {
     sequelize,
     modelName: 'HoaDon',

@@ -1,8 +1,12 @@
 // src/routes/shipperRoutes.js
 const express = require('express');
 const controller = require('../controllers/shipperController');
+const homeController = require('../controllers/shipperHomeController');
 
 const router = express.Router();
+
+// Home
+router.get('/home', homeController.getHome);
 
 // Trạng thái
 router.get('/status', controller.getStatus);
@@ -14,9 +18,10 @@ router.get('/orders', controller.getAssignedOrders);
 router.get('/orders/:id', controller.getOrderDetail);
 router.get('/history', controller.getOrderHistory);
 
-// Giao hàng
-router.post('/orders/:id/pickup', controller.confirmPickup);
-router.post('/orders/:id/delivered', controller.markDelivered);
+// Giao hàng (thứ tự thao tác: pickup -> arrived -> delivered)
+router.post('/orders/:id/pickup', controller.confirmPickup);     // CONFIRMED -> SHIPPING
+router.post('/orders/:id/arrived', controller.baoDenNoi);        // báo khách "đã đến điểm giao"
+router.post('/orders/:id/delivered', controller.markDelivered);  // SHIPPING -> DELIVERED
 router.get('/orders/:id/timeout', controller.getTimeoutRemaining);
 
 module.exports = router;

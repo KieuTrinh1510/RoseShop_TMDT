@@ -1,20 +1,25 @@
 // lib/screens/home_screen.dart
-// Giữ nguyên tên class HomeScreen để login_screen.dart không phải sửa gì.
+// 4 tab (Home / Đơn hàng / Lịch sử / Profile). IndexedStack giữ state các tab
+// đã mở; tab chưa bấm vào thì chưa build (lazy) để không gọi API thừa.
+
 import 'package:flutter/material.dart';
 import '../widgets/liquid_bottom_nav.dart';
-import '../widgets/loadable_view.dart';
-import '../widgets/skeleton.dart';
-import 'mock_pages.dart';
+import 'home_tab.dart';
+import 'orders_tab.dart';
+import 'history_tab.dart';
+import 'profile_tab.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
-
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
   int _index = 0;
+
+  /// Tab đã được người dùng vào ít nhất 1 lần → mới build & giữ state.
+  final Set<int> _visited = {0};
 
   static const _items = [
     NavItemData(icon: Icons.home_rounded, label: 'Home'),
@@ -23,36 +28,28 @@ class _HomeScreenState extends State<HomeScreen> {
     NavItemData(icon: Icons.person_rounded, label: 'Profile'),
   ];
 
-  static const _pages = <Widget>[
-    HomePage(),
-    OrdersPage(),
-    HistoryPage(),
-    ProfilePage(),
-  ];
-
-  static const _skeletons = <Widget>[
-    HomeSkeleton(),
-    ListSkeleton(),
-    ListSkeleton(),
-    ProfileSkeleton(),
-  ];
-
-  // ---- MOCK LOADER -------------------------------------------------------
-  // Khi nối API thật: thay hàm này bằng lời gọi ApiService cho từng tab,
-  // trả về dữ liệu (List/Map/model) rồi dùng nó trong builder bên dưới.
-  static const bool _simulateError =
-      false; // đổi true để test màn Error + Retry
-
-  Future<bool> _mockLoad() async {
-    await Future<void>.delayed(const Duration(milliseconds: 600));
-    if (_simulateError) throw Exception('Mô phỏng lỗi mạng');
-    return true;
-  }
-  // -----------------------------------------------------------------------
-
   void _onTap(int i) {
     if (i == _index) return;
-    setState(() => _index = i);
+    setState(() {
+      _index = i;
+      _visited.add(i);
+    });
+  }
+
+  Widget _tabAt(int i) {
+    if (!_visited.contains(i)) return const SizedBox.shrink();
+    switch (i) {
+      case 0:
+        return const HomeTab();
+      case 1:
+        return const OrdersTab();
+      case 2:
+        return const HistoryTab();
+      case 3:
+        return const ProfileTab();
+      default:
+        return const SizedBox.shrink();
+    }
   }
 
   @override
@@ -63,21 +60,13 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: const Color(0xFF7B808D),
       body: Stack(
         children: [
-          // Nền xám lạnh + vài đốm sáng để hiệu ứng kính có chiều sâu
           const _Background(),
-
-          // Đổi tab: trang cũ bị gỡ ngay (không cross-fade, không chồng hình).
-          // Trang mới: Skeleton -> dữ liệu thật -> từng item fade + slide up.
           Positioned.fill(
-            child: LoadableView<bool>(
-              key: ValueKey<int>(_index),
-              loader: _mockLoad,
-              skeleton: _skeletons[_index],
-              builder: (context, data) => _pages[_index],
+            child: IndexedStack(
+              index: _index,
+              children: List.generate(4, _tabAt),
             ),
           ),
-
-          // Thanh nav nổi, nằm trong SafeArea (cộng inset đáy)
           Positioned(
             left: 16,
             right: 16,
@@ -96,7 +85,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class _Background extends StatelessWidget {
   const _Background();
-
   @override
   Widget build(BuildContext context) {
     return Positioned.fill(

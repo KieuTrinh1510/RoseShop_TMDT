@@ -6,7 +6,6 @@ const orderService = require('../services/shipperOrderService');
 const deliveryService = require('../services/shipperDeliveryService');
 
 // Mã shipper lấy từ user đã đăng nhập (giống Auth::user()->ma_nguoi_dung bên PHP)
-// Middleware đăng nhập của bạn phải gắn req.user, nếu tên khác thì sửa ở đây.
 function layMaNhanVien(req) {
     return Number(req.user.ma_nguoi_dung);
 }
@@ -26,7 +25,7 @@ async function chay(res, congViec) {
     }
 }
 
-// ── Trạng thái (UC7.2) ──
+// ── Trạng thái ──
 exports.getStatus = (req, res) =>
     chay(res, () => statusService.getStatus(layMaNhanVien(req)));
 
@@ -58,6 +57,9 @@ exports.getOrderHistory = (req, res) =>
 // ── Giao hàng ──
 exports.confirmPickup = (req, res) =>
     chay(res, () => deliveryService.confirmPickup(layMaNhanVien(req), req.params.id));
+
+exports.baoDenNoi = (req, res) =>
+    chay(res, () => deliveryService.baoDenNoi(layMaNhanVien(req), req.params.id));
 
 exports.markDelivered = (req, res) =>
     chay(res, () => deliveryService.markDelivered(layMaNhanVien(req), req.params.id));
