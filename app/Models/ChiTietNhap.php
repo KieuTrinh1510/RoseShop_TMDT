@@ -42,4 +42,20 @@ class ChiTietNhap extends Model
     {
         return $this->belongsTo(SanPham::class, 'ma_san_pham', 'ma_san_pham');
     }
+
+    public function danhGiaLoHangs()
+    {
+        return $this->hasMany(DanhGiaLoHang::class, 'ma_chi_tiet_nhap', 'ma_chi_tiet_nhap');
+    }
+
+    public function danhGiaMoiNhat()
+    {
+        return $this->hasOne(DanhGiaLoHang::class, 'ma_chi_tiet_nhap', 'ma_chi_tiet_nhap')
+            ->latestOfMany('thoi_gian_danh_gia');
+    }
+
+    public function baoCaoHangHongs()
+    {
+        return $this->hasMany(BaoCaoHangHong::class, 'ma_chi_tiet_nhap', 'ma_chi_tiet_nhap');
+    }
 }

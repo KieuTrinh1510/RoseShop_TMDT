@@ -388,13 +388,13 @@
                         <a href="{{ route('phieu-nhap.index') }}" class="submenu-item {{ request()->routeIs('phieu-nhap.*') ? 'active' : '' }}">
                             Phiếu nhập hàng
                         </a>
+                        <a href="{{ route('admin.nha-cung-cap') }}" class="submenu-item {{ request()->routeIs('admin.nha-cung-cap*') ? 'active' : '' }}">
+                            Nhà cung cấp
+                        </a>
+                        <a href="{{ route('admin.lo-hang') }}" class="submenu-item {{ request()->routeIs('admin.lo-hang*') ? 'active' : '' }}">
+                            Lô hàng
+                        </a>
                         @if($isAdmin)
-                            <a href="{{ route('admin.nha-cung-cap') }}" class="submenu-item {{ request()->routeIs('admin.nha-cung-cap*') ? 'active' : '' }}">
-                                Nhà cung cấp
-                            </a>
-                            <a href="{{ route('admin.lo-hang') }}" class="submenu-item {{ request()->routeIs('admin.lo-hang*') ? 'active' : '' }}">
-                                Lô hàng
-                            </a>
                             <a href="{{ route('admin.ton-kho') }}" class="submenu-item {{ request()->routeIs('admin.ton-kho*') ? 'active' : '' }}">
                                 Tồn kho
                             </a>
@@ -608,6 +608,49 @@
                     tongQuanItem.classList.add('active');
                 });
             }
+
+            // Tự động kết thúc / đóng mọi thông báo alert sau 3 giây (3s)
+            function setupAutoDismiss(alertEl) {
+                if (!alertEl || alertEl.dataset.autoDismissed) return;
+                alertEl.dataset.autoDismissed = 'true';
+                setTimeout(function() {
+                    alertEl.style.transition = 'opacity 0.5s ease, transform 0.5s ease, max-height 0.5s ease, margin 0.5s ease, padding 0.5s ease';
+                    alertEl.style.opacity = '0';
+                    alertEl.style.transform = 'translateY(-10px)';
+                    setTimeout(function() {
+                        if (typeof bootstrap !== 'undefined' && bootstrap.Alert) {
+                            try {
+                                const bsAlert = bootstrap.Alert.getInstance(alertEl) || new bootstrap.Alert(alertEl);
+                                bsAlert.close();
+                            } catch (e) {
+                                alertEl.remove();
+                            }
+                        } else {
+                            alertEl.remove();
+                        }
+                    }, 500);
+                }, 3000);
+            }
+
+            // Kích hoạt cho các alert có sẵn khi tải trang
+            document.querySelectorAll('.alert:not(.alert-permanent)').forEach(setupAutoDismiss);
+
+            // Theo dõi và tự động áp dụng cho các alert được thêm động vào DOM
+            const alertObserver = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.nodeType === 1) {
+                            if (node.classList && node.classList.contains('alert') && !node.classList.contains('alert-permanent')) {
+                                setupAutoDismiss(node);
+                            } else if (node.querySelectorAll) {
+                                node.querySelectorAll('.alert:not(.alert-permanent)').forEach(setupAutoDismiss);
+                            }
+                        }
+                    });
+                });
+            });
+
+            alertObserver.observe(document.body, { childList: true, subtree: true });
         });
     </script>
 </div>

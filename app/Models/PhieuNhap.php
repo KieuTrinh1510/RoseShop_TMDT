@@ -19,6 +19,7 @@ class PhieuNhap extends Model
     protected $fillable = [
         'ngay_nhap',
         'ma_nhan_vien',
+        'ma_nha_cung_cap',
         'ten_nha_cung_cap',
         'so_dien_thoai_ncc',
         'email_ncc',
@@ -29,6 +30,11 @@ class PhieuNhap extends Model
     protected $casts = [
         'ngay_nhap' => 'datetime',
     ];
+
+    public function nhaCungCap()
+    {
+        return $this->belongsTo(NhaCungCap::class, 'ma_nha_cung_cap', 'ma_nha_cung_cap');
+    }
 
     public function nhanVien()
     {
