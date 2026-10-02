@@ -145,10 +145,12 @@ Route::middleware(['auth', 'role:ADMIN'])->group(function () {
 
     // Quản lý Nhân viên (bao gồm trả tiền - admin only)
     Route::prefix('nhan-vien')->name('nhan-vien.')->controller(NhanVienController::class)->group(function () {
-        Route::get('/',                   'index')->name('index');
-        Route::put('/{ma_nhan_vien}',     'update')->name('update');
-        Route::delete('/{ma_nhan_vien}',  'destroy')->name('destroy');
-        Route::post('/{ma}/tra-tien',     'payback')->name('payback');
+        Route::get('/',                               'index')->name('index');
+        Route::post('/',                              'store')->name('store');
+        Route::put('/{ma_nhan_vien}',                 'update')->name('update');
+        Route::delete('/{ma_nhan_vien}',              'destroy')->name('destroy');
+        Route::post('/{ma}/tra-tien',                 'payback')->name('payback');
+        Route::patch('/{ma_nhan_vien}/toggle-status', 'toggleStatus')->name('toggle-status');
     });
 
     // ─── Placeholder routes cho các menu đang phát triển (ADMIN only) ──

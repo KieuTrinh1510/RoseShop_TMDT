@@ -15,6 +15,16 @@ class CheckRole
             return redirect()->route('login');
         }
 
+        // Chặn nhân viên ngừng hoạt động tiếp tục sử dụng chức năng ngay lập tức
+        if (Auth::user()->trang_thai === \App\Models\NguoiDung::TRANG_THAI_BI_KHOA) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            return redirect()->route('login')->withErrors([
+                'ten_dang_nhap' => 'Tài khoản của bạn đã bị ngừng hoạt động. Vui lòng liên hệ quản trị viên.'
+            ]);
+        }
+
         $vai_tro = Auth::user()->vai_tro; // ADMIN, NHAN_VIEN, SHIPPER, KHACH_HANG
 
         if (! in_array($vai_tro, $roles)) {
