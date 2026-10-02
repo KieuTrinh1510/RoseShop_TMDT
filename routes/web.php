@@ -9,6 +9,8 @@ use App\Http\Controllers\Admin\SanPham\NguyenVatLieuController;
 use App\Http\Controllers\Admin\HoaDonController;
 use App\Http\Controllers\Admin\DonHangController;
 use App\Http\Controllers\Admin\PhieuNhapController;
+use App\Http\Controllers\Admin\NhaCungCapController;
+use App\Http\Controllers\Admin\LoHangController;
 use App\Http\Controllers\Admin\BaoCaoController;
 use App\Http\Controllers\Shipper\ShipperController;
 use App\Http\Controllers\Shipper\NhanDonController;
@@ -155,8 +157,6 @@ Route::middleware(['auth', 'role:ADMIN'])->group(function () {
     Route::get('/admin/thanh-toan',             fn() => view('admin.placeholder', ['title' => 'Thanh toán']))->name('admin.thanh-toan');
     Route::get('/admin/mau-bo-hoa',             fn() => view('admin.placeholder', ['title' => 'Mẫu bó hoa']))->name('admin.mau-bo-hoa');
     Route::get('/admin/nguyen-vat-lieu',        fn() => view('admin.placeholder', ['title' => 'Nguyên vật liệu']))->name('admin.nguyen-vat-lieu');
-    Route::get('/admin/nha-cung-cap',           fn() => view('admin.placeholder', ['title' => 'Nhà cung cấp']))->name('admin.nha-cung-cap');
-    Route::get('/admin/lo-hang',                fn() => view('admin.placeholder', ['title' => 'Lô hàng']))->name('admin.lo-hang');
     Route::get('/admin/ton-kho',                fn() => view('admin.placeholder', ['title' => 'Tồn kho']))->name('admin.ton-kho');
     Route::get('/admin/quan-ly-shipper',        fn() => view('admin.placeholder', ['title' => 'Shipper']))->name('admin.shipper');
     Route::get('/admin/giao-hang/phan-cong',    fn() => view('admin.placeholder', ['title' => 'Phân công giao hàng']))->name('admin.giao-hang.phan-cong');
@@ -226,6 +226,26 @@ Route::prefix('phieu-nhap')->name('phieu-nhap.')->controller(PhieuNhapController
     Route::delete('/{id}', 'destroy')->name('destroy');
  
     Route::post('/{id}/confirm', 'confirm')->name('confirm');
+});
+
+// Quản lý Nhà cung cấp (UC4.1) - Cả ADMIN và NHÂN VIÊN
+Route::prefix('admin/nha-cung-cap')->name('admin.nha-cung-cap.')->controller(NhaCungCapController::class)->group(function () {
+    Route::get('/',              'index')->name('index');
+    Route::get('/create',        'create')->name('create');
+    Route::post('/',             'store')->name('store');
+    Route::get('/{id}',          'show')->name('show')->whereNumber('id');
+    Route::get('/{id}/edit',     'edit')->name('edit')->whereNumber('id');
+    Route::put('/{id}',          'update')->name('update')->whereNumber('id');
+    Route::patch('/{id}/trang-thai', 'updateStatus')->name('status')->whereNumber('id');
+    Route::post('/lo-hang/{ma_chi_tiet_nhap}/danh-gia', 'danhGiaLo')->name('danh-gia-lo')->whereNumber('ma_chi_tiet_nhap');
+});
+Route::get('/admin/nha-cung-cap', [NhaCungCapController::class, 'index'])->name('admin.nha-cung-cap');
+
+// Quản lý Lô hàng & Đánh giá chất lượng lô (Cả ADMIN và NHÂN VIÊN)
+Route::middleware(['auth', 'role:ADMIN,NHAN_VIEN'])->group(function () {
+    Route::get('/admin/lo-hang', [LoHangController::class, 'index'])->name('admin.lo-hang');
+    Route::get('/admin/lo-hang/{id}', [LoHangController::class, 'show'])->name('admin.lo-hang.show')->whereNumber('id');
+    Route::post('/admin/lo-hang/{id}/danh-gia', [LoHangController::class, 'danhGia'])->name('admin.lo-hang.danh-gia')->whereNumber('id');
 });
 Route::get('/bao-cao',               [BaoCaoController::class, 'index'])->name('bao-cao.index');
 Route::get('/bao-cao/doanh-thu',     [BaoCaoController::class, 'doanhThu'])->name('bao-cao.doanh-thu');

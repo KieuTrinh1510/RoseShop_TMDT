@@ -1,0 +1,476 @@
+/* ==========================================================================
+   CSS Quản lý Nhà cung cấp (RoseShop Admin)
+   ========================================================================== */
+.ncc-container {
+    padding: 0;
+}
+
+.ncc-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ncc-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.ncc-stat-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 18px 20px;
+    border: 1px solid #EAECF0;
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ncc-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 24, 40, 0.08);
+}
+
+.ncc-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.ncc-stat-icon.pink {
+    background-color: #FDEAF3;
+    color: #EC3D8F;
+}
+
+.ncc-stat-icon.green {
+    background-color: #ECFDF3;
+    color: #039855;
+}
+
+.ncc-stat-icon.gray {
+    background-color: #F2F4F7;
+    color: #667085;
+}
+
+.ncc-stat-info p {
+    margin: 0;
+    font-size: 13px;
+    color: #667085;
+    font-weight: 500;
+}
+
+.ncc-stat-info h3 {
+    margin: 4px 0 0 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: #101828;
+}
+
+/* Card & Table */
+.ncc-card {
+    background: #ffffff;
+    border: 1px solid #EAECF0;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+
+.ncc-card-header {
+    padding: 16px 20px;
+    background: #FAFAFA;
+    border-bottom: 1px solid #EAECF0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.ncc-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1D2939;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ncc-table {
+    width: 100%;
+    margin-bottom: 0;
+    vertical-align: middle;
+}
+
+.ncc-table thead th {
+    background-color: #F8F9FA;
+    color: #475467;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #EAECF0;
+    border-top: none;
+    white-space: nowrap;
+}
+
+.ncc-table tbody td {
+    padding: 14px 16px;
+    color: #344054;
+    font-size: 14px;
+    border-bottom: 1px solid #F2F4F7;
+    vertical-align: middle;
+}
+
+.ncc-table tbody tr:hover {
+    background-color: #FDF9FA;
+}
+
+/* Badges */
+.ncc-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.ncc-badge.active {
+    background-color: #ECFDF3;
+    color: #027A48;
+    border: 1px solid #A6F4C5;
+}
+
+.ncc-badge.inactive {
+    background-color: #FEF3F2;
+    color: #B42318;
+    border: 1px solid #FECDCA;
+}
+
+.ncc-badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: currentColor;
+}
+
+/* Action Buttons */
+.ncc-btn-primary {
+    background-color: #EC3D8F;
+    border: 1px solid #EC3D8F;
+    color: #ffffff;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 8px 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.ncc-btn-primary:hover {
+    background-color: #D82677;
+    border-color: #D82677;
+    color: #ffffff;
+}
+
+.ncc-btn-secondary {
+    background-color: #ffffff;
+    border: 1px solid #D0D5DD;
+    color: #344054;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 8px 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.ncc-btn-secondary:hover {
+    background-color: #F9FAFB;
+    color: #1D2939;
+    border-color: #98A2B3;
+}
+
+.ncc-action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #D0D5DD;
+    background: #fff;
+    color: #475467;
+    transition: all 0.15s ease;
+    text-decoration: none;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.ncc-action-btn:hover {
+    background: #F9FAFB;
+    color: #1D2939;
+    border-color: #98A2B3;
+}
+
+.ncc-action-btn.view:hover {
+    color: #EC3D8F;
+    border-color: #EC3D8F;
+    background-color: #FDEAF3;
+}
+
+.ncc-action-btn.edit:hover {
+    color: #027A48;
+    border-color: #A6F4C5;
+    background-color: #ECFDF3;
+}
+
+.ncc-action-btn.status-deactivate:hover {
+    color: #B42318;
+    border-color: #FECDCA;
+    background-color: #FEF3F2;
+}
+
+.ncc-action-btn.status-activate:hover {
+    color: #027A48;
+    border-color: #A6F4C5;
+    background-color: #ECFDF3;
+}
+
+/* Filter Box */
+.ncc-filter-box {
+    background: #ffffff;
+    border: 1px solid #EAECF0;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+}
+
+.ncc-filter-grid {
+    display: grid;
+    grid-template-columns: 2fr 1.2fr 1fr auto;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+@media (max-width: 991px) {
+    .ncc-filter-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 575px) {
+    .ncc-filter-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Detail page styles */
+.ncc-detail-grid {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+@media (max-width: 991px) {
+    .ncc-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ncc-info-card {
+    background: #ffffff;
+    border: 1px solid #EAECF0;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05);
+}
+
+.ncc-info-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #101828;
+    margin-bottom: 6px;
+}
+
+.ncc-info-meta {
+    font-size: 13px;
+    color: #667085;
+    margin-bottom: 20px;
+}
+
+.ncc-info-item {
+    padding: 12px 0;
+    border-top: 1px solid #F2F4F7;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ncc-info-item .label {
+    font-size: 12px;
+    color: #667085;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ncc-info-item .value {
+    font-size: 14px;
+    color: #1D2939;
+    font-weight: 500;
+    word-break: break-word;
+}
+
+.ncc-info-item .value a {
+    color: #EC3D8F;
+    text-decoration: none;
+}
+
+.ncc-info-item .value a:hover {
+    text-decoration: underline;
+}
+
+.ncc-empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: #667085;
+}
+
+.ncc-empty-icon {
+    font-size: 40px;
+    color: #D0D5DD;
+    margin-bottom: 12px;
+}
+
+/* ==========================================================================
+   Quality Dashboard & Lot Evaluation Styles
+   ========================================================================== */
+.ncc-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.ncc-kpi-card {
+    background: #ffffff;
+    border: 1px solid #EAECF0;
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ncc-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(16, 24, 40, 0.06);
+}
+
+.ncc-kpi-card .kpi-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #667085;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ncc-kpi-card .kpi-val {
+    font-size: 20px;
+    font-weight: 700;
+    color: #101828;
+    line-height: 1.2;
+}
+
+.ncc-kpi-card.kpi-success {
+    border-left: 4px solid #12B76A;
+}
+.ncc-kpi-card.kpi-success .kpi-val {
+    color: #027A48;
+}
+
+.ncc-kpi-card.kpi-warning {
+    border-left: 4px solid #F79009;
+}
+.ncc-kpi-card.kpi-warning .kpi-val {
+    color: #B54708;
+}
+
+.ncc-kpi-card.kpi-danger {
+    border-left: 4px solid #F04438;
+}
+.ncc-kpi-card.kpi-danger .kpi-val {
+    color: #D92D20;
+}
+
+.ncc-kpi-card.kpi-rate {
+    border-left: 4px solid #EC3D8F;
+    background: #FFF5F9;
+}
+.ncc-kpi-card.kpi-rate .kpi-val {
+    color: #EC3D8F;
+}
+
+.badge-quality-dat {
+    background-color: #ECFDF3;
+    color: #027A48;
+    border: 1px solid #A6F4C5;
+    font-weight: 600;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.badge-quality-covande {
+    background-color: #FFFAEB;
+    color: #B54708;
+    border: 1px solid #FEDF89;
+    font-weight: 600;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.badge-quality-khongdat {
+    background-color: #FEF3F2;
+    color: #B42318;
+    border: 1px solid #FECDCA;
+    font-weight: 600;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.badge-quality-chuadanhgia {
+    background-color: #F2F4F7;
+    color: #667085;
+    border: 1px solid #D0D5DD;
+    font-weight: 500;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
