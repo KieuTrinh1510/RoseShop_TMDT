@@ -98,6 +98,10 @@ class NhanVienController extends Controller
             PhieuNhap::pluck('ma_nhan_vien')->toArray()
         ));
 
+        // Mã nhân viên tiếp theo tự động tăng theo định dạng NV-xxxx
+        $maxId = max((int)NguoiDung::max('ma_nguoi_dung'), (int)NhanVien::max('ma_nhan_vien'));
+        $nextMaNV = 'NV-' . str_pad($maxId + 1, 4, '0', STR_PAD_LEFT);
+
         return view('admin.NhanVien', compact(
             'nhanViens',
             'chucVus',
@@ -108,7 +112,8 @@ class NhanVienController extends Controller
             'dangHoatDong',
             'perPage',
             'hasBusinessIds',
-            'inProgressOrderCounts'
+            'inProgressOrderCounts',
+            'nextMaNV'
         ));
     }
 

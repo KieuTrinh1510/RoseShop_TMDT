@@ -409,7 +409,7 @@
                 <div class="rs-form-grid">
                     <div class="rs-form-group col-span-2">
                         <label class="rs-form-label">Mã nhân viên</label>
-                        <input type="text" class="rs-form-control rs-readonly-input" value="NV-xxxx (Hệ thống tự động cấp sau khi tạo)" readonly>
+                        <input type="text" class="rs-form-control rs-readonly-input" value="{{ $nextMaNV }}" readonly>
                     </div>
 
                     <div class="rs-form-group">
