@@ -229,7 +229,11 @@ Route::prefix('phieu-nhap')->name('phieu-nhap.')->controller(PhieuNhapController
     Route::delete('/{id}', 'destroy')->name('destroy');
  
     Route::post('/{id}/confirm', 'confirm')->name('confirm');
+
+    Route::get('/{id}', 'show')->name('show')->whereNumber('id');
 });
+
+Route::get('/admin/phieu-nhap/{id}', [PhieuNhapController::class, 'show'])->whereNumber('id');
 
 // Quản lý Nhà cung cấp (UC4.1) - Cả ADMIN và NHÂN VIÊN
 Route::prefix('admin/nha-cung-cap')->name('admin.nha-cung-cap.')->controller(NhaCungCapController::class)->group(function () {

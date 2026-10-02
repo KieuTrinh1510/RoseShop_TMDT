@@ -279,4 +279,17 @@ class PhieuNhapController extends Controller
         return redirect()->route('phieu-nhap.index')
                          ->with('success', 'Xác nhận thành công! Số lượng kho đã được cập nhật.');
     }
+
+    public function show($id)
+    {
+        $phieuNhap = PhieuNhap::with([
+            'nhanVien',
+            'nhaCungCap',
+            'chiTietNhaps.sanPham',
+            'chiTietNhaps.danhGiaMoiNhat',
+            'chiTietNhaps.baoCaoHangHongs',
+        ])->findOrFail($id);
+
+        return view('admin.PhieuNhap.show', compact('phieuNhap'));
+    }
 }

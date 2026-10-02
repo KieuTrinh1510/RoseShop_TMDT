@@ -389,7 +389,9 @@
                                 @endphp
                                 <tr>
                                     <td>
-                                        <span class="fw-bold">#{{ $pn->ma_phieu_nhap }}</span>
+                                        <a href="{{ route('phieu-nhap.show', $pn->ma_phieu_nhap) }}" class="fw-bold text-decoration-none" style="color:#EC3D8F;" title="Xem chi tiết phiếu nhập">
+                                            #{{ $pn->ma_phieu_nhap }}
+                                        </a>
                                     </td>
                                     <td>
                                         {{ $pn->ngay_nhap ? \Carbon\Carbon::parse($pn->ngay_nhap)->format('d/m/Y H:i') : '—' }}
@@ -417,10 +419,12 @@
                                         @endif
                                     </td>
                                     <td class="text-end">
-                                        <a href="{{ route('phieu-nhap.index') }}"
-                                           class="ncc-action-btn view"
-                                           title="Xem tại trang Phiếu nhập">
-                                            <i class="bi bi-arrow-up-right-square"></i>
+                                        <a href="{{ route('phieu-nhap.show', $pn->ma_phieu_nhap) }}"
+                                           class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1"
+                                           style="font-size:12px; font-weight:600; padding: 4px 10px; border-radius:6px;"
+                                           title="Xem chi tiết phiếu nhập #PN-{{ $pn->ma_phieu_nhap }}">
+                                            <i class="bi bi-eye"></i>
+                                            <span>Xem chi tiết</span>
                                         </a>
                                     </td>
                                 </tr>

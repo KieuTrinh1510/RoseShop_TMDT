@@ -303,7 +303,11 @@
                     <tbody>
                         @forelse($danhSachPhieuNhap as $pn)
                         <tr>
-                            <td>{{ $pn->ma_phieu_nhap }}</td>
+                            <td>
+                                <a href="{{ route('phieu-nhap.show', $pn->ma_phieu_nhap) }}" class="fw-bold text-decoration-none" style="color:#EC3D8F;" title="Mở trang chi tiết">
+                                    #PN-{{ $pn->ma_phieu_nhap }}
+                                </a>
+                            </td>
 
                             <td>
                                 {{ $pn->ngay_nhap ? \Carbon\Carbon::parse($pn->ngay_nhap)->format('d/m/Y H:i') : '—' }}
@@ -408,8 +412,11 @@
                 <div class="text-center py-3 text-muted">Đang tải...</div>
             </div>
 
-            <div class="modal-footer" style="border-top:1px solid #ccc;">
-                <button type="button" class="btn btn-dark" data-bs-dismiss="modal">Đóng</button>
+            <div class="modal-footer d-flex justify-content-between" style="border-top:1px solid #ccc;">
+                <a href="#" id="linkTrangChiTietModal" class="btn btn-outline-dark btn-sm">
+                    <i class="bi bi-box-arrow-up-right me-1"></i>Mở trang chi tiết đầy đủ
+                </a>
+                <button type="button" class="btn btn-dark btn-sm" data-bs-dismiss="modal">Đóng</button>
             </div>
         </div>
     </div>
@@ -639,6 +646,11 @@
             `<i class="bi bi-file-earmark-text me-2"></i>Chi tiết phiếu nhập #${id}`;
         document.getElementById('noiDungModal').innerHTML =
             '<div class="text-center py-3 text-muted"><i class="bi bi-hourglass-split me-2"></i>Đang tải...</div>';
+        
+        const linkFull = document.getElementById('linkTrangChiTietModal');
+        if (linkFull) {
+            linkFull.href = `/phieu-nhap/${id}`;
+        }
 
         const modal = new bootstrap.Modal(document.getElementById('modalChiTiet'));
         modal.show();
