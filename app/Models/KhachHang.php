@@ -22,13 +22,14 @@ class KhachHang extends Model
         'email',
         'dia_chi',
         'diem_tich_luy',
+        'quyen_cod',
     ];
 
     protected $casts = [
         'diem_tich_luy' => 'integer',
+        'quyen_cod'     => 'string',
     ];
 
-   
     public function nguoiDung()
     {
         return $this->belongsTo(NguoiDung::class, 'ma_khach_hang', 'ma_nguoi_dung');
@@ -37,5 +38,10 @@ class KhachHang extends Model
     public function hoaDons()
     {
         return $this->hasMany(HoaDon::class, 'ma_khach_hang', 'ma_khach_hang');
+    }
+
+    public function lichSuViPhamCod()
+    {
+        return $this->hasMany(LichSuViPhamCod::class, 'ma_khach_hang', 'ma_khach_hang')->orderBy('id', 'desc');
     }
 }
