@@ -425,15 +425,24 @@
 
             <div class="rs-modal-body">
                 <div class="rs-form-grid">
-                    {{-- Mã tài khoản: Tự sinh hiển thị dạng ô xám chuẩn --}}
+                    {{-- Mã tài khoản & Mã đối tượng tương ứng --}}
                     <div class="rs-form-group col-span-2">
-                        <label class="rs-form-label">Mã tài khoản</label>
-                        <input type="text" class="rs-form-control rs-readonly-input" value="{{ $nextMaTK }}" readonly>
+                        <div style="display: flex; gap: 12px; width: 100%;">
+                            <div style="flex: 1;">
+                                <label class="rs-form-label">Mã tài khoản</label>
+                                <input type="text" class="rs-form-control rs-readonly-input" value="{{ $nextMaTK }}" readonly>
+                            </div>
+                            <div style="flex: 1; display: none;" id="box_ma_doi_tuong">
+                                <label class="rs-form-label" id="label_ma_doi_tuong">Mã đối tượng dự kiến</label>
+                                <input type="text" class="rs-form-control rs-readonly-input" id="input_ma_doi_tuong" value="{{ $nextMaNV }}" readonly style="color: #f43f5e; font-weight: 700;">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="rs-form-group">
                         <label class="rs-form-label">Tên đăng nhập <span style="color:#e11d48;">*</span></label>
-                        <input type="text" name="ten_dang_nhap" class="rs-form-control" required placeholder="VD: admin_rose, nv_thao" autocomplete="off">
+                        <input type="text" name="ten_dang_nhap" id="create_ten_dang_nhap" class="rs-form-control" required placeholder="VD: admin_rose, nv_thao" autocomplete="off">
+                        <div id="create_username_feedback" class="rs-feedback-msg" style="display:none;"></div>
                     </div>
 
                     <div class="rs-form-group">
@@ -453,8 +462,11 @@
                     </div>
 
                     {{-- Nhóm trường thông tin Khách hàng (nếu tạo KH) --}}
-                    <div id="createKhachHangFields" class="col-span-2" style="display:none; border-top:1px dashed #e2e8f0; padding-top:14px; margin-top:4px;">
-                        <div class="rs-form-grid">
+                    <div id="createKhachHangFields" class="col-span-2" style="display:none; border-top:1px dashed #e2e8f0; padding-top:16px; margin-top:6px; width: 100%;">
+                        <div style="font-size: 13.5px; font-weight: 700; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                            <span style="color:#f43f5e;">👤</span> Thông tin chi tiết khách hàng
+                        </div>
+                        <div class="rs-form-grid" style="width: 100%;">
                             <div class="rs-form-group col-span-2">
                                 <label class="rs-form-label">Họ và tên khách hàng <span style="color:#e11d48;">*</span></label>
                                 <input type="text" name="ten_khach_hang" id="create_ten_khach_hang" class="rs-form-control" placeholder="Nguyễn Văn A">
@@ -475,8 +487,11 @@
                     </div>
 
                     {{-- Nhóm trường thông tin Nhân sự (Nhân viên / Shipper) --}}
-                    <div id="createNhanVienFields" class="col-span-2" style="display:none; border-top:1px dashed #e2e8f0; padding-top:14px; margin-top:4px;">
-                        <div class="rs-form-grid">
+                    <div id="createNhanVienFields" class="col-span-2" style="display:none; border-top:1px dashed #e2e8f0; padding-top:16px; margin-top:6px; width: 100%;">
+                        <div style="font-size: 13.5px; font-weight: 700; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                            <span style="color:#f43f5e;">📋</span> Thông tin chi tiết nhân sự
+                        </div>
+                        <div class="rs-form-grid" style="width: 100%;">
                             <div class="rs-form-group col-span-2">
                                 <label class="rs-form-label">Họ và tên nhân viên <span style="color:#e11d48;">*</span></label>
                                 <input type="text" name="ten_nhan_vien" id="create_ten_nhan_vien" class="rs-form-control" placeholder="Trần Thị B">
@@ -595,10 +610,16 @@
         const role = document.getElementById('create_vai_tro').value;
         const khFields = document.getElementById('createKhachHangFields');
         const nvFields = document.getElementById('createNhanVienFields');
+        const boxDoiTuong = document.getElementById('box_ma_doi_tuong');
+        const labelDoiTuong = document.getElementById('label_ma_doi_tuong');
+        const inputDoiTuong = document.getElementById('input_ma_doi_tuong');
 
         if (role === 'KHACH_HANG') {
             khFields.style.display = 'block';
             nvFields.style.display = 'none';
+            boxDoiTuong.style.display = 'block';
+            labelDoiTuong.textContent = 'Mã khách hàng dự kiến';
+            inputDoiTuong.value = '{{ $nextMaKH }}';
             document.getElementById('create_ten_khach_hang').setAttribute('required', 'required');
             document.getElementById('create_so_dien_thoai').setAttribute('required', 'required');
             document.getElementById('create_email').setAttribute('required', 'required');
@@ -607,24 +628,85 @@
         } else if (role === 'NHAN_VIEN' || role === 'SHIPPER') {
             khFields.style.display = 'none';
             nvFields.style.display = 'block';
+            boxDoiTuong.style.display = 'block';
+            if (role === 'SHIPPER') {
+                labelDoiTuong.textContent = 'Mã Shipper (NV) dự kiến';
+                inputDoiTuong.value = '{{ $nextMaNV }}';
+                document.getElementById('create_chuc_vu').value = 'SHIPPER';
+            } else {
+                labelDoiTuong.textContent = 'Mã nhân viên dự kiến';
+                inputDoiTuong.value = '{{ $nextMaNV }}';
+            }
             document.getElementById('create_ten_nhan_vien').setAttribute('required', 'required');
             document.getElementById('create_so_dien_thoai_nv').setAttribute('required', 'required');
             document.getElementById('create_ten_khach_hang').removeAttribute('required');
             document.getElementById('create_so_dien_thoai').removeAttribute('required');
             document.getElementById('create_email').removeAttribute('required');
-
-            if (role === 'SHIPPER') {
-                document.getElementById('create_chuc_vu').value = 'SHIPPER';
-            }
         } else {
             khFields.style.display = 'none';
             nvFields.style.display = 'none';
+            boxDoiTuong.style.display = 'none';
             document.getElementById('create_ten_khach_hang').removeAttribute('required');
             document.getElementById('create_so_dien_thoai').removeAttribute('required');
             document.getElementById('create_email').removeAttribute('required');
             document.getElementById('create_ten_nhan_vien').removeAttribute('required');
             document.getElementById('create_so_dien_thoai_nv').removeAttribute('required');
         }
+    }
+
+    // Real-time kiểm tra trùng Tên đăng nhập ngay khi Admin gõ
+    let usernameTimer = null;
+    const usernameInput = document.getElementById('create_ten_dang_nhap');
+    const usernameFeedback = document.getElementById('create_username_feedback');
+    const createSubmitBtn = document.querySelector('#createModal button[type="submit"]');
+
+    if (usernameInput) {
+        usernameInput.addEventListener('input', function() {
+            clearTimeout(usernameTimer);
+            const val = this.value.trim();
+
+            if (val.length === 0) {
+                usernameFeedback.style.display = 'none';
+                usernameInput.classList.remove('is-invalid', 'is-valid');
+                if (createSubmitBtn) createSubmitBtn.disabled = false;
+                return;
+            }
+
+            if (val.length < 3) {
+                usernameFeedback.style.display = 'flex';
+                usernameFeedback.className = 'rs-feedback-msg error';
+                usernameFeedback.innerHTML = '✕ Tên đăng nhập phải có ít nhất 3 ký tự';
+                usernameInput.classList.add('is-invalid');
+                usernameInput.classList.remove('is-valid');
+                if (createSubmitBtn) createSubmitBtn.disabled = true;
+                return;
+            }
+
+            usernameTimer = setTimeout(() => {
+                fetch(`{{ route('nguoi-dung.check-username') }}?ten_dang_nhap=${encodeURIComponent(val)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        usernameFeedback.style.display = 'flex';
+                        if (data.exists) {
+                            usernameFeedback.className = 'rs-feedback-msg error';
+                            usernameFeedback.innerHTML = '✕ Tên đăng nhập này đã được sử dụng! Vui lòng chọn tên khác.';
+                            usernameInput.classList.add('is-invalid');
+                            usernameInput.classList.remove('is-valid');
+                            if (createSubmitBtn) createSubmitBtn.disabled = true;
+                        } else {
+                            usernameFeedback.className = 'rs-feedback-msg success';
+                            usernameFeedback.innerHTML = '✓ Tên đăng nhập hợp lệ, có thể sử dụng.';
+                            usernameInput.classList.remove('is-invalid');
+                            usernameInput.classList.add('is-valid');
+                            if (createSubmitBtn) createSubmitBtn.disabled = false;
+                        }
+                    })
+                    .catch(() => {
+                        usernameFeedback.style.display = 'none';
+                        if (createSubmitBtn) createSubmitBtn.disabled = false;
+                    });
+            }, 300);
+        });
     }
 
     // Modal Khóa / Mở khóa tài khoản

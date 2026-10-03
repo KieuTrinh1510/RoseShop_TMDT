@@ -80,9 +80,12 @@ class NguoiDungController extends Controller
 
         $hasBusinessIds = array_unique(array_merge($orderCustomers, $orderStaff, $importStaff, $codCustomers));
 
-        // 8. Mã tài khoản tiếp theo
+        // 8. Mã tài khoản, nhân viên, khách hàng đồng bộ tiếp theo
         $maxId = (int)NguoiDung::max('ma_nguoi_dung');
-        $nextMaTK = 'TK-' . str_pad($maxId + 1, 4, '0', STR_PAD_LEFT);
+        $nextIdFormatted = str_pad($maxId + 1, 4, '0', STR_PAD_LEFT);
+        $nextMaTK = 'TK-' . $nextIdFormatted;
+        $nextMaNV = 'NV-' . $nextIdFormatted;
+        $nextMaKH = 'KH-' . $nextIdFormatted;
 
         return view('admin.NguoiDung', compact(
             'nguoiDungs',
@@ -94,7 +97,9 @@ class NguoiDungController extends Controller
             'soBiKhoa',
             'perPage',
             'hasBusinessIds',
-            'nextMaTK'
+            'nextMaTK',
+            'nextMaNV',
+            'nextMaKH'
         ));
     }
 

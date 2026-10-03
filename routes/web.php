@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\NguoiDungController;
 use App\Http\Controllers\Admin\KhachHangController;
 use App\Http\Controllers\Admin\NhanVienController;
+use App\Http\Controllers\Admin\ShipperController as AdminShipperController;
 use App\Http\Controllers\Admin\SanPham\SanPhamController;
 use App\Http\Controllers\Admin\SanPham\BoHoaController as SanPhamBoHoaController;
 use App\Http\Controllers\Admin\SanPham\NguyenVatLieuController;
@@ -141,6 +142,7 @@ Route::middleware(['auth', 'role:ADMIN'])->group(function () {
         Route::delete('/{id}',       [NguoiDungController::class, 'destroy'])->name('destroy');
         Route::get('/{id}/edit-data',[NguoiDungController::class, 'editData'])->name('edit-data');
         Route::post('/{id}/reset-password', [NguoiDungController::class, 'resetPassword'])->name('reset-password');
+        Route::get('/check-username', [NguoiDungController::class, 'checkUsername'])->name('check-username');
         Route::patch('/{id}/toggle-status', [NguoiDungController::class, 'toggleStatus'])->name('toggle-status');
     });
 
@@ -159,7 +161,15 @@ Route::middleware(['auth', 'role:ADMIN'])->group(function () {
     Route::get('/admin/mau-bo-hoa',             fn() => view('admin.placeholder', ['title' => 'Mẫu bó hoa']))->name('admin.mau-bo-hoa');
     Route::get('/admin/nguyen-vat-lieu',        fn() => view('admin.placeholder', ['title' => 'Nguyên vật liệu']))->name('admin.nguyen-vat-lieu');
     Route::get('/admin/ton-kho',                fn() => view('admin.placeholder', ['title' => 'Tồn kho']))->name('admin.ton-kho');
-    Route::get('/admin/quan-ly-shipper',        fn() => view('admin.placeholder', ['title' => 'Shipper']))->name('admin.shipper');
+    // Quản lý Shipper (ADMIN only - UC2.4)
+    Route::prefix('admin/quan-ly-shipper')->name('admin.shipper.')->controller(AdminShipperController::class)->group(function () {
+        Route::get('/',                               'index')->name('index');
+        Route::get('/{id}/detail',                    'detail')->name('detail');
+        Route::get('/{id}/lich-su-giao-hang',         'lichSuGiaoHang')->name('lich-su-giao-hang');
+        Route::patch('/{id}/toggle-status',           'toggleStatus')->name('toggle-status');
+        Route::delete('/{id}',                        'destroy')->name('destroy');
+    });
+    Route::get('/admin/shipper', fn() => redirect()->route('admin.shipper.index'))->name('admin.shipper');
     Route::get('/admin/giao-hang/phan-cong',    fn() => view('admin.placeholder', ['title' => 'Phân công giao hàng']))->name('admin.giao-hang.phan-cong');
     Route::get('/admin/giao-hang/theo-doi',     fn() => view('admin.placeholder', ['title' => 'Theo dõi giao hàng']))->name('admin.giao-hang.theo-doi');
     Route::get('/admin/giao-hang/hang-hoan',    fn() => view('admin.placeholder', ['title' => 'Hàng hoàn']))->name('admin.giao-hang.hang-hoan');
