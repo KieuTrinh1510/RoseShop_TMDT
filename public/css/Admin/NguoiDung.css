@@ -717,7 +717,7 @@
     background: #ffffff;
     border-radius: 16px;
     width: 100%;
-    max-width: 580px;
+    max-width: 660px;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
     transform: scale(0.95);
     transition: transform 0.2s ease-in-out;
@@ -795,16 +795,47 @@ input.rs-readonly-input {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 14px;
+    width: 100%;
 }
 
 .rs-form-group {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    width: 100%;
 }
 
+.col-span-2,
 .rs-form-group.col-span-2 {
-    grid-column: span 2;
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+}
+
+.rs-feedback-msg {
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.rs-feedback-msg.error {
+    color: #e11d48;
+}
+
+.rs-feedback-msg.success {
+    color: #059669;
+}
+
+.rs-form-control.is-invalid {
+    border-color: #f43f5e !important;
+    background-color: #fff1f2 !important;
+}
+
+.rs-form-control.is-valid {
+    border-color: #10b981 !important;
+    background-color: #f0fdf4 !important;
 }
 
 .rs-form-label {

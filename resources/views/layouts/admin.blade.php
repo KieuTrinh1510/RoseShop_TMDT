@@ -429,7 +429,7 @@
                             <a href="{{ route('nhan-vien.index') }}" class="submenu-item {{ request()->routeIs('nhan-vien.*') ? 'active' : '' }}">
                                 Nhân viên
                             </a>
-                            <a href="{{ route('admin.shipper') }}" class="submenu-item {{ request()->routeIs('admin.shipper*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.shipper.index') }}" class="submenu-item {{ request()->routeIs('admin.shipper*') ? 'active' : '' }}">
                                 Shipper
                             </a>
                         </div>

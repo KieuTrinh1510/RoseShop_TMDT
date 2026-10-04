@@ -24,15 +24,6 @@
                 <p class="rs-header-subtitle">Theo dõi, quản lý thông tin nhân viên và phân quyền hệ thống</p>
             </div>
         </div>
-
-        {{-- Nút Thêm nhân viên chuyển lên góc trên Header theo ghi chú Image 1 --}}
-        <button type="button" class="rs-btn-create" onclick="openCreateModal()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M5 12h14"/>
-                <path d="M12 5v14"/>
-            </svg>
-            Thêm nhân viên
-        </button>
     </div>
 
     {{-- THÔNG BÁO --}}
