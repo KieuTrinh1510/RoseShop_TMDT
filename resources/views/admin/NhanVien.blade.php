@@ -121,84 +121,66 @@
     {{-- 3. CARD CHÍNH CHỨA BỘ LỌC VÀ BẢNG --}}
     <div class="rs-main-card">
 
-        {{-- Form lọc và tìm kiếm 2 tầng đồng bộ giao diện --}}
-        <form method="GET" action="{{ route('nhan-vien.index') }}" id="nhanVienFilterForm" class="rs-toolbar-stack">
+        {{-- Form lọc: Tất cả bộ lọc + Ô tìm kiếm + Nút tìm kiếm trên cùng 1 hàng --}}
+        <form method="GET" action="{{ route('nhan-vien.index') }}" id="nhanVienFilterForm" class="rs-toolbar-unified">
+            <input type="hidden" name="per_page" id="nv_per_page_hidden" value="{{ $perPage }}">
 
-            {{-- Hàng 1: Ô tìm kiếm kéo dài + Nút Tìm kiếm cùng 1 hàng --}}
-            <div class="rs-search-row">
-                <div class="rs-search-bar">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"/>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                    </svg>
-                    <input type="text"
-                           name="keyword"
-                           value="{{ request('keyword') }}"
-                           placeholder="Tìm kiếm theo tên, email, SĐT..."
-                           autocomplete="off">
-                </div>
-                <button type="submit" class="rs-btn-search">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"/>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                    </svg>
-                    Tìm kiếm
-                </button>
+            {{-- 1. Lọc theo chức vụ --}}
+            <select name="chuc_vu" class="rs-select" onchange="document.getElementById('nhanVienFilterForm').submit()">
+                <option value="">Tất cả chức vụ</option>
+                @foreach($chucVus as $val => $lbl)
+                    <option value="{{ $val }}" {{ request('chuc_vu') == $val ? 'selected' : '' }}>
+                        {{ $lbl }}
+                    </option>
+                @endforeach
+            </select>
+
+            {{-- 2. Lọc theo trạng thái tài khoản --}}
+            <select name="trang_thai" class="rs-select" onchange="document.getElementById('nhanVienFilterForm').submit()">
+                <option value="">Tất cả trạng thái</option>
+                <option value="HOAT_DONG" {{ request('trang_thai') == 'HOAT_DONG' ? 'selected' : '' }}>Hoạt động</option>
+                <option value="BI_KHOA" {{ request('trang_thai') == 'BI_KHOA' ? 'selected' : '' }}>Bị khóa</option>
+            </select>
+
+            {{-- 3. Sắp xếp mức lương --}}
+            <select name="sort" class="rs-select" onchange="document.getElementById('nhanVienFilterForm').submit()">
+                <option value="">Sắp xếp mức lương</option>
+                <option value="luong_desc" {{ request('sort') == 'luong_desc' ? 'selected' : '' }}>Lương cao → thấp</option>
+                <option value="luong_asc" {{ request('sort') == 'luong_asc' ? 'selected' : '' }}>Lương thấp → cao</option>
+            </select>
+
+            {{-- 4. Ô tìm kiếm nội dung --}}
+            <div class="rs-search-box-unified">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text"
+                       name="keyword"
+                       value="{{ request('keyword') }}"
+                       placeholder="Tìm kiếm theo tên, email, SĐT..."
+                       autocomplete="off">
             </div>
 
-            {{-- Hàng 2: Bộ lọc bên trái + Hiển thị dòng/trang bên phải --}}
-            <div class="rs-filter-row">
-                <div class="rs-filter-left">
-                    {{-- Lọc theo chức vụ --}}
-                    <select name="chuc_vu" class="rs-select" onchange="document.getElementById('nhanVienFilterForm').submit()">
-                        <option value="">Tất cả chức vụ</option>
-                        @foreach($chucVus as $val => $lbl)
-                            <option value="{{ $val }}" {{ request('chuc_vu') == $val ? 'selected' : '' }}>
-                                {{ $lbl }}
-                            </option>
-                        @endforeach
-                    </select>
+            {{-- 5. Nút tìm kiếm --}}
+            <button type="submit" class="rs-btn-search">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                Tìm kiếm
+            </button>
 
-                    {{-- Sắp xếp mức lương --}}
-                    <select name="sort" class="rs-select" onchange="document.getElementById('nhanVienFilterForm').submit()">
-                        <option value="">Sắp xếp mức lương</option>
-                        <option value="luong_desc" {{ request('sort') == 'luong_desc' ? 'selected' : '' }}>Lương cao → thấp</option>
-                        <option value="luong_asc" {{ request('sort') == 'luong_asc' ? 'selected' : '' }}>Lương thấp → cao</option>
-                    </select>
-
-                    {{-- Lọc theo trạng thái tài khoản --}}
-                    <select name="trang_thai" class="rs-select" onchange="document.getElementById('nhanVienFilterForm').submit()">
-                        <option value="">Tất cả trạng thái</option>
-                        <option value="HOAT_DONG" {{ request('trang_thai') == 'HOAT_DONG' ? 'selected' : '' }}>Hoạt động</option>
-                        <option value="BI_KHOA" {{ request('trang_thai') == 'BI_KHOA' ? 'selected' : '' }}>Bị khóa</option>
-                    </select>
-
-                    @if(request()->anyFilled(['keyword', 'chuc_vu', 'trang_thai', 'sort']))
-                        <a href="{{ route('nhan-vien.index', ['per_page' => $perPage]) }}" class="rs-btn-filter-clear">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="18" y1="6" x2="6" y2="18"/>
-                                <line x1="6" y1="6" x2="18" y2="18"/>
-                            </svg>
-                            Bỏ lọc
-                        </a>
-                    @endif
-                </div>
-
-                {{-- Hiển thị [10 ▼] dòng/trang bên phải --}}
-                <div class="rs-filter-right">
-                    <div class="rs-per-page-box">
-                        <span>Hiển thị</span>
-                        <select name="per_page" class="rs-per-page-select" onchange="document.getElementById('nhanVienFilterForm').submit()">
-                            <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10</option>
-                            <option value="20" {{ $perPage == 20 ? 'selected' : '' }}>20</option>
-                            <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50</option>
-                            <option value="100" {{ $perPage == 100 ? 'selected' : '' }}>100</option>
-                        </select>
-                        <span>dòng/trang</span>
-                    </div>
-                </div>
-            </div>
-
+            {{-- 6. Nút Bỏ lọc nếu đang có filter --}}
+            @if(request()->anyFilled(['keyword', 'chuc_vu', 'trang_thai', 'sort']))
+                <a href="{{ route('nhan-vien.index', ['per_page' => $perPage]) }}" class="rs-btn-filter-clear" title="Đặt lại bộ lọc">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                    Bỏ lọc
+                </a>
+            @endif
         </form>
 
         {{-- 4. BẢNG DỮ LIỆU CHUẨN HÓA VỚI CỘT MÃ NHÂN VIÊN VÀ TIỀN COD --}}
@@ -347,10 +329,21 @@
             </table>
         </div>
 
-        {{-- 5. FOOTER PHÂN TRANG --}}
+        {{-- 5. FOOTER: Chuẩn hóa theo hình ảnh (Số hàng mỗi trang [10 ▼]   X-Y / Z bản ghi   < 1 ... n >) --}}
         <div class="rs-table-footer">
-            <div class="rs-footer-summary">
-                Hiển thị <span class="rs-text-bold">{{ $nhanViens->firstItem() ?? 0 }}</span> - <span class="rs-text-bold">{{ $nhanViens->lastItem() ?? 0 }}</span> trong tổng số <span class="rs-text-bold">{{ $nhanViens->total() }}</span> bản ghi
+            <div class="rs-footer-left">
+                <div class="rs-per-page-inline">
+                    <span class="rs-per-page-label">Số hàng mỗi trang</span>
+                    <select class="rs-per-page-select" onchange="document.getElementById('nv_per_page_hidden').value = this.value; document.getElementById('nhanVienFilterForm').submit();">
+                        <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10</option>
+                        <option value="20" {{ $perPage == 20 ? 'selected' : '' }}>20</option>
+                        <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50</option>
+                        <option value="100" {{ $perPage == 100 ? 'selected' : '' }}>100</option>
+                    </select>
+                </div>
+                <div class="rs-records-count">
+                    {{ $nhanViens->firstItem() ?? 0 }}-{{ $nhanViens->lastItem() ?? 0 }} / {{ $nhanViens->total() }} bản ghi
+                </div>
             </div>
 
             <div class="rs-footer-pagination">
@@ -362,14 +355,45 @@
                         <li class="page-item"><a class="page-link" href="{{ $nhanViens->previousPageUrl() }}" rel="prev">&lsaquo;</a></li>
                     @endif
 
-                    {{-- Các nút số trang (1, 2, 3...) --}}
-                    @for ($p = 1; $p <= $nhanViens->lastPage(); $p++)
-                        @if ($p == $nhanViens->currentPage())
+                    {{-- Logic sliding window: Chỉ hiển thị trang đầu cuối, ở giữa là ... --}}
+                    @php
+                        $currentPage = $nhanViens->currentPage();
+                        $lastPage = $nhanViens->lastPage();
+                        $pages = [];
+
+                        if ($lastPage <= 3) {
+                            for ($i = 1; $i <= $lastPage; $i++) {
+                                $pages[] = $i;
+                            }
+                        } else {
+                            $pages[] = 1;
+                            if ($currentPage > 2) {
+                                $pages[] = '...';
+                            }
+                            if ($currentPage == 1) {
+                                $pages[] = 2;
+                            } elseif ($currentPage == $lastPage) {
+                                $pages[] = $lastPage - 1;
+                            } else {
+                                $pages[] = $currentPage;
+                            }
+                            if ($currentPage < $lastPage - 1) {
+                                $pages[] = '...';
+                            }
+                            $pages[] = $lastPage;
+                            $pages = array_values(array_unique($pages));
+                        }
+                    @endphp
+
+                    @foreach ($pages as $p)
+                        @if ($p === '...')
+                            <li class="page-item disabled"><span class="page-link ellipsis">&hellip;</span></li>
+                        @elseif ($p == $currentPage)
                             <li class="page-item active"><span class="page-link">{{ $p }}</span></li>
                         @else
                             <li class="page-item"><a class="page-link" href="{{ $nhanViens->url($p) }}">{{ $p }}</a></li>
                         @endif
-                    @endfor
+                    @endforeach
 
                     {{-- Nút trang sau (>) --}}
                     @if ($nhanViens->hasMorePages())

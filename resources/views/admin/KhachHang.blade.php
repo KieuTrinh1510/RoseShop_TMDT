@@ -105,82 +105,63 @@
     {{-- 3. CARD CHÍNH: TOOLBAR 2 TẦNG + TABLE 8 CỘT --}}
     <div class="rs-card">
 
-        {{-- TOOLBAR BỘ LỌC 2 TẦNG THEO BẢN VẼ BỐ CỤC ĐỀ XUẤT --}}
-        <form method="GET" action="{{ route('khach-hang.index') }}" id="filterForm" class="rs-toolbar-stack">
+        {{-- Form lọc: Tất cả bộ lọc + Ô tìm kiếm + Nút tìm kiếm trên cùng 1 hàng --}}
+        <form method="GET" action="{{ route('khach-hang.index') }}" id="filterForm" class="rs-toolbar-unified">
+            <input type="hidden" name="per_page" id="kh_per_page_hidden" value="{{ $perPage }}">
 
-            {{-- Hàng 1: Ô tìm kiếm toàn diện + Nút Tìm kiếm --}}
-            <div class="rs-search-row">
-                <div class="rs-search-bar">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"/>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                    </svg>
-                    <input type="text"
-                           name="keyword"
-                           value="{{ request('keyword') }}"
-                           placeholder="Tìm kiếm khách hàng theo tên, mã KH, số điện thoại, email..."
-                           autocomplete="off">
-                </div>
-                <button type="submit" class="rs-btn-search">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"/>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                    </svg>
-                    Tìm kiếm
-                </button>
+            {{-- 1. Lọc trạng thái tài khoản --}}
+            <select name="trang_thai" class="rs-select" onchange="document.getElementById('filterForm').submit()">
+                <option value="">Tất cả trạng thái</option>
+                <option value="HOAT_DONG" {{ request('trang_thai') === 'HOAT_DONG' ? 'selected' : '' }}>Hoạt động</option>
+                <option value="BI_KHOA" {{ request('trang_thai') === 'BI_KHOA' ? 'selected' : '' }}>Bị khóa</option>
+            </select>
+
+            {{-- 2. Lọc quyền COD --}}
+            <select name="quyen_cod" class="rs-select" onchange="document.getElementById('filterForm').submit()">
+                <option value="">Tất cả quyền COD</option>
+                <option value="CHO_PHEP" {{ request('quyen_cod') === 'CHO_PHEP' ? 'selected' : '' }}>Được phép COD</option>
+                <option value="GIOI_HAN" {{ request('quyen_cod') === 'GIOI_HAN' ? 'selected' : '' }}>Bị giới hạn COD</option>
+            </select>
+
+            {{-- 3. Sắp xếp điểm tích lũy --}}
+            <select name="sort" class="rs-select" onchange="document.getElementById('filterForm').submit()">
+                <option value="">Sắp xếp điểm</option>
+                <option value="diem_desc" {{ request('sort') === 'diem_desc' ? 'selected' : '' }}>Điểm: Cao → Thấp</option>
+                <option value="diem_asc" {{ request('sort') === 'diem_asc' ? 'selected' : '' }}>Điểm: Thấp → Cao</option>
+            </select>
+
+            {{-- 4. Ô tìm kiếm nội dung --}}
+            <div class="rs-search-box-unified">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input type="text"
+                       name="keyword"
+                       value="{{ request('keyword') }}"
+                       placeholder="Tìm kiếm theo tên, mã KH, SĐT, email..."
+                       autocomplete="off">
             </div>
 
-            {{-- Hàng 2: Bộ lọc bên trái + Hiển thị dòng/trang bên phải --}}
-            <div class="rs-filter-row">
-                <div class="rs-filter-left">
-                    {{-- Lọc trạng thái tài khoản --}}
-                    <select name="trang_thai" class="rs-select" onchange="document.getElementById('filterForm').submit()">
-                        <option value="">Trạng thái</option>
-                        <option value="HOAT_DONG" {{ request('trang_thai') === 'HOAT_DONG' ? 'selected' : '' }}>Hoạt động</option>
-                        <option value="BI_KHOA" {{ request('trang_thai') === 'BI_KHOA' ? 'selected' : '' }}>Bị khóa</option>
-                    </select>
+            {{-- 5. Nút tìm kiếm --}}
+            <button type="submit" class="rs-btn-search">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                Tìm kiếm
+            </button>
 
-                    {{-- Lọc quyền COD --}}
-                    <select name="quyen_cod" class="rs-select" onchange="document.getElementById('filterForm').submit()">
-                        <option value="">Quyền COD</option>
-                        <option value="CHO_PHEP" {{ request('quyen_cod') === 'CHO_PHEP' ? 'selected' : '' }}>Được phép COD</option>
-                        <option value="GIOI_HAN" {{ request('quyen_cod') === 'GIOI_HAN' ? 'selected' : '' }}>Bị giới hạn COD</option>
-                    </select>
-
-                    {{-- Sắp xếp --}}
-                    <select name="sort" class="rs-select" onchange="document.getElementById('filterForm').submit()">
-                        <option value="">Sắp xếp</option>
-                        <option value="diem_desc" {{ request('sort') === 'diem_desc' ? 'selected' : '' }}>Điểm: Cao → Thấp</option>
-                        <option value="diem_asc" {{ request('sort') === 'diem_asc' ? 'selected' : '' }}>Điểm: Thấp → Cao</option>
-                    </select>
-
-                    {{-- Nút Xóa lọc --}}
-                    @if(request()->anyFilled(['keyword', 'trang_thai', 'quyen_cod', 'sort']))
-                        <a href="{{ route('khach-hang.index', ['per_page' => $perPage]) }}" class="rs-btn-filter-clear">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="18" y1="6" x2="6" y2="18"/>
-                                <line x1="6" y1="6" x2="18" y2="18"/>
-                            </svg>
-                            Bỏ lọc
-                        </a>
-                    @endif
-                </div>
-
-                {{-- Hiển thị [10 ▼] dòng/trang bên phải (đồng bộ kiểu dáng nhân viên) --}}
-                <div class="rs-filter-right">
-                    <div class="rs-per-page-box">
-                        <span>Hiển thị</span>
-                        <select name="per_page" class="rs-per-page-select" onchange="document.getElementById('filterForm').submit()">
-                            <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10</option>
-                            <option value="20" {{ $perPage == 20 ? 'selected' : '' }}>20</option>
-                            <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50</option>
-                            <option value="100" {{ $perPage == 100 ? 'selected' : '' }}>100</option>
-                        </select>
-                        <span>dòng/trang</span>
-                    </div>
-                </div>
-            </div>
-
+            {{-- 6. Nút Bỏ lọc nếu đang có filter --}}
+            @if(request()->anyFilled(['keyword', 'trang_thai', 'quyen_cod', 'sort']))
+                <a href="{{ route('khach-hang.index', ['per_page' => $perPage]) }}" class="rs-btn-filter-clear" title="Đặt lại bộ lọc">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                    Bỏ lọc
+                </a>
+            @endif
         </form>
 
         {{-- BẢNG KHÁCH HÀNG 7 CỘT TINH GỌN (THÔNG TIN CẦN NHÌN NHANH, KHÔNG TRÀN MÀN HÌNH) --}}
@@ -357,10 +338,21 @@
             </table>
         </div>
 
-        {{-- 4. FOOTER: PHÂN TRANG ĐỒNG BỘ --}}
+        {{-- 4. FOOTER: Chuẩn hóa theo hình ảnh (Số hàng mỗi trang [10 ▼]   X-Y / Z bản ghi   < 1 ... n >) --}}
         <div class="rs-table-footer">
-            <div class="rs-footer-summary">
-                Hiển thị <span class="rs-text-bold">{{ $khachHangs->firstItem() ?? 0 }}</span> - <span class="rs-text-bold">{{ $khachHangs->lastItem() ?? 0 }}</span> trong tổng số <span class="rs-text-bold">{{ $khachHangs->total() }}</span> bản ghi
+            <div class="rs-footer-left">
+                <div class="rs-per-page-inline">
+                    <span class="rs-per-page-label">Số hàng mỗi trang</span>
+                    <select class="rs-per-page-select" onchange="document.getElementById('kh_per_page_hidden').value = this.value; document.getElementById('filterForm').submit();">
+                        <option value="10" {{ $perPage == 10 ? 'selected' : '' }}>10</option>
+                        <option value="20" {{ $perPage == 20 ? 'selected' : '' }}>20</option>
+                        <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50</option>
+                        <option value="100" {{ $perPage == 100 ? 'selected' : '' }}>100</option>
+                    </select>
+                </div>
+                <div class="rs-records-count">
+                    {{ $khachHangs->firstItem() ?? 0 }}-{{ $khachHangs->lastItem() ?? 0 }} / {{ $khachHangs->total() }} bản ghi
+                </div>
             </div>
 
             <div class="rs-footer-pagination">
@@ -372,14 +364,45 @@
                         <li class="page-item"><a class="page-link" href="{{ $khachHangs->previousPageUrl() }}" rel="prev">&lsaquo;</a></li>
                     @endif
 
-                    {{-- Các nút số trang (1, 2, 3...) --}}
-                    @for ($p = 1; $p <= $khachHangs->lastPage(); $p++)
-                        @if ($p == $khachHangs->currentPage())
+                    {{-- Logic sliding window: Chỉ hiển thị trang đầu cuối, ở giữa là ... --}}
+                    @php
+                        $currentPage = $khachHangs->currentPage();
+                        $lastPage = $khachHangs->lastPage();
+                        $pages = [];
+
+                        if ($lastPage <= 3) {
+                            for ($i = 1; $i <= $lastPage; $i++) {
+                                $pages[] = $i;
+                            }
+                        } else {
+                            $pages[] = 1;
+                            if ($currentPage > 2) {
+                                $pages[] = '...';
+                            }
+                            if ($currentPage == 1) {
+                                $pages[] = 2;
+                            } elseif ($currentPage == $lastPage) {
+                                $pages[] = $lastPage - 1;
+                            } else {
+                                $pages[] = $currentPage;
+                            }
+                            if ($currentPage < $lastPage - 1) {
+                                $pages[] = '...';
+                            }
+                            $pages[] = $lastPage;
+                            $pages = array_values(array_unique($pages));
+                        }
+                    @endphp
+
+                    @foreach ($pages as $p)
+                        @if ($p === '...')
+                            <li class="page-item disabled"><span class="page-link ellipsis">&hellip;</span></li>
+                        @elseif ($p == $currentPage)
                             <li class="page-item active"><span class="page-link">{{ $p }}</span></li>
                         @else
                             <li class="page-item"><a class="page-link" href="{{ $khachHangs->url($p) }}">{{ $p }}</a></li>
                         @endif
-                    @endfor
+                    @endforeach
 
                     {{-- Nút trang sau (>) --}}
                     @if ($khachHangs->hasMorePages())

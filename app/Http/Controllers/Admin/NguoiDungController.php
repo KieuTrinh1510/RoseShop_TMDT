@@ -6,15 +6,96 @@ use App\Models\NguoiDung;
 use App\Models\KhachHang;
 use App\Models\NhanVien;
 use App\Models\HoaDon;
+use App\Models\PhieuNhap;
+use App\Models\LichSuViPhamCod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class NguoiDungController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $nguoiDungs = NguoiDung::with(['khachHang', 'nhanVien'])->get();
-        return view('admin.NguoiDung', compact('nguoiDungs'));
+        $query = NguoiDung::with(['khachHang', 'nhanVien']);
+
+        // 1. Tìm kiếm theo từ khóa (Mã TK, Tên đăng nhập, Tên, Email, SĐT)
+        if ($request->filled('keyword')) {
+            $kw = trim($request->keyword);
+            $query->where(function ($q) use ($kw) {
+                $q->where('ten_dang_nhap', 'like', "%{$kw}%");
+                if (is_numeric($kw)) {
+                    $q->orWhere('ma_nguoi_dung', (int)$kw);
+                }
+                $q->orWhereHas('khachHang', function ($sub) use ($kw) {
+                    $sub->where('ten_khach_hang', 'like', "%{$kw}%")
+                        ->orWhere('email', 'like', "%{$kw}%")
+                        ->orWhere('so_dien_thoai', 'like', "%{$kw}%");
+                });
+                $q->orWhereHas('nhanVien', function ($sub) use ($kw) {
+                    $sub->where('ten_nhan_vien', 'like', "%{$kw}%")
+                        ->orWhere('email', 'like', "%{$kw}%")
+                        ->orWhere('so_dien_thoai', 'like', "%{$kw}%");
+                });
+            });
+        }
+
+        // 2. Lọc theo vai trò (ADMIN, NHAN_VIEN, SHIPPER, KHACH_HANG)
+        if ($request->filled('vai_tro')) {
+            $query->where('vai_tro', $request->vai_tro);
+        }
+
+        // 3. Lọc theo trạng thái tài khoản (HOAT_DONG, BI_KHOA)
+        if ($request->filled('trang_thai')) {
+            $query->where('trang_thai', $request->trang_thai);
+        }
+
+        // 4. Sắp xếp
+        $sort = $request->get('sort', '');
+        if ($sort === 'id_asc') {
+            $query->orderBy('ma_nguoi_dung', 'asc');
+        } elseif ($sort === 'username_asc') {
+            $query->orderBy('ten_dang_nhap', 'asc');
+        } elseif ($sort === 'username_desc') {
+            $query->orderBy('ten_dang_nhap', 'desc');
+        } else {
+            $query->orderBy('ma_nguoi_dung', 'desc');
+        }
+
+        // 5. Phân trang: 10 (mặc định), 20, 50, 100
+        $perPage = in_array((int)$request->get('per_page'), [10, 20, 50, 100]) ? (int)$request->get('per_page') : 10;
+        $nguoiDungs = $query->paginate($perPage)->appends($request->query());
+
+        // 6. Thống kê KPI
+        $tongTaiKhoan   = NguoiDung::count();
+        $soAdmin        = NguoiDung::where('vai_tro', 'ADMIN')->count();
+        $soNhanSu       = NguoiDung::whereIn('vai_tro', ['NHAN_VIEN', 'SHIPPER'])->count();
+        $soKhachHang    = NguoiDung::where('vai_tro', 'KHACH_HANG')->count();
+        $soDangHoatDong = NguoiDung::where('trang_thai', NguoiDung::TRANG_THAI_HOAT_DONG)->count();
+        $soBiKhoa       = NguoiDung::where('trang_thai', NguoiDung::TRANG_THAI_BI_KHOA)->count();
+
+        // 7. Danh sách ID tài khoản đã phát sinh dữ liệu nghiệp vụ (bảo toàn hồ sơ, chặn xóa vật lý)
+        $orderCustomers = HoaDon::pluck('ma_khach_hang')->toArray();
+        $orderStaff     = HoaDon::whereNotNull('ma_nhan_vien_giao')->pluck('ma_nhan_vien_giao')->toArray();
+        $importStaff    = PhieuNhap::pluck('ma_nhan_vien')->toArray();
+        $codCustomers   = LichSuViPhamCod::pluck('ma_khach_hang')->toArray();
+
+        $hasBusinessIds = array_unique(array_merge($orderCustomers, $orderStaff, $importStaff, $codCustomers));
+
+        // 8. Mã tài khoản tiếp theo
+        $maxId = (int)NguoiDung::max('ma_nguoi_dung');
+        $nextMaTK = 'TK-' . str_pad($maxId + 1, 4, '0', STR_PAD_LEFT);
+
+        return view('admin.NguoiDung', compact(
+            'nguoiDungs',
+            'tongTaiKhoan',
+            'soAdmin',
+            'soNhanSu',
+            'soKhachHang',
+            'soDangHoatDong',
+            'soBiKhoa',
+            'perPage',
+            'hasBusinessIds',
+            'nextMaTK'
+        ));
     }
 
     public function checkUsername(Request $request)
@@ -142,18 +223,70 @@ class NguoiDungController extends Controller
         }
     }
 
-    public function destroy($id)
+    public function toggleStatus(Request $request, $id)
     {
+        if (! auth()->user() || ! auth()->user()->isAdmin()) {
+            abort(403, 'Chỉ Quản trị viên (Admin) mới có quyền khóa hoặc mở khóa tài khoản.');
+        }
+
+        if ((int)$id === (int)auth()->id()) {
+            return back()->with('error', 'Bạn không thể tự khóa tài khoản của chính mình đang đăng nhập!');
+        }
+
+        $user = NguoiDung::findOrFail($id);
+        $targetStatus = $request->input('target_status');
+
+        if ($targetStatus === NguoiDung::TRANG_THAI_BI_KHOA) {
+            // Chặn thao tác trùng
+            if ($user->trang_thai === NguoiDung::TRANG_THAI_BI_KHOA) {
+                return back()->with('error', "Tài khoản \"{$user->ten_dang_nhap}\" đã ở trạng thái Bị khóa, không thể khóa lại!");
+            }
+            $user->trang_thai = NguoiDung::TRANG_THAI_BI_KHOA;
+            $user->save();
+            return back()->with('success', "Đã khóa tài khoản \"{$user->ten_dang_nhap}\" thành công!");
+        } elseif ($targetStatus === NguoiDung::TRANG_THAI_HOAT_DONG) {
+            // Chặn thao tác trùng
+            if ($user->trang_thai === NguoiDung::TRANG_THAI_HOAT_DONG) {
+                return back()->with('error', "Tài khoản \"{$user->ten_dang_nhap}\" đang ở trạng thái Hoạt động, không thể mở khóa!");
+            }
+            $user->trang_thai = NguoiDung::TRANG_THAI_HOAT_DONG;
+            $user->save();
+            return back()->with('success', "Đã mở khóa tài khoản \"{$user->ten_dang_nhap}\" thành công!");
+        } else {
+            $isLocking = ($user->trang_thai === NguoiDung::TRANG_THAI_HOAT_DONG);
+            $user->trang_thai = $isLocking ? NguoiDung::TRANG_THAI_BI_KHOA : NguoiDung::TRANG_THAI_HOAT_DONG;
+            $user->save();
+            $action = $isLocking ? 'Khóa' : 'Mở khóa';
+            return back()->with('success', "Đã {$action} tài khoản \"{$user->ten_dang_nhap}\" thành công!");
+        }
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        if (! auth()->user() || ! auth()->user()->isAdmin()) {
+            abort(403, 'Chỉ Quản trị viên (Admin) mới có quyền xóa tài khoản.');
+        }
+
+        if ((int)$id === (int)auth()->id()) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Bạn không thể tự xóa tài khoản của chính mình đang đăng nhập!'], 422);
+            }
+            return back()->with('error', 'Bạn không thể tự xóa tài khoản của chính mình đang đăng nhập!');
+        }
+
         $user = NguoiDung::findOrFail($id);
 
-        if ($user->isKhachHang()) {
-            $soHoaDon = HoaDon::where('ma_khach_hang', $id)->count();
-            if ($soHoaDon > 0) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Không thể xóa! Khách hàng này có ' . $soHoaDon . ' hóa đơn liên quan, vui lòng xóa hóa đơn trước.',
-                ], 422);
+        // BẢO TOÀN DỮ LIỆU NGHIỆP VỤ: Không xóa vật lý nếu đã phát sinh dữ liệu
+        $hasOrders = HoaDon::where('ma_khach_hang', $id)->orWhere('ma_nhan_vien_giao', $id)->exists();
+        $hasImports = PhieuNhap::where('ma_nhan_vien', $id)->exists();
+        $hasCodViolations = LichSuViPhamCod::where('ma_khach_hang', $id)->exists();
+
+        if ($hasOrders || $hasImports || $hasCodViolations) {
+            $msg = 'Bảo toàn dữ liệu: Tài khoản "' . $user->ten_dang_nhap . '" đã phát sinh dữ liệu nghiệp vụ trong hệ thống (đơn hàng/nhập kho/lịch sử COD), không được phép xóa vật lý! Vui lòng sử dụng tính năng "Khóa tài khoản" thay thế.';
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
             }
+            return back()->with('error', $msg);
         }
 
         DB::beginTransaction();
@@ -163,13 +296,20 @@ class NguoiDungController extends Controller
             } elseif ($user->isNhanVien()) {
                 NhanVien::where('ma_nhan_vien', $id)->delete();
             }
-            
+
             $user->delete();
             DB::commit();
-            return response()->json(['success' => true]);
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => true, 'message' => 'Xóa tài khoản thành công!']);
+            }
+            return back()->with('success', 'Xóa tài khoản thành công!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Lỗi xóa tài khoản: ' . $e->getMessage()], 500);
+            }
+            return back()->with('error', 'Lỗi: ' . $e->getMessage());
         }
     }
 
