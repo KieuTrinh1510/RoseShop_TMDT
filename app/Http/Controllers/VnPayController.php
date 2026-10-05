@@ -166,14 +166,33 @@ class VnPayController extends Controller
             ->with('success', "🎉 Thanh toán VNPay thành công cho đơn hàng #{$hoaDon->ma_hoa_don}!");
     }
 
-    // Thanh toán thất bại/hủy — không đụng DB, giữ nguyên đơn để user thử lại.
+    // Thanh toán thất bại/hủy — release reservation để phục hồi tồn khả dụng
     if ($responseCode !== null && !$this->vnPayService->isSuccessResponseCode($responseCode)) {
-        Log::info('VNPay Return: thanh toán thất bại/hủy', [
+        Log::info('VNPay Return: thanh toán thất bại/hủy, giải phóng reservation', [
             'ma_hoa_don'    => $hoaDon->ma_hoa_don,
             'response_code' => $responseCode,
         ]);
+
+        try {
+            DB::transaction(function () use ($hoaDon, $responseCode, $vnpData) {
+                $locked = HoaDon::where('ma_hoa_don', $hoaDon->ma_hoa_don)->lockForUpdate()->first();
+                if ($locked && $locked->trang_thai_thanh_toan !== 'DA_THANH_TOAN' && $locked->trang_thai !== 'CANCELLED') {
+                    if ($locked->reservations()->where('trang_thai', \App\Models\InventoryReservation::STATUS_RESERVED)->exists()) {
+                        \App\Services\InventoryReservationService::releaseOrder($locked);
+                    }
+                    $locked->trang_thai           = 'CANCELLED';
+                    $locked->vnpay_response_code  = $responseCode;
+                    $locked->vnpay_transaction_no = $vnpData['vnp_TransactionNo'] ?? null;
+                    $locked->vnpay_bank_code      = $vnpData['vnp_BankCode'] ?? null;
+                    $locked->save();
+                }
+            });
+        } catch (\Throwable $e) {
+            Log::error('VNPay Return release reservation error: ' . $e->getMessage());
+        }
+
         return redirect()->route('customer.dashboard')
-            ->with('error', "Thanh toán cho đơn hàng #{$hoaDon->ma_hoa_don} không thành công. Bạn có thể bấm \"Thanh toán\" ở đơn hàng này để thử lại.");
+            ->with('error', "Thanh toán cho đơn hàng #{$hoaDon->ma_hoa_don} không thành công hoặc đã bị hủy. Hàng đang giữ đã được giải phóng.");
     }
 
     return redirect()->route('customer.dashboard')
@@ -269,17 +288,17 @@ class VnPayController extends Controller
 
                     Log::info('VNPay IPN: finalize thành công', ['ma_hoa_don' => $hoaDon->ma_hoa_don]);
                 } else {
-                    // Thất bại / khách huỷ trên trang VNPay: KHÔNG trừ kho, KHÔNG trừ/cộng điểm.
-                    // QUAN TRỌNG: KHÔNG đổi trang_thai (giữ nguyên PENDING) và KHÔNG đổi
-                    // trang_thai_thanh_toan (giữ nguyên CHUA_THANH_TOAN) — đơn phải sống nguyên
-                    // để khách bấm "Thanh toán" lại trên CHÍNH đơn này (không tạo đơn mới).
-                    // Chỉ ghi lại kết quả lần thử gần nhất để tra cứu/hỗ trợ khi cần.
+                    // Thất bại / khách huỷ trên trang VNPay: giải phóng giữ kho (RESERVED -> RELEASED)
+                    if ($hoaDon->reservations()->where('trang_thai', \App\Models\InventoryReservation::STATUS_RESERVED)->exists()) {
+                        \App\Services\InventoryReservationService::releaseOrder($hoaDon);
+                    }
+                    $hoaDon->trang_thai           = 'CANCELLED';
                     $hoaDon->vnpay_response_code  = $responseCode;
                     $hoaDon->vnpay_transaction_no = $vnpData['vnp_TransactionNo'] ?? null;
                     $hoaDon->vnpay_bank_code      = $vnpData['vnp_BankCode'] ?? null;
                     $hoaDon->save();
 
-                    Log::info('VNPay IPN: thanh toán thất bại/huỷ, đơn được giữ nguyên để retry', [
+                    Log::info('VNPay IPN: thanh toán thất bại/huỷ, reservation đã release', [
                         'ma_hoa_don'    => $hoaDon->ma_hoa_don,
                         'response_code' => $responseCode,
                     ]);

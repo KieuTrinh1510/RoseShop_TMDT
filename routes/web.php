@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\DonHangController;
 use App\Http\Controllers\Admin\PhieuNhapController;
 use App\Http\Controllers\Admin\NhaCungCapController;
 use App\Http\Controllers\Admin\LoHangController;
+use App\Http\Controllers\Admin\TonKhoController;
 use App\Http\Controllers\Admin\BaoCaoController;
 use App\Http\Controllers\Shipper\ShipperController;
 use App\Http\Controllers\Shipper\NhanDonController;
@@ -160,7 +161,8 @@ Route::middleware(['auth', 'role:ADMIN'])->group(function () {
     Route::get('/admin/thanh-toan',             fn() => view('admin.placeholder', ['title' => 'Thanh toán']))->name('admin.thanh-toan');
     Route::get('/admin/mau-bo-hoa',             fn() => view('admin.placeholder', ['title' => 'Mẫu bó hoa']))->name('admin.mau-bo-hoa');
     Route::get('/admin/nguyen-vat-lieu',        fn() => view('admin.placeholder', ['title' => 'Nguyên vật liệu']))->name('admin.nguyen-vat-lieu');
-    Route::get('/admin/ton-kho',                fn() => view('admin.placeholder', ['title' => 'Tồn kho']))->name('admin.ton-kho');
+    Route::get('/admin/ton-kho',                [TonKhoController::class, 'index'])->name('admin.ton-kho');
+    Route::get('/admin/ton-kho/{id}/giu',        [TonKhoController::class, 'chiTietGiu'])->name('admin.ton-kho.giu');
     // Quản lý Shipper (ADMIN only - UC2.4)
     Route::prefix('admin/quan-ly-shipper')->name('admin.shipper.')->controller(AdminShipperController::class)->group(function () {
         Route::get('/',                               'index')->name('index');

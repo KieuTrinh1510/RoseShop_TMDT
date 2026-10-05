@@ -103,4 +103,13 @@ class BoHoa extends Model
     {
         return $query->where('loai_bo_hoa', 'HE_THONG');
     }
+
+    public function reservations()
+    {
+        return $this->hasMany(
+            InventoryReservation::class,
+            'ma_bo_hoa',
+            'ma_bo_hoa'
+        );
+    }
 }
