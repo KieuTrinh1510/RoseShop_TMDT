@@ -581,4 +581,113 @@ class UC43_LoHangManagementTest extends TestCase
         // Vẫn thấy lô hàng cũ
         $resShow->assertSee('#CTN-' . $ctn->ma_chi_tiet_nhap);
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // TEST 24: Phân biệt rõ Lỗi QC và Đã trừ hỏng trên danh sách lô (Không dùng max())
+    // ─────────────────────────────────────────────────────────────────────────
+    public function test_24_phan_biet_ro_loi_qc_va_hang_hong_da_tru_kho_tren_danh_sach_lo(): void
+    {
+        $admin = $this->createUser('ADMIN', 'admin_24');
+        [$pn, $ctn, $sp] = $this->createPhieuNhapWithLot(PhieuNhap::TRANG_THAI_CONFIRMED, 100);
+
+        // 1. Thực hiện QC phát hiện 30 lỗi (Có vấn đề)
+        $resQc = $this->actingAs($admin)->post(route('admin.lo-hang.danh-gia', $ctn->ma_chi_tiet_nhap), [
+            'ket_qua'      => DanhGiaLoHang::KET_QUA_CO_VAN_DE,
+            'so_luong_loi' => 30,
+            'ly_do'        => 'Hoa héo',
+        ]);
+        $resQc->assertSessionHas('success');
+
+        // Tồn kho và số lượng còn lại của lô tuyệt đối KHÔNG đổi
+        $this->assertEquals(100, $ctn->fresh()->so_luong_con_lai);
+        $this->assertEquals(20, $sp->fresh()->so_luong);
+
+        // Kiểm tra UI danh sách lô: Phải hiển thị riêng biệt Lỗi QC: 30 và Đã trừ hỏng: 0
+        $resIndex = $this->actingAs($admin)->get(route('admin.lo-hang'));
+        $resIndex->assertOk();
+        $resIndex->assertSee('Lỗi QC:');
+        $resIndex->assertSee('Đã trừ hỏng:');
+        $resIndex->assertSee('30');
+        $resIndex->assertSee('100'); // Còn lại vẫn là 100
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // TEST 25: Báo hỏng lô tái sử dụng UC4.4 và giảm đúng tồn kho một lần
+    // ─────────────────────────────────────────────────────────────────────────
+    public function test_25_bao_hong_lo_tai_su_dung_uc44_va_giam_dung_ton_kho_mot_lan(): void
+    {
+        $admin = $this->createUser('ADMIN', 'admin_25');
+        [$pn, $ctn, $sp] = $this->createPhieuNhapWithLot(PhieuNhap::TRANG_THAI_CONFIRMED, 100);
+
+        $spInitialStock = $sp->fresh()->so_luong; // 20
+
+        // Báo hỏng 30 cành hoa từ lô này
+        $resBaoHong = $this->actingAs($admin)->post(route('san-pham.bao-hang-hong'), [
+            'ma_san_pham'      => $sp->ma_san_pham,
+            'ma_chi_tiet_nhap' => $ctn->ma_chi_tiet_nhap,
+            'so_luong_hong'    => 30,
+            'ly_do'            => 'Xuất hủy hoa héo dập',
+            'ghi_chu'          => 'Trừ kho theo lô #CTN-' . $ctn->ma_chi_tiet_nhap,
+        ]);
+        $resBaoHong->assertSessionHas('success');
+
+        // Kiểm tra tồn lô giảm chính xác 30 (100 -> 70)
+        $this->assertEquals(70, $ctn->fresh()->so_luong_con_lai);
+
+        // Kiểm tra tồn sản phẩm giảm chính xác 30 (không double deduction)
+        $this->assertEquals($spInitialStock - 30, $sp->fresh()->so_luong);
+
+        // Bảng bao_cao_hang_hong có bản ghi
+        $this->assertDatabaseHas('bao_cao_hang_hong', [
+            'ma_chi_tiet_nhap' => $ctn->ma_chi_tiet_nhap,
+            'ma_san_pham'      => $sp->ma_san_pham,
+            'so_luong_hong'    => 30,
+            'ly_do'            => 'Xuất hủy hoa héo dập',
+        ]);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // TEST 26: Không cho phép báo hỏng vượt quá số lượng còn lại của lô
+    // ─────────────────────────────────────────────────────────────────────────
+    public function test_26_khong_cho_phep_bao_hong_vuot_qua_so_luong_con_lai_cua_lo(): void
+    {
+        $admin = $this->createUser('ADMIN', 'admin_26');
+        [$pn, $ctn, $sp] = $this->createPhieuNhapWithLot(PhieuNhap::TRANG_THAI_CONFIRMED, 50);
+
+        $spInitialStock = $sp->fresh()->so_luong;
+
+        // Thử báo hỏng 51 cành trong khi lô chỉ còn 50
+        $response = $this->actingAs($admin)->post(route('san-pham.bao-hang-hong'), [
+            'ma_san_pham'      => $sp->ma_san_pham,
+            'ma_chi_tiet_nhap' => $ctn->ma_chi_tiet_nhap,
+            'so_luong_hong'    => 51,
+            'ly_do'            => 'Thử xuất hỏng vượt tồn',
+        ]);
+        $response->assertSessionHasErrors('so_luong_hong');
+
+        // Tồn kho không bị trừ
+        $this->assertEquals(50, $ctn->fresh()->so_luong_con_lai);
+        $this->assertEquals($spInitialStock, $sp->fresh()->so_luong);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // TEST 27: Trang chi tiết lô có nút và modal Báo hỏng lô khi còn hàng
+    // ─────────────────────────────────────────────────────────────────────────
+    public function test_27_trang_chi_tiet_lo_co_nut_va_modal_bao_hong(): void
+    {
+        $admin = $this->createUser('ADMIN', 'admin_27');
+        [$pn, $ctn] = $this->createPhieuNhapWithLot(PhieuNhap::TRANG_THAI_CONFIRMED, 40);
+
+        // 1. Khi còn hàng: có nút và modal báo hỏng
+        $resShow = $this->actingAs($admin)->get(route('admin.lo-hang.show', $ctn->ma_chi_tiet_nhap));
+        $resShow->assertOk();
+        $resShow->assertSee('Báo hỏng lô');
+        $resShow->assertSee('modalBaoHongLo');
+        $resShow->assertSee(route('san-pham.bao-hang-hong'), false);
+
+        // 2. Khi hết hàng: không hiển thị nút báo hỏng
+        $ctn->update(['so_luong_con_lai' => 0]);
+        $resShowHet = $this->actingAs($admin)->get(route('admin.lo-hang.show', $ctn->ma_chi_tiet_nhap));
+        $resShowHet->assertDontSee('Báo hỏng lô');
+    }
 }
