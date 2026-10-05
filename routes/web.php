@@ -241,10 +241,14 @@ Route::prefix('phieu-nhap')->name('phieu-nhap.')->controller(PhieuNhapController
  
     Route::post('/{id}/confirm', 'confirm')->name('confirm');
 
+    Route::post('/{id}/cancel', 'cancel')->name('cancel');
+    Route::post('/{id}/huy', 'cancel')->name('huy');
+
     Route::get('/{id}', 'show')->name('show')->whereNumber('id');
 });
 
 Route::get('/admin/phieu-nhap/{id}', [PhieuNhapController::class, 'show'])->whereNumber('id');
+Route::post('/admin/phieu-nhap/{id}/huy', [PhieuNhapController::class, 'cancel'])->name('admin.phieu-nhap.cancel')->whereNumber('id');
 
 // Quản lý Nhà cung cấp (UC4.1) - Cả ADMIN và NHÂN VIÊN
 Route::prefix('admin/nha-cung-cap')->name('admin.nha-cung-cap.')->controller(NhaCungCapController::class)->group(function () {

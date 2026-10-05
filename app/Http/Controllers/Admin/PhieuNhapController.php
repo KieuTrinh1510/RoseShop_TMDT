@@ -8,6 +8,7 @@ use App\Models\NhanVien;
 use App\Models\SanPham;
 use App\Models\NhaCungCap;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class PhieuNhapController extends Controller
@@ -155,7 +156,7 @@ class PhieuNhapController extends Controller
 
     public function editData($id)
     {
-        $phieuNhap = PhieuNhap::with(['chiTietNhaps.sanPham', 'nhaCungCap'])->findOrFail($id);
+        $phieuNhap = PhieuNhap::with(['chiTietNhaps.sanPham', 'nhaCungCap', 'nguoiHuy.nhanVien'])->findOrFail($id);
 
         return response()->json($phieuNhap);
     }
@@ -163,6 +164,11 @@ class PhieuNhapController extends Controller
     public function update(Request $request, $id)
     {
         $phieuNhap = PhieuNhap::findOrFail($id);
+
+        if ($phieuNhap->trang_thai === 'CANCELLED') {
+            return redirect()->route('phieu-nhap.index')
+                             ->with('error', 'Không thể chỉnh sửa phiếu nhập đã hủy!');
+        }
 
         if ($phieuNhap->trang_thai !== 'DRAFT') {
             return redirect()->route('phieu-nhap.index')
@@ -241,24 +247,44 @@ class PhieuNhapController extends Controller
     {
         $phieuNhap = PhieuNhap::findOrFail($id);
 
+        if ($phieuNhap->trang_thai === 'CANCELLED') {
+            return redirect()->route('phieu-nhap.index')
+                             ->with('error', 'Không thể xóa phiếu nhập đã hủy! Phiếu đã hủy được lưu trữ để tra cứu lịch sử.');
+        }
+
         if ($phieuNhap->trang_thai !== 'DRAFT') {
             return redirect()->route('phieu-nhap.index')
                              ->with('error', 'Không thể xóa phiếu nhập đã xác nhận!');
         }
 
-        
         $phieuNhap->delete();
 
         return redirect()->route('phieu-nhap.index')
                          ->with('success', 'Đã xóa phiếu nhập!');
     }
 
-    
     public function confirm($id)
     {
         $phieuNhap = PhieuNhap::with('chiTietNhaps')->findOrFail($id);
 
+        if ($phieuNhap->trang_thai === 'CANCELLED') {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không thể xác nhận phiếu nhập đã hủy!'
+                ], 422);
+            }
+            return redirect()->route('phieu-nhap.index')
+                             ->with('error', 'Không thể xác nhận phiếu nhập đã hủy!');
+        }
+
         if ($phieuNhap->trang_thai !== 'DRAFT') {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Phiếu nhập này đã được xác nhận rồi!'
+                ], 422);
+            }
             return redirect()->route('phieu-nhap.index')
                              ->with('error', 'Phiếu nhập này đã được xác nhận rồi!');
         }
@@ -266,24 +292,108 @@ class PhieuNhapController extends Controller
         DB::transaction(function () use ($phieuNhap) {
 
             foreach ($phieuNhap->chiTietNhaps as $chiTiet) {
-                
                 $sanPham = SanPham::findOrFail($chiTiet->ma_san_pham);
                 $sanPham->so_luong += $chiTiet->so_luong;
                 $sanPham->save();
             }
 
-            $phieuNhap->trang_thai = 'CONFIRMED';
+            $phieuNhap->trang_thai = PhieuNhap::TRANG_THAI_CONFIRMED;
             $phieuNhap->save();
         });
 
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Xác nhận thành công! Số lượng kho đã được cập nhật.'
+            ]);
+        }
+
         return redirect()->route('phieu-nhap.index')
                          ->with('success', 'Xác nhận thành công! Số lượng kho đã được cập nhật.');
+    }
+
+    public function cancel(Request $request, $id)
+    {
+        $phieuNhap = PhieuNhap::findOrFail($id);
+
+        if ($phieuNhap->trang_thai === 'CONFIRMED') {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không thể hủy phiếu nhập đã xác nhận!'
+                ], 422);
+            }
+            return redirect()->route('phieu-nhap.index')
+                             ->with('error', 'Không thể hủy phiếu nhập đã xác nhận!');
+        }
+
+        if ($phieuNhap->trang_thai === 'CANCELLED') {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Phiếu nhập này đã được hủy trước đó, không thể hủy lại!'
+                ], 422);
+            }
+            return redirect()->route('phieu-nhap.index')
+                             ->with('error', 'Phiếu nhập này đã được hủy trước đó!');
+        }
+
+        if ($phieuNhap->trang_thai !== 'DRAFT') {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Chỉ có thể hủy phiếu nhập ở trạng thái Đang tạo (Draft)!'
+                ], 422);
+            }
+            return redirect()->route('phieu-nhap.index')
+                             ->with('error', 'Chỉ có thể hủy phiếu nhập ở trạng thái Đang tạo (Draft)!');
+        }
+
+        $request->validate([
+            'ly_do_huy' => 'required|string',
+        ], [
+            'ly_do_huy.required' => 'Vui lòng nhập lý do hủy phiếu nhập.',
+        ]);
+
+        $lyDoHuy = trim($request->ly_do_huy);
+        if ($lyDoHuy === '') {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Lý do hủy không được để trống.',
+                ], 422);
+            }
+            return redirect()->back()
+                             ->withErrors(['ly_do_huy' => 'Lý do hủy không được để trống.'])
+                             ->withInput();
+        }
+
+        DB::transaction(function () use ($phieuNhap, $lyDoHuy) {
+            $phieuNhap->trang_thai   = PhieuNhap::TRANG_THAI_CANCELLED;
+            $phieuNhap->ly_do_huy    = $lyDoHuy;
+            $phieuNhap->nguoi_huy_id = Auth::id();
+            $phieuNhap->huy_luc      = now();
+            $phieuNhap->save();
+        });
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success'    => true,
+                'message'    => 'Hủy phiếu nhập thành công! Trạng thái: Đã hủy (Cancelled).',
+                'trang_thai' => 'CANCELLED',
+                'ly_do_huy'  => $lyDoHuy,
+            ]);
+        }
+
+        return redirect()->route('phieu-nhap.index')
+                         ->with('success', 'Hủy phiếu nhập thành công! Trạng thái: Đã hủy (Cancelled).');
     }
 
     public function show($id)
     {
         $phieuNhap = PhieuNhap::with([
             'nhanVien',
+            'nguoiHuy.nhanVien',
             'nhaCungCap',
             'chiTietNhaps.sanPham',
             'chiTietNhaps.danhGiaMoiNhat',

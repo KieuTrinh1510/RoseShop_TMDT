@@ -105,22 +105,25 @@ class NhaCungCapController extends Controller
         // Thống kê chất lượng
         $thongKe = $ncc->thong_ke_chat_luong;
 
-        // Danh sách các lô đã nhập từ NCC này
+        // Danh sách các lô đã nhập từ NCC này (chỉ từ phiếu đã CONFIRMED)
         $loHangs = $ncc->chiTietNhaps()
+            ->whereHas('phieuNhap', fn($q) => $q->where('trang_thai', 'CONFIRMED'))
             ->with(['sanPham', 'phieuNhap.nhanVien', 'danhGiaMoiNhat.nhanVien', 'baoCaoHangHongs'])
             ->orderBy('chi_tiet_nhap.ma_chi_tiet_nhap', 'desc')
             ->paginate(15, ['*'], 'lo_page')
             ->withQueryString();
 
-        // Tính tổng giá trị nhập của NCC
+        // Tính tổng giá trị nhập của NCC (chỉ tính phiếu đã CONFIRMED)
         $tongGiaTriNhap = DB::table('chi_tiet_nhap as ctn')
             ->join('phieu_nhap as pn', 'ctn.ma_phieu_nhap', '=', 'pn.ma_phieu_nhap')
             ->where('pn.ma_nha_cung_cap', $id)
+            ->where('pn.trang_thai', 'CONFIRMED')
             ->sum(DB::raw('ctn.so_luong * ctn.gia_nhap'));
 
         $tongMatHang = DB::table('chi_tiet_nhap as ctn')
             ->join('phieu_nhap as pn', 'ctn.ma_phieu_nhap', '=', 'pn.ma_phieu_nhap')
             ->where('pn.ma_nha_cung_cap', $id)
+            ->where('pn.trang_thai', 'CONFIRMED')
             ->count('ctn.ma_chi_tiet_nhap');
 
         return view('admin.NhaCungCap.show', compact('ncc', 'phieuNhaps', 'loHangs', 'thongKe', 'tongGiaTriNhap', 'tongMatHang'));
@@ -128,7 +131,10 @@ class NhaCungCapController extends Controller
 
     public function danhGiaLo(Request $request, $ma_chi_tiet_nhap)
     {
-        $chiTietNhap = ChiTietNhap::with('phieuNhap')->findOrFail($ma_chi_tiet_nhap);
+        $chiTietNhap = ChiTietNhap::with('phieuNhap')
+            ->where('ma_chi_tiet_nhap', $ma_chi_tiet_nhap)
+            ->whereHas('phieuNhap', fn($q) => $q->where('trang_thai', 'CONFIRMED'))
+            ->firstOrFail();
 
         $request->validate([
             'ket_qua'      => ['required', 'in:DAT,CO_VAN_DE,KHONG_DAT'],

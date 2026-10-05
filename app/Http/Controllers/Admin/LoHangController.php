@@ -18,7 +18,9 @@ class LoHangController extends Controller
             'phieuNhap.nhanVien',
             'danhGiaMoiNhat.nhanVien',
             'baoCaoHangHongs',
-        ]);
+        ])->whereHas('phieuNhap', function ($q) {
+            $q->where('trang_thai', 'CONFIRMED');
+        });
 
         if ($request->filled('keyword')) {
             $kw = trim($request->keyword);
@@ -67,14 +69,19 @@ class LoHangController extends Controller
             'phieuNhap.nhanVien',
             'danhGiaLoHangs.nhanVien',
             'baoCaoHangHongs.nhanVien',
-        ])->findOrFail($id);
+        ])->whereHas('phieuNhap', function ($q) {
+            $q->where('trang_thai', 'CONFIRMED');
+        })->findOrFail($id);
 
         return view('admin.LoHang.show', compact('loHang'));
     }
 
     public function danhGia(Request $request, $id)
     {
-        $chiTietNhap = ChiTietNhap::with('phieuNhap')->findOrFail($id);
+        $chiTietNhap = ChiTietNhap::with('phieuNhap')
+            ->whereHas('phieuNhap', function ($q) {
+                $q->where('trang_thai', 'CONFIRMED');
+            })->findOrFail($id);
 
         $request->validate([
             'ket_qua'      => ['required', 'in:DAT,CO_VAN_DE,KHONG_DAT'],

@@ -46,8 +46,11 @@ class NhaCungCap extends Model
 
     public function getThongKeChatLuongAttribute(): array
     {
-        $tongPhieuNhap = $this->phieuNhaps()->count();
-        $lots = $this->chiTietNhaps()->with(['danhGiaMoiNhat', 'baoCaoHangHongs'])->get();
+        $tongPhieuNhap = $this->phieuNhaps()->where('trang_thai', 'CONFIRMED')->count();
+        $lots = $this->chiTietNhaps()
+            ->whereHas('phieuNhap', fn($q) => $q->where('trang_thai', 'CONFIRMED'))
+            ->with(['danhGiaMoiNhat', 'baoCaoHangHongs'])
+            ->get();
         $tongSoLo = $lots->count();
 
         $soLoDaDanhGia = 0;

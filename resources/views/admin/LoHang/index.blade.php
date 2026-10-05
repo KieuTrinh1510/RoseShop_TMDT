@@ -96,6 +96,7 @@
                         <th class="text-center">Số lượng</th>
                         <th class="text-center">Còn lại</th>
                         <th class="text-end">Giá nhập</th>
+                        <th class="text-center">Trạng thái</th>
                         <th class="text-center">Chất lượng</th>
                         <th class="text-center">Hàng hỏng</th>
                         <th class="text-end" style="width: 140px;">Thao tác</th>
@@ -148,6 +149,13 @@
                                 {{ number_format($lo->gia_nhap, 0, ',', '.') }} đ
                             </td>
                             <td class="text-center">
+                                @if($lo->so_luong_con_lai > 0)
+                                    <span class="badge bg-success" style="font-size:11px; font-weight:600;">CÒN HÀNG</span>
+                                @else
+                                    <span class="badge bg-secondary" style="font-size:11px; font-weight:600;">HẾT HÀNG</span>
+                                @endif
+                            </td>
+                            <td class="text-center">
                                 @if($dg)
                                     @if($dg->ket_qua === 'DAT')
                                         <span class="badge-quality-dat">
@@ -184,18 +192,20 @@
                                        title="Xem chi tiết lô">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <button type="button"
-                                            class="btn btn-sm {{ $dg ? 'btn-outline-primary' : 'btn-primary' }}"
-                                            style="font-size:12px; font-weight:600; padding: 4px 10px; border-radius:6px;"
-                                            onclick="openModalDanhGia({{ $lo->ma_chi_tiet_nhap }}, '{{ addslashes($lo->sanPham->ten_san_pham ?? '') }}', {{ $lo->so_luong }}, '{{ $dg?->ket_qua ?? '' }}', {{ $dg?->so_luong_loi ?? 0 }}, '{{ addslashes($dg?->ly_do ?? '') }}', '{{ addslashes($dg?->ghi_chu ?? '') }}')">
-                                        {{ $dg ? 'Sửa ĐG' : 'Đánh giá' }}
-                                    </button>
+                                    @if($lo->so_luong_con_lai > 0)
+                                        <button type="button"
+                                                class="btn btn-sm {{ $dg ? 'btn-outline-primary' : 'btn-primary' }}"
+                                                style="font-size:12px; font-weight:600; padding: 4px 10px; border-radius:6px;"
+                                                onclick="openModalDanhGia({{ $lo->ma_chi_tiet_nhap }}, '{{ addslashes($lo->sanPham->ten_san_pham ?? '') }}', {{ $lo->so_luong }}, '{{ $dg?->ket_qua ?? '' }}', {{ $dg?->so_luong_loi ?? 0 }}, '{{ addslashes($dg?->ly_do ?? '') }}', '{{ addslashes($dg?->ghi_chu ?? '') }}')">
+                                            {{ $dg ? 'Sửa ĐG' : 'Đánh giá' }}
+                                        </button>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="ncc-empty-state">
+                            <td colspan="11" class="ncc-empty-state">
                                 <div class="ncc-empty-icon">
                                     <i class="bi bi-boxes"></i>
                                 </div>

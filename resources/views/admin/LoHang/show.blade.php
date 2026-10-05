@@ -26,12 +26,14 @@
                     <span>Xem Nhà cung cấp</span>
                 </a>
             @endif
+            @if($loHang->so_luong_con_lai > 0)
             <button type="button"
                     class="ncc-btn-primary"
                     onclick="openModalDanhGia({{ $loHang->ma_chi_tiet_nhap }}, '{{ addslashes($loHang->sanPham->ten_san_pham ?? '') }}', {{ $loHang->so_luong }}, '{{ $loHang->danhGiaMoiNhat?->ket_qua ?? '' }}', {{ $loHang->danhGiaMoiNhat?->so_luong_loi ?? 0 }}, '{{ addslashes($loHang->danhGiaMoiNhat?->ly_do ?? '') }}', '{{ addslashes($loHang->danhGiaMoiNhat?->ghi_chu ?? '') }}')">
                 <i class="bi bi-shield-check me-1"></i>
                 <span>{{ $loHang->danhGiaMoiNhat ? 'Cập nhật đánh giá' : 'Đánh giá chất lượng' }}</span>
             </button>
+            @endif
         </div>
     </div>
 
@@ -106,6 +108,21 @@
                 </div>
 
                 <div class="ncc-info-item">
+                    <span class="label">Trạng thái lô</span>
+                    <span class="value">
+                        @if($loHang->so_luong_con_lai > 0)
+                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fw-bold">
+                                <i class="bi bi-check-circle me-1"></i>CÒN HÀNG
+                            </span>
+                        @else
+                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1 fw-bold">
+                                <i class="bi bi-dash-circle me-1"></i>HẾT HÀNG
+                            </span>
+                        @endif
+                    </span>
+                </div>
+
+                <div class="ncc-info-item">
                     <span class="label">Tồn kho lô</span>
                     <div class="d-flex justify-content-between align-items-center mt-1">
                         <div>
@@ -117,10 +134,17 @@
                             @if($loHang->so_luong_con_lai > 0)
                                 <span class="badge bg-success" style="font-size:13px;">{{ $loHang->so_luong_con_lai }}</span>
                             @else
-                                <span class="badge bg-secondary" style="font-size:13px;">0 (Hết)</span>
+                                <span class="badge bg-secondary" style="font-size:13px;">0 (Hết hàng)</span>
                             @endif
                         </div>
                     </div>
+                </div>
+
+                <div class="ncc-info-item">
+                    <span class="label">Tổng hàng hỏng / hao hụt</span>
+                    <span class="value fw-bold {{ $loHang->baoCaoHangHongs->sum('so_luong_hong') > 0 ? 'text-danger' : 'text-muted' }}">
+                        {{ $loHang->baoCaoHangHongs->sum('so_luong_hong') }} {{ $loHang->sanPham->don_vi_tinh ?? 'sản phẩm' }}
+                    </span>
                 </div>
 
                 <div class="ncc-info-item">

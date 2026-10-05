@@ -246,6 +246,9 @@
                                     <option value="CONFIRMED" {{ request('trang_thai') == 'CONFIRMED' ? 'selected' : '' }}>
                                         Đã xác nhận
                                     </option>
+                                    <option value="CANCELLED" {{ request('trang_thai') == 'CANCELLED' ? 'selected' : '' }}>
+                                        Đã hủy
+                                    </option>
                                 </select>
                             </div>
 
@@ -325,9 +328,13 @@
                                     <span class="badge badge-draft">
                                         <i class="bi bi-pencil me-1"></i>Đang tạo
                                     </span>
-                                @else
+                                @elseif($pn->trang_thai === 'CONFIRMED')
                                     <span class="badge badge-confirmed">
                                         <i class="bi bi-check-lg me-1"></i>Đã xác nhận
+                                    </span>
+                                @elseif($pn->trang_thai === 'CANCELLED')
+                                    <span class="badge" style="background:#6c757d; color:#fff;">
+                                        <i class="bi bi-x-circle me-1"></i>Đã hủy
                                     </span>
                                 @endif
                             </td>
@@ -361,6 +368,13 @@
                                                 <i class="bi bi-check2-circle me-1"></i>Xác nhận
                                             </button>
                                         </form>
+
+                                        {{-- NÚT HỦY PHIẾU (chỉ hiện khi DRAFT) --}}
+                                        <button type="button" class="btn btn-outline-danger btn-sm"
+                                                onclick="moModalHuyPhieu({{ $pn->ma_phieu_nhap }})"
+                                                title="Hủy phiếu nhập">
+                                            <i class="bi bi-x-circle me-1"></i>Hủy phiếu
+                                        </button>
 
                                         {{-- NÚT XÓA (chỉ hiện khi DRAFT) --}}
                                         <form action="{{ route('phieu-nhap.destroy', $pn->ma_phieu_nhap) }}"
@@ -421,6 +435,44 @@
         </div>
     </div>
 </div>
+
+{{-- =====================================================================
+     MODAL XÁC NHẬN HỦY PHIẾU NHẬP (UC4.2)
+===================================================================== --}}
+<div class="modal fade" id="modalHuyPhieu" tabindex="-1" aria-labelledby="tieuDeModalHuy" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" style="border-radius:0; border:2px solid #dc3545;">
+            <form id="formHuyPhieu" method="POST" action="" onsubmit="return validateFormHuyPhieu()">
+                @csrf
+                <div class="modal-header" style="background:#dc3545; color:#fff; border-radius:0;">
+                    <h5 class="modal-title" id="tieuDeModalHuy">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>Hủy phiếu nhập <span id="spanMaPhieuHuy"></span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted mb-3" style="font-size:0.9rem;">
+                        Phiếu sau khi hủy sẽ được giữ lại để tra cứu lịch sử và không làm phát sinh nhập kho.
+                    </p>
+                    <div class="mb-3">
+                        <label for="inp_ly_do_huy" class="form-label fw-bold">
+                            Lý do hủy <span class="text-danger">*</span>
+                        </label>
+                        <textarea name="ly_do_huy" id="inp_ly_do_huy" class="form-control" rows="3" required
+                                  placeholder="Nhà cung cấp không giao hàng / Tạo nhầm phiếu / Sai thông tin nhập..."></textarea>
+                        <div id="errorLyDoHuy" class="text-danger mt-1" style="font-size:0.85rem; display:none;">
+                            Vui lòng nhập lý do hủy phiếu nhập.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid #dee2e6;">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Quay lại</button>
+                    <button type="submit" class="btn btn-danger btn-sm">Xác nhận hủy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 </div>
 
 @endsection
@@ -428,6 +480,23 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    function moModalHuyPhieu(maPhieuNhap) {
+        document.getElementById('spanMaPhieuHuy').innerText = `#PN-${maPhieuNhap}`;
+        document.getElementById('inp_ly_do_huy').value = '';
+        document.getElementById('errorLyDoHuy').style.display = 'none';
+        document.getElementById('formHuyPhieu').action = `/phieu-nhap/${maPhieuNhap}/cancel`;
+        const modal = new bootstrap.Modal(document.getElementById('modalHuyPhieu'));
+        modal.show();
+    }
+
+    function validateFormHuyPhieu() {
+        const val = document.getElementById('inp_ly_do_huy').value.trim();
+        if (!val) {
+            document.getElementById('errorLyDoHuy').style.display = 'block';
+            return false;
+        }
+        return true;
+    }
 
   
     const danhSachSanPham = @json($danhSachSanPham);
@@ -688,12 +757,29 @@
 
                 const trangThaiHtml = pn.trang_thai === 'DRAFT'
                     ? '<span class="badge" style="background:#e8e8e8;color:#333;border:1px solid #aaa;">Đang tạo (Draft)</span>'
-                    : '<span class="badge bg-dark">Đã xác nhận</span>';
+                    : (pn.trang_thai === 'CANCELLED'
+                        ? '<span class="badge" style="background:#6c757d;color:#fff;">Đã hủy</span>'
+                        : '<span class="badge bg-dark">Đã xác nhận</span>');
 
                 const ngayNhap = pn.ngay_nhap
                     ? new Date(pn.ngay_nhap).toLocaleString('vi-VN') : '—';
 
+                let thongTinHuyHtml = '';
+                if (pn.trang_thai === 'CANCELLED') {
+                    const tenNguoiHuy = pn.nguoi_huy ? (pn.nguoi_huy.nhan_vien ? pn.nguoi_huy.nhan_vien.ten_nhan_vien : pn.nguoi_huy.ten_dang_nhap) : '—';
+                    const thoiGianHuy = pn.huy_luc ? new Date(pn.huy_luc).toLocaleString('vi-VN') : '—';
+                    thongTinHuyHtml = `
+                        <div class="alert alert-danger py-2 px-3 mb-3" style="font-size:0.88rem; border-left:4px solid #dc3545;">
+                            <strong class="d-block mb-1 text-danger"><i class="bi bi-x-circle me-1"></i>THÔNG TIN HỦY PHIẾU:</strong>
+                            <div class="mb-1"><strong>Lý do:</strong> ${pn.ly_do_huy ? pn.ly_do_huy : '—'}</div>
+                            <div class="mb-1"><strong>Người hủy:</strong> ${tenNguoiHuy}</div>
+                            <div><strong>Thời gian hủy:</strong> ${thoiGianHuy}</div>
+                        </div>
+                    `;
+                }
+
                 document.getElementById('noiDungModal').innerHTML = `
+                    ${thongTinHuyHtml}
                     <div class="row g-2 mb-3" style="font-size:0.88rem;">
                         <div class="col-md-6">
                             <strong>Ngày nhập:</strong> ${ngayNhap}<br>
