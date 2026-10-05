@@ -15,7 +15,14 @@
             <h1 class="rs-page-title">Chi tiết phiếu nhập #PN-{{ $phieuNhap->ma_phieu_nhap }}</h1>
             <p class="rs-page-subtitle">
                 Ngày nhập: {{ $phieuNhap->ngay_nhap ? $phieuNhap->ngay_nhap->format('d/m/Y H:i') : '—' }} 
-                — Trạng thái: {{ $phieuNhap->trang_thai === 'CONFIRMED' ? 'Đã xác nhận' : 'Đang tạo (Draft)' }}
+                — Trạng thái: 
+                @if($phieuNhap->trang_thai === 'CONFIRMED')
+                    Đã xác nhận
+                @elseif($phieuNhap->trang_thai === 'CANCELLED')
+                    Đã hủy
+                @else
+                    Đang tạo (Draft)
+                @endif
             </p>
         </div>
         <div class="ncc-header-actions">
@@ -81,6 +88,42 @@
         </div>
     </div>
 
+    {{-- Khối thông tin hủy nếu phiếu bị cancel (Section F) --}}
+    @if($phieuNhap->trang_thai === 'CANCELLED')
+        <div class="card mb-4 border-danger" style="border-width: 2px; background: #fff5f5; border-radius: 8px;">
+            <div class="card-body p-3">
+                <div class="d-flex align-items-center mb-2">
+                    <span class="badge bg-danger me-2" style="font-size: 13px;">
+                        <i class="bi bi-x-circle me-1"></i>THÔNG TIN HỦY PHIẾU
+                    </span>
+                    <span class="text-muted" style="font-size: 13px;">
+                        Phiếu này đã bị hủy, không làm phát sinh nhập kho hay tạo lô tồn thực tế.
+                    </span>
+                </div>
+                <div class="row g-2 mt-1" style="font-size: 14px;">
+                    <div class="col-md-6">
+                        <strong class="text-secondary">Lý do hủy:</strong>
+                        <div class="text-danger fw-semibold mt-1 p-2 bg-white rounded border border-danger-subtle">
+                            {{ $phieuNhap->ly_do_huy ?: '—' }}
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <strong class="text-secondary">Người hủy:</strong>
+                        <div class="mt-1 text-dark fw-medium">
+                            {{ $phieuNhap->ten_nguoi_huy }}
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <strong class="text-secondary">Thời gian hủy:</strong>
+                        <div class="mt-1 text-dark fw-medium">
+                            {{ $phieuNhap->huy_luc ? $phieuNhap->huy_luc->format('d/m/Y H:i') : '—' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- 2-Column Detail Grid: Thông tin Phiếu & Thông tin NCC --}}
     <div class="ncc-detail-grid mb-4">
         {{-- Left: Thông tin Phiếu nhập --}}
@@ -91,6 +134,10 @@
                     @if($phieuNhap->trang_thai === 'CONFIRMED')
                         <span class="badge bg-dark" style="font-size:12px; font-weight:500;">
                             <i class="bi bi-check-lg me-1"></i>Đã xác nhận
+                        </span>
+                    @elseif($phieuNhap->trang_thai === 'CANCELLED')
+                        <span class="badge bg-secondary" style="font-size:12px; font-weight:500;">
+                            <i class="bi bi-x-circle me-1"></i>Đã hủy
                         </span>
                     @else
                         <span class="badge" style="background:#f2f4f7; color:#344054; border:1px solid #d0d5dd; font-size:12px; font-weight:500;">
@@ -304,13 +351,17 @@
                                 @endif
                             </td>
                             <td class="text-end">
-                                <a href="{{ route('admin.lo-hang.show', $ct->ma_chi_tiet_nhap) }}"
-                                   class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1"
-                                   style="font-size:12px; font-weight:600; padding:4px 8px; border-radius:6px;"
-                                   title="Xem chi tiết lô">
-                                    <i class="bi bi-box-arrow-up-right"></i>
-                                    <span>Xem lô</span>
-                                </a>
+                                @if($phieuNhap->trang_thai === 'CONFIRMED')
+                                    <a href="{{ route('admin.lo-hang.show', $ct->ma_chi_tiet_nhap) }}"
+                                       class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1"
+                                       style="font-size:12px; font-weight:600; padding:4px 8px; border-radius:6px;"
+                                       title="Xem chi tiết lô">
+                                        <i class="bi bi-box-arrow-up-right"></i>
+                                        <span>Xem lô</span>
+                                    </a>
+                                @else
+                                    <span class="text-muted" style="font-size:12px;">Chưa tạo lô</span>
+                                @endif
                             </td>
                         </tr>
                     @empty
