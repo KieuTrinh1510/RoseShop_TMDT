@@ -123,28 +123,43 @@
                 </div>
 
                 <div class="ncc-info-item">
-                    <span class="label">Tồn kho lô</span>
-                    <div class="d-flex justify-content-between align-items-center mt-1">
-                        <div>
-                            <span class="text-muted" style="font-size:13px;">Ban đầu:</span>
-                            <strong>{{ $loHang->so_luong }}</strong>
+                    <span class="label">Phân bổ tồn kho lô</span>
+                    <div class="mt-2" style="font-size:13px;">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">1. Số lượng ban đầu:</span>
+                            <strong class="text-dark">{{ $loHang->so_luong }}</strong>
                         </div>
-                        <div>
-                            <span class="text-muted" style="font-size:13px;">Còn lại:</span>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">2. Tồn thực tế (On Hand):</span>
                             @if($loHang->so_luong_con_lai > 0)
-                                <span class="badge bg-success" style="font-size:13px;">{{ $loHang->so_luong_con_lai }}</span>
+                                <span class="badge bg-primary-subtle text-primary border px-2 py-1 fw-bold">{{ $loHang->so_luong_con_lai }}</span>
                             @else
-                                <span class="badge bg-secondary" style="font-size:13px;">0 (Hết hàng)</span>
+                                <span class="badge bg-secondary-subtle text-secondary border px-2 py-1 fw-bold">0 (Hết hàng)</span>
                             @endif
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">3. Đang giữ (Reserved):</span>
+                            <span class="badge bg-warning-subtle text-warning border px-2 py-1 fw-bold">{{ $tongDangGiu }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">4. Khả dụng (Available):</span>
+                            <span class="badge bg-success-subtle text-success border px-2 py-1 fw-bold">{{ $tonKhaDung }}</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="ncc-info-item">
-                    <span class="label">Tổng hàng hỏng / hao hụt</span>
-                    <span class="value fw-bold {{ $loHang->baoCaoHangHongs->sum('so_luong_hong') > 0 ? 'text-danger' : 'text-muted' }}">
-                        {{ $loHang->baoCaoHangHongs->sum('so_luong_hong') }} {{ $loHang->sanPham->don_vi_tinh ?? 'sản phẩm' }}
-                    </span>
+                    <span class="label">Thống kê xuất & hỏng</span>
+                    <div class="mt-2" style="font-size:13px;">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Tổng đã xuất kho:</span>
+                            <strong class="text-success">{{ $tongDaXuat }} sp</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Tổng hàng hỏng/hao hụt:</span>
+                            <strong class="{{ $tongHangHong > 0 ? 'text-danger' : 'text-muted' }}">{{ $tongHangHong }} sp</strong>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="ncc-info-item">
@@ -165,10 +180,172 @@
             </div>
         </div>
 
-        {{-- Right: Evaluation History & Damage Reports --}}
+        {{-- Right: Export History, Timeline, Reserved Orders, Quality & Damaged Reports --}}
         <div>
 
-            {{-- Quality Evaluation History --}}
+            {{-- 1. Lịch sử xuất kho theo lô (nguồn chuẩn: inventory_reservations CONSUMED) --}}
+            <div class="ncc-card mb-4">
+                <div class="ncc-card-header d-flex justify-content-between align-items-center">
+                    <h2 class="ncc-card-title mb-0">
+                        <i class="bi bi-cart-check text-success"></i>
+                        Lịch sử xuất kho theo lô
+                        <span class="badge bg-light text-muted border ms-1" style="font-size:12px;">{{ $lichSuXuatKho->count() }} lượt xuất</span>
+                    </h2>
+                    <span class="text-muted" style="font-size: 13px;">Tổng xuất: <strong class="text-success">{{ $tongDaXuat }}</strong> sp</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="ncc-table">
+                        <thead>
+                            <tr>
+                                <th>Thời gian xuất</th>
+                                <th>Mã đơn hàng</th>
+                                <th>Khách hàng</th>
+                                <th class="text-center">Số lượng xuất</th>
+                                <th>Phân loại / Mục đích</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($lichSuXuatKho as $xuat)
+                                <tr>
+                                    <td>
+                                        {{ $xuat->updated_at ? $xuat->updated_at->format('d/m/Y H:i') : ($xuat->created_at ? $xuat->created_at->format('d/m/Y H:i') : '—') }}
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold" style="color:#EC3D8F;">#DH-{{ $xuat->ma_hoa_don }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold text-dark">{{ $xuat->hoaDon?->khachHang?->ho_ten ?? 'Khách vãng lai' }}</div>
+                                        <small class="text-muted">{{ $xuat->hoaDon?->so_dien_thoai ?: '' }}</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle fw-bold">
+                                            -{{ $xuat->so_luong }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if($xuat->boHoa)
+                                            <span class="badge bg-info-subtle text-info border">
+                                                <i class="bi bi-flower1 me-1"></i>Nguyên liệu bó: {{ $xuat->boHoa->ten_bo_hoa }}
+                                            </span>
+                                        @else
+                                            <span class="badge bg-light text-dark border">
+                                                <i class="bi bi-box-seam me-1"></i>Sản phẩm đơn lẻ
+                                            </span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="ncc-empty-state py-4">
+                                        <p class="mb-0 text-muted">Lô hàng này chưa phát sinh giao dịch xuất kho bán hàng nào.</p>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {{-- 2. Đơn hàng đang giữ tồn (RESERVED) trên lô nếu có --}}
+            @if($danhSachDangGiu->isNotEmpty())
+            <div class="ncc-card mb-4 border-warning">
+                <div class="ncc-card-header bg-warning-subtle d-flex justify-content-between align-items-center">
+                    <h2 class="ncc-card-title mb-0 text-warning-emphasis">
+                        <i class="bi bi-lock-fill me-1"></i>
+                        Đơn hàng đang giữ tồn (Reserved) trên lô
+                        <span class="badge bg-warning text-dark ms-1">{{ $danhSachDangGiu->count() }} đơn</span>
+                    </h2>
+                    <span class="fw-bold text-dark">Tổng giữ: {{ $tongDangGiu }} sp</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="ncc-table">
+                        <thead>
+                            <tr>
+                                <th>Thời gian giữ</th>
+                                <th>Mã đơn hàng</th>
+                                <th>Khách hàng</th>
+                                <th class="text-center">Số lượng giữ</th>
+                                <th>Phân loại</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($danhSachDangGiu as $giu)
+                                <tr>
+                                    <td>{{ $giu->created_at ? $giu->created_at->format('d/m/Y H:i') : '—' }}</td>
+                                    <td>
+                                        <span class="fw-bold text-warning-emphasis">#DH-{{ $giu->ma_hoa_don }}</span>
+                                    </td>
+                                    <td>{{ $giu->hoaDon?->khachHang?->ho_ten ?? 'Khách vãng lai' }}</td>
+                                    <td class="text-center"><span class="badge bg-warning text-dark fw-bold">{{ $giu->so_luong }}</span></td>
+                                    <td>{{ $giu->boHoa ? "Bó hoa: {$giu->boHoa->ten_bo_hoa}" : 'Sản phẩm đơn lẻ' }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @endif
+
+            {{-- 3. Lịch sử biến động của lô (Timeline tổng hợp) --}}
+            <div class="ncc-card mb-4">
+                <div class="ncc-card-header d-flex justify-content-between align-items-center">
+                    <h2 class="ncc-card-title mb-0">
+                        <i class="bi bi-clock-history text-primary"></i>
+                        Lịch sử biến động của lô
+                        <span class="badge bg-light text-muted border ms-1" style="font-size:12px;">{{ $timeline->count() }} mốc</span>
+                    </h2>
+                </div>
+                <div class="p-3 bg-light border-bottom" style="font-size:12px; color:#667085;">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Truy vết toàn diện từ Nhập kho ban đầu, Xuất kho theo đơn, đến Hàng hỏng/hao hụt. Hiện tại hệ thống chưa phát sinh nghiệp vụ Điều chỉnh tồn kho (Inventory Adjustment).
+                </div>
+
+                <div class="table-responsive">
+                    <table class="ncc-table">
+                        <thead>
+                            <tr>
+                                <th>Thời gian</th>
+                                <th>Sự kiện</th>
+                                <th class="text-center">Biến động</th>
+                                <th>Chi tiết giao dịch</th>
+                                <th>Người thực hiện</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($timeline as $m)
+                                <tr>
+                                    <td>
+                                        {{ $m['thoi_gian'] ? \Carbon\Carbon::parse($m['thoi_gian'])->format('d/m/Y H:i') : '—' }}
+                                    </td>
+                                    <td>
+                                        <span class="badge {{ $m['badge_class'] }}">
+                                            <i class="bi {{ $m['icon'] }} me-1"></i>{{ $m['tieu_de'] }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center fw-bold {{ $m['so_luong_thay_doi'] > 0 ? 'text-primary' : 'text-danger' }}">
+                                        {{ $m['so_luong_thay_doi'] > 0 ? '+' . $m['so_luong_thay_doi'] : $m['so_luong_thay_doi'] }}
+                                    </td>
+                                    <td>
+                                        {{ $m['chi_tiet'] }}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ $m['nguoi_thuc_hien'] }}</small>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="ncc-empty-state py-4">
+                                        <p class="mb-0 text-muted">Chưa có dữ liệu biến động.</p>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {{-- 4. Quality Evaluation History --}}
             <div class="ncc-card mb-4">
                 <div class="ncc-card-header">
                     <h2 class="ncc-card-title">
@@ -230,7 +407,7 @@
                 </div>
             </div>
 
-            {{-- Damaged Inventory Reports --}}
+            {{-- 5. Damaged Inventory Reports --}}
             <div class="ncc-card">
                 <div class="ncc-card-header">
                     <h2 class="ncc-card-title">

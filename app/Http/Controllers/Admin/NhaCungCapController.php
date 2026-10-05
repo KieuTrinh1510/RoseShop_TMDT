@@ -136,6 +136,16 @@ class NhaCungCapController extends Controller
             ->whereHas('phieuNhap', fn($q) => $q->where('trang_thai', 'CONFIRMED'))
             ->firstOrFail();
 
+        // Guard Backend: Chặn đánh giá QC mới khi lô đã hết hàng
+        if ($chiTietNhap->so_luong_con_lai <= 0) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Không thể đánh giá chất lượng cho lô hàng đã hết hàng!'], 422);
+            }
+            return redirect()->back()
+                ->withErrors(['lo_hang' => 'Không thể đánh giá chất lượng cho lô hàng đã hết hàng!'])
+                ->withInput();
+        }
+
         $request->validate([
             'ket_qua'      => ['required', 'in:DAT,CO_VAN_DE,KHONG_DAT'],
             'so_luong_loi' => ['nullable', 'integer', 'min:0', 'max:' . $chiTietNhap->so_luong],

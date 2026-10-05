@@ -64,6 +64,16 @@ class ChiTietNhap extends Model
         return $this->hasMany(InventoryReservation::class, 'ma_chi_tiet_nhap', 'ma_chi_tiet_nhap');
     }
 
+    public function chiTietHoaDons()
+    {
+        return $this->hasMany(ChiTietHoaDon::class, 'ma_chi_tiet_nhap', 'ma_chi_tiet_nhap');
+    }
+
+    public function chiTietBoHoas()
+    {
+        return $this->hasMany(ChiTietBoHoa::class, 'ma_chi_tiet_nhap', 'ma_chi_tiet_nhap');
+    }
+
     public function getTonThucTeAttribute(): int
     {
         return (int) $this->so_luong_con_lai;
