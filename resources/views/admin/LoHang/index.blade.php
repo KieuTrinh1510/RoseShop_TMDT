@@ -4,6 +4,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/Admin/NhaCungCap.css') }}">
+    <style>
+        .ncc-filter-grid {
+            grid-template-columns: 1.5fr 1.3fr 1.2fr 1fr auto;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -40,8 +45,19 @@
                     <input type="text"
                            name="keyword"
                            class="form-control"
-                           placeholder="Mã lô, tên sản phẩm, tên nhà cung cấp..."
+                           placeholder="Mã lô, mã SP, mã PN, tên SP..."
                            value="{{ request('keyword') }}">
+                </div>
+                <div>
+                    <label class="form-label" style="font-size:12px; font-weight:600; color:#475467;">Nhà cung cấp</label>
+                    <select name="ma_nha_cung_cap" class="form-select">
+                        <option value="">-- Tất cả NCC --</option>
+                        @foreach($nhaCungCaps as $ncc)
+                            <option value="{{ $ncc->ma_nha_cung_cap }}" {{ (string) request('ma_nha_cung_cap') === (string) $ncc->ma_nha_cung_cap ? 'selected' : '' }}>
+                                {{ $ncc->ten_nha_cung_cap }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
                 <div>
                     <label class="form-label" style="font-size:12px; font-weight:600; color:#475467;">Đánh giá chất lượng</label>
@@ -65,8 +81,8 @@
                     <button type="submit" class="btn btn-dark" style="height:38px; font-weight:600; font-size:13px; padding: 0 16px;">
                         <i class="bi bi-funnel me-1"></i> Lọc
                     </button>
-                    @if(request()->anyFilled(['keyword', 'ket_qua', 'ton_kho']))
-                        <a href="{{ route('admin.lo-hang') }}" class="btn btn-outline-secondary" style="height:38px; display:inline-flex; align-items:center;">
+                    @if(request()->anyFilled(['keyword', 'ma_nha_cung_cap', 'ket_qua', 'ton_kho']))
+                        <a href="{{ route('admin.lo-hang') }}" class="btn btn-outline-secondary" style="height:38px; display:inline-flex; align-items:center;" title="Xóa bộ lọc">
                             <i class="bi bi-arrow-counterclockwise"></i>
                         </a>
                     @endif
