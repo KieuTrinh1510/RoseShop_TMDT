@@ -437,8 +437,29 @@ class UC41_SupplierManagementTest extends TestCase
     {
         $admin = $this->createUser('ADMIN', 'admin_test');
 
-        // Lấy phiếu nhập cũ #2 đã tồn tại sẵn trong database
-        $oldPn = PhieuNhap::with('nhaCungCap')->find(2);
+        // Lấy phiếu nhập cũ với NCC hoặc tạo mới nếu database vừa được reset sạch
+        $oldPn = PhieuNhap::with('nhaCungCap')->where('ten_nha_cung_cap', 'NCC Hoa Trung Quoc')->first();
+        if (!$oldPn) {
+            $ncc = NhaCungCap::where('ten_nha_cung_cap', 'NCC Hoa Trung Quoc')->first() ?? NhaCungCap::create([
+                'ten_nha_cung_cap' => 'NCC Hoa Trung Quoc',
+                'so_dien_thoai'    => '0902234567',
+                'email'            => 'trungquoc@flower.com',
+                'dia_chi'          => 'Quảng Châu',
+                'trang_thai'       => NhaCungCap::TRANG_THAI_DANG_HOP_TAC,
+            ]);
+            $oldPn = PhieuNhap::create([
+                'ma_nhan_vien'      => $this->getOperationalEmployeeId(),
+                'ma_nha_cung_cap'   => $ncc->ma_nha_cung_cap,
+                'ten_nha_cung_cap'  => $ncc->ten_nha_cung_cap,
+                'so_dien_thoai_ncc' => $ncc->so_dien_thoai,
+                'email_ncc'         => $ncc->email,
+                'dia_chi_ncc'       => $ncc->dia_chi,
+                'ngay_nhap'         => now(),
+                'tong_tien'         => 1000000,
+                'trang_thai'        => PhieuNhap::TRANG_THAI_CONFIRMED,
+            ]);
+        }
+
         $this->assertNotNull($oldPn);
         $this->assertNotNull($oldPn->ma_nha_cung_cap);
         $this->assertEquals('NCC Hoa Trung Quoc', $oldPn->ten_nha_cung_cap);

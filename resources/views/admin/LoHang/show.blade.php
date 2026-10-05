@@ -33,6 +33,13 @@
                 <i class="bi bi-shield-check me-1"></i>
                 <span>{{ $loHang->danhGiaMoiNhat ? 'Cập nhật đánh giá' : 'Đánh giá chất lượng' }}</span>
             </button>
+            <button type="button"
+                    class="btn btn-outline-danger d-inline-flex align-items-center gap-1"
+                    style="font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 8px;"
+                    onclick="openModalBaoHong()">
+                <i class="bi bi-trash3 me-1"></i>
+                <span>Báo hỏng lô</span>
+            </button>
             @endif
         </div>
     </div>
@@ -409,12 +416,19 @@
 
             {{-- 5. Damaged Inventory Reports --}}
             <div class="ncc-card">
-                <div class="ncc-card-header">
-                    <h2 class="ncc-card-title">
+                <div class="ncc-card-header d-flex justify-content-between align-items-center">
+                    <h2 class="ncc-card-title mb-0">
                         <i class="bi bi-trash3 text-danger"></i>
                         Lịch sử hàng hỏng / hao hụt đã trừ tồn kho
                         <span class="badge bg-light text-muted border ms-1" style="font-size:12px;">{{ $loHang->baoCaoHangHongs->count() }}</span>
                     </h2>
+                    @if($loHang->so_luong_con_lai > 0)
+                    <button type="button"
+                            class="btn btn-sm btn-outline-danger fw-semibold d-inline-flex align-items-center gap-1"
+                            onclick="openModalBaoHong()">
+                        <i class="bi bi-plus-lg me-1"></i>Báo hỏng lô
+                    </button>
+                    @endif
                 </div>
 
                 <div class="table-responsive">
@@ -556,6 +570,107 @@
     </div>
 </div>
 
+{{-- Modal Báo hỏng lô (Tái sử dụng nghiệp vụ UC4.4 san-pham.bao-hang-hong) --}}
+<div class="modal fade" id="modalBaoHongLo" tabindex="-1" aria-labelledby="modalBaoHongLoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:12px; border:none; box-shadow:0 10px 30px rgba(0,0,0,0.15); overflow:hidden;">
+            <form action="{{ route('san-pham.bao-hang-hong') }}" method="POST" id="formBaoHongLo">
+                @csrf
+                <input type="hidden" name="ma_san_pham" value="{{ $loHang->ma_san_pham }}">
+                <input type="hidden" name="ma_chi_tiet_nhap" value="{{ $loHang->ma_chi_tiet_nhap }}">
+                <input type="hidden" name="redirect_to" value="{{ url()->current() }}">
+
+                <div class="modal-header" style="background:#FFF5F5; border-bottom:1px solid #FEE2E2;">
+                    <h5 class="modal-title fw-bold text-danger" id="modalBaoHongLoLabel" style="font-size:16px;">
+                        <i class="bi bi-trash3 text-danger me-2"></i>Báo hỏng / Hao hụt kho cho lô #CTN-{{ $loHang->ma_chi_tiet_nhap }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3 p-3 bg-light rounded-3">
+                        <div class="d-flex justify-content-between mb-1" style="font-size:13px;">
+                            <span class="text-muted">Mặt hàng:</span>
+                            <strong class="text-dark">{{ $loHang->sanPham->ten_san_pham ?? 'Sản phẩm #' . $loHang->ma_san_pham }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1" style="font-size:13px;">
+                            <span class="text-muted">Mã lô nhập:</span>
+                            <strong class="text-primary">#CTN-{{ $loHang->ma_chi_tiet_nhap }} (Phiếu #PN-{{ $loHang->ma_phieu_nhap }})</strong>
+                        </div>
+                        <div class="d-flex justify-content-between" style="font-size:13px;">
+                            <span class="text-muted">Tồn khả dụng của lô:</span>
+                            <strong class="text-success"><span id="bh_ton_con_lai">{{ $loHang->so_luong_con_lai }}</span> sp</strong>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning py-2 px-3 mb-3 d-flex align-items-center gap-2" style="font-size:12px;">
+                        <i class="bi bi-exclamation-triangle-fill text-warning flex-shrink-0"></i>
+                        <span>Thao tác này sẽ <strong>trừ trực tiếp</strong> số lượng vào tồn kho lô và tồn kho sản phẩm.</span>
+                    </div>
+
+                    @php
+                        $qcLoi = (int) ($loHang->danhGiaMoiNhat?->so_luong_loi ?? 0);
+                    @endphp
+                    @if($qcLoi > 0 && $qcLoi <= $loHang->so_luong_con_lai)
+                    <div class="mb-3 p-2 border rounded-3 bg-white d-flex justify-content-between align-items-center">
+                        <span style="font-size:12px; color:#667085;">
+                            <i class="bi bi-info-circle me-1"></i>QC gần nhất phát hiện: <strong class="text-danger">{{ $qcLoi }} lỗi</strong>
+                        </span>
+                        <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size:11px;" onclick="document.getElementById('bh_so_luong_hong').value = {{ $qcLoi }};">
+                            Điền số lượng này
+                        </button>
+                    </div>
+                    @endif
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Số lượng hỏng cần xuất hủy <span class="text-danger">*</span>
+                            <small class="text-muted fw-normal">(Tối đa: {{ $loHang->so_luong_con_lai }} sp)</small>
+                        </label>
+                        <input type="number"
+                               name="so_luong_hong"
+                               id="bh_so_luong_hong"
+                               class="form-control"
+                               min="1"
+                               max="{{ $loHang->so_luong_con_lai }}"
+                               value="{{ $qcLoi > 0 && $qcLoi <= $loHang->so_luong_con_lai ? $qcLoi : 1 }}"
+                               required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Lý do hỏng / hao hụt <span class="text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               name="ly_do"
+                               id="bh_ly_do"
+                               class="form-control"
+                               value="{{ $loHang->danhGiaMoiNhat?->ly_do ? 'Theo kết quả QC: ' . $loHang->danhGiaMoiNhat->ly_do : '' }}"
+                               placeholder="VD: Hoa héo dập khi vận chuyển, hỏng mốc..."
+                               maxlength="255"
+                               required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Ghi chú chi tiết</label>
+                        <textarea name="ghi_chu" id="bh_ghi_chu" class="form-control" rows="2" maxlength="1000" placeholder="Ghi chú thêm nếu có...">{{ $loHang->danhGiaMoiNhat?->ghi_chu ?? '' }}</textarea>
+                    </div>
+
+                    <div class="p-2 bg-light rounded-3 d-flex justify-content-between text-muted" style="font-size:12px;">
+                        <span><i class="bi bi-person me-1"></i> Người báo cáo: <strong>{{ auth()->user()->nhanVien->ten_nhan_vien ?? auth()->user()->ten_dang_nhap }}</strong></span>
+                        <span><i class="bi bi-clock me-1"></i> Ghi nhận tự động</span>
+                    </div>
+                </div>
+                <div class="modal-footer" style="background:#FAFAFA; border-top:1px solid #EAECF0;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-danger fw-semibold">
+                        <i class="bi bi-trash3 me-1"></i> Xác nhận trừ kho hàng hỏng
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
@@ -598,6 +713,10 @@
         onKetQuaChange();
 
         new bootstrap.Modal(document.getElementById('modalDanhGiaLo')).show();
+    }
+
+    function openModalBaoHong() {
+        new bootstrap.Modal(document.getElementById('modalBaoHongLo')).show();
     }
 </script>
 @endpush

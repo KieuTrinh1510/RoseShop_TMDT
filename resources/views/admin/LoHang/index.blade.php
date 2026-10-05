@@ -114,7 +114,7 @@
                         <th class="text-end">Giá nhập</th>
                         <th class="text-center">Trạng thái</th>
                         <th class="text-center">Chất lượng</th>
-                        <th class="text-center">Hàng hỏng</th>
+                        <th class="text-center" style="min-width: 140px;">Hao hụt & Lỗi QC</th>
                         <th class="text-end" style="width: 140px;">Thao tác</th>
                     </tr>
                 </thead>
@@ -192,14 +192,23 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="text-center">
-                                @if($tongHongLo > 0 || ($dg && $dg->so_luong_loi > 0))
-                                    <span class="text-danger fw-bold">
-                                        {{ max($tongHongLo, $dg?->so_luong_loi ?? 0) }}
-                                    </span>
-                                @else
-                                    <span class="text-muted">0</span>
-                                @endif
+                            <td style="font-size: 12px; line-height: 1.4;">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="text-muted" title="Lỗi ghi nhận từ QC (không trừ tồn kho)">Lỗi QC:</span>
+                                    @if($dg && $dg->so_luong_loi > 0)
+                                        <span class="badge bg-warning-subtle text-dark border border-warning-subtle fw-bold px-1 py-0" title="Phát hiện qua kiểm định QC (chưa trừ kho)">{{ $dg->so_luong_loi }}</span>
+                                    @else
+                                        <span class="text-muted">0</span>
+                                    @endif
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-muted" title="Hàng hỏng / hao hụt đã thực tế trừ kho">Đã trừ hỏng:</span>
+                                    @if($tongHongLo > 0)
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-bold px-1 py-0" title="Đã trừ vào tồn kho thực tế">{{ $tongHongLo }}</span>
+                                    @else
+                                        <span class="text-muted">0</span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="text-end">
                                 <div class="d-inline-flex gap-1">
