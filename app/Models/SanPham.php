@@ -138,4 +138,31 @@ class SanPham extends Model
     {
         return $query->where('loai_san_pham', self::LOAI_MIENG_XOP);
     }
+
+    public function reservations()
+    {
+        return $this->hasMany(
+            InventoryReservation::class,
+            'ma_san_pham',
+            'ma_san_pham'
+        );
+    }
+
+    public function getTonThucTeAttribute(): int
+    {
+        return (int) $this->so_luong;
+    }
+
+    public function getTonDangGiuAttribute(): int
+    {
+        if ($this->relationLoaded('reservations')) {
+            return (int) $this->reservations->where('trang_thai', InventoryReservation::STATUS_RESERVED)->sum('so_luong');
+        }
+        return (int) $this->reservations()->reserved()->sum('so_luong');
+    }
+
+    public function getTonKhaDungAttribute(): int
+    {
+        return max(0, $this->ton_thuc_te - $this->ton_dang_giu);
+    }
 }

@@ -85,7 +85,7 @@ class DonHangController extends Controller
 
         $message = $xacNhan
             ? "Đơn hàng {$maHD} đã được xác nhận và giao cho shipper."
-            : "Đơn hàng {$maHD} đã bị từ chối. Hàng đang giữ đã được hoàn kho."
+            : "Đơn hàng {$maHD} đã bị từ chối. Tồn giữ đã được giải phóng."
                 .($request->filled('ly_do') ? ' Lý do: '.$request->ly_do : '')
                 ." Nếu đã thanh toán, vui lòng liên hệ cửa hàng để được hoàn tiền."
                 .$msgDiem;
@@ -123,24 +123,26 @@ class DonHangController extends Controller
             if ($xacNhan) {
                 if (!NhanVien::whereKey($shipperId)->where('chuc_vu', 'SHIPPER')->exists()) BoHoaController::loi('Vui lòng chọn nhân viên có chức vụ SHIPPER.');
                 if (!$hd->dia_chi_giao || !$hd->so_dien_thoai || !$hd->phuong_thuc_thanh_toan) BoHoaController::loi('Khách chưa hoàn tất thông tin giao hàng và phương thức thanh toán.');
-                // Lock reserved bouquets. Both types already left available stock at checkout.
-                \App\Models\BoHoa::where('ma_hoa_don', $id)->orderBy('ma_bo_hoa')->lockForUpdate()->get();
+
+                // CONFIRM: RESERVED -> CONSUMED (trừ on_hand của sản phẩm và lô hàng)
+                if ($hd->reservations()->where('trang_thai', \App\Models\InventoryReservation::STATUS_RESERVED)->exists()) {
+                    \App\Services\InventoryReservationService::confirmOrder($hd);
+                }
             } else {
-                $laBo = BoHoaController::huyBoTrongDon($hd);
+                // CANCEL/REJECT: RESERVED -> RELEASED (KHÔNG cộng on_hand vì chưa từng bị trừ)
+                if ($hd->reservations()->where('trang_thai', \App\Models\InventoryReservation::STATUS_RESERVED)->exists()) {
+                    \App\Services\InventoryReservationService::releaseOrder($hd);
+                } else {
+                    // Fallback tương thích ngược cho đơn cũ không có bản ghi reservation
+                    $laBo = BoHoaController::huyBoTrongDon($hd);
+                    $items = $hd->chiTietHoaDon()->get();
+                    if (!$laBo) BoHoaController::hoanKho($items->toArray());
+                }
+
                 $items = $hd->chiTietHoaDon()->get();
-                // Bouquet allocations are returned by huyBoTrongDon() using their
-                // own lot records.  Returning ChiTietHoaDon as well would add the
-                // same stock back a second time.
-                if (!$laBo) BoHoaController::hoanKho($items->toArray());
-                if (!$laBo && $items->isNotEmpty()) {
+                if ($items->isNotEmpty()) {
                     $khach = KhachHang::whereKey($hd->ma_khach_hang)->lockForUpdate()->first();
                     if ($khach) {
-                        // ===== Logic điểm tích lũy (tính ngược từ dữ liệu có sẵn, từ bản 1) =====
-                        //  goc     = sum(gia_ban_snapshot × so_luong) từ chi tiết hóa đơn
-                        //  daDung  = (goc - tong_tien) / DIEM_QUY_DOI
-                        //            → nếu > 0 tức khách có dùng điểm khi đặt → hoàn lại khi hủy
-                        //  daCong  = floor(tong_tien / TICH_DIEM)
-                        //            → điểm đã cộng khi đặt đơn → thu hồi khi hủy
                         $goc = $items->sum(fn ($ct) => $ct->gia_ban_snapshot * $ct->so_luong);
                         $daDung = max(0, (int) round(($goc - $hd->tong_tien) / self::DIEM_QUY_DOI));
                         $daCong = (int) floor($hd->tong_tien / self::TICH_DIEM);

@@ -502,23 +502,16 @@ class BoHoaController extends Controller
 
         $laVnpay = ($donData['phuong_thuc_thanh_toan'] ?? null) === 'NGAN_HANG';
 
-        if ($laVnpay) {
-            $info    = self::duLieuCheckout($checkout, $khach->getKey());
-            $tongGoc = (float) $info['quote']['tong_tien'];
-            $giam    = min($diemSuDung * 1000, $tongGoc);
+        self::hoanTatBoHoa($hoaDon, $checkout, $khach, $diemSuDung);
 
+        if ($laVnpay) {
             $hoaDon->vnpay_cart_snapshot = [
                 'loai_don'        => 'bo_hoa',
                 'bo_hoa_checkout' => $checkout,
                 'diem_su_dung'    => $diemSuDung,
             ];
-            $hoaDon->tong_tien = max(0, $tongGoc - $giam);
             $hoaDon->save();
-
-            return $hoaDon;
         }
-
-        self::hoanTatBoHoa($hoaDon, $checkout, $khach, $diemSuDung);
 
         return $hoaDon;
     }
@@ -537,7 +530,7 @@ class BoHoaController extends Controller
             'tong_tien' => 0,
         ]);
 
-        // Tính tổng tiền (không trừ kho)
+        // Tính tổng tiền
         $tongGoc = 0;
         foreach ($dsCheckout as $checkout) {
             $info = self::duLieuCheckout($checkout, $khach->getKey());
@@ -546,25 +539,20 @@ class BoHoaController extends Controller
         $giam     = min($diemSuDung * 1000, $tongGoc);
         $tongTien = max(0, $tongGoc - $giam);
 
-        $laVnpay = ($donData['phuong_thuc_thanh_toan'] ?? null) === 'NGAN_HANG';
+        $hoaDon->tong_tien = $tongTien;
+        $hoaDon->save();
 
+        self::hoanTatGioBoHoa($hoaDon, $dsCheckout, $khach, $diemSuDung);
+
+        $laVnpay = ($donData['phuong_thuc_thanh_toan'] ?? null) === 'NGAN_HANG';
         if ($laVnpay) {
             $hoaDon->vnpay_cart_snapshot = [
                 'loai_don'     => 'gio_bo_hoa',
                 'ds_checkout'  => $dsCheckout,
                 'diem_su_dung' => $diemSuDung,
             ];
-            $hoaDon->tong_tien = $tongTien;
             $hoaDon->save();
-
-            return $hoaDon;
         }
-
-        // COD
-        $hoaDon->tong_tien = $tongTien;
-        $hoaDon->save();
-
-        self::hoanTatGioBoHoa($hoaDon, $dsCheckout, $khach, $diemSuDung);
 
         return $hoaDon;
     }
@@ -595,6 +583,7 @@ class BoHoaController extends Controller
                     ->whereNull('ma_hoa_don')
                     ->where('ma_mau_bo_hoa', $info['source']->getKey())
                     ->where('so_luong', 1)
+                    ->whereDoesntHave('reservations', fn ($q) => $q->where('trang_thai', 'RESERVED'))
                     ->orderBy('ma_bo_hoa')
                     ->lockForUpdate()
                     ->with('chiTietBoHoa.sanPham')
@@ -617,11 +606,16 @@ class BoHoaController extends Controller
                     'loi_nhan'      => $checkout['loi_nhan'] ?? null,
                     'gia_ban'       => $giaMoiBo,
                 ]);
+
+                // 1. BÓ HOA THÀNH PHẨM CẮM SẴN: reserve bó hoa, KHÔNG reserve BOM nguyên liệu
+                \App\Services\InventoryReservationService::reserveReadyBouquet($hoaDon, $bo);
+
                 $tong += $giaMoiBo;
                 --$need;
             }
 
             if ($need > 0) {
+                // 2. BÓ THEO MẪU LÀM THEO ĐƠN: reserve BOM nguyên liệu từ các lô khả dụng theo FIFO
                 $formula = $info['thanhPhan']->map(fn ($c) => [
                     'ma_san_pham' => $c->ma_san_pham,
                     'vai_tro'     => $c->vai_tro,
@@ -636,16 +630,13 @@ class BoHoaController extends Controller
                     ];
                 }
 
-                $phanBo = Bo::phanBo($formula, true, true);
-                $gia = Bo::giaPhanBo($phanBo, $info['source']->size, $info['source']->kieu_bo_hoa, $need);
-
                 $bo = BoHoa::create([
                     'ma_mau_bo_hoa' => $info['source']->getKey(),
                     'ma_hoa_don'    => $hoaDon->getKey(),
                     'ma_khach_hang' => $khach->getKey(),
                     'ten_bo_hoa'    => $info['ten'],
                     'so_luong'      => $need,
-                    'gia_ban'       => $gia['gia_moi_bo'],
+                    'gia_ban'       => 0,
                     'loai_bo_hoa'   => 'HE_THONG',
                     'kieu_bo_hoa'   => $info['source']->kieu_bo_hoa,
                     'size'          => $info['source']->size,
@@ -653,11 +644,17 @@ class BoHoaController extends Controller
                     'loi_nhan'      => $checkout['loi_nhan'] ?? null,
                     'trang_thai'    => 'ACTIVE',
                 ]);
+
+                $phanBo = \App\Services\InventoryReservationService::reserveBouquetIngredients($hoaDon, $bo, $formula);
+                $gia = Bo::giaPhanBo($phanBo, $info['source']->size, $info['source']->kieu_bo_hoa, $need);
+                $bo->update(['gia_ban' => $gia['gia_moi_bo']]);
+
                 Bo::luuChiTiet($bo, $phanBo);
                 Bo::saoChepAnhTuMau($info['source']->getKey(), $bo->getKey());
                 $tong += $gia['tong_tien'];
             }
         } else {
+            // 3. CUSTOM MIX (TUY_CHON): reserve đúng nguyên liệu khách chọn theo chi_tiet_bo_hoa
             $draft = $info['source'];
             $formula = $info['thanhPhan']->map(fn ($c) => [
                 'ma_san_pham' => $c->ma_san_pham,
@@ -673,15 +670,12 @@ class BoHoaController extends Controller
                 ];
             }
 
-            $phanBo = Bo::phanBo($formula, true, true);
-            $gia = Bo::giaPhanBo($phanBo, $draft->size, $draft->kieu_bo_hoa, $qty);
-
             $bo = BoHoa::create([
                 'ma_hoa_don'    => $hoaDon->getKey(),
                 'ma_khach_hang' => $khach->getKey(),
                 'ten_bo_hoa'    => $draft->ten_bo_hoa,
                 'so_luong'      => $qty,
-                'gia_ban'       => $gia['gia_moi_bo'],
+                'gia_ban'       => 0,
                 'loai_bo_hoa'   => 'TUY_CHON',
                 'kieu_bo_hoa'   => $draft->kieu_bo_hoa,
                 'size'          => $draft->size,
@@ -689,6 +683,11 @@ class BoHoaController extends Controller
                 'loi_nhan'      => $checkout['loi_nhan'] ?? $draft->loi_nhan,
                 'trang_thai'    => 'ACTIVE',
             ]);
+
+            $phanBo = \App\Services\InventoryReservationService::reserveBouquetIngredients($hoaDon, $bo, $formula);
+            $gia = Bo::giaPhanBo($phanBo, $draft->size, $draft->kieu_bo_hoa, $qty);
+            $bo->update(['gia_ban' => $gia['gia_moi_bo']]);
+
             Bo::luuChiTiet($bo, $phanBo);
             self::taoChiTietHoaDon($hoaDon, $phanBo);
             $tong = $gia['tong_tien'];

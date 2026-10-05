@@ -218,16 +218,34 @@ class ThanhToanController extends Controller
                     'ngay_dat'               => now(),
                 ]);
 
-                if ($laVnpay) {
-                    $hoaDon->vnpay_cart_snapshot = [
-                        'loai_don'     => 'gio_hang',
-                        'gio_hang'     => $gioHang,
-                        'diem_su_dung' => $diemSuDung,
-                        'tong_tien'    => $tongTien,
-                    ];
-                    $hoaDon->save();
-                } else {
-                    $this->xuLyFifoVaHoanTat($hoaDon, $gioHang, $diemSuDung, $khachHang, $tongTien);
+                // 1. TẠO RESERVATION CHO TỪNG SẢN PHẨM & LÔ (KHÔNG TRỪ ON_HAND)
+                $allocatedRows = \App\Services\InventoryReservationService::reserveSingleItems($hoaDon, $gioHang);
+
+                // 2. LƯU CHI TIẾT HÓA ĐƠN
+                $grouped = collect($allocatedRows)->groupBy(
+                    fn ($r) => ($r['ma_san_pham'] ?? 0).'-'.($r['ma_chi_tiet_nhap'] ?? 0)
+                );
+
+                foreach ($grouped as $items) {
+                    $first = $items->first();
+                    $item  = collect($gioHang)->firstWhere('ma_san_pham', $first['ma_san_pham']);
+                    ChiTietHoaDon::create([
+                        'ma_hoa_don'        => $hoaDon->getKey(),
+                        'ma_san_pham'       => $first['ma_san_pham'],
+                        'ma_chi_tiet_nhap'  => $first['ma_chi_tiet_nhap'] ?? null,
+                        'so_luong'          => $items->sum('so_luong'),
+                        'gia_nhap_snapshot' => $first['gia_nhap_snapshot'] ?? 0,
+                        'gia_ban_snapshot'  => $item['gia_ban'] ?? ($first['gia_ban_snapshot'] ?? 0),
+                    ]);
+                }
+
+                if ($diemSuDung > 0 && $khachHang) {
+                    $khachHang->decrement('diem_tich_luy', $diemSuDung);
+                }
+
+                $diemMoi = (int) floor($tongTien / self::TICH_DIEM);
+                if ($diemMoi > 0 && $khachHang) {
+                    $khachHang->increment('diem_tich_luy', $diemMoi);
                 }
 
                 return $hoaDon;
@@ -296,6 +314,19 @@ class ThanhToanController extends Controller
         }
 
         if ($hoaDon->trang_thai_thanh_toan === 'DA_THANH_TOAN' || $hoaDon->trang_thai === 'CANCELLED') {
+            return;
+        }
+
+        // Nếu đơn đã được tạo RESERVED lúc checkout (kiến trúc mới):
+        // Chỉ lưu thông tin giao dịch VNPay và đánh dấu DA_THANH_TOAN.
+        // Hàng giữ vẫn RESERVED chờ admin xác nhận (CONFIRM) mới trừ kho on_hand.
+        if ($hoaDon->reservations()->exists()) {
+            $hoaDon->vnpay_transaction_no = $vnpayMeta['vnpay_transaction_no'] ?? null;
+            $hoaDon->vnpay_bank_code      = $vnpayMeta['vnpay_bank_code'] ?? null;
+            $hoaDon->vnpay_pay_date       = $vnpayMeta['vnpay_pay_date'] ?? null;
+            $hoaDon->vnpay_response_code  = $vnpayMeta['vnpay_response_code'] ?? null;
+            $hoaDon->trang_thai_thanh_toan = 'DA_THANH_TOAN';
+            $hoaDon->save();
             return;
         }
 
