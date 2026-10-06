@@ -3,61 +3,62 @@
 @push('styles')
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/Admin/NhaCungCap.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/Admin/PhieuNhap.css') }}">
 @endpush
 
 @section('content')
-<div class="ncc-container">
+<div class="pn-detail-container">
+<div class="container py-4">
 
-    {{-- Page Header --}}
-    <div class="rs-page-header">
-        <div class="rs-page-header-text">
-            <h1 class="rs-page-title">Chi tiết phiếu nhập #PN-{{ $phieuNhap->ma_phieu_nhap }}</h1>
-            <p class="rs-page-subtitle">
-                Ngày nhập: {{ $phieuNhap->ngay_nhap ? $phieuNhap->ngay_nhap->format('d/m/Y H:i') : '—' }} 
-                — Trạng thái: 
-                @if($phieuNhap->trang_thai === 'CONFIRMED')
-                    Đã xác nhận
-                @elseif($phieuNhap->trang_thai === 'CANCELLED')
-                    Đã hủy
-                @else
-                    Đang tạo (Draft)
-                @endif
-            </p>
+    {{-- 1. HEADER TRANG: Tiêu đề chuẩn hóa RoseShop + 1 Nút Quay lại danh sách duy nhất --}}
+    <div class="rs-header-block">
+        <div class="rs-header-left">
+            <div class="rs-header-icon-box">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                    <polyline points="10 9 9 9 8 9"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="rs-header-title">Chi tiết phiếu nhập #PN-{{ $phieuNhap->ma_phieu_nhap }}</h1>
+                <p class="rs-header-subtitle">
+                    Ngày nhập: {{ $phieuNhap->ngay_nhap ? $phieuNhap->ngay_nhap->format('d/m/Y H:i') : '—' }} 
+                    — Trạng thái: 
+                    @if($phieuNhap->trang_thai === 'CONFIRMED')
+                        <span class="badge badge-confirmed"><i class="bi bi-check-lg me-1"></i>Đã xác nhận</span>
+                    @elseif($phieuNhap->trang_thai === 'CANCELLED')
+                        <span class="badge badge-cancelled"><i class="bi bi-x-circle me-1"></i>Đã hủy</span>
+                    @else
+                        <span class="badge badge-draft"><i class="bi bi-pencil me-1"></i>Đang tạo (Draft)</span>
+                    @endif
+                </p>
+            </div>
         </div>
-        <div class="ncc-header-actions">
-            @if($phieuNhap->ma_nha_cung_cap)
-                <a href="{{ route('admin.nha-cung-cap.show', $phieuNhap->ma_nha_cung_cap) }}" class="ncc-btn-secondary">
-                    <i class="bi bi-arrow-left"></i>
-                    <span>Quay lại Nhà cung cấp</span>
-                </a>
-                <a href="{{ route('admin.nha-cung-cap.show', $phieuNhap->ma_nha_cung_cap) }}" class="ncc-btn-secondary">
-                    <i class="bi bi-building"></i>
-                    <span>Xem hồ sơ NCC</span>
-                </a>
-            @else
-                <a href="{{ route('phieu-nhap.index') }}" class="ncc-btn-secondary">
-                    <i class="bi bi-arrow-left"></i>
-                    <span>Quay lại danh sách</span>
-                </a>
-            @endif
-            <a href="{{ route('phieu-nhap.index') }}" class="ncc-btn-primary">
-                <i class="bi bi-journal-text"></i>
-                <span>Danh sách phiếu nhập</span>
+
+        {{-- Nút Quay lại danh sách phiếu nhập duy nhất, rõ ràng, không gây rối luồng --}}
+        <div>
+            <a href="{{ route('phieu-nhap.index') }}" class="rs-btn-back">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m15 18-6-6 6-6"/>
+                </svg>
+                <span>Quay lại danh sách phiếu nhập</span>
             </a>
         </div>
     </div>
 
     {{-- Flash Notifications --}}
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="alert alert-success alert-dismissible fade show" role="alert" style="border-radius:12px;">
             <i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
     @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show" role="alert" style="border-radius:12px;">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ session('error') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
@@ -69,28 +70,28 @@
         $tongGiaTri = $phieuNhap->chiTietNhaps->sum(fn($ct) => (float)$ct->so_luong * (float)$ct->gia_nhap);
     @endphp
 
-    {{-- Top Summary KPIs --}}
-    <div class="ncc-kpi-grid mb-4">
-        <div class="ncc-kpi-card">
-            <span class="kpi-label">Tổng mặt hàng</span>
-            <span class="kpi-val">{{ $tongSoLo }}</span>
-            <small class="text-muted" style="font-size:12px;">Số loại sản phẩm</small>
+    {{-- 2. Top Summary KPIs: Thống kê số lượng & giá trị --}}
+    <div class="pn-kpi-grid">
+        <div class="pn-kpi-card">
+            <span class="pn-kpi-label">Tổng mặt hàng</span>
+            <span class="pn-kpi-val">{{ $tongSoLo }}</span>
+            <small class="text-muted" style="font-size:12px; margin-top:4px;">Số loại sản phẩm</small>
         </div>
-        <div class="ncc-kpi-card">
-            <span class="kpi-label">Tổng số lượng</span>
-            <span class="kpi-val">{{ number_format($tongSoLuong) }}</span>
-            <small class="text-muted" style="font-size:12px;">Sản phẩm nhập</small>
+        <div class="pn-kpi-card">
+            <span class="pn-kpi-label">Tổng số lượng</span>
+            <span class="pn-kpi-val">{{ number_format($tongSoLuong) }}</span>
+            <small class="text-muted" style="font-size:12px; margin-top:4px;">Sản phẩm nhập</small>
         </div>
-        <div class="ncc-kpi-card kpi-rate">
-            <span class="kpi-label">Tổng giá trị phiếu nhập</span>
-            <span class="kpi-val">{{ number_format($tongGiaTri, 0, ',', '.') }} đ</span>
-            <small class="text-muted" style="font-size:12px;">Tổng kinh phí nhập</small>
+        <div class="pn-kpi-card highlight">
+            <span class="pn-kpi-label">Tổng giá trị phiếu nhập</span>
+            <span class="pn-kpi-val">{{ number_format($tongGiaTri, 0, ',', '.') }} đ</span>
+            <small class="text-muted" style="font-size:12px; margin-top:4px;">Tổng kinh phí nhập hàng</small>
         </div>
     </div>
 
-    {{-- Khối thông tin hủy nếu phiếu bị cancel (Section F) --}}
+    {{-- Khối thông tin hủy nếu phiếu bị cancel --}}
     @if($phieuNhap->trang_thai === 'CANCELLED')
-        <div class="card mb-4 border-danger" style="border-width: 2px; background: #fff5f5; border-radius: 8px;">
+        <div class="card mb-4 border-danger" style="border-width: 1px; background: #fff1f2; border-radius: 14px;">
             <div class="card-body p-3">
                 <div class="d-flex align-items-center mb-2">
                     <span class="badge bg-danger me-2" style="font-size: 13px;">
@@ -124,62 +125,62 @@
         </div>
     @endif
 
-    {{-- 2-Column Detail Grid: Thông tin Phiếu & Thông tin NCC --}}
-    <div class="ncc-detail-grid mb-4">
+    {{-- 3. 2-Column Detail Grid: Thông tin Phiếu & Thông tin NCC --}}
+    <div class="pn-detail-grid">
         {{-- Left: Thông tin Phiếu nhập --}}
         <div>
-            <div class="ncc-info-card">
+            <div class="pn-info-card">
                 <div class="d-flex align-items-center justify-content-between mb-3">
                     <span class="badge bg-light text-muted border">Mã phiếu: #PN-{{ $phieuNhap->ma_phieu_nhap }}</span>
                     @if($phieuNhap->trang_thai === 'CONFIRMED')
-                        <span class="badge bg-dark" style="font-size:12px; font-weight:500;">
+                        <span class="badge badge-confirmed">
                             <i class="bi bi-check-lg me-1"></i>Đã xác nhận
                         </span>
                     @elseif($phieuNhap->trang_thai === 'CANCELLED')
-                        <span class="badge bg-secondary" style="font-size:12px; font-weight:500;">
+                        <span class="badge badge-cancelled">
                             <i class="bi bi-x-circle me-1"></i>Đã hủy
                         </span>
                     @else
-                        <span class="badge" style="background:#f2f4f7; color:#344054; border:1px solid #d0d5dd; font-size:12px; font-weight:500;">
+                        <span class="badge badge-draft">
                             <i class="bi bi-pencil me-1"></i>Đang tạo (Draft)
                         </span>
                     @endif
                 </div>
 
-                <h2 class="ncc-info-title">
-                    <i class="bi bi-file-earmark-text text-primary me-1"></i>Thông tin phiếu nhập
+                <h2 class="pn-info-title">
+                    <i class="bi bi-file-earmark-text text-danger me-1"></i>Thông tin phiếu nhập
                 </h2>
-                <div class="ncc-info-meta">
-                    Phiếu nhập hàng hóa kho nội bộ
+                <div class="pn-info-meta">
+                    Phiếu nhập hàng hóa kho nội bộ RoseShop
                 </div>
 
-                <div class="ncc-info-item">
+                <div class="pn-info-item">
                     <span class="label">Mã phiếu</span>
-                    <span class="value fw-bold">#PN-{{ $phieuNhap->ma_phieu_nhap }}</span>
+                    <span class="value fw-bold text-danger">#PN-{{ $phieuNhap->ma_phieu_nhap }}</span>
                 </div>
 
-                <div class="ncc-info-item">
+                <div class="pn-info-item">
                     <span class="label">Ngày nhập</span>
                     <span class="value">
                         {{ $phieuNhap->ngay_nhap ? $phieuNhap->ngay_nhap->format('d/m/Y H:i') : '—' }}
                     </span>
                 </div>
 
-                <div class="ncc-info-item">
+                <div class="pn-info-item">
                     <span class="label">Nhân viên phụ trách</span>
-                    <span class="value">
+                    <span class="value fw-semibold">
                         {{ $phieuNhap->nhanVien->ten_nhan_vien ?? '—' }}
                     </span>
                 </div>
 
-                <div class="ncc-info-item">
+                <div class="pn-info-item">
                     <span class="label">Thời gian tạo</span>
                     <span class="value text-muted" style="font-size:13px;">
                         {{ $phieuNhap->created_at ? $phieuNhap->created_at->format('d/m/Y H:i') : '—' }}
                     </span>
                 </div>
 
-                <div class="ncc-info-item">
+                <div class="pn-info-item">
                     <span class="label">Cập nhật lần cuối</span>
                     <span class="value text-muted" style="font-size:13px;">
                         {{ $phieuNhap->updated_at ? $phieuNhap->updated_at->format('d/m/Y H:i') : '—' }}
@@ -188,49 +189,43 @@
             </div>
         </div>
 
-        {{-- Right: Thông tin Nhà cung cấp (Bảo toàn snapshot) --}}
+        {{-- Right: Thông tin Nhà cung cấp --}}
         <div>
-            <div class="ncc-info-card">
+            <div class="pn-info-card">
                 <div class="d-flex align-items-center justify-content-between mb-3">
                     <span class="badge bg-light text-muted border">Đối tác cung ứng</span>
-                    @if($phieuNhap->ma_nha_cung_cap)
-                        <a href="{{ route('admin.nha-cung-cap.show', $phieuNhap->ma_nha_cung_cap) }}" class="fw-semibold text-decoration-none" style="font-size:12px; color:#EC3D8F;">
-                            <i class="bi bi-box-arrow-up-right me-1"></i>Xem hồ sơ Nhà cung cấp
-                        </a>
-                    @else
-                        <span class="text-muted" style="font-size:12px;">Snapshot dữ liệu</span>
-                    @endif
+                    <span class="text-muted" style="font-size:12px;">Dữ liệu giao dịch</span>
                 </div>
 
-                <h2 class="ncc-info-title">
-                    <i class="bi bi-building text-primary me-1"></i>Thông tin nhà cung cấp
+                <h2 class="pn-info-title">
+                    <i class="bi bi-building text-danger me-1"></i>Thông tin nhà cung cấp
                 </h2>
-                <div class="ncc-info-meta">
-                    Dữ liệu lưu cùng phiếu nhập tại thời điểm giao dịch
+                <div class="pn-info-meta">
+                    Thông tin nhà cung cấp tại thời điểm lập phiếu nhập
                 </div>
 
-                <div class="ncc-info-item">
+                <div class="pn-info-item">
                     <span class="label">Tên nhà cung cấp</span>
                     <span class="value fw-bold text-dark">
                         {{ $phieuNhap->ten_nha_cung_cap ?: ($phieuNhap->nhaCungCap?->ten_nha_cung_cap ?? '—') }}
                     </span>
                 </div>
 
-                <div class="ncc-info-item">
+                <div class="pn-info-item">
                     <span class="label">Số điện thoại</span>
                     <span class="value">
                         {{ $phieuNhap->so_dien_thoai_ncc ?: ($phieuNhap->nhaCungCap?->so_dien_thoai ?? '—') }}
                     </span>
                 </div>
 
-                <div class="ncc-info-item">
+                <div class="pn-info-item">
                     <span class="label">Email</span>
                     <span class="value">
                         {{ $phieuNhap->email_ncc ?: ($phieuNhap->nhaCungCap?->email ?? '—') }}
                     </span>
                 </div>
 
-                <div class="ncc-info-item">
+                <div class="pn-info-item">
                     <span class="label">Địa chỉ</span>
                     <span class="value">
                         {{ $phieuNhap->dia_chi_ncc ?: ($phieuNhap->nhaCungCap?->dia_chi ?? '—') }}
@@ -238,11 +233,11 @@
                 </div>
 
                 @if($phieuNhap->ma_nha_cung_cap)
-                    <div class="ncc-info-item">
-                        <span class="label">Hồ sơ danh mục</span>
+                    <div class="pn-info-item">
+                        <span class="label">Hồ sơ đối tác</span>
                         <span class="value">
-                            <a href="{{ route('admin.nha-cung-cap.show', $phieuNhap->ma_nha_cung_cap) }}" class="text-decoration-none fw-semibold" style="color:#EC3D8F;">
-                                <i class="bi bi-link-45deg me-1"></i>#NCC-{{ $phieuNhap->ma_nha_cung_cap }} ({{ $phieuNhap->nhaCungCap->ten_nha_cung_cap ?? 'Chi tiết đối tác' }})
+                            <a href="{{ route('admin.nha-cung-cap.show', $phieuNhap->ma_nha_cung_cap) }}" class="text-decoration-none fw-semibold" style="color:#f43f5e;" title="Xem thông tin chi tiết nhà cung cấp">
+                                <i class="bi bi-link-45deg me-1"></i>#NCC-{{ $phieuNhap->ma_nha_cung_cap }} ({{ $phieuNhap->nhaCungCap->ten_nha_cung_cap ?? 'Xem chi tiết' }})
                             </a>
                         </span>
                     </div>
@@ -251,31 +246,33 @@
         </div>
     </div>
 
-    {{-- Main Table: Danh sách mặt hàng nhập & Thông tin Lô --}}
-    <div class="ncc-card">
-        <div class="ncc-card-header">
-            <h2 class="ncc-card-title">
-                <i class="bi bi-boxes"></i>
-                Danh sách mặt hàng nhập
-                <span class="badge bg-light text-muted border ms-1" style="font-size:12px;">{{ $tongSoLo }}</span>
-            </h2>
+    {{-- 4. Bảng Mặt hàng nhập & Thông tin Lô --}}
+    <div class="card pn-card mb-4" style="border: 1px solid #fecdd3; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(244,63,94,0.06);">
+        <div class="card-header pn-card-header" style="background:#fff1f2; border-bottom:1px solid #fecdd3; padding:14px 20px; display:flex; justify-content:space-between; align-items:center;">
+            <span class="fw-bold" style="color:#e11d48; font-size:15px; display:flex; align-items:center; gap:8px;">
+                <i class="bi bi-boxes"></i>Danh sách mặt hàng nhập
+            </span>
+            <span class="badge" style="background:#ffe4e6; color:#e11d48; border:1px solid #fecdd3; font-size:12px; font-weight:600; padding:5px 12px; border-radius:20px;">
+                {{ $tongSoLo }} mặt hàng
+            </span>
         </div>
 
-        <div class="table-responsive">
-            <table class="ncc-table">
+        {{-- Thanh cuộn dọc & ngang riêng biệt cho bảng danh sách mặt hàng --}}
+        <div class="rs-table-container" style="max-height: 480px; overflow-y: auto; overflow-x: auto; border: none; border-radius: 0;">
+            <table class="table rs-table mb-0">
                 <thead>
                     <tr>
-                        <th>Mặt hàng</th>
-                        <th>Mã SP</th>
-                        <th>ĐVT</th>
-                        <th class="text-center">SL nhập</th>
-                        <th class="text-end">Giá nhập</th>
-                        <th class="text-end">Thành tiền</th>
-                        <th class="text-center">Mã lô</th>
-                        <th class="text-center">Còn lại</th>
-                        <th class="text-center">Chất lượng lô</th>
-                        <th class="text-center">Hàng hỏng</th>
-                        <th class="text-end" style="width: 100px;">Thao tác</th>
+                        <th style="min-width: 180px;">Mặt hàng</th>
+                        <th class="text-center" style="min-width: 80px;">Mã SP</th>
+                        <th class="text-center" style="min-width: 80px;">ĐVT</th>
+                        <th class="text-center" style="min-width: 100px;">SL nhập</th>
+                        <th class="text-end" style="min-width: 120px;">Giá nhập</th>
+                        <th class="text-end" style="min-width: 130px;">Thành tiền</th>
+                        <th class="text-center" style="min-width: 100px;">Mã lô</th>
+                        <th class="text-center" style="min-width: 90px;">Còn lại</th>
+                        <th class="text-center" style="min-width: 120px;">Chất lượng lô</th>
+                        <th class="text-center" style="min-width: 100px;">Hàng hỏng</th>
+                        <th class="text-center" style="min-width: 110px;">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -291,10 +288,10 @@
                                     {{ $ct->sanPham->ten_san_pham ?? ('Sản phẩm #' . $ct->ma_san_pham) }}
                                 </div>
                             </td>
-                            <td>
+                            <td class="text-center">
                                 <span class="badge bg-light text-muted border">#{{ $ct->ma_san_pham }}</span>
                             </td>
-                            <td>
+                            <td class="text-center">
                                 <span class="text-muted">{{ $ct->sanPham->don_vi_tinh ?? '—' }}</span>
                             </td>
                             <td class="text-center fw-bold">
@@ -303,7 +300,7 @@
                             <td class="text-end fw-semibold">
                                 {{ number_format($ct->gia_nhap, 0, ',', '.') }} đ
                             </td>
-                            <td class="text-end fw-bold" style="color:#1D2939;">
+                            <td class="text-end fw-bold" style="color:#0f172a;">
                                 {{ number_format($thanhTien, 0, ',', '.') }} đ
                             </td>
                             <td class="text-center">
@@ -350,7 +347,7 @@
                                     <span class="text-muted">0</span>
                                 @endif
                             </td>
-                            <td class="text-end">
+                            <td class="text-center">
                                 @if($phieuNhap->trang_thai === 'CONFIRMED')
                                     <a href="{{ route('admin.lo-hang.show', $ct->ma_chi_tiet_nhap) }}"
                                        class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1"
@@ -366,26 +363,24 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="11" class="ncc-empty-state">
-                                <div class="ncc-empty-icon">
-                                    <i class="bi bi-inbox"></i>
-                                </div>
-                                <p class="mb-0 fw-semibold">Phiếu nhập chưa có mặt hàng.</p>
+                            <td colspan="11" class="text-center py-4 text-muted">
+                                <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                Phiếu nhập chưa có mặt hàng.
                             </td>
                         </tr>
                     @endforelse
                 </tbody>
                 @if($tongSoLo > 0)
                     <tfoot>
-                        <tr style="background:#FAFAFA; font-weight:700;">
-                            <td colspan="3" class="text-end text-uppercase" style="font-size:13px; color:#475467;">
-                                Tổng cộng:
+                        <tr style="background:#fff1f2; font-weight:700;">
+                            <td colspan="3" class="text-end text-uppercase" style="font-size:13.5px; color:#e11d48; font-weight:700;">
+                                TỔNG CỘNG:
                             </td>
-                            <td class="text-center text-dark" style="font-size:14px;">
+                            <td class="text-center" style="font-size:14px; color:#e11d48; font-weight:700;">
                                 {{ number_format($tongSoLuong) }}
                             </td>
                             <td></td>
-                            <td class="text-end" style="color:#EC3D8F; font-size:15px;">
+                            <td class="text-end" style="color:#e11d48; font-size:15px; font-weight:700;">
                                 {{ number_format($tongGiaTri, 0, ',', '.') }} đ
                             </td>
                             <td colspan="5"></td>
@@ -396,29 +391,29 @@
         </div>
     </div>
 
-    {{-- Tổng kết Phiếu nhập (Summary Block) --}}
-    <div class="ncc-card mt-4">
-        <div class="ncc-card-header">
-            <h2 class="ncc-card-title">
-                <i class="bi bi-receipt"></i>
-                Tổng kết phiếu nhập
-            </h2>
+    {{-- 5. Tổng kết Phiếu nhập (Summary Block) Đồng bộ màu sắc RoseShop --}}
+    <div class="card pn-card" style="max-width: 480px; border: 1px solid #fecdd3; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(244,63,94,0.06);">
+        <div class="card-header pn-card-header" style="background: #fff1f2; border-bottom: 1px solid #fecdd3; padding: 14px 20px;">
+            <span class="fw-bold" style="color: #e11d48; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+                <i class="bi bi-receipt-cutoff"></i>Tổng kết phiếu nhập
+            </span>
         </div>
-        <div class="p-3" style="max-width: 500px;">
-            <div class="d-flex justify-content-between py-2 border-bottom">
+        <div class="p-3" style="background: #ffffff;">
+            <div class="d-flex justify-content-between py-2 border-bottom" style="border-color: #ffe4e6 !important; font-size: 13.5px;">
                 <span class="text-muted">Tổng số loại mặt hàng:</span>
                 <strong class="text-dark">{{ $tongSoLo }} loại</strong>
             </div>
-            <div class="d-flex justify-content-between py-2 border-bottom">
+            <div class="d-flex justify-content-between py-2 border-bottom" style="border-color: #ffe4e6 !important; font-size: 13.5px;">
                 <span class="text-muted">Tổng số lượng nhập:</span>
                 <strong class="text-dark">{{ number_format($tongSoLuong) }}</strong>
             </div>
-            <div class="d-flex justify-content-between py-2">
-                <span class="text-muted">Tổng giá trị phiếu nhập:</span>
-                <strong class="fs-5" style="color:#EC3D8F;">{{ number_format($tongGiaTri, 0, ',', '.') }} đ</strong>
+            <div class="d-flex justify-content-between py-2 align-items-center" style="font-size: 13.5px;">
+                <span class="text-muted fw-semibold">Tổng giá trị phiếu nhập:</span>
+                <strong style="color: #e11d48; font-weight: 800; font-size: 18px;">{{ number_format($tongGiaTri, 0, ',', '.') }} đ</strong>
             </div>
         </div>
     </div>
 
+</div>
 </div>
 @endsection
