@@ -27,16 +27,33 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
     font-family: var(--rs-font) !important;
 }
 
-/* 1. Wrapper trang: Co giãn 100% linh hoạt theo thu phóng, không bị bó cứng */
+/* 1. Wrapper trang: Co giãn 100% linh hoạt theo thu phóng, cách đều top, left, right */
+.ncc-container,
 .rs-management-page,
 .pn-detail-container {
     color: #1e293b;
     padding: 24px 32px 48px !important;
-    background-color: #f8fafc;
-    min-height: 100vh;
+    box-sizing: border-box !important;
     width: 100%;
 }
 
+@media (max-width: 991px) {
+    .ncc-container,
+    .rs-management-page,
+    .pn-detail-container {
+        padding: 20px 20px 40px !important;
+    }
+}
+
+@media (max-width: 575px) {
+    .ncc-container,
+    .rs-management-page,
+    .pn-detail-container {
+        padding: 16px 14px 32px !important;
+    }
+}
+
+.ncc-container *,
 .rs-management-page *,
 .pn-detail-container * {
     box-sizing: border-box;
@@ -621,8 +638,8 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 
 .rs-modal-header {
     padding: 16px 24px !important;
-    background: #fff1f2 !important;
-    border-bottom: 1px solid #fecdd3 !important;
+    background: #FAFAFA !important;
+    border-bottom: 1px solid #EAECF0 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
@@ -631,7 +648,7 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 .rs-modal-title {
     font-size: 17px !important;
     font-weight: 700 !important;
-    color: #e11d48 !important;
+    color: #101828 !important;
     margin: 0 !important;
     display: flex !important;
     align-items: center !important;
@@ -640,25 +657,26 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 
 .rs-modal-close {
     background: #ffffff !important;
-    border: 1px solid #fecdd3 !important;
-    font-size: 24px !important;
+    border: 1px solid #D0D5DD !important;
+    font-size: 22px !important;
     font-weight: 400 !important;
-    color: #e11d48 !important;
+    color: #475467 !important;
     cursor: pointer !important;
-    width: 36px !important;
-    height: 36px !important;
-    border-radius: 10px !important;
+    width: 34px !important;
+    height: 34px !important;
+    border-radius: 8px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    transition: all 0.2s ease !important;
+    transition: all 0.15s ease !important;
     line-height: 1 !important;
     padding: 0 !important;
 }
 
 .rs-modal-close:hover {
-    background: #ffe4e6 !important;
-    color: #be123c !important;
+    background: #FDEAF3 !important;
+    color: #EC3D8F !important;
+    border-color: #EC3D8F !important;
     transform: scale(1.05) !important;
 }
 
@@ -680,49 +698,51 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 
 .rs-modal-footer {
     padding: 14px 24px !important;
-    border-top: 1px solid #f1f5f9 !important;
+    border-top: 1px solid #EAECF0 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: flex-end !important;
     gap: 12px !important;
-    background: #f8fafc !important;
+    background: #FAFAFA !important;
 }
 
 .rs-btn-cancel {
-    height: 40px !important;
-    padding: 0 18px !important;
+    height: 38px !important;
+    padding: 0 16px !important;
     background: #ffffff !important;
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 10px !important;
-    color: #475569 !important;
+    border: 1px solid #D0D5DD !important;
+    border-radius: 8px !important;
+    color: #344054 !important;
     font-size: 13.5px !important;
     font-weight: 600 !important;
     cursor: pointer !important;
-    transition: all 0.2s ease !important;
+    transition: all 0.15s ease !important;
 }
 
 .rs-btn-cancel:hover {
-    background: #f1f5f9 !important;
-    color: #0f172a !important;
+    background: #F9FAFB !important;
+    color: #1D2939 !important;
+    border-color: #98A2B3 !important;
 }
 
 .rs-btn-submit {
-    height: 40px !important;
-    padding: 0 22px !important;
-    background: #f43f5e !important;
-    border: none !important;
-    border-radius: 10px !important;
+    height: 38px !important;
+    padding: 0 20px !important;
+    background: #EC3D8F !important;
+    border: 1px solid #EC3D8F !important;
+    border-radius: 8px !important;
     color: #ffffff !important;
     font-size: 13.5px !important;
     font-weight: 600 !important;
     cursor: pointer !important;
-    box-shadow: 0 2px 8px rgba(244, 63, 94, 0.25) !important;
-    transition: all 0.2s ease !important;
+    box-shadow: 0 1px 3px rgba(236, 61, 143, 0.2) !important;
+    transition: all 0.15s ease !important;
 }
 
 .rs-btn-submit:hover {
-    background: #e11d48 !important;
-    box-shadow: 0 4px 12px rgba(244, 63, 94, 0.35) !important;
+    background: #D82677 !important;
+    border-color: #D82677 !important;
+    box-shadow: 0 3px 8px rgba(236, 61, 143, 0.3) !important;
 }
 
 /* Form Styles trong Modal */

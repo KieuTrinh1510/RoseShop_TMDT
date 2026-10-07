@@ -2,39 +2,28 @@
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<link rel="stylesheet" href="{{ asset('css/Admin/PhieuNhap.css') }}">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="{{ asset('css/Admin/NhaCungCap.css') }}">
+<link rel="stylesheet" href="{{ asset('css/Admin/PhieuNhap.css') }}">
 @endpush
 
 @section('content')
 
-<div class="rs-management-page">
+<div class="ncc-container">
 
-    {{-- 1. HEADER TRANG: Tiêu đề + Nút Thêm phiếu nhập (Đồng bộ chuẩn Quản lý người dùng, nhân viên, shipper) --}}
-    <div class="rs-header-block">
-        <div class="rs-header-left">
-            <div class="rs-header-icon-box">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-                    <line x1="12" y1="22.08" x2="12" y2="12"/>
-                </svg>
-            </div>
-            <div>
-                <h1 class="rs-header-title">Quản lý nhập hàng</h1>
-                <p class="rs-header-subtitle">Lập và theo dõi các phiếu nhập hàng từ nhà vườn và nhà cung cấp</p>
-            </div>
+    {{-- 1. HEADER TRANG: Đồng bộ hoàn toàn với Quản lý nhà cung cấp --}}
+    <div class="rs-page-header">
+        <div class="rs-page-header-text">
+            <h1 class="rs-page-title">Quản lý phiếu nhập</h1>
+            <p class="rs-page-subtitle">Lập và theo dõi các phiếu nhập hàng từ nhà vườn và nhà cung cấp.</p>
         </div>
-
-        {{-- Nút Thêm phiếu nhập mới trên Header: Bấm vào mở Modal popup đè lên màn hình --}}
-        <button type="button" class="rs-btn-create" onclick="openModalThemPhieu()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M5 12h14"/>
-                <path d="M12 5v14"/>
-            </svg>
-            <span>Thêm phiếu nhập</span>
-        </button>
+        <div class="ncc-header-actions">
+            <button type="button" class="ncc-btn-primary" onclick="openModalThemPhieu()">
+                <i class="bi bi-plus-lg"></i>
+                <span>Thêm phiếu nhập</span>
+            </button>
+        </div>
     </div>
 
     {{-- THÔNG BÁO HỆ THỐNG --}}
@@ -62,160 +51,189 @@
         </div>
     @endif
 
-    {{-- 2. CARD CHÍNH: CHỨA BỘ LỌC TINH GỌN VÀ BẢNG CÓ THANH CUỘN RIÊNG --}}
-    <div class="rs-main-card">
+    {{-- 2. KHU VỰC BỘ LỌC & TÌM KIẾM: Đồng bộ chuẩn ncc-filter-box, gọn gàng, ít màu --}}
+    <div class="ncc-filter-box">
+        <form method="GET" action="{{ route('phieu-nhap.index') }}">
+            <div class="pn-filter-grid">
+                
+                {{-- Lọc trạng thái --}}
+                <div>
+                    <label class="form-label" style="font-size:13px; font-weight:600; color:#475467;">Trạng thái</label>
+                    <select name="trang_thai" class="form-select" onchange="this.form.submit()">
+                        <option value="">— Tất cả trạng thái —</option>
+                        <option value="DRAFT" {{ request('trang_thai') == 'DRAFT' ? 'selected' : '' }}>
+                            Đang tạo
+                        </option>
+                        <option value="CONFIRMED" {{ request('trang_thai') == 'CONFIRMED' ? 'selected' : '' }}>
+                            Đã xác nhận
+                        </option>
+                        <option value="CANCELLED" {{ request('trang_thai') == 'CANCELLED' ? 'selected' : '' }}>
+                            Đã hủy
+                        </option>
+                    </select>
+                </div>
 
-        {{-- ===== BỘ LỌC / TÌM KIẾM FIT TRÊN 1 HÀNG HÀI HÒA ===== --}}
-        <form method="GET" action="{{ route('phieu-nhap.index') }}" class="rs-filter-bar">
-            
-            {{-- Lọc trạng thái --}}
-            <div class="rs-filter-item">
-                <label class="rs-filter-label">Trạng thái:</label>
-                <select name="trang_thai" class="rs-filter-select" onchange="this.form.submit()">
-                    <option value="">-- Tất cả --</option>
-                    <option value="DRAFT" {{ request('trang_thai') == 'DRAFT' ? 'selected' : '' }}>
-                        Đang tạo (Draft)
-                    </option>
-                    <option value="CONFIRMED" {{ request('trang_thai') == 'CONFIRMED' ? 'selected' : '' }}>
-                        Đã xác nhận
-                    </option>
-                    <option value="CANCELLED" {{ request('trang_thai') == 'CANCELLED' ? 'selected' : '' }}>
-                        Đã hủy
-                    </option>
-                </select>
+                {{-- Từ ngày --}}
+                <div>
+                    <label class="form-label" style="font-size:13px; font-weight:600; color:#475467;">Từ ngày</label>
+                    <input type="date" name="tu_ngay" class="form-control" value="{{ request('tu_ngay') }}">
+                </div>
+
+                {{-- Đến ngày --}}
+                <div>
+                    <label class="form-label" style="font-size:13px; font-weight:600; color:#475467;">Đến ngày</label>
+                    <input type="date" name="den_ngay" class="form-control" value="{{ request('den_ngay') }}">
+                </div>
+
+                {{-- Tìm nhà cung cấp --}}
+                <div>
+                    <label class="form-label" style="font-size:13px; font-weight:600; color:#475467;">Tìm kiếm nhà cung cấp</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" name="tim_ncc" value="{{ request('tim_ncc') }}" class="form-control"
+                               placeholder="Tìm theo tên hoặc SĐT NCC..." autocomplete="off">
+                    </div>
+                </div>
+
+                {{-- Nút Thao tác lọc --}}
+                <div class="d-flex gap-2">
+                    <button type="submit" class="ncc-btn-primary" style="padding: 8px 16px;">
+                        <i class="bi bi-funnel"></i> Lọc
+                    </button>
+                    @if(request()->anyFilled(['trang_thai', 'tu_ngay', 'den_ngay', 'tim_ncc']))
+                        <a href="{{ route('phieu-nhap.index') }}" class="ncc-btn-secondary" style="padding: 8px 14px;" title="Đặt lại bộ lọc">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                        </a>
+                    @endif
+                </div>
             </div>
-
-            {{-- Từ ngày --}}
-            <div class="rs-filter-item">
-                <label class="rs-filter-label">Từ ngày:</label>
-                <input type="date" name="tu_ngay" class="rs-filter-date" value="{{ request('tu_ngay') }}">
-            </div>
-
-            {{-- Đến ngày --}}
-            <div class="rs-filter-item">
-                <label class="rs-filter-label">Đến ngày:</label>
-                <input type="date" name="den_ngay" class="rs-filter-date" value="{{ request('den_ngay') }}">
-            </div>
-
-            {{-- Tìm nhà cung cấp (Ô tìm kiếm fit linh hoạt với icon kính lúp) --}}
-            <div class="rs-filter-search-box">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"/>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                <input type="text" name="tim_ncc" value="{{ request('tim_ncc') }}" placeholder="Nhập tên hoặc SĐT nhà cung cấp..." autocomplete="off">
-            </div>
-
-            {{-- Nút Lọc --}}
-            <button type="submit" class="rs-btn-filter-submit">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"/>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                <span>Lọc</span>
-            </button>
-
-            {{-- Nút Bỏ lọc --}}
-            @if(request()->anyFilled(['trang_thai', 'tu_ngay', 'den_ngay', 'tim_ncc']))
-                <a href="{{ route('phieu-nhap.index') }}" class="rs-btn-filter-reset" title="Đặt lại bộ lọc">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                    <span>Bỏ lọc</span>
-                </a>
-            @endif
         </form>
+    </div>
 
-        {{-- ===== BẢNG DANH SÁCH CÓ THANH CUỘN RIÊNG & STICKY HEADER ===== --}}
-        <div class="rs-table-container">
-            <table class="rs-table">
+    {{-- 3. CARD BẢNG DANH SÁCH: Đồng bộ cấu trúc ncc-card & ncc-table --}}
+    <div class="ncc-card">
+        <div class="ncc-card-header">
+            <h2 class="ncc-card-title">
+                <i class="bi bi-list-ul"></i>
+                Danh sách phiếu nhập
+                <span class="badge bg-light text-muted border ms-1" style="font-size:12px;">{{ $danhSachPhieuNhap->count() }}</span>
+            </h2>
+        </div>
+
+        <div class="table-responsive">
+            <table class="ncc-table">
                 <thead>
                     <tr>
-                        <th style="width:75px; text-align:center;">Mã PN</th>
-                        <th style="width:140px; text-align:center;">Ngày nhập</th>
-                        <th style="width:160px;">Nhân viên</th>
-                        <th style="width:200px;">Nhà cung cấp</th>
-                        <th style="width:130px; text-align:center;">SĐT NCC</th>
-                        <th style="width:130px; text-align:center;">Trạng thái</th>
-                        <th style="width:220px; text-align:center;">Hành động</th>
+                        <th style="width: 85px; text-align: center;">Mã PN</th>
+                        <th style="width: 140px; text-align: center;">Ngày nhập</th>
+                        <th>Nhân viên</th>
+                        <th>Nhà cung cấp</th>
+                        <th style="width: 130px; text-align: center;">SĐT NCC</th>
+                        <th style="width: 140px; text-align: center;">Trạng thái</th>
+                        <th class="text-end" style="width: 180px;">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody id="tbodyPhieuNhap">
                     @forelse($danhSachPhieuNhap as $pn)
                     <tr class="dong-phieu-nhap">
-                        <td style="text-align:center;">
-                            <a href="{{ route('phieu-nhap.show', $pn->ma_phieu_nhap) }}" class="fw-bold text-decoration-none" style="color:#f43f5e;" title="Mở trang chi tiết">
+                        {{-- Mã PN --}}
+                        <td style="text-align: center;">
+                            <a href="{{ route('phieu-nhap.show', $pn->ma_phieu_nhap) }}" class="pn-code-link" title="Mở trang chi tiết">
                                 #PN-{{ $pn->ma_phieu_nhap }}
                             </a>
                         </td>
 
-                        <td style="text-align:center;">
+                        {{-- Ngày nhập --}}
+                        <td style="text-align: center;" class="text-muted">
                             {{ $pn->ngay_nhap ? \Carbon\Carbon::parse($pn->ngay_nhap)->format('d/m/Y H:i') : '—' }}
                         </td>
 
-                        <td class="fw-medium">{{ $pn->nhanVien ? $pn->nhanVien->ten_nhan_vien : '—' }}</td>
+                        {{-- Nhân viên --}}
+                        <td class="fw-medium text-dark">
+                            {{ $pn->nhanVien ? $pn->nhanVien->ten_nhan_vien : '—' }}
+                        </td>
 
-                        <td class="fw-semibold text-dark">{{ $pn->nhaCungCap->ten_nha_cung_cap ?? $pn->ten_nha_cung_cap ?? '—' }}</td>
+                        {{-- Nhà cung cấp --}}
+                        <td>
+                            @if($pn->nhaCungCap)
+                                <a href="{{ route('admin.nha-cung-cap.show', $pn->nhaCungCap->ma_nha_cung_cap) }}"
+                                   class="fw-semibold text-dark text-decoration-none">
+                                    {{ $pn->nhaCungCap->ten_nha_cung_cap }}
+                                </a>
+                            @else
+                                <span class="fw-semibold text-dark">{{ $pn->ten_nha_cung_cap ?? '—' }}</span>
+                            @endif
+                        </td>
 
-                        <td style="text-align:center;">{{ $pn->nhaCungCap->so_dien_thoai ?? $pn->so_dien_thoai_ncc ?? '—' }}</td>
+                        {{-- SĐT NCC --}}
+                        <td style="text-align: center;">
+                            @php
+                                $sdt = $pn->nhaCungCap->so_dien_thoai ?? $pn->so_dien_thoai_ncc;
+                            @endphp
+                            @if($sdt)
+                                <a href="tel:{{ $sdt }}" class="text-muted text-decoration-none">
+                                    <i class="bi bi-telephone me-1 text-secondary"></i>{{ $sdt }}
+                                </a>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </td>
 
-                        {{-- Trạng thái --}}
-                        <td style="text-align:center;">
+                        {{-- Trạng thái: Badge pill chuẩn hệ thống --}}
+                        <td style="text-align: center;">
                             @if($pn->trang_thai === 'DRAFT')
-                                <span class="badge-draft">
-                                    <i class="bi bi-pencil me-1"></i>Đang tạo
+                                <span class="ncc-badge draft">
+                                    <span class="ncc-badge-dot"></span> Đang tạo
                                 </span>
                             @elseif($pn->trang_thai === 'CONFIRMED')
-                                <span class="badge-confirmed">
-                                    <i class="bi bi-check-lg me-1"></i>Đã xác nhận
+                                <span class="ncc-badge active">
+                                    <span class="ncc-badge-dot"></span> Đã xác nhận
                                 </span>
                             @elseif($pn->trang_thai === 'CANCELLED')
-                                <span class="badge-cancelled">
-                                    <i class="bi bi-x-circle me-1"></i>Đã hủy
+                                <span class="ncc-badge inactive">
+                                    <span class="ncc-badge-dot"></span> Đã hủy
                                 </span>
                             @endif
                         </td>
 
-                        {{-- Hành động --}}
-                        <td style="text-align:center;">
-                            <div class="d-flex gap-1 justify-content-center flex-wrap">
+                        {{-- Cột hành động: Icon buttons nhỏ gọn 32px, 1 hàng duy nhất --}}
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-1 justify-content-end">
 
                                 {{-- NÚT XEM CHI TIẾT (luôn hiện) --}}
-                                <button class="btn btn-chitiet btn-sm"
+                                <button type="button" class="ncc-action-btn view"
                                         onclick="xemChiTiet({{ $pn->ma_phieu_nhap }})"
-                                        title="Xem chi tiết nhập">
-                                    <i class="bi bi-eye me-1"></i>Chi tiết
+                                        title="Xem chi tiết">
+                                    <i class="bi bi-eye"></i>
                                 </button>
 
                                 @if($pn->trang_thai === 'DRAFT')
-
-                                    {{-- NÚT SỬA (mở Modal Popup sửa đè lên) --}}
-                                    <button class="btn btn-sua btn-sm"
+                                    {{-- NÚT SỬA --}}
+                                    <button type="button" class="ncc-action-btn edit"
                                             onclick="chuyenCheDeSua({{ $pn->ma_phieu_nhap }})"
                                             title="Sửa phiếu nhập">
-                                        <i class="bi bi-pencil-fill me-1"></i>Sửa
+                                        <i class="bi bi-pencil"></i>
                                     </button>
 
                                     {{-- NÚT XÁC NHẬN --}}
-                                    <button type="button" class="btn btn-xacnhan btn-sm"
+                                    <button type="button" class="ncc-action-btn confirm"
                                             onclick="moModalXacNhan({{ $pn->ma_phieu_nhap }})"
                                             title="Xác nhận nhập kho">
-                                        <i class="bi bi-check2-circle me-1"></i>Xác nhận
+                                        <i class="bi bi-check2-circle"></i>
                                     </button>
 
                                     {{-- NÚT HỦY PHIẾU --}}
-                                    <button type="button" class="btn btn-outline-danger btn-sm"
+                                    <button type="button" class="ncc-action-btn cancel"
                                             onclick="moModalHuyPhieu({{ $pn->ma_phieu_nhap }})"
                                             title="Hủy phiếu nhập">
-                                        <i class="bi bi-x-circle me-1"></i>Hủy
+                                        <i class="bi bi-x-circle"></i>
                                     </button>
 
                                     {{-- NÚT XÓA --}}
-                                    <button type="button" class="btn btn-xoa btn-sm"
+                                    <button type="button" class="ncc-action-btn delete"
                                             onclick="moModalXoa({{ $pn->ma_phieu_nhap }})"
                                             title="Xóa phiếu nhập">
-                                        <i class="bi bi-trash me-1"></i>Xóa
+                                        <i class="bi bi-trash"></i>
                                     </button>
                                 @endif
                             </div>
@@ -223,9 +241,12 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
-                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>
-                            Không tìm thấy phiếu nhập nào phù hợp với bộ lọc.
+                        <td colspan="7" class="ncc-empty-state">
+                            <div class="ncc-empty-icon">
+                                <i class="bi bi-inbox"></i>
+                            </div>
+                            <p class="mb-0 fw-semibold">Không tìm thấy phiếu nhập nào phù hợp.</p>
+                            <small class="text-muted">Hãy thử thay đổi từ khóa tìm kiếm hoặc điều chỉnh khoảng ngày lọc.</small>
                         </td>
                     </tr>
                     @endforelse
@@ -233,25 +254,25 @@
             </table>
         </div>
 
-        {{-- FOOTER PHÂN TRANG CLIENT-SIDE ĐỒNG BỘ --}}
+        {{-- 4. FOOTER PHÂN TRANG CLIENT-SIDE ĐỒNG BỘ --}}
         @if($danhSachPhieuNhap->count() > 0)
-            <div class="rs-table-footer">
-                <div class="rs-footer-left">
-                    <div class="rs-per-page-inline">
-                        <span class="rs-per-page-label">Số hàng mỗi trang</span>
-                        <select id="rsPerPageSelect" class="rs-per-page-select" onchange="doiSoHangMoiTrang(this.value)">
+            <div class="ncc-table-footer">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted" style="font-size: 13.5px; font-weight: 500;">Số hàng mỗi trang:</span>
+                        <select id="rsPerPageSelect" class="form-select form-select-sm" style="width: 72px;" onchange="doiSoHangMoiTrang(this.value)">
                             <option value="10" selected>10</option>
                             <option value="20">20</option>
                             <option value="50">50</option>
                             <option value="100">100</option>
                         </select>
                     </div>
-                    <div id="rsRecordsCount" class="rs-records-count">
+                    <div id="rsRecordsCount" class="text-muted fw-semibold" style="font-size: 13.5px;">
                         1-{{ min(10, $danhSachPhieuNhap->count()) }} / {{ $danhSachPhieuNhap->count() }} bản ghi
                     </div>
                 </div>
-                <div class="rs-footer-pagination">
-                    <ul id="rsPaginationList" class="rs-pagination">
+                <div>
+                    <ul id="rsPaginationList" class="pagination pagination-sm mb-0">
                         {{-- Render bởi JS --}}
                     </ul>
                 </div>
@@ -421,10 +442,10 @@
         </div>
 
         <div class="rs-modal-footer">
-            <button type="button" class="rs-btn-cancel" onclick="dongModalPhieuNhap()">
+            <button type="button" class="ncc-btn-secondary" onclick="dongModalPhieuNhap()">
                 Hủy bỏ
             </button>
-            <button type="submit" id="btnSubmit" class="rs-btn-submit" form="formChung">
+            <button type="submit" id="btnSubmit" class="ncc-btn-primary" form="formChung">
                 <i id="iconSubmit" class="bi bi-plus-lg me-1"></i>
                 <span id="textSubmit">Tạo phiếu nhập</span>
             </button>
@@ -438,13 +459,13 @@
 ===================================================================== --}}
 <div class="modal fade" id="modalChiTiet" tabindex="-1">
     <div class="modal-dialog modal-xl" style="max-width: 1140px; width: 95%;">
-        <div class="modal-content" style="border-radius: 16px; border: 1px solid #fecdd3; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);">
+        <div class="modal-content" style="border-radius: 16px; border: 1px solid #EAECF0; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);">
 
-            <div class="modal-header" style="background: #fff1f2; border-bottom: 1px solid #fecdd3; padding: 16px 24px;">
-                <h5 class="modal-title" id="tieuDeModal" style="color: #e11d48; font-weight: 700; font-size: 17px; margin: 0; display: flex; align-items: center; gap: 8px;">
-                    <i class="bi bi-file-earmark-text me-2"></i>Chi tiết phiếu nhập
+            <div class="modal-header" style="background: #FAFAFA; border-bottom: 1px solid #EAECF0; padding: 16px 24px;">
+                <h5 class="modal-title" id="tieuDeModal" style="color: #101828; font-weight: 700; font-size: 17px; margin: 0; display: flex; align-items: center; gap: 8px;">
+                    <i class="bi bi-file-earmark-text me-2" style="color: #EC3D8F;"></i>Chi tiết phiếu nhập
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(27%) sepia(85%) saturate(3015%) hue-rotate(334deg) brightness(91%) contrast(97%);"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
             <div class="modal-body" id="noiDungModal" style="padding: 20px 24px;">
@@ -454,8 +475,8 @@
                 </div>
             </div>
 
-            <div class="modal-footer d-flex justify-content-end" style="background: #f8fafc; border-top: 1px solid #f1f5f9; padding: 12px 24px;">
-                <a href="#" id="linkTrangChiTietModal" class="rs-btn-back" style="font-size: 13px; height: 38px;">
+            <div class="modal-footer d-flex justify-content-end" style="background: #FAFAFA; border-top: 1px solid #EAECF0; padding: 12px 24px;">
+                <a href="#" id="linkTrangChiTietModal" class="ncc-btn-secondary" style="font-size: 13px;">
                     <i class="bi bi-box-arrow-up-right me-1"></i>Mở trang chi tiết đầy đủ
                 </a>
             </div>
@@ -468,26 +489,26 @@
      MODAL XÁC NHẬN HỦY PHIẾU NHẬP (UC4.2)
 ===================================================================== --}}
 <div class="modal fade" id="modalHuyPhieu" tabindex="-1" aria-labelledby="tieuDeModalHuy" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px; border: 1px solid #EAECF0; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);">
             <form id="formHuyPhieu" method="POST" action="" onsubmit="return validateFormHuyPhieu()">
                 @csrf
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title text-white" id="tieuDeModalHuy">
-                        <i class="bi bi-exclamation-triangle-fill me-2"></i>Xác nhận hủy phiếu nhập
+                <div class="modal-header" style="background: #FEF3F2; border-bottom: 1px solid #FECDCA; padding: 16px 22px;">
+                    <h5 class="modal-title" id="tieuDeModalHuy" style="color: #B42318; font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Xác nhận hủy phiếu nhập
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <div class="alert alert-warning py-2 mb-3" style="font-size:0.9rem;">
+                <div class="modal-body" style="padding: 22px;">
+                    <div class="alert alert-warning py-2 mb-3" style="font-size: 0.9rem; background: #FFFAEB; border-color: #FEDF89; color: #B54708;">
                         <i class="bi bi-info-circle me-1"></i>
                         Hành động này <strong>không thể hoàn tác</strong>. Phiếu nhập chuyển sang trạng thái <strong>Đã hủy</strong> và không làm phát sinh nhập kho.
                     </div>
                     <div class="mb-2">
-                        <label class="form-label fw-bold">Mã phiếu: <span id="spanMaPhieuHuy" class="text-danger"></span></label>
+                        <label class="form-label" style="font-size: 13.5px; font-weight: 600; color: #344054;">Mã phiếu: <span id="spanMaPhieuHuy" style="color: #B42318; font-weight: 700;"></span></label>
                     </div>
                     <div class="mb-3">
-                        <label for="inp_ly_do_huy" class="form-label fw-bold">
+                        <label for="inp_ly_do_huy" class="form-label" style="font-size: 13px; font-weight: 600; color: #344054;">
                             Lý do hủy <span class="text-danger">*</span>
                         </label>
                         <textarea name="ly_do_huy" id="inp_ly_do_huy" class="form-control" rows="3"
@@ -497,9 +518,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
-                    <button type="submit" class="btn btn-danger btn-sm">
+                <div class="modal-footer" style="background: #FAFAFA; border-top: 1px solid #EAECF0; padding: 12px 22px;">
+                    <button type="button" class="ncc-btn-secondary" data-bs-dismiss="modal" style="padding: 6px 14px; font-size: 13px;">Đóng</button>
+                    <button type="submit" class="btn btn-danger btn-sm" style="border-radius: 8px; padding: 7px 16px; font-weight: 600; background: #D92D20; border-color: #D92D20;">
                         <i class="bi bi-x-circle me-1"></i>Xác nhận hủy phiếu
                     </button>
                 </div>
@@ -513,27 +534,27 @@
 ===================================================================== --}}
 <div class="modal fade" id="modalXacNhanPhieu" tabindex="-1" aria-labelledby="tieuDeModalXacNhan" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius: 16px; border: 1px solid #bbf7d0; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);">
+        <div class="modal-content" style="border-radius: 16px; border: 1px solid #EAECF0; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);">
             <form id="formXacNhanModal" method="POST" action="">
                 @csrf
-                <div class="modal-header" style="background: #ecfdf5; border-bottom: 1px solid #a7f3d0; padding: 16px 22px;">
-                    <h5 class="modal-title" id="tieuDeModalXacNhan" style="color: #059669; font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                <div class="modal-header" style="background: #ECFDF3; border-bottom: 1px solid #A6F4C5; padding: 16px 22px;">
+                    <h5 class="modal-title" id="tieuDeModalXacNhan" style="color: #027A48; font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px;">
                         <i class="bi bi-check2-circle fs-5"></i>Xác nhận nhập kho phiếu nhập
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" style="padding: 22px;">
-                    <div class="alert alert-success py-2 mb-3" style="font-size: 0.9rem; background: #f0fdf4; border-color: #bbf7d0; color: #166534;">
+                    <div class="alert alert-success py-2 mb-3" style="font-size: 0.9rem; background: #ECFDF3; border-color: #A6F4C5; color: #027A48;">
                         <i class="bi bi-info-circle me-1"></i>
                         Hành động này sẽ <strong>cộng số lượng hàng vào tồn kho</strong> thực tế của hệ thống và chuyển trạng thái sang <strong>Đã xác nhận</strong>.
                     </div>
-                    <p class="mb-1" style="font-size: 14.5px;">
-                        Bạn có chắc chắn muốn xác nhận phiếu nhập <strong id="spanMaPhieuXacNhan" style="color: #059669; font-size: 16px;"></strong> không?
+                    <p class="mb-1" style="font-size: 14.5px; color: #344054;">
+                        Bạn có chắc chắn muốn xác nhận phiếu nhập <strong id="spanMaPhieuXacNhan" style="color: #027A48; font-size: 15px;"></strong> không?
                     </p>
                 </div>
-                <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #f1f5f9; padding: 12px 22px;">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" style="border-radius: 8px; padding: 6px 14px;">Hủy bỏ</button>
-                    <button type="submit" class="btn btn-success btn-sm" style="border-radius: 8px; padding: 6px 16px; font-weight: 600; background: #16a34a; border-color: #16a34a;">
+                <div class="modal-footer" style="background: #FAFAFA; border-top: 1px solid #EAECF0; padding: 12px 22px;">
+                    <button type="button" class="ncc-btn-secondary" data-bs-dismiss="modal" style="padding: 6px 14px; font-size: 13px;">Hủy bỏ</button>
+                    <button type="submit" class="ncc-btn-primary" style="padding: 7px 16px; font-size: 13px; background: #039855; border-color: #039855;">
                         <i class="bi bi-check-lg me-1"></i>Đồng ý xác nhận
                     </button>
                 </div>
@@ -547,28 +568,28 @@
 ===================================================================== --}}
 <div class="modal fade" id="modalXoaPhieu" tabindex="-1" aria-labelledby="tieuDeModalXoa" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius: 16px; border: 1px solid #fecdd3; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);">
+        <div class="modal-content" style="border-radius: 16px; border: 1px solid #EAECF0; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);">
             <form id="formXoaModal" method="POST" action="">
                 @csrf
                 @method('DELETE')
-                <div class="modal-header" style="background: #fff1f2; border-bottom: 1px solid #fecdd3; padding: 16px 22px;">
-                    <h5 class="modal-title" id="tieuDeModalXoa" style="color: #e11d48; font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                <div class="modal-header" style="background: #FEF3F2; border-bottom: 1px solid #FECDCA; padding: 16px 22px;">
+                    <h5 class="modal-title" id="tieuDeModalXoa" style="color: #B42318; font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px;">
                         <i class="bi bi-trash3 fs-5"></i>Xác nhận xóa phiếu nhập
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" style="padding: 22px;">
-                    <div class="alert alert-danger py-2 mb-3" style="font-size: 0.9rem; background: #fff1f2; border-color: #fecdd3; color: #9f1239;">
+                    <div class="alert alert-danger py-2 mb-3" style="font-size: 0.9rem; background: #FEF3F2; border-color: #FECDCA; color: #B42318;">
                         <i class="bi bi-exclamation-triangle me-1"></i>
                         Hành động này <strong>không thể hoàn tác</strong>. Dữ liệu phiếu nhập nháp sẽ bị xóa vĩnh viễn khỏi hệ thống.
                     </div>
-                    <p class="mb-1" style="font-size: 14.5px;">
-                        Bạn có chắc chắn muốn xóa phiếu nhập <strong id="spanMaPhieuXoa" style="color: #e11d48; font-size: 16px;"></strong> không?
+                    <p class="mb-1" style="font-size: 14.5px; color: #344054;">
+                        Bạn có chắc chắn muốn xóa phiếu nhập <strong id="spanMaPhieuXoa" style="color: #B42318; font-size: 15px;"></strong> không?
                     </p>
                 </div>
-                <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #f1f5f9; padding: 12px 22px;">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" style="border-radius: 8px; padding: 6px 14px;">Hủy bỏ</button>
-                    <button type="submit" class="btn btn-danger btn-sm" style="border-radius: 8px; padding: 6px 16px; font-weight: 600; background: #e11d48; border-color: #e11d48;">
+                <div class="modal-footer" style="background: #FAFAFA; border-top: 1px solid #EAECF0; padding: 12px 22px;">
+                    <button type="button" class="ncc-btn-secondary" data-bs-dismiss="modal" style="padding: 6px 14px; font-size: 13px;">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-danger btn-sm" style="border-radius: 8px; padding: 7px 16px; font-weight: 600; background: #D92D20; border-color: #D92D20;">
                         <i class="bi bi-trash me-1"></i>Đồng ý xóa
                     </button>
                 </div>
@@ -721,9 +742,9 @@
         document.getElementById('methodField').innerHTML = '';
 
         document.getElementById('tieuDeForm').innerHTML =
-            '<i class="bi bi-plus-circle me-1"></i>Thêm Phiếu Nhập Mới';
+            '<i class="bi bi-plus-circle me-1" style="color: #EC3D8F;"></i>Thêm Phiếu Nhập Mới';
 
-        document.getElementById('btnSubmit').className = 'rs-btn-submit';
+        document.getElementById('btnSubmit').className = 'ncc-btn-primary';
         document.getElementById('iconSubmit').className = 'bi bi-plus-lg me-1';
         document.getElementById('textSubmit').textContent = 'Tạo phiếu nhập';
     }
@@ -811,10 +832,10 @@
                     '<input type="hidden" name="_method" value="PUT">';
 
                 document.getElementById('tieuDeForm').innerHTML =
-                    `<i class="bi bi-pencil-fill me-1"></i>Sửa Phiếu Nhập #PN-${id}`;
+                    `<i class="bi bi-pencil-fill me-1" style="color: #EC3D8F;"></i>Sửa Phiếu Nhập #PN-${id}`;
 
-                document.getElementById('btnSubmit').className = 'rs-btn-submit';
-                document.getElementById('iconSubmit').className = 'bi bi-save me-1';
+                document.getElementById('btnSubmit').className = 'ncc-btn-primary';
+                document.getElementById('iconSubmit').className = 'bi bi-check2 me-1';
                 document.getElementById('textSubmit').textContent = 'Lưu thay đổi';
 
                 // Mở Modal Popup đè lên màn hình
@@ -1006,9 +1027,9 @@
         if (!pagList) return;
 
         let html = '';
-        const prevDisabled = trangHienTai === 1 ? 'pointer-events:none; opacity:0.5;' : 'cursor:pointer;';
-        html += `<li style="display:inline-block;">
-                    <a onclick="denTrang(${trangHienTai - 1})" class="page-link" style="${prevDisabled}">&lsaquo;</a>
+        const prevDisabled = trangHienTai === 1 ? 'disabled' : '';
+        html += `<li class="page-item ${prevDisabled}">
+                    <a onclick="denTrang(${trangHienTai - 1})" class="page-link" style="${trangHienTai === 1 ? 'pointer-events:none;' : 'cursor:pointer;'}">&lsaquo;</a>
                  </li>`;
 
         let pages = [];
@@ -1034,14 +1055,14 @@
             } else {
                 const activeClass = p === trangHienTai ? 'active' : '';
                 html += `<li class="page-item ${activeClass}">
-                            <a onclick="denTrang(${p})" class="page-link">${p}</a>
+                            <a onclick="denTrang(${p})" class="page-link" style="cursor:pointer;">${p}</a>
                          </li>`;
             }
         });
 
-        const nextDisabled = trangHienTai === tongTrang ? 'pointer-events:none; opacity:0.5;' : 'cursor:pointer;';
-        html += `<li style="display:inline-block;">
-                    <a onclick="denTrang(${trangHienTai + 1})" class="page-link" style="${nextDisabled}">&rsaquo;</a>
+        const nextDisabled = trangHienTai === tongTrang ? 'disabled' : '';
+        html += `<li class="page-item ${nextDisabled}">
+                    <a onclick="denTrang(${trangHienTai + 1})" class="page-link" style="${trangHienTai === tongTrang ? 'pointer-events:none;' : 'cursor:pointer;'}">&rsaquo;</a>
                  </li>`;
 
         pagList.innerHTML = html;
