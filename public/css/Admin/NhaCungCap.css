@@ -2,7 +2,21 @@
    CSS Quản lý Nhà cung cấp (RoseShop Admin)
    ========================================================================== */
 .ncc-container {
-    padding: 0;
+    padding: 24px 32px 48px;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+@media (max-width: 991px) {
+    .ncc-container {
+        padding: 20px 20px 40px;
+    }
+}
+
+@media (max-width: 575px) {
+    .ncc-container {
+        padding: 16px 14px 32px;
+    }
 }
 
 .ncc-header-actions {
@@ -161,6 +175,12 @@
     border: 1px solid #FECDCA;
 }
 
+.ncc-badge.draft {
+    background-color: #FFFAEB;
+    color: #B54708;
+    border: 1px solid #FEDF89;
+}
+
 .ncc-badge-dot {
     width: 6px;
     height: 6px;
@@ -257,6 +277,19 @@
     background-color: #ECFDF3;
 }
 
+.ncc-action-btn.confirm:hover {
+    color: #027A48;
+    border-color: #A6F4C5;
+    background-color: #ECFDF3;
+}
+
+.ncc-action-btn.cancel:hover,
+.ncc-action-btn.delete:hover {
+    color: #B42318;
+    border-color: #FECDCA;
+    background-color: #FEF3F2;
+}
+
 /* Filter Box */
 .ncc-filter-box {
     background: #ffffff;
@@ -283,6 +316,93 @@
     .ncc-filter-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* Phiếu Nhập Filter Grid */
+.pn-filter-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1.1fr 1.1fr 2fr auto;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+@media (max-width: 991px) {
+    .pn-filter-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 575px) {
+    .pn-filter-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Table Footer & Client-side Pagination */
+.ncc-table-footer {
+    padding: 14px 20px;
+    background: #ffffff;
+    border-top: 1px solid #EAECF0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.ncc-table-footer .pagination {
+    margin-bottom: 0;
+    gap: 4px;
+}
+
+.ncc-table-footer .page-link {
+    color: #475467;
+    border: 1px solid #D0D5DD;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 6px;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    background-color: #ffffff;
+    transition: all 0.15s ease;
+}
+
+.ncc-table-footer .page-link:hover {
+    color: #EC3D8F;
+    background-color: #FDEAF3;
+    border-color: #EC3D8F;
+}
+
+.ncc-table-footer .page-item.active .page-link {
+    background-color: #EC3D8F !important;
+    border-color: #EC3D8F !important;
+    color: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(236, 61, 143, 0.3) !important;
+}
+
+.ncc-table-footer .page-item.disabled .page-link {
+    color: #cbd5e1;
+    border-color: #EAECF0;
+    background-color: #ffffff;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.pn-code-link {
+    font-weight: 600;
+    color: #EC3D8F;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.pn-code-link:hover {
+    color: #D82677;
+    text-decoration: underline;
 }
 
 /* Detail page styles */

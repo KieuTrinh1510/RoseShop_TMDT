@@ -338,83 +338,61 @@
                     </div>
                 </div>
 
-                {{-- Phân trang thu gọn < 1 2 ... n > --}}
+                {{-- Phân trang thu gọn < 1 ... n > --}}
                 <div class="rs-footer-pagination">
                     @php
                         $currentPage = $shippers->currentPage();
                         $lastPage    = $shippers->lastPage();
+                        $pages = [];
+
+                        if ($lastPage <= 3) {
+                            for ($i = 1; $i <= $lastPage; $i++) {
+                                $pages[] = $i;
+                            }
+                        } else {
+                            if ($currentPage == 1) {
+                                $pages = [1, '...', $lastPage];
+                            } elseif ($currentPage == $lastPage) {
+                                $pages = [1, '...', $lastPage];
+                            } else {
+                                $pages[] = 1;
+                                if ($currentPage > 2) {
+                                    $pages[] = '...';
+                                }
+                                $pages[] = $currentPage;
+                                if ($currentPage < $lastPage - 1) {
+                                    $pages[] = '...';
+                                }
+                                $pages[] = $lastPage;
+                            }
+                        }
                     @endphp
 
                     @if($lastPage > 1)
                         <ul class="rs-pagination">
                             {{-- Nút Previous --}}
                             @if($shippers->onFirstPage())
-                                <li class="page-item disabled"><span class="page-link">&lt;</span></li>
+                                <li class="page-item disabled"><span class="page-link">&lsaquo;</span></li>
                             @else
-                                <li class="page-item"><a class="page-link" href="{{ $shippers->previousPageUrl() }}">&lt;</a></li>
+                                <li class="page-item"><a class="page-link" href="{{ $shippers->previousPageUrl() }}">&lsaquo;</a></li>
                             @endif
 
                             {{-- Danh sách trang --}}
-                            @if($lastPage <= 7)
-                                @for($i = 1; $i <= $lastPage; $i++)
-                                    <li class="page-item {{ $i == $currentPage ? 'active' : '' }}">
-                                        @if($i == $currentPage)
-                                            <span class="page-link">{{ $i }}</span>
-                                        @else
-                                            <a class="page-link" href="{{ $shippers->url($i) }}">{{ $i }}</a>
-                                        @endif
-                                    </li>
-                                @endfor
-                            @else
-                                {{-- Trang 1 --}}
-                                <li class="page-item {{ 1 == $currentPage ? 'active' : '' }}">
-                                    @if(1 == $currentPage)
-                                        <span class="page-link">1</span>
-                                    @else
-                                        <a class="page-link" href="{{ $shippers->url(1) }}">1</a>
-                                    @endif
-                                </li>
-
-                                @if($currentPage > 3)
-                                    <li class="page-item disabled"><span class="page-link ellipsis">...</span></li>
+                            @foreach ($pages as $p)
+                                @if ($p === '...')
+                                    <li class="page-item disabled"><span class="page-link ellipsis">&hellip;</span></li>
+                                @elseif ($p == $currentPage)
+                                    <li class="page-item active"><span class="page-link">{{ $p }}</span></li>
+                                @else
+                                    <li class="page-item"><a class="page-link" href="{{ $shippers->url($p) }}">{{ $p }}</a></li>
                                 @endif
-
-                                @php
-                                    $start = max(2, $currentPage - 1);
-                                    $end   = min($lastPage - 1, $currentPage + 1);
-                                    if ($currentPage <= 3) { $end = 4; }
-                                    if ($currentPage >= $lastPage - 2) { $start = $lastPage - 3; }
-                                @endphp
-
-                                @for($i = $start; $i <= $end; $i++)
-                                    <li class="page-item {{ $i == $currentPage ? 'active' : '' }}">
-                                        @if($i == $currentPage)
-                                            <span class="page-link">{{ $i }}</span>
-                                        @else
-                                            <a class="page-link" href="{{ $shippers->url($i) }}">{{ $i }}</a>
-                                        @endif
-                                    </li>
-                                @endfor
-
-                                @if($currentPage < $lastPage - 2)
-                                    <li class="page-item disabled"><span class="page-link ellipsis">...</span></li>
-                                @endif
-
-                                {{-- Trang cuối --}}
-                                <li class="page-item {{ $lastPage == $currentPage ? 'active' : '' }}">
-                                    @if($lastPage == $currentPage)
-                                        <span class="page-link">{{ $lastPage }}</span>
-                                    @else
-                                        <a class="page-link" href="{{ $shippers->url($lastPage) }}">{{ $lastPage }}</a>
-                                    @endif
-                                </li>
-                            @endif
+                            @endforeach
 
                             {{-- Nút Next --}}
                             @if($shippers->hasMorePages())
-                                <li class="page-item"><a class="page-link" href="{{ $shippers->nextPageUrl() }}">&gt;</a></li>
+                                <li class="page-item"><a class="page-link" href="{{ $shippers->nextPageUrl() }}">&rsaquo;</a></li>
                             @else
-                                <li class="page-item disabled"><span class="page-link">&gt;</span></li>
+                                <li class="page-item disabled"><span class="page-link">&rsaquo;</span></li>
                             @endif
                         </ul>
                     @endif

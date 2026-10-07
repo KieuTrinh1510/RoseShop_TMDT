@@ -2,8 +2,24 @@
    RoseShop Admin - Quản lý Tài khoản hệ thống CSS (Đồng bộ chuẩn Nhân viên & Khách hàng)
    ========================================================================== */
 
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&display=swap');
+
+:root {
+    --rs-font: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Áp dụng phông chữ Be Vietnam Pro chuẩn hệ thống cho toàn bộ trang và các phần tử con */
+.rs-management-page,
+.rs-management-page *,
+.rs-modal,
+.rs-modal *,
+.modal,
+.modal *,
+input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6, label, a {
+    font-family: var(--rs-font) !important;
+}
+
 .rs-management-page {
-    font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, sans-serif !important;
     color: #1e293b;
     padding: 24px 32px 48px !important;
     background-color: #f8fafc;
@@ -666,11 +682,15 @@
     color: #0f172a !important;
 }
 
-.rs-pagination .page-item.active .page-link, .pagination .page-item.active .page-link {
+.rs-pagination .page-item.active .page-link,
+.pagination .page-item.active .page-link,
+.page-item.active .page-link,
+.active > .page-link {
     background: #f43f5e !important;
     border-color: #f43f5e !important;
     color: #ffffff !important;
     font-weight: 700 !important;
+    box-shadow: 0 2px 6px rgba(244, 63, 94, 0.35) !important;
 }
 
 .rs-pagination .page-item.disabled .page-link, .pagination .page-item.disabled .page-link {

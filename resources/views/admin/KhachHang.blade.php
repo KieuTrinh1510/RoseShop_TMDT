@@ -375,22 +375,21 @@
                                 $pages[] = $i;
                             }
                         } else {
-                            $pages[] = 1;
-                            if ($currentPage > 2) {
-                                $pages[] = '...';
-                            }
                             if ($currentPage == 1) {
-                                $pages[] = 2;
+                                $pages = [1, '...', $lastPage];
                             } elseif ($currentPage == $lastPage) {
-                                $pages[] = $lastPage - 1;
+                                $pages = [1, '...', $lastPage];
                             } else {
+                                $pages[] = 1;
+                                if ($currentPage > 2) {
+                                    $pages[] = '...';
+                                }
                                 $pages[] = $currentPage;
+                                if ($currentPage < $lastPage - 1) {
+                                    $pages[] = '...';
+                                }
+                                $pages[] = $lastPage;
                             }
-                            if ($currentPage < $lastPage - 1) {
-                                $pages[] = '...';
-                            }
-                            $pages[] = $lastPage;
-                            $pages = array_values(array_unique($pages));
                         }
                     @endphp
 

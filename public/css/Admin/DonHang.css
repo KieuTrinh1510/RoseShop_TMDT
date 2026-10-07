@@ -275,8 +275,8 @@
      background: var(--paper-warm);
      color: var(--ink);
  }.don-hang-container .pagination-wrap .current{
-     background: var(--ink);
-     color: var(--paper);
+     background: #f43f5e !important;
+     color: #ffffff !important;
      font-weight: 700;
  }.don-hang-container .pagination-wrap .disabled{
      color: var(--ink-muted);

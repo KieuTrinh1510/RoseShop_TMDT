@@ -258,6 +258,107 @@
             color: #EC3D8F !important;
             font-weight: 600 !important;
         }
+
+        /* ==========================================================================
+           ĐỒNG BỘ PHÂN TRANG TOÀN BỘ HỆ THỐNG ADMIN ROSESHOP (MÀU HỒNG #f43f5e)
+           ========================================================================== */
+        :root {
+            --bs-pagination-active-bg: #f43f5e !important;
+            --bs-pagination-active-border-color: #f43f5e !important;
+            --bs-pagination-active-color: #ffffff !important;
+            --bs-pagination-color: #475467 !important;
+            --bs-pagination-hover-color: #f43f5e !important;
+            --bs-pagination-focus-color: #f43f5e !important;
+            --bs-pagination-focus-box-shadow: 0 0 0 0.2rem rgba(244, 63, 94, 0.25) !important;
+        }
+
+        .pagination,
+        .rs-pagination {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            list-style: none !important;
+            --bs-pagination-active-bg: #f43f5e !important;
+            --bs-pagination-active-border-color: #f43f5e !important;
+            --bs-pagination-active-color: #ffffff !important;
+            --bs-pagination-color: #475467 !important;
+            --bs-pagination-hover-color: #f43f5e !important;
+        }
+
+        .pagination .page-item,
+        .rs-pagination .page-item {
+            margin: 0 !important;
+            display: inline-block !important;
+        }
+
+        .pagination .page-link,
+        .rs-pagination .page-link {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            min-width: 32px !important;
+            height: 32px !important;
+            padding: 0 8px !important;
+            border-radius: 6px !important;
+            border: 1px solid #e2e8f0 !important;
+            background: #ffffff !important;
+            color: #475467 !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            text-decoration: none !important;
+            transition: all 0.15s ease !important;
+            cursor: pointer !important;
+            box-shadow: none !important;
+        }
+
+        .pagination .page-link:hover,
+        .rs-pagination .page-link:hover {
+            border-color: #f43f5e !important;
+            background: #fff1f2 !important;
+            color: #f43f5e !important;
+        }
+
+        /* Nút Active: Màu hồng RoseShop #f43f5e */
+        .pagination .page-item.active .page-link,
+        .rs-pagination .page-item.active .page-link,
+        .page-item.active .page-link,
+        .active > .page-link,
+        ul.pagination li.active a,
+        ul.pagination li.active span,
+        ul.rs-pagination li.active a,
+        ul.rs-pagination li.active span {
+            background-color: #f43f5e !important;
+            border-color: #f43f5e !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            box-shadow: 0 2px 6px rgba(244, 63, 94, 0.35) !important;
+        }
+
+        /* Nút Disabled */
+        .pagination .page-item.disabled .page-link,
+        .rs-pagination .page-item.disabled .page-link,
+        .page-item.disabled .page-link {
+            color: #cbd5e1 !important;
+            border-color: #f1f5f9 !important;
+            background: #ffffff !important;
+            cursor: not-allowed !important;
+            pointer-events: none !important;
+            opacity: 0.6 !important;
+        }
+
+        /* Dấu ... (Ellipsis) */
+        .pagination .page-link.ellipsis,
+        .rs-pagination .page-link.ellipsis,
+        .page-link.ellipsis {
+            border: none !important;
+            background: transparent !important;
+            color: #94a3b8 !important;
+            cursor: default !important;
+            padding: 0 4px !important;
+            min-width: 24px !important;
+        }
     </style>
 </head>
 
