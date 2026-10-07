@@ -42,7 +42,7 @@ class NguyenVatLieuController extends Controller
 
         $danhSachLoaiNguyenLieu = $this->danhSachLoaiNguyenLieu;
 
-        return view('admin.SanPham.QuanLyNguyenVatLieu', compact(
+        return view('admin.NguyenVatLieu.index', compact(
             'nguyenVatLieu', 'danhSachLoaiNguyenLieu'
         ));
     }

@@ -378,11 +378,11 @@
                             Sản phẩm
                         </a>
                         @if($isAdmin)
-                            <a href="{{ route('admin.mau-bo-hoa') }}" class="submenu-item {{ request()->routeIs('admin.mau-bo-hoa*') ? 'active' : '' }}">
-                                Mẫu bó hoa
-                            </a>
                             <a href="{{ route('admin.nguyen-vat-lieu') }}" class="submenu-item {{ request()->routeIs('admin.nguyen-vat-lieu*') ? 'active' : '' }}">
                                 Nguyên vật liệu
+                            </a>
+                            <a href="{{ route('admin.mau-bo-hoa') }}" class="submenu-item {{ request()->routeIs('admin.mau-bo-hoa*') ? 'active' : '' }}">
+                                Mẫu bó hoa
                             </a>
                         @endif
                         <a href="{{ route('phieu-nhap.index') }}" class="submenu-item {{ request()->routeIs('phieu-nhap.*') ? 'active' : '' }}">

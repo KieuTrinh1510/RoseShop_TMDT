@@ -43,8 +43,6 @@
             </div>
         @endif
 
-        @include('admin.SanPham._nav', ['activeTab' => 'nguyen-vat-lieu'])
-
         {{-- ===== FORM THÊM / SỬA NGUYÊN VẬT LIỆU ===== --}}
         <div class="card mb-4">
             <div class="card-header bg-secondary text-white">
