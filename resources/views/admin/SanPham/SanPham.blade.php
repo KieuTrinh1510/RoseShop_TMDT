@@ -30,8 +30,6 @@
             </div>
         @endif
 
-        @include('admin.SanPham._nav', ['activeTab' => 'san-pham'])
-
         {{-- ===== FORM THÊM / SỬA SẢN PHẨM ===== --}}
         <div class="card mb-4" id="cardForm">
             <div class="card-header bg-success text-white d-flex justify-content-between align-items-center" id="cardFormHeader">
