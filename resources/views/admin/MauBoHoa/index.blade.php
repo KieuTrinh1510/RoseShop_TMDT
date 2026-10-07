@@ -285,13 +285,14 @@
             padding: 16px 18px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: flex-start;
+            gap: 14px;
         }
         .template-basic-card h3 {
             font-size: 0.95rem;
             font-weight: 700;
             color: #831843;
-            margin: 0 0 12px;
+            margin: 0;
         }
         .basic-info-grid {
             display: flex;
@@ -302,19 +303,22 @@
             display: grid;
             grid-template-columns: 2fr 1fr 1fr;
             gap: 12px;
+            align-items: flex-start;
         }
         .basic-row-2 {
             display: grid;
-            grid-template-columns: 1.2fr 1.8fr;
+            grid-template-columns: 2fr 2fr;
             gap: 12px;
-            align-items: center;
+            align-items: flex-start;
         }
         .form-group-custom label {
             display: block;
             font-size: 0.82rem;
             font-weight: 600;
             color: #374151;
-            margin-bottom: 4px;
+            margin-bottom: 5px;
+            line-height: 1.3;
+            min-height: 18px;
         }
         .form-group-custom .form-control,
         .form-group-custom .form-select {
@@ -331,7 +335,7 @@
         }
         .upload-compact {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 10px;
         }
         .upload-preview-box {
