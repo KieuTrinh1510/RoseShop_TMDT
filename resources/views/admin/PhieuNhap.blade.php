@@ -178,44 +178,60 @@
                         </td>
 
                         {{-- Hành động --}}
-                        <td style="text-align:center;">
-                            <div class="d-flex gap-1 justify-content-center flex-wrap">
+                        <td style="text-align: center; white-space: nowrap;">
+                            <div class="rs-action-group">
 
                                 {{-- NÚT XEM CHI TIẾT (luôn hiện) --}}
-                                <button class="btn btn-chitiet btn-sm"
+                                <button type="button" class="rs-action-btn detail"
                                         onclick="xemChiTiet({{ $pn->ma_phieu_nhap }})"
-                                        title="Xem chi tiết nhập">
-                                    <i class="bi bi-eye me-1"></i>Chi tiết
+                                        title="Xem chi tiết phiếu nhập">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                                        <circle cx="12" cy="12" r="3"/>
+                                    </svg>
                                 </button>
 
                                 @if($pn->trang_thai === 'DRAFT')
 
                                     {{-- NÚT SỬA (mở Modal Popup sửa đè lên) --}}
-                                    <button class="btn btn-sua btn-sm"
+                                    <button type="button" class="rs-action-btn edit"
                                             onclick="chuyenCheDeSua({{ $pn->ma_phieu_nhap }})"
                                             title="Sửa phiếu nhập">
-                                        <i class="bi bi-pencil-fill me-1"></i>Sửa
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                                            <path d="m15 5 4 4"/>
+                                        </svg>
                                     </button>
 
                                     {{-- NÚT XÁC NHẬN --}}
-                                    <button type="button" class="btn btn-xacnhan btn-sm"
+                                    <button type="button" class="rs-action-btn confirm"
                                             onclick="moModalXacNhan({{ $pn->ma_phieu_nhap }})"
                                             title="Xác nhận nhập kho">
-                                        <i class="bi bi-check2-circle me-1"></i>Xác nhận
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M20 6 9 17l-5-5"/>
+                                        </svg>
                                     </button>
 
                                     {{-- NÚT HỦY PHIẾU --}}
-                                    <button type="button" class="btn btn-outline-danger btn-sm"
+                                    <button type="button" class="rs-action-btn cancel"
                                             onclick="moModalHuyPhieu({{ $pn->ma_phieu_nhap }})"
                                             title="Hủy phiếu nhập">
-                                        <i class="bi bi-x-circle me-1"></i>Hủy
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <path d="m15 9-6 6"/>
+                                            <path d="m9 9 6 6"/>
+                                        </svg>
                                     </button>
 
                                     {{-- NÚT XÓA --}}
-                                    <button type="button" class="btn btn-xoa btn-sm"
+                                    <button type="button" class="rs-action-btn delete"
                                             onclick="moModalXoa({{ $pn->ma_phieu_nhap }})"
                                             title="Xóa phiếu nhập">
-                                        <i class="bi bi-trash me-1"></i>Xóa
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M3 6h18"/>
+                                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                        </svg>
                                     </button>
                                 @endif
                             </div>
