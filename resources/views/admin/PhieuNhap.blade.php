@@ -1012,21 +1012,25 @@
                  </li>`;
 
         let pages = [];
-        if (tongTrang <= 5) {
+        if (tongTrang <= 3) {
             for (let i = 1; i <= tongTrang; i++) pages.push(i);
         } else {
-            if (trangHienTai <= 3) {
-                pages = [1, 2, 3, 4, '...', tongTrang];
-            } else if (trangHienTai >= tongTrang - 2) {
-                pages = [1, '...', tongTrang - 3, tongTrang - 2, tongTrang - 1, tongTrang];
+            if (trangHienTai === 1) {
+                pages = [1, '...', tongTrang];
+            } else if (trangHienTai === tongTrang) {
+                pages = [1, '...', tongTrang];
             } else {
-                pages = [1, '...', trangHienTai - 1, trangHienTai, trangHienTai + 1, '...', tongTrang];
+                pages = [1];
+                if (trangHienTai > 2) pages.push('...');
+                pages.push(trangHienTai);
+                if (trangHienTai < tongTrang - 1) pages.push('...');
+                pages.push(tongTrang);
             }
         }
 
         pages.forEach(p => {
             if (p === '...') {
-                html += `<li style="display:inline-block;"><span class="page-link ellipsis">...</span></li>`;
+                html += `<li class="page-item disabled"><span class="page-link ellipsis">...</span></li>`;
             } else {
                 const activeClass = p === trangHienTai ? 'active' : '';
                 html += `<li class="page-item ${activeClass}">
