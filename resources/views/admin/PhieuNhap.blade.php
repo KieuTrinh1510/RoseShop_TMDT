@@ -132,20 +132,20 @@
             <table class="rs-table">
                 <thead>
                     <tr>
-                        <th style="width:75px; text-align:center;">Mã PN</th>
-                        <th style="width:140px; text-align:center;">Ngày nhập</th>
-                        <th style="width:160px;">Nhân viên</th>
-                        <th style="width:200px;">Nhà cung cấp</th>
-                        <th style="width:130px; text-align:center;">SĐT NCC</th>
-                        <th style="width:130px; text-align:center;">Trạng thái</th>
-                        <th style="width:220px; text-align:center;">Hành động</th>
+                        <th style="width: 90px; text-align: center;">Mã PN</th>
+                        <th style="width: 140px; text-align: center;">Ngày nhập</th>
+                        <th style="width: 170px; text-align: left;">Nhân viên</th>
+                        <th style="width: 220px; text-align: left;">Nhà cung cấp</th>
+                        <th style="width: 150px; text-align: center; white-space: nowrap;">SĐT NCC</th>
+                        <th style="width: 140px; text-align: center;">Trạng thái</th>
+                        <th style="width: 160px; text-align: center;">Hành động</th>
                     </tr>
                 </thead>
                 <tbody id="tbodyPhieuNhap">
                     @forelse($danhSachPhieuNhap as $pn)
                     <tr class="dong-phieu-nhap">
                         <td style="text-align:center;">
-                            <a href="{{ route('phieu-nhap.show', $pn->ma_phieu_nhap) }}" class="fw-bold text-decoration-none" style="color:#f43f5e;" title="Mở trang chi tiết">
+                            <a href="{{ route('phieu-nhap.show', $pn->ma_phieu_nhap) }}" class="fw-bold text-decoration-none" style="color:#EC3D8F;" title="Mở trang chi tiết">
                                 #PN-{{ $pn->ma_phieu_nhap }}
                             </a>
                         </td>
@@ -325,7 +325,7 @@
                     <div class="col-md-3">
                         <label class="form-label d-flex justify-content-between">
                             <span>Nhà cung cấp <span class="text-danger">*</span></span>
-                            <a href="{{ route('admin.nha-cung-cap.create') }}" target="_blank" class="text-decoration-none" style="font-size:0.78rem; color:#f43f5e;">
+                            <a href="{{ route('admin.nha-cung-cap.create') }}" target="_blank" class="text-decoration-none" style="font-size:0.78rem; color:#EC3D8F;">
                                 <i class="bi bi-plus-circle me-1"></i>Thêm mới
                             </a>
                         </label>
@@ -457,7 +457,7 @@
         <div class="modal-content" style="border-radius: 16px; border: 1px solid #fecdd3; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);">
 
             <div class="modal-header" style="background: #fff1f2; border-bottom: 1px solid #fecdd3; padding: 16px 24px;">
-                <h5 class="modal-title" id="tieuDeModal" style="color: #e11d48; font-weight: 700; font-size: 17px; margin: 0; display: flex; align-items: center; gap: 8px;">
+                <h5 class="modal-title" id="tieuDeModal" style="color: #D82677; font-weight: 700; font-size: 17px; margin: 0; display: flex; align-items: center; gap: 8px;">
                     <i class="bi bi-file-earmark-text me-2"></i>Chi tiết phiếu nhập
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" style="filter: invert(27%) sepia(85%) saturate(3015%) hue-rotate(334deg) brightness(91%) contrast(97%);"></button>
@@ -568,7 +568,7 @@
                 @csrf
                 @method('DELETE')
                 <div class="modal-header" style="background: #fff1f2; border-bottom: 1px solid #fecdd3; padding: 16px 22px;">
-                    <h5 class="modal-title" id="tieuDeModalXoa" style="color: #e11d48; font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                    <h5 class="modal-title" id="tieuDeModalXoa" style="color: #D82677; font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px;">
                         <i class="bi bi-trash3 fs-5"></i>Xác nhận xóa phiếu nhập
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -579,12 +579,12 @@
                         Hành động này <strong>không thể hoàn tác</strong>. Dữ liệu phiếu nhập nháp sẽ bị xóa vĩnh viễn khỏi hệ thống.
                     </div>
                     <p class="mb-1" style="font-size: 14.5px;">
-                        Bạn có chắc chắn muốn xóa phiếu nhập <strong id="spanMaPhieuXoa" style="color: #e11d48; font-size: 16px;"></strong> không?
+                        Bạn có chắc chắn muốn xóa phiếu nhập <strong id="spanMaPhieuXoa" style="color: #D82677; font-size: 16px;"></strong> không?
                     </p>
                 </div>
                 <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #f1f5f9; padding: 12px 22px;">
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" style="border-radius: 8px; padding: 6px 14px;">Hủy bỏ</button>
-                    <button type="submit" class="btn btn-danger btn-sm" style="border-radius: 8px; padding: 6px 16px; font-weight: 600; background: #e11d48; border-color: #e11d48;">
+                    <button type="submit" class="btn btn-danger btn-sm" style="border-radius: 8px; padding: 6px 16px; font-weight: 600; background: #D82677; border-color: #D82677;">
                         <i class="bi bi-trash me-1"></i>Đồng ý xóa
                     </button>
                 </div>
@@ -880,7 +880,7 @@
                             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                                 <div class="d-flex align-items-center gap-2">
                                     <span class="text-muted fw-semibold">Mã phiếu:</span>
-                                    <span style="color:#e11d48; font-weight:800; font-size:15px;">#PN-${id}</span>
+                                    <span style="color:#D82677; font-weight:800; font-size:15px;">#PN-${id}</span>
                                 </div>
                                 <div class="d-flex align-items-center gap-2 flex-wrap">
                                     ${subTitleHtml}
@@ -910,7 +910,7 @@
                                         <td><strong>${tenSp}</strong></td>
                                         <td class="text-center fw-bold">${ct.so_luong}</td>
                                         <td class="text-end">${Number(ct.gia_nhap).toLocaleString('vi-VN')} ₫</td>
-                                        <td class="text-end fw-bold" style="color:#e11d48;">${thanhTien.toLocaleString('vi-VN')} ₫</td>
+                                        <td class="text-end fw-bold" style="color:#D82677;">${thanhTien.toLocaleString('vi-VN')} ₫</td>
                                     </tr>`;
                             });
                         }
@@ -936,8 +936,8 @@
                                     <tbody>${rows}</tbody>
                                     <tfoot>
                                         <tr>
-                                            <td colspan="4" class="text-end text-uppercase" style="color:#e11d48; font-weight:700;">Tổng cộng:</td>
-                                            <td class="text-end" style="color:#e11d48; font-weight:700; font-size:15px;">${tongCong.toLocaleString('vi-VN')} ₫</td>
+                                            <td colspan="4" class="text-end text-uppercase" style="color:#D82677; font-weight:700;">Tổng cộng:</td>
+                                            <td class="text-end" style="color:#D82677; font-weight:700; font-size:15px;">${tongCong.toLocaleString('vi-VN')} ₫</td>
                                         </tr>
                                     </tfoot>
                                 </table>

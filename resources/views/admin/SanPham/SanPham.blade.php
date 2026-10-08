@@ -34,11 +34,11 @@
 
         {{-- ===== FORM THÊM / SỬA SẢN PHẨM ===== --}}
         <div class="card mb-4" id="cardForm">
-            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center" id="cardFormHeader">
-                <span id="tieuDeForm">
-                    <i class="bi bi-plus-circle me-2"></i>Thêm Sản Phẩm Mới
+            <div class="card-header d-flex justify-content-between align-items-center" id="cardFormHeader">
+                <span id="tieuDeForm" class="fw-bold">
+                    <i class="bi bi-plus-circle me-2" style="color: var(--rs-primary);"></i>Thêm Sản Phẩm Mới
                 </span>
-                <button type="button" id="btnHuy" class="btn btn-light btn-sm"
+                <button type="button" id="btnHuy" class="btn btn-outline-secondary btn-sm"
                         onclick="chuyenVeCheDoDaThem()" style="display:none;">
                     <i class="bi bi-x-lg me-1"></i>Hủy sửa
                 </button>
@@ -126,7 +126,7 @@
                     </div>
 
                     <div class="mt-3 d-flex gap-2">
-                        <button type="submit" id="btnSubmit" class="btn btn-success">
+                        <button type="submit" id="btnSubmit" class="btn ncc-btn-primary">
                             <i class="bi bi-plus-lg me-1" id="iconSubmit"></i>
                             <span id="textSubmit">Thêm sản phẩm</span>
                         </button>
@@ -138,9 +138,9 @@
 
         {{-- ===== DANH SÁCH SẢN PHẨM ===== --}}
         <div class="card">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-list-ul me-2"></i>Danh Sách Sản Phẩm (Admin)</span>
-                <span class="badge bg-white text-primary">{{ $danhSachSanPham->total() }} sản phẩm</span>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="fw-bold"><i class="bi bi-list-ul me-2" style="color: var(--rs-primary);"></i>Danh Sách Sản Phẩm</span>
+                <span class="badge badge-dang-ban">{{ $danhSachSanPham->total() }} sản phẩm</span>
             </div>
             <div class="card-body">
 
@@ -269,31 +269,32 @@
                                 </td>
 
                                 <td>
-                                    <div class="d-flex gap-1 flex-wrap">
+                                    <div class="d-flex gap-1 justify-content-center align-items-center">
 
-                                        <button class="btn btn-warning btn-sm"
+                                        <button type="button" class="ncc-action-btn edit"
                                                 onclick="chuyenCheDeSua({{ $sp->ma_san_pham }})"
                                                 title="Sửa sản phẩm">
-                                            <i class="bi bi-pencil-fill"></i> Sửa
+                                            <i class="bi bi-pencil-fill"></i>
                                         </button>
 
                                         <form action="{{ route('san-pham.toggle', $sp->ma_san_pham) }}"
                                               method="POST"
+                                              class="d-inline"
                                               onsubmit="return confirm('{{ $sp->trang_thai === 'DANG_BAN' ? 'Ẩn sản phẩm này? Khách hàng sẽ không thể mua.' : 'Hiện lại sản phẩm này để khách hàng mua được?' }}')">
                                             @csrf
                                             @method('PATCH')
                                             @if($sp->trang_thai === 'DANG_BAN')
-                                                <button type="submit" class="btn btn-secondary btn-sm" title="Ẩn sản phẩm">
-                                                    <i class="bi bi-eye-slash-fill"></i> Ẩn
+                                                <button type="submit" class="ncc-action-btn toggle" title="Ẩn sản phẩm">
+                                                    <i class="bi bi-eye-slash-fill"></i>
                                                 </button>
                                             @else
-                                                <button type="submit" class="btn btn-success btn-sm" title="Hiện lại">
-                                                    <i class="bi bi-eye-fill"></i> Hiện
+                                                <button type="submit" class="ncc-action-btn toggle" title="Hiện lại">
+                                                    <i class="bi bi-eye-fill"></i>
                                                 </button>
                                             @endif
                                         </form>
 
-                                        <button class="btn btn-danger btn-sm"
+                                        <button type="button" class="ncc-action-btn danger"
                                                 onclick="moModalHangHong(
                                                     {{ $sp->ma_san_pham }},
                                                     '{{ addslashes($sp->ten_san_pham) }}',
@@ -301,7 +302,7 @@
                                                 )"
                                                 title="Báo cáo hàng hỏng"
                                                 {{ $tongConLai == 0 ? 'disabled' : '' }}>
-                                            <i class="bi bi-exclamation-triangle-fill"></i> Hỏng
+                                            <i class="bi bi-exclamation-triangle-fill"></i>
                                         </button>
 
                                     </div>

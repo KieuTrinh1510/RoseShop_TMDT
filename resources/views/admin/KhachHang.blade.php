@@ -200,7 +200,7 @@
                         @endphp
                         <tr>
                             {{-- 1. Mã khách hàng --}}
-                            <td style="text-align: center; font-weight: 700; color: #f43f5e; font-family: monospace; font-size: 13px;">
+                            <td style="text-align: center; font-weight: 700; color: #EC3D8F; font-family: monospace; font-size: 13px;">
                                 KH-{{ str_pad($kh->ma_khach_hang, 4, '0', STR_PAD_LEFT) }}
                             </td>
 
@@ -428,7 +428,7 @@
                     <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
                     <circle cx="12" cy="12" r="3"/>
                 </svg>
-                Chi tiết khách hàng <span id="detail_ma_khach_hang" style="color:#f43f5e;"></span>
+                Chi tiết khách hàng <span id="detail_ma_khach_hang" style="color:#EC3D8F;"></span>
             </h3>
             <button type="button" class="rs-modal-close" onclick="closeModal('detailModal')">&times;</button>
         </div>
@@ -543,25 +543,25 @@
                     </div>
 
                     <div class="rs-form-group col-span-2">
-                        <label class="rs-form-label">Họ và tên khách hàng <span style="color:#f43f5e;">*</span></label>
+                        <label class="rs-form-label">Họ và tên khách hàng <span style="color:#EC3D8F;">*</span></label>
                         <input type="text" name="ten_khach_hang" id="edit_ten_khach_hang" class="rs-form-control" oninput="clearErrorKh('edit_ten_khach_hang')">
                         <div class="rs-field-error" id="err_edit_ten_khach_hang"></div>
                     </div>
 
                     <div class="rs-form-group">
-                        <label class="rs-form-label">Số điện thoại <span style="color:#f43f5e;">*</span></label>
+                        <label class="rs-form-label">Số điện thoại <span style="color:#EC3D8F;">*</span></label>
                         <input type="text" name="so_dien_thoai" id="edit_so_dien_thoai" class="rs-form-control" oninput="clearErrorKh('edit_so_dien_thoai')">
                         <div class="rs-field-error" id="err_edit_so_dien_thoai"></div>
                     </div>
 
                     <div class="rs-form-group">
-                        <label class="rs-form-label">Email <span style="color:#f43f5e;">*</span></label>
+                        <label class="rs-form-label">Email <span style="color:#EC3D8F;">*</span></label>
                         <input type="email" name="email" id="edit_email" class="rs-form-control" oninput="clearErrorKh('edit_email')">
                         <div class="rs-field-error" id="err_edit_email"></div>
                     </div>
 
                     <div class="rs-form-group col-span-2">
-                        <label class="rs-form-label">Địa chỉ nhận hàng <span style="color:#f43f5e;">*</span></label>
+                        <label class="rs-form-label">Địa chỉ nhận hàng <span style="color:#EC3D8F;">*</span></label>
                         <input type="text" name="dia_chi" id="edit_dia_chi" class="rs-form-control" oninput="clearErrorKh('edit_dia_chi')">
                         <div class="rs-field-error" id="err_edit_dia_chi"></div>
                     </div>
@@ -603,7 +603,7 @@
                 </div>
 
                 <div class="rs-form-group" style="margin-bottom: 14px;">
-                    <label class="rs-form-label">Lý do vi phạm <span style="color:#e11d48;">*</span></label>
+                    <label class="rs-form-label">Lý do vi phạm <span style="color:#D82677;">*</span></label>
                     <select name="loai_vi_pham" class="rs-form-control" required>
                         <option value="BOM_HANG">Bom hàng (Không nhận hàng khi giao)</option>
                         <option value="TU_CHOI_NHAN">Từ chối nhận hàng không có lý do</option>
@@ -613,7 +613,7 @@
                 </div>
 
                 <div class="rs-form-group">
-                    <label class="rs-form-label">Ghi chú chi tiết <span style="color:#e11d48;">*</span></label>
+                    <label class="rs-form-label">Ghi chú chi tiết <span style="color:#D82677;">*</span></label>
                     <textarea name="ly_do" class="rs-form-control" rows="3" style="height:auto !important; padding:8px 12px;" required placeholder="Nhập lý do giới hạn quyền COD..."></textarea>
                 </div>
             </div>
@@ -652,7 +652,7 @@
                 </div>
 
                 <div class="rs-form-group">
-                    <label class="rs-form-label">Lý do khôi phục quyền COD <span style="color:#e11d48;">*</span></label>
+                    <label class="rs-form-label">Lý do khôi phục quyền COD <span style="color:#D82677;">*</span></label>
                     <textarea name="ly_do" class="rs-form-control" rows="3" style="height:auto !important; padding:8px 12px;" required placeholder="Nhập lý do khôi phục quyền COD..."></textarea>
                 </div>
             </div>
@@ -708,7 +708,7 @@
     <div class="rs-modal-dialog" style="max-width: 480px;">
         <div class="rs-modal-header">
             <h3 class="rs-modal-title">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D82677" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="3 6 5 6 21 6"/>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                 </svg>
@@ -730,7 +730,7 @@
                         Bảo toàn hồ sơ đơn hàng
                     </div>
                     <div style="font-size:13px; color:#475467; line-height:1.5;">
-                        Khách hàng <strong id="deleteBlockedName"></strong> đã phát sinh đơn hàng trong hệ thống. Để bảo toàn lịch sử giao dịch và đối soát, hệ thống <strong style="color:#e11d48;">không cho phép xóa vật lý</strong>.
+                        Khách hàng <strong id="deleteBlockedName"></strong> đã phát sinh đơn hàng trong hệ thống. Để bảo toàn lịch sử giao dịch và đối soát, hệ thống <strong style="color:#D82677;">không cho phép xóa vật lý</strong>.
                     </div>
                 </div>
                 <p style="font-size:13.5px; color:#334155; margin:0; line-height:1.5;">

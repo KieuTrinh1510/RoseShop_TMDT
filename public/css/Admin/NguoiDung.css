@@ -15,14 +15,30 @@
 .rs-modal *,
 .modal,
 .modal *,
-input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6, label, a {
+input,
+button,
+select,
+textarea,
+table,
+th,
+td,
+span,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+label,
+a {
     font-family: var(--rs-font) !important;
 }
 
 .rs-management-page {
     color: #1e293b;
-    padding: 24px 32px 48px !important;
-    background-color: #f8fafc;
+    padding: 24px 32px 24px 32px !important;
+    background-color: #F8F9FA !important;
     min-height: 100vh;
 }
 
@@ -50,8 +66,8 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
     height: 52px;
     min-width: 52px;
     border-radius: 50%;
-    background: #ffe4e6;
-    color: #f43f5e;
+    background: #FDEAF3;
+    color: #EC3D8F;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -75,7 +91,7 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 .rs-btn-create {
     height: 42px !important;
     padding: 0 20px !important;
-    background: #f43f5e !important;
+    background: #EC3D8F !important;
     color: #ffffff !important;
     border: none !important;
     border-radius: 12px !important;
@@ -91,7 +107,7 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 }
 
 .rs-btn-create:hover {
-    background: #e11d48 !important;
+    background: #D82677 !important;
     transform: translateY(-1px) !important;
     box-shadow: 0 6px 16px rgba(244, 63, 94, 0.35) !important;
 }
@@ -144,8 +160,8 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 }
 
 .rs-kpi-icon.pink {
-    background: #ffe4e6;
-    color: #e11d48;
+    background: #FDEAF3;
+    color: #D82677;
 }
 
 .rs-kpi-icon.purple {
@@ -206,7 +222,7 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
     display: flex;
     align-items: center;
     gap: 10px;
-    background: #fff1f2;
+    background: #FDEAF3;
     color: #9f1239;
     border: 1px solid #fecdd3;
     border-radius: 12px;
@@ -218,8 +234,8 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 
 /* Card chứa nội dung bảng & bộ lọc */
 .rs-main-card {
-    background: #ffffff;
-    border: 1px solid #f1f5f9;
+    background: #ffffff !important;
+    border: 1px solid #EAECF0 !important;
     border-radius: 16px;
     padding: 24px;
     box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
@@ -264,7 +280,7 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 }
 
 .rs-search-box-unified input:focus {
-    border-color: #f43f5e !important;
+    border-color: #EC3D8F !important;
     background: #ffffff !important;
     box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.12) !important;
 }
@@ -272,7 +288,7 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 .rs-btn-search {
     height: 40px !important;
     padding: 0 18px !important;
-    background: #f43f5e !important;
+    background: #EC3D8F !important;
     color: #ffffff !important;
     border: none !important;
     border-radius: 10px !important;
@@ -289,7 +305,7 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 }
 
 .rs-btn-search:hover {
-    background: #e11d48 !important;
+    background: #D82677 !important;
     transform: translateY(-1px) !important;
     box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3) !important;
 }
@@ -327,7 +343,7 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 }
 
 .rs-select:focus {
-    border-color: #f43f5e !important;
+    border-color: #EC3D8F !important;
     background-color: #ffffff !important;
     box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.12) !important;
 }
@@ -350,9 +366,9 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 }
 
 .rs-btn-filter-clear:hover {
-    border-color: #f43f5e;
-    color: #f43f5e;
-    background: #fff1f2;
+    border-color: #EC3D8F;
+    color: #EC3D8F;
+    background: #FDEAF3;
 }
 
 .rs-per-page-box {
@@ -384,7 +400,7 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 }
 
 .rs-per-page-select:focus {
-    border-color: #f43f5e !important;
+    border-color: #EC3D8F !important;
 }
 
 /* ==========================================================================
@@ -423,7 +439,7 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 }
 
 .rs-table-container::-webkit-scrollbar-thumb:hover {
-    background: #f43f5e !important;
+    background: #EC3D8F !important;
 }
 
 .rs-table {
@@ -438,15 +454,15 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
     position: sticky !important;
     top: 0 !important;
     z-index: 20 !important;
-    background-color: #fff1f2 !important;
-    color: #e11d48 !important;
+    background-color: #FDEAF3 !important;
+    color: #EC3D8F !important;
     font-weight: 700 !important;
     font-size: 13.5px !important;
     text-transform: none !important;
     text-align: center !important;
     letter-spacing: normal !important;
     padding: 14px 16px !important;
-    border-bottom: 2px solid #fecdd3 !important;
+    border-bottom: 1px solid #F9C5DC !important;
     border-top: none !important;
     white-space: nowrap !important;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -457,7 +473,7 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 }
 
 .rs-table tbody tr:hover {
-    background-color: #fff1f2 !important;
+    background-color: #FDEAF3 !important;
 }
 
 .rs-table td {
@@ -528,23 +544,23 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 }
 
 .rs-status-badge.active {
-    background: #ecfdf5;
-    color: #059669;
-    border: 1px solid #a7f3d0;
+    background: #ECFDF3 !important;
+    color: #027A48 !important;
+    border: 1px solid #ABEFC6 !important;
 }
 
 .rs-status-badge.active::before {
-    background: #10b981;
+    background: #027A48 !important;
 }
 
 .rs-status-badge.locked {
-    background: #fef2f2;
-    color: #dc2626;
-    border: 1px solid #fecaca;
+    background: #FEF3F2 !important;
+    color: #B42318 !important;
+    border: 1px solid #FECDCA !important;
 }
 
 .rs-status-badge.locked::before {
-    background: #ef4444;
+    background: #B42318 !important;
 }
 
 /* Nhóm nút hành động */
@@ -600,9 +616,9 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 }
 
 .rs-action-btn.delete:hover {
-    color: #e11d48 !important;
+    color: #D82677 !important;
     border-color: #fecdd3 !important;
-    background: #ffe4e6 !important;
+    background: #FDEAF3 !important;
 }
 
 /* Footer & Phân trang */
@@ -646,7 +662,8 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 }
 
 /* Custom Pagination Links */
-.rs-pagination, .pagination {
+.rs-pagination,
+.pagination {
     display: flex !important;
     align-items: center !important;
     gap: 6px !important;
@@ -655,11 +672,13 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
     padding: 0 !important;
 }
 
-.rs-pagination .page-item, .pagination .page-item {
+.rs-pagination .page-item,
+.pagination .page-item {
     display: inline-block !important;
 }
 
-.rs-pagination .page-link, .pagination .page-link {
+.rs-pagination .page-link,
+.pagination .page-link {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -676,7 +695,8 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
     transition: all 0.15s !important;
 }
 
-.rs-pagination .page-link:hover, .pagination .page-link:hover {
+.rs-pagination .page-link:hover,
+.pagination .page-link:hover {
     border-color: #cbd5e1 !important;
     background: #f8fafc !important;
     color: #0f172a !important;
@@ -685,22 +705,24 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 .rs-pagination .page-item.active .page-link,
 .pagination .page-item.active .page-link,
 .page-item.active .page-link,
-.active > .page-link {
-    background: #f43f5e !important;
-    border-color: #f43f5e !important;
+.active>.page-link {
+    background: #EC3D8F !important;
+    border-color: #EC3D8F !important;
     color: #ffffff !important;
     font-weight: 700 !important;
     box-shadow: 0 2px 6px rgba(244, 63, 94, 0.35) !important;
 }
 
-.rs-pagination .page-item.disabled .page-link, .pagination .page-item.disabled .page-link {
+.rs-pagination .page-item.disabled .page-link,
+.pagination .page-item.disabled .page-link {
     color: #cbd5e1 !important;
     border-color: #f1f5f9 !important;
     cursor: not-allowed !important;
     background: #ffffff !important;
 }
 
-.rs-pagination .page-link.ellipsis, .pagination .page-link.ellipsis {
+.rs-pagination .page-link.ellipsis,
+.pagination .page-link.ellipsis {
     border: none !important;
     background: transparent !important;
     color: #94a3b8 !important;
@@ -786,7 +808,7 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 
 .rs-modal-close:hover {
     background: #fee2e2 !important;
-    color: #e11d48 !important;
+    color: #D82677 !important;
     border-color: #fecdd3 !important;
     transform: scale(1.05) !important;
 }
@@ -841,7 +863,7 @@ input.rs-readonly-input {
 }
 
 .rs-feedback-msg.error {
-    color: #e11d48;
+    color: #D82677;
 }
 
 .rs-feedback-msg.success {
@@ -849,8 +871,8 @@ input.rs-readonly-input {
 }
 
 .rs-form-control.is-invalid {
-    border-color: #f43f5e !important;
-    background-color: #fff1f2 !important;
+    border-color: #EC3D8F !important;
+    background-color: #FDEAF3 !important;
 }
 
 .rs-form-control.is-valid {
@@ -879,7 +901,7 @@ input.rs-readonly-input {
 }
 
 .rs-form-control:focus {
-    border-color: #f43f5e !important;
+    border-color: #EC3D8F !important;
     box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.12) !important;
 }
 
@@ -914,7 +936,7 @@ input.rs-readonly-input {
 .rs-btn-submit {
     height: 40px !important;
     padding: 0 20px !important;
-    background: #f43f5e !important;
+    background: #EC3D8F !important;
     border: none !important;
     border-radius: 10px !important;
     color: #ffffff !important;
@@ -926,6 +948,6 @@ input.rs-readonly-input {
 }
 
 .rs-btn-submit:hover {
-    background: #e11d48 !important;
+    background: #D82677 !important;
     box-shadow: 0 4px 12px rgba(244, 63, 94, 0.35) !important;
 }

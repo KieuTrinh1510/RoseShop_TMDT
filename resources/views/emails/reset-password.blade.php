@@ -22,7 +22,7 @@
             border: 1px solid #fecdd3;
         }
         .email-header {
-            background: linear-gradient(135deg, #e11d48, #f43f5e);
+            background: linear-gradient(135deg, #D82677, #EC3D8F);
             padding: 30px;
             text-align: center;
             color: #ffffff;
@@ -82,7 +82,7 @@
         }
         .btn-reset {
             display: inline-block;
-            background-color: #e11d48;
+            background-color: #D82677;
             color: #ffffff !important;
             text-decoration: none;
             font-weight: 600;
@@ -96,7 +96,7 @@
         }
         .notice {
             background-color: #fff1f2;
-            border-left: 4px solid #e11d48;
+            border-left: 4px solid #D82677;
             padding: 14px 16px;
             border-radius: 6px;
             font-size: 13px;
@@ -112,7 +112,7 @@
             border-top: 1px dashed #e5e7eb;
         }
         .raw-link a {
-            color: #e11d48;
+            color: #D82677;
         }
         .email-footer {
             background-color: #f9fafb;

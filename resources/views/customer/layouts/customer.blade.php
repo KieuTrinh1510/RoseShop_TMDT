@@ -36,7 +36,7 @@
         .notification-item { position: relative; display: inline-block; }
         .notif-dot {
             position: absolute; top: -2px; right: -4px;
-            width: 8px; height: 8px; background: #e11d48;
+            width: 8px; height: 8px; background: #D82677;
             border-radius: 50%; box-shadow: 0 0 0 2px #fff;
             display: none;
         }

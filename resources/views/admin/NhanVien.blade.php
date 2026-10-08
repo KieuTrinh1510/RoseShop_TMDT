@@ -214,7 +214,7 @@
                         @endphp
                         <tr>
                             {{-- 1. Mã nhân viên --}}
-                            <td style="text-align: center; font-weight: 700; color: #f43f5e; font-family: monospace; font-size: 13px;">
+                            <td style="text-align: center; font-weight: 700; color: #EC3D8F; font-family: monospace; font-size: 13px;">
                                 NV-{{ str_pad($nv->ma_nhan_vien, 4, '0', STR_PAD_LEFT) }}
                             </td>
                             <td>
@@ -408,7 +408,7 @@
             @csrf
             <div class="rs-modal-header">
                 <h3 class="rs-modal-title">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EC3D8F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
                         <circle cx="9" cy="7" r="4"/>
                         <line x1="19" x2="19" y1="8" y2="14"/>
@@ -427,22 +427,22 @@
                     </div>
 
                     <div class="rs-form-group">
-                        <label class="rs-form-label">Tên đăng nhập <span style="color:#e11d48;">*</span></label>
+                        <label class="rs-form-label">Tên đăng nhập <span style="color:#D82677;">*</span></label>
                         <input type="text" name="ten_dang_nhap" class="rs-form-control" required placeholder="VD: nv_linh">
                     </div>
 
                     <div class="rs-form-group">
-                        <label class="rs-form-label">Mật khẩu <span style="color:#e11d48;">*</span></label>
+                        <label class="rs-form-label">Mật khẩu <span style="color:#D82677;">*</span></label>
                         <input type="password" name="mat_khau" class="rs-form-control" required minlength="6" placeholder="Tối thiểu 6 ký tự">
                     </div>
 
                     <div class="rs-form-group col-span-2">
-                        <label class="rs-form-label">Họ và tên nhân viên <span style="color:#e11d48;">*</span></label>
+                        <label class="rs-form-label">Họ và tên nhân viên <span style="color:#D82677;">*</span></label>
                         <input type="text" name="ten_nhan_vien" class="rs-form-control" required placeholder="VD: Nguyễn Văn An">
                     </div>
 
                     <div class="rs-form-group">
-                        <label class="rs-form-label">Số điện thoại <span style="color:#e11d48;">*</span></label>
+                        <label class="rs-form-label">Số điện thoại <span style="color:#D82677;">*</span></label>
                         <input type="text" name="so_dien_thoai" class="rs-form-control" placeholder="0987654321" required>
                     </div>
 
@@ -452,7 +452,7 @@
                     </div>
 
                     <div class="rs-form-group">
-                        <label class="rs-form-label">Chức vụ <span style="color:#e11d48;">*</span></label>
+                        <label class="rs-form-label">Chức vụ <span style="color:#D82677;">*</span></label>
                         <select name="chuc_vu" class="rs-form-control" required>
                             @foreach($chucVus as $val => $lbl)
                                 <option value="{{ $val }}">{{ $lbl }}</option>
@@ -490,7 +490,7 @@
             @method('PUT')
             <div class="rs-modal-header">
                 <h3 class="rs-modal-title">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EC3D8F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
                         <path d="m15 5 4 4"/>
                     </svg>
@@ -513,12 +513,12 @@
                     </div>
 
                     <div class="rs-form-group col-span-2">
-                        <label class="rs-form-label">Họ và tên nhân viên <span style="color:#e11d48;">*</span></label>
+                        <label class="rs-form-label">Họ và tên nhân viên <span style="color:#D82677;">*</span></label>
                         <input type="text" name="ten_nhan_vien" id="edit_ten_nhan_vien" class="rs-form-control" required>
                     </div>
 
                     <div class="rs-form-group">
-                        <label class="rs-form-label">Số điện thoại <span style="color:#e11d48;">*</span></label>
+                        <label class="rs-form-label">Số điện thoại <span style="color:#D82677;">*</span></label>
                         <input type="text" name="so_dien_thoai" id="edit_so_dien_thoai" class="rs-form-control" required>
                     </div>
 
@@ -528,7 +528,7 @@
                     </div>
 
                     <div class="rs-form-group">
-                        <label class="rs-form-label">Chức vụ <span style="color:#e11d48;">*</span></label>
+                        <label class="rs-form-label">Chức vụ <span style="color:#D82677;">*</span></label>
                         <select name="chuc_vu" id="edit_chuc_vu" class="rs-form-control" required>
                             @foreach($chucVus as $val => $lbl)
                                 <option value="{{ $val }}">{{ $lbl }}</option>
@@ -590,7 +590,7 @@
 
             <div class="rs-modal-footer">
                 <button type="button" class="rs-btn-cancel" onclick="closeDeleteModal()">Hủy</button>
-                <button type="submit" class="rs-btn-submit" id="delete_confirm_btn" style="background: #e11d48;">
+                <button type="submit" class="rs-btn-submit" id="delete_confirm_btn" style="background: #D82677;">
                     Xác nhận xóa
                 </button>
             </div>
@@ -686,13 +686,13 @@
 
         if (isActive) {
             targetInput.value = 'BI_KHOA';
-            titleEl.innerHTML = '<span style="color:#e11d48;">⚠️ Xác nhận ngừng hoạt động nhân viên</span>';
+            titleEl.innerHTML = '<span style="color:#D82677;">⚠️ Xác nhận ngừng hoạt động nhân viên</span>';
             warningEl.style.color = '#991b1b';
             warningEl.style.background = '#fef2f2';
             warningEl.style.borderColor = '#fee2e2';
             warningEl.innerHTML = '<strong>Lưu ý:</strong> Nhân viên sẽ bị khóa quyền truy cập hệ thống ngay lập tức và không thể tiếp tục thực hiện công việc. Hồ sơ, lịch sử giao hàng và nghiệp vụ của nhân viên vẫn được <strong>bảo toàn nguyên vẹn</strong>.';
             submitBtn.textContent = 'Xác nhận ngừng hoạt động';
-            submitBtn.style.background = '#e11d48';
+            submitBtn.style.background = '#D82677';
         } else {
             targetInput.value = 'HOAT_DONG';
             titleEl.innerHTML = '<span style="color:#059669;">✓ Xác nhận mở lại hoạt động</span>';
@@ -730,7 +730,7 @@
             warningEl.innerHTML = '<strong>Bảo toàn hồ sơ nhân viên:</strong> Nhân viên này đã phát sinh nghiệp vụ trong hệ thống (đơn hàng giao thành công hoặc phiếu nhập kho).<br><br>Theo quy định bảo toàn dữ liệu, <strong>không được phép xóa vật lý</strong> để tránh sai lệch dữ liệu lịch sử. Vui lòng sử dụng tính năng <strong>"Ngừng hoạt động / Khóa tài khoản"</strong>.';
             submitBtn.style.display = 'none';
         } else {
-            titleEl.innerHTML = '<span style="color:#e11d48;">🗑️ Xác nhận xóa nhân viên</span>';
+            titleEl.innerHTML = '<span style="color:#D82677;">🗑️ Xác nhận xóa nhân viên</span>';
             warningEl.style.color = '#991b1b';
             warningEl.style.background = '#fef2f2';
             warningEl.style.border = '1px solid #fee2e2';

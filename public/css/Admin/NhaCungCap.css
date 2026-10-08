@@ -113,8 +113,8 @@
 }
 
 .ncc-table thead th {
-    background-color: #F8F9FA;
-    color: #475467;
+    background-color: #FDEAF3 !important;
+    color: #EC3D8F;
     font-weight: 600;
     font-size: 13px;
     text-transform: uppercase;

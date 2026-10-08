@@ -260,15 +260,15 @@
         }
 
         /* ==========================================================================
-           ĐỒNG BỘ PHÂN TRANG TOÀN BỘ HỆ THỐNG ADMIN ROSESHOP (MÀU HỒNG #f43f5e)
+           ĐỒNG BỘ PHÂN TRANG TOÀN BỘ HỆ THỐNG ADMIN ROSESHOP (MÀU HỒNG #EC3D8F)
            ========================================================================== */
         :root {
-            --bs-pagination-active-bg: #f43f5e !important;
-            --bs-pagination-active-border-color: #f43f5e !important;
+            --bs-pagination-active-bg: #EC3D8F !important;
+            --bs-pagination-active-border-color: #EC3D8F !important;
             --bs-pagination-active-color: #ffffff !important;
             --bs-pagination-color: #475467 !important;
-            --bs-pagination-hover-color: #f43f5e !important;
-            --bs-pagination-focus-color: #f43f5e !important;
+            --bs-pagination-hover-color: #EC3D8F !important;
+            --bs-pagination-focus-color: #EC3D8F !important;
             --bs-pagination-focus-box-shadow: 0 0 0 0.2rem rgba(244, 63, 94, 0.25) !important;
         }
 
@@ -280,11 +280,11 @@
             margin: 0 !important;
             padding: 0 !important;
             list-style: none !important;
-            --bs-pagination-active-bg: #f43f5e !important;
-            --bs-pagination-active-border-color: #f43f5e !important;
+            --bs-pagination-active-bg: #EC3D8F !important;
+            --bs-pagination-active-border-color: #EC3D8F !important;
             --bs-pagination-active-color: #ffffff !important;
             --bs-pagination-color: #475467 !important;
-            --bs-pagination-hover-color: #f43f5e !important;
+            --bs-pagination-hover-color: #EC3D8F !important;
         }
 
         .pagination .page-item,
@@ -315,12 +315,12 @@
 
         .pagination .page-link:hover,
         .rs-pagination .page-link:hover {
-            border-color: #f43f5e !important;
+            border-color: #EC3D8F !important;
             background: #fff1f2 !important;
-            color: #f43f5e !important;
+            color: #EC3D8F !important;
         }
 
-        /* Nút Active: Màu hồng RoseShop #f43f5e */
+        /* Nút Active: Màu hồng RoseShop #EC3D8F */
         .pagination .page-item.active .page-link,
         .rs-pagination .page-item.active .page-link,
         .page-item.active .page-link,
@@ -329,8 +329,8 @@
         ul.pagination li.active span,
         ul.rs-pagination li.active a,
         ul.rs-pagination li.active span {
-            background-color: #f43f5e !important;
-            border-color: #f43f5e !important;
+            background-color: #EC3D8F !important;
+            border-color: #EC3D8F !important;
             color: #ffffff !important;
             font-weight: 700 !important;
             box-shadow: 0 2px 6px rgba(244, 63, 94, 0.35) !important;

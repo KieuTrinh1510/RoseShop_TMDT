@@ -275,7 +275,7 @@
      background: var(--paper-warm);
      color: var(--ink);
  }.don-hang-container .pagination-wrap .current{
-     background: #f43f5e !important;
+     background: #EC3D8F !important;
      color: #ffffff !important;
      font-weight: 700;
  }.don-hang-container .pagination-wrap .disabled{

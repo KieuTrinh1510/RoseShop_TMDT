@@ -238,7 +238,7 @@
                         @endphp
                         <tr>
                             {{-- 1. Mã tài khoản --}}
-                            <td style="text-align: center; font-weight: 700; color: #f43f5e; font-family: monospace; font-size: 13px;">
+                            <td style="text-align: center; font-weight: 700; color: #EC3D8F; font-family: monospace; font-size: 13px;">
                                 TK-{{ str_pad($user->ma_nguoi_dung, 4, '0', STR_PAD_LEFT) }}
                             </td>
 
@@ -248,7 +248,7 @@
                                     {{ $user->ten_dang_nhap }}
                                 </span>
                                 @if($isCurrentAuth)
-                                    <span style="font-size:11px; color:#f43f5e; font-weight:600; background:#fff1f2; padding:2px 6px; border-radius:4px; margin-left:4px;">(Bạn)</span>
+                                    <span style="font-size:11px; color:#EC3D8F; font-weight:600; background:#fff1f2; padding:2px 6px; border-radius:4px; margin-left:4px;">(Bạn)</span>
                                 @endif
                             </td>
 
@@ -411,7 +411,7 @@
             @csrf
             <div class="rs-modal-header">
                 <h3 class="rs-modal-title">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EC3D8F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
                         <circle cx="9" cy="7" r="4"/>
                         <line x1="19" x2="19" y1="8" y2="14"/>
@@ -433,24 +433,24 @@
                             </div>
                             <div style="flex: 1; display: none;" id="box_ma_doi_tuong">
                                 <label class="rs-form-label" id="label_ma_doi_tuong">Mã đối tượng dự kiến</label>
-                                <input type="text" class="rs-form-control rs-readonly-input" id="input_ma_doi_tuong" value="{{ $nextMaNV }}" readonly style="color: #f43f5e; font-weight: 700;">
+                                <input type="text" class="rs-form-control rs-readonly-input" id="input_ma_doi_tuong" value="{{ $nextMaNV }}" readonly style="color: #EC3D8F; font-weight: 700;">
                             </div>
                         </div>
                     </div>
 
                     <div class="rs-form-group">
-                        <label class="rs-form-label">Tên đăng nhập <span style="color:#e11d48;">*</span></label>
+                        <label class="rs-form-label">Tên đăng nhập <span style="color:#D82677;">*</span></label>
                         <input type="text" name="ten_dang_nhap" id="create_ten_dang_nhap" class="rs-form-control" required placeholder="VD: admin_rose, nv_thao" autocomplete="off">
                         <div id="create_username_feedback" class="rs-feedback-msg" style="display:none;"></div>
                     </div>
 
                     <div class="rs-form-group">
-                        <label class="rs-form-label">Mật khẩu khởi tạo <span style="color:#e11d48;">*</span></label>
+                        <label class="rs-form-label">Mật khẩu khởi tạo <span style="color:#D82677;">*</span></label>
                         <input type="password" name="mat_khau" class="rs-form-control" required minlength="6" placeholder="Tối thiểu 6 ký tự">
                     </div>
 
                     <div class="rs-form-group col-span-2">
-                        <label class="rs-form-label">Phân quyền vai trò <span style="color:#e11d48;">*</span></label>
+                        <label class="rs-form-label">Phân quyền vai trò <span style="color:#D82677;">*</span></label>
                         <select name="vai_tro" id="create_vai_tro" class="rs-form-control" required onchange="toggleCreateRoleFields()">
                             <option value="">-- Chọn vai trò --</option>
                             <option value="ADMIN">Admin (Quản trị viên)</option>
@@ -463,19 +463,19 @@
                     {{-- Nhóm trường thông tin Khách hàng (nếu tạo KH) --}}
                     <div id="createKhachHangFields" class="col-span-2" style="display:none; border-top:1px dashed #e2e8f0; padding-top:16px; margin-top:6px; width: 100%;">
                         <div style="font-size: 13.5px; font-weight: 700; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
-                            <span style="color:#f43f5e;">👤</span> Thông tin chi tiết khách hàng
+                            <span style="color:#EC3D8F;">👤</span> Thông tin chi tiết khách hàng
                         </div>
                         <div class="rs-form-grid" style="width: 100%;">
                             <div class="rs-form-group col-span-2">
-                                <label class="rs-form-label">Họ và tên khách hàng <span style="color:#e11d48;">*</span></label>
+                                <label class="rs-form-label">Họ và tên khách hàng <span style="color:#D82677;">*</span></label>
                                 <input type="text" name="ten_khach_hang" id="create_ten_khach_hang" class="rs-form-control" placeholder="Nguyễn Văn A">
                             </div>
                             <div class="rs-form-group">
-                                <label class="rs-form-label">Số điện thoại <span style="color:#e11d48;">*</span></label>
+                                <label class="rs-form-label">Số điện thoại <span style="color:#D82677;">*</span></label>
                                 <input type="text" name="so_dien_thoai" id="create_so_dien_thoai" class="rs-form-control" placeholder="0987654321">
                             </div>
                             <div class="rs-form-group">
-                                <label class="rs-form-label">Email <span style="color:#e11d48;">*</span></label>
+                                <label class="rs-form-label">Email <span style="color:#D82677;">*</span></label>
                                 <input type="email" name="email" id="create_email" class="rs-form-control" placeholder="khachhang@gmail.com">
                             </div>
                             <div class="rs-form-group col-span-2">
@@ -488,15 +488,15 @@
                     {{-- Nhóm trường thông tin Nhân sự (Nhân viên / Shipper) --}}
                     <div id="createNhanVienFields" class="col-span-2" style="display:none; border-top:1px dashed #e2e8f0; padding-top:16px; margin-top:6px; width: 100%;">
                         <div style="font-size: 13.5px; font-weight: 700; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
-                            <span style="color:#f43f5e;">📋</span> Thông tin chi tiết nhân sự
+                            <span style="color:#EC3D8F;">📋</span> Thông tin chi tiết nhân sự
                         </div>
                         <div class="rs-form-grid" style="width: 100%;">
                             <div class="rs-form-group col-span-2">
-                                <label class="rs-form-label">Họ và tên nhân viên <span style="color:#e11d48;">*</span></label>
+                                <label class="rs-form-label">Họ và tên nhân viên <span style="color:#D82677;">*</span></label>
                                 <input type="text" name="ten_nhan_vien" id="create_ten_nhan_vien" class="rs-form-control" placeholder="Trần Thị B">
                             </div>
                             <div class="rs-form-group">
-                                <label class="rs-form-label">Số điện thoại <span style="color:#e11d48;">*</span></label>
+                                <label class="rs-form-label">Số điện thoại <span style="color:#D82677;">*</span></label>
                                 <input type="text" name="so_dien_thoai_nv" id="create_so_dien_thoai_nv" class="rs-form-control" placeholder="0912345678">
                             </div>
                             <div class="rs-form-group">
@@ -504,7 +504,7 @@
                                 <input type="email" name="email_nv" class="rs-form-control" placeholder="nhanvien@example.com">
                             </div>
                             <div class="rs-form-group">
-                                <label class="rs-form-label">Chức vụ <span style="color:#e11d48;">*</span></label>
+                                <label class="rs-form-label">Chức vụ <span style="color:#D82677;">*</span></label>
                                 <select name="chuc_vu" id="create_chuc_vu" class="rs-form-control">
                                     <option value="CSKH">CSKH</option>
                                     <option value="VAN_HANH">Vận hành</option>
@@ -733,13 +733,13 @@
             // Chuẩn bị Khóa
             targetInput.value = 'BI_KHOA';
             titleElem.innerHTML = `
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D82677" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
                 Xác nhận khóa tài khoản
             `;
-            transitionElem.innerHTML = `<span style="color:#10b981;">Hoạt động</span> &rarr; <span style="color:#e11d48;">Bị khóa</span>`;
+            transitionElem.innerHTML = `<span style="color:#10b981;">Hoạt động</span> &rarr; <span style="color:#D82677;">Bị khóa</span>`;
             warningElem.style.background = '#fff1f2';
             warningElem.style.border = '1px solid #fecdd3';
             warningElem.style.color = '#9f1239';
@@ -748,7 +748,7 @@
                 Tài khoản sau khi bị khóa sẽ lập tức bị đăng xuất khỏi hệ thống và bị chặn toàn bộ các thao tác yêu cầu đăng nhập. Dữ liệu lịch sử của người dùng vẫn được bảo toàn toàn vẹn.
             `;
             confirmBtn.textContent = 'Khóa tài khoản';
-            confirmBtn.style.background = '#e11d48';
+            confirmBtn.style.background = '#D82677';
             confirmBtn.style.boxShadow = '0 4px 12px rgba(225, 29, 72, 0.25)';
         } else {
             // Chuẩn bị Mở khóa
@@ -760,7 +760,7 @@
                 </svg>
                 Xác nhận mở khóa tài khoản
             `;
-            transitionElem.innerHTML = `<span style="color:#e11d48;">Bị khóa</span> &rarr; <span style="color:#10b981;">Hoạt động</span>`;
+            transitionElem.innerHTML = `<span style="color:#D82677;">Bị khóa</span> &rarr; <span style="color:#10b981;">Hoạt động</span>`;
             warningElem.style.background = '#ecfdf5';
             warningElem.style.border = '1px solid #a7f3d0';
             warningElem.style.color = '#065f46';

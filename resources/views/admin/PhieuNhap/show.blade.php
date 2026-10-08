@@ -236,7 +236,7 @@
                     <div class="pn-info-item">
                         <span class="label">Hồ sơ đối tác</span>
                         <span class="value">
-                            <a href="{{ route('admin.nha-cung-cap.show', $phieuNhap->ma_nha_cung_cap) }}" class="text-decoration-none fw-semibold" style="color:#f43f5e;" title="Xem thông tin chi tiết nhà cung cấp">
+                            <a href="{{ route('admin.nha-cung-cap.show', $phieuNhap->ma_nha_cung_cap) }}" class="text-decoration-none fw-semibold" style="color:#EC3D8F;" title="Xem thông tin chi tiết nhà cung cấp">
                                 <i class="bi bi-link-45deg me-1"></i>#NCC-{{ $phieuNhap->ma_nha_cung_cap }} ({{ $phieuNhap->nhaCungCap->ten_nha_cung_cap ?? 'Xem chi tiết' }})
                             </a>
                         </span>
@@ -249,10 +249,10 @@
     {{-- 4. Bảng Mặt hàng nhập & Thông tin Lô --}}
     <div class="card pn-card mb-4" style="border: 1px solid #fecdd3; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(244,63,94,0.06);">
         <div class="card-header pn-card-header" style="background:#fff1f2; border-bottom:1px solid #fecdd3; padding:14px 20px; display:flex; justify-content:space-between; align-items:center;">
-            <span class="fw-bold" style="color:#e11d48; font-size:15px; display:flex; align-items:center; gap:8px;">
+            <span class="fw-bold" style="color:#D82677; font-size:15px; display:flex; align-items:center; gap:8px;">
                 <i class="bi bi-boxes"></i>Danh sách mặt hàng nhập
             </span>
-            <span class="badge" style="background:#ffe4e6; color:#e11d48; border:1px solid #fecdd3; font-size:12px; font-weight:600; padding:5px 12px; border-radius:20px;">
+            <span class="badge" style="background:#ffe4e6; color:#D82677; border:1px solid #fecdd3; font-size:12px; font-weight:600; padding:5px 12px; border-radius:20px;">
                 {{ $tongSoLo }} mặt hàng
             </span>
         </div>
@@ -373,14 +373,14 @@
                 @if($tongSoLo > 0)
                     <tfoot>
                         <tr style="background:#fff1f2; font-weight:700;">
-                            <td colspan="3" class="text-end text-uppercase" style="font-size:13.5px; color:#e11d48; font-weight:700;">
+                            <td colspan="3" class="text-end text-uppercase" style="font-size:13.5px; color:#D82677; font-weight:700;">
                                 TỔNG CỘNG:
                             </td>
-                            <td class="text-center" style="font-size:14px; color:#e11d48; font-weight:700;">
+                            <td class="text-center" style="font-size:14px; color:#D82677; font-weight:700;">
                                 {{ number_format($tongSoLuong) }}
                             </td>
                             <td></td>
-                            <td class="text-end" style="color:#e11d48; font-size:15px; font-weight:700;">
+                            <td class="text-end" style="color:#D82677; font-size:15px; font-weight:700;">
                                 {{ number_format($tongGiaTri, 0, ',', '.') }} đ
                             </td>
                             <td colspan="5"></td>
@@ -394,7 +394,7 @@
     {{-- 5. Tổng kết Phiếu nhập (Summary Block) Đồng bộ màu sắc RoseShop --}}
     <div class="card pn-card" style="max-width: 480px; border: 1px solid #fecdd3; border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(244,63,94,0.06);">
         <div class="card-header pn-card-header" style="background: #fff1f2; border-bottom: 1px solid #fecdd3; padding: 14px 20px;">
-            <span class="fw-bold" style="color: #e11d48; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+            <span class="fw-bold" style="color: #D82677; font-size: 15px; display: flex; align-items: center; gap: 8px;">
                 <i class="bi bi-receipt-cutoff"></i>Tổng kết phiếu nhập
             </span>
         </div>
@@ -409,7 +409,7 @@
             </div>
             <div class="d-flex justify-content-between py-2 align-items-center" style="font-size: 13.5px;">
                 <span class="text-muted fw-semibold">Tổng giá trị phiếu nhập:</span>
-                <strong style="color: #e11d48; font-weight: 800; font-size: 18px;">{{ number_format($tongGiaTri, 0, ',', '.') }} đ</strong>
+                <strong style="color: #D82677; font-weight: 800; font-size: 18px;">{{ number_format($tongGiaTri, 0, ',', '.') }} đ</strong>
             </div>
         </div>
     </div>

@@ -190,7 +190,7 @@
                         @endphp
                         <tr>
                             {{-- Mã Shipper: Đồng bộ theo mã nhân viên toàn hệ thống NV-xxxx --}}
-                            <td style="text-align: center; font-weight: 700; color: #f43f5e; font-family: monospace; font-size: 13px;">
+                            <td style="text-align: center; font-weight: 700; color: #EC3D8F; font-family: monospace; font-size: 13px;">
                                 NV-{{ str_pad($sp->ma_nhan_vien, 4, '0', STR_PAD_LEFT) }}
                             </td>
 
