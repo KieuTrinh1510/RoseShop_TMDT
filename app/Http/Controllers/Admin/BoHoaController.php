@@ -765,18 +765,6 @@ class BoHoaController extends Controller
                 $prefix   = "Từ bó hoa #{$bo->ma_bo_hoa} - {$bo->ten_bo_hoa}";
                 $ghiChuFull = $ghiChu ? ($prefix . ' | ' . $ghiChu) : $prefix;
 
-                foreach ($bo->chiTietBoHoa as $ct) {
-                    BaoCaoHangHong::create([
-                        'ma_san_pham'       => $ct->ma_san_pham,
-                        'ma_chi_tiet_nhap'  => $ct->ma_chi_tiet_nhap,
-                        'ma_nhan_vien'      => $maNhanVien,
-                        'so_luong_hong'     => $ct->so_luong * $d['so_luong_hong'],
-                        'ly_do'             => $d['ly_do'],
-                        'ghi_chu'           => $ghiChuFull,
-                        'thoi_gian_bao_cao' => $thoiGian,
-                    ]);
-                }
-
                 $remaining = (int) $d['so_luong_hong'];
                 foreach ($group as $b) {
                     if ($remaining <= 0) break;
@@ -846,19 +834,43 @@ class BoHoaController extends Controller
         if (DB::transactionLevel() === 0 || $hd->trang_thai !== 'PENDING') {
             self::loi('Chỉ hoàn giữ kho của đơn PENDING trong transaction.');
         }
+
+        // 1. Nếu đơn hàng có bản ghi InventoryReservation, ưu tiên gọi releaseOrder để release chuẩn
+        if ($hd->reservations()->where('trang_thai', InventoryReservation::STATUS_RESERVED)->exists()) {
+            InventoryReservationService::releaseOrder($hd);
+        }
+
+        // 2. Xử lý các bó hoa thuộc đơn hàng này
         $bos = BoHoa::where('ma_hoa_don', $hd->getKey())->orderBy('ma_bo_hoa')->lockForUpdate()->get();
         foreach ($bos as $bo) {
-            $rows = $bo->chiTietBoHoa()->get()->toArray();
-            if (collect($rows)->contains(fn ($r) => !$r['ma_chi_tiet_nhap'])) {
-                self::loi('Thiếu lô đã giữ, không thể hoàn tự động.');
+            // A. Bó hoa thành phẩm có sẵn (HE_THONG hoặc có ma_mau_bo_hoa):
+            // Tuyệt đối KHÔNG gọi hoanKho (không tăng SanPham, không tăng ChiTietNhap vì nguyên liệu đã trừ lúc sản xuất).
+            if ($bo->loai_bo_hoa === 'HE_THONG' || $bo->ma_mau_bo_hoa) {
+                // Giải phóng reservation nếu còn sót
+                InventoryReservation::where('ma_bo_hoa', $bo->ma_bo_hoa)
+                    ->where('trang_thai', InventoryReservation::STATUS_RESERVED)
+                    ->update(['trang_thai' => InventoryReservation::STATUS_RELEASED]);
+
+                $bo->ma_hoa_don    = null;
+                $bo->ma_khach_hang = null;
+                $bo->loi_nhan      = null;
+                if ($bo->so_luong > 0) {
+                    $bo->trang_thai = 'ACTIVE';
+                }
+                $bo->save();
+            } else {
+                // B. Bó làm theo đơn / tùy chọn (TUY_CHON):
+                // Chưa trừ tồn kho vật lý lúc PENDING (chỉ reserve nguyên liệu), khi hủy thì release reservation,
+                // KHÔNG tăng tồn kho SanPham/ChiTietNhap. Đánh dấu bó hoa đã hủy.
+                InventoryReservation::where('ma_bo_hoa', $bo->ma_bo_hoa)
+                    ->where('trang_thai', InventoryReservation::STATUS_RESERVED)
+                    ->update(['trang_thai' => InventoryReservation::STATUS_RELEASED]);
+
+                $bo->trang_thai = 'CANCELLED';
+                $bo->save();
             }
-            self::hoanKho($rows);
-            $bo->ma_hoa_don    = null;
-            $bo->ma_khach_hang = null;
-            $bo->loi_nhan      = null;
-            $bo->trang_thai    = 'DRAFT';
-            $bo->save();
         }
+
         return $bos->isNotEmpty();
     }
 

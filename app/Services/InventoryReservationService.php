@@ -42,6 +42,60 @@ class InventoryReservationService
     }
 
     /**
+     * Lấy tổng số lượng đang giữ (RESERVED) của một bó hoa thành phẩm cụ thể.
+     */
+    public static function getReservedForBouquet(int $maBoHoa): int
+    {
+        return (int) InventoryReservation::where('ma_bo_hoa', $maBoHoa)
+            ->where('trang_thai', InventoryReservation::STATUS_RESERVED)
+            ->sum('so_luong');
+    }
+
+    /**
+     * Lấy số lượng tồn khả dụng của một bó hoa thành phẩm cụ thể.
+     */
+    public static function getAvailableForBouquet(BoHoa $bo): int
+    {
+        $onHand = ($bo->trang_thai === 'ACTIVE' && is_null($bo->ma_hoa_don)) ? (int) $bo->so_luong : 0;
+        $reserved = self::getReservedForBouquet($bo->ma_bo_hoa);
+        return max(0, $onHand - $reserved);
+    }
+
+    /**
+     * Lấy thông tin tồn kho chuẩn hóa [on_hand, reserved, available] cho một Mẫu bó hoa thành phẩm.
+     * On Hand   = SUM(bo_hoa.so_luong) (với loai_bo_hoa = HE_THONG, trang_thai = ACTIVE, ma_hoa_don is null, so_luong > 0)
+     * Reserved  = SUM(inventory_reservations.so_luong) của các bó trong nhóm (trang_thai = RESERVED)
+     * Available = max(0, On Hand - Reserved)
+     */
+    public static function getStockForTemplate(int $maMauBoHoa): array
+    {
+        $activeBouquets = BoHoa::where('ma_mau_bo_hoa', $maMauBoHoa)
+            ->where('loai_bo_hoa', 'HE_THONG')
+            ->where('trang_thai', 'ACTIVE')
+            ->whereNull('ma_hoa_don')
+            ->where('so_luong', '>', 0)
+            ->get(['ma_bo_hoa', 'so_luong']);
+
+        $onHand = (int) $activeBouquets->sum('so_luong');
+        $boIds = $activeBouquets->pluck('ma_bo_hoa')->all();
+
+        $reserved = 0;
+        if (!empty($boIds)) {
+            $reserved = (int) InventoryReservation::whereIn('ma_bo_hoa', $boIds)
+                ->where('trang_thai', InventoryReservation::STATUS_RESERVED)
+                ->sum('so_luong');
+        }
+
+        $available = max(0, $onHand - $reserved);
+
+        return [
+            'on_hand'   => $onHand,
+            'reserved'  => $reserved,
+            'available' => $available,
+        ];
+    }
+
+    /**
      * Lấy số lượng tồn khả dụng của một lô hàng.
      */
     public static function getAvailableForLot(ChiTietNhap $lot): int
@@ -352,11 +406,15 @@ class InventoryReservationService
                 }
             }
 
-            // 3. Nếu là bó hoa thành phẩm có sẵn: đánh dấu trạng thái bó hoa
+            // 3. Nếu là bó hoa thành phẩm có sẵn: trừ tồn thực tế của bó hoa
             if ($res->ma_bo_hoa && !$res->ma_san_pham) {
                 $bo = BoHoa::whereKey($res->ma_bo_hoa)->lockForUpdate()->first();
                 if ($bo) {
-                    $bo->update(['trang_thai' => 'CONFIRMED']);
+                    $bo->so_luong = max(0, (int) $bo->so_luong - (int) $res->so_luong);
+                    if (!$bo->ma_hoa_don && $hoaDon->ma_hoa_don) {
+                        $bo->ma_hoa_don = $hoaDon->ma_hoa_don;
+                    }
+                    $bo->save();
                 }
             }
 

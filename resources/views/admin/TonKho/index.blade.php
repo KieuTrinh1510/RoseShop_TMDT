@@ -25,7 +25,12 @@
         .stat-card-tk .title { font-size: 13px; color: #667085; font-weight: 500; margin-bottom: 6px; }
         .stat-card-tk .value { font-size: 24px; font-weight: 700; color: #101828; }
         .ncc-filter-grid {
-            grid-template-columns: 1.8fr 1.2fr 1.3fr 1fr auto;
+            grid-template-columns: 1.3fr 1.5fr 1.1fr 1.1fr 1fr auto;
+        }
+        @media (max-width: 1200px) {
+            .ncc-filter-grid {
+                grid-template-columns: 1fr 1fr;
+            }
         }
     </style>
 @endpush
@@ -98,11 +103,19 @@
         <form method="GET" action="{{ route('admin.ton-kho') }}">
             <div class="ncc-filter-grid">
                 <div>
+                    <label class="form-label" style="font-size:12px; font-weight:600; color:#475467;">Loại tồn kho</label>
+                    <select name="loai_ton_kho" class="form-select">
+                        <option value="">-- Tất cả kho hàng --</option>
+                        <option value="san_pham" {{ request('loai_ton_kho') === 'san_pham' ? 'selected' : '' }}>Sản phẩm / Nguyên vật liệu</option>
+                        <option value="bo_hoa" {{ request('loai_ton_kho') === 'bo_hoa' ? 'selected' : '' }}>Bó hoa thành phẩm</option>
+                    </select>
+                </div>
+                <div>
                     <label class="form-label" style="font-size:12px; font-weight:600; color:#475467;">Tìm kiếm mặt hàng</label>
                     <input type="text"
                            name="keyword"
                            class="form-control"
-                           placeholder="Mã hoặc tên sản phẩm..."
+                           placeholder="Mã hoặc tên sản phẩm / mẫu bó..."
                            value="{{ request('keyword') }}">
                 </div>
                 <div>
@@ -110,10 +123,10 @@
                     <select name="loai_san_pham" class="form-select">
                         <option value="">-- Tất cả loại --</option>
                         <option value="HOA_TUOI" {{ request('loai_san_pham') === 'HOA_TUOI' ? 'selected' : '' }}>Hoa tươi</option>
+                        <option value="SAN_PHAM_PREMIUM" {{ request('loai_san_pham') === 'SAN_PHAM_PREMIUM' ? 'selected' : '' }}>Hoa sen / Cao cấp</option>
                         <option value="HOA_SAP" {{ request('loai_san_pham') === 'HOA_SAP' ? 'selected' : '' }}>Hoa sáp</option>
                         <option value="HOA_GIA" {{ request('loai_san_pham') === 'HOA_GIA' ? 'selected' : '' }}>Hoa lụa/giả</option>
-                        <option value="PHU_KIEN" {{ request('loai_san_pham') === 'PHU_KIEN' ? 'selected' : '' }}>Phụ kiện bán</option>
-                        <option value="PHU_KIEN_TRANG_TRI" {{ request('loai_san_pham') === 'PHU_KIEN_TRANG_TRI' ? 'selected' : '' }}>Phụ kiện trang trí</option>
+                        <option value="PHU_KIEN_TRANG_TRI" {{ request('loai_san_pham') === 'PHU_KIEN_TRANG_TRI' || request('loai_san_pham') === 'PHU_KIEN' ? 'selected' : '' }}>Phụ kiện trang trí</option>
                         <option value="GIAY_GOI" {{ request('loai_san_pham') === 'GIAY_GOI' ? 'selected' : '' }}>Giấy gói</option>
                         <option value="RUY_BANG" {{ request('loai_san_pham') === 'RUY_BANG' ? 'selected' : '' }}>Ruy băng</option>
                         <option value="MIENG_XOP" {{ request('loai_san_pham') === 'MIENG_XOP' ? 'selected' : '' }}>Miếng xốp</option>
@@ -142,7 +155,7 @@
                     <button type="submit" class="ncc-btn-primary" style="flex:1;">
                         <i class="bi bi-funnel"></i> Lọc
                     </button>
-                    @if(request()->anyFilled(['keyword', 'loai_san_pham', 'tinh_trang_ton', 'trang_thai']))
+                    @if(request()->anyFilled(['loai_ton_kho', 'keyword', 'loai_san_pham', 'tinh_trang_ton', 'trang_thai']))
                         <a href="{{ route('admin.ton-kho') }}" class="btn btn-outline-secondary" title="Xóa bộ lọc">
                             <i class="bi bi-x-lg"></i>
                         </a>
@@ -158,7 +171,7 @@
             <table class="table ncc-table align-middle mb-0">
                 <thead>
                     <tr>
-                        <th style="width: 70px;">Mã SP</th>
+                        <th style="width: 80px;">Mã</th>
                         <th>Mặt hàng</th>
                         <th>Loại / ĐVT</th>
                         <th class="text-center" style="width: 140px;">Tồn thực tế</th>
@@ -174,36 +187,59 @@
                             $thucTe = (int) $sp->ton_thuc_te;
                             $dangGiu = (int) $sp->ton_dang_giu;
                             $khaDung = (int) $sp->ton_kha_dung;
+                            $isBoHoa = !empty($sp->is_bo_hoa);
                         @endphp
                         <tr>
-                            <td><strong class="text-secondary">#{{ $sp->ma_san_pham }}</strong></td>
+                            <td>
+                                @if($isBoHoa)
+                                    <strong class="text-primary" title="Bó hoa thành phẩm">{{ $sp->ma_dinh_danh }}</strong>
+                                @else
+                                    <strong class="text-secondary">{{ $sp->ma_dinh_danh }}</strong>
+                                @endif
+                            </td>
                             <td>
                                 <div class="d-flex align-items-center gap-2">
                                     @if($sp->hinh_anh)
-                                        <img src="{{ asset($sp->hinh_anh) }}" alt="" style="width: 36px; height: 36px; object-fit: cover; border-radius: 6px; border: 1px solid #f2f4f7;">
+                                        <img src="{{ asset($sp->hinh_anh) }}" alt="" style="width: 38px; height: 38px; object-fit: cover; border-radius: 6px; border: 1px solid #f2f4f7;">
                                     @else
-                                        <div style="width: 36px; height: 36px; background: #f2f4f7; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #98a2b3;">
+                                        <div style="width: 38px; height: 38px; background: #f2f4f7; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #98a2b3;">
                                             <i class="bi bi-image"></i>
                                         </div>
                                     @endif
                                     <div>
-                                        <div class="fw-semibold text-dark">{{ $sp->ten_san_pham }}</div>
+                                        <div class="fw-semibold text-dark d-flex align-items-center gap-1">
+                                            {{ $sp->ten_san_pham }}
+                                            @if($isBoHoa)
+                                                <span class="badge" style="background:#f3e8ff; color:#7e22ce; border: 1px solid #e9d5ff; font-size:10px; font-weight:600; padding:2px 5px;">Bó sẵn</span>
+                                            @endif
+                                        </div>
                                         <small class="text-muted">{{ number_format($sp->gia_ban_hien_tai ?? 0) }} đ</small>
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <div><small class="badge bg-light text-dark border">{{ $sp->loai_san_pham }}</small></div>
-                                <small class="text-muted">{{ $sp->don_vi_tinh_text }}</small>
+                                @if($isBoHoa)
+                                    <div><small class="badge" style="background:#f3e8ff; color:#6b21a8; border: 1px solid #e9d5ff;">Bó hoa thành phẩm</small></div>
+                                    <small class="text-muted">{{ $sp->don_vi_tinh_text }}</small>
+                                @else
+                                    <div><small class="badge bg-light text-dark border">{{ $sp->loai_san_pham }}</small></div>
+                                    <small class="text-muted">{{ $sp->don_vi_tinh_text }}</small>
+                                @endif
                             </td>
                             <td class="text-center">
                                 <span class="badge-ton-thuc-te">{{ number_format($thucTe) }}</span>
                             </td>
                             <td class="text-center">
                                 @if($dangGiu > 0)
-                                    <span class="badge-ton-dang-giu" onclick="xemDonGiu({{ $sp->ma_san_pham }})" title="Bấm để xem danh sách đơn đang giữ">
-                                        <i class="bi bi-lock-fill me-1"></i>{{ number_format($dangGiu) }}
-                                    </span>
+                                    @if($isBoHoa)
+                                        <span class="badge-ton-dang-giu" onclick="xemDonGiuBoHoa({{ $sp->id }})" title="Bấm để xem danh sách đơn đang giữ bó hoa này">
+                                            <i class="bi bi-lock-fill me-1"></i>{{ number_format($dangGiu) }}
+                                        </span>
+                                    @else
+                                        <span class="badge-ton-dang-giu" onclick="xemDonGiu({{ $sp->id }})" title="Bấm để xem danh sách đơn đang giữ">
+                                            <i class="bi bi-lock-fill me-1"></i>{{ number_format($dangGiu) }}
+                                        </span>
+                                    @endif
                                 @else
                                     <span class="text-muted">0</span>
                                 @endif
@@ -217,16 +253,28 @@
                                 @elseif($khaDung <= 10)
                                     <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">Sắp hết</span>
                                 @else
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Sẵn sàng</span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Còn hàng</span>
                                 @endif
                             </td>
                             <td class="text-end">
-                                @if($dangGiu > 0)
-                                    <button type="button" class="btn btn-sm btn-outline-warning" onclick="xemDonGiu({{ $sp->ma_san_pham }})" title="Xem đơn giữ">
-                                        <i class="bi bi-eye"></i> Đơn giữ
-                                    </button>
+                                @if($isBoHoa)
+                                    @if($dangGiu > 0)
+                                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="xemDonGiuBoHoa({{ $sp->id }})" title="Xem đơn giữ">
+                                            <i class="bi bi-eye"></i> Đơn giữ
+                                        </button>
+                                    @else
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="xemChiTietBoHoa({{ $sp->id }})" title="Xem chi tiết tồn bó">
+                                            <i class="bi bi-info-circle"></i> Chi tiết
+                                        </button>
+                                    @endif
                                 @else
-                                    <span class="text-muted" style="font-size: 13px;">—</span>
+                                    @if($dangGiu > 0)
+                                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="xemDonGiu({{ $sp->id }})" title="Xem đơn giữ">
+                                            <i class="bi bi-eye"></i> Đơn giữ
+                                        </button>
+                                    @else
+                                        <span class="text-muted" style="font-size: 13px;">—</span>
+                                    @endif
                                 @endif
                             </td>
                         </tr>
@@ -357,5 +405,83 @@ function xemDonGiu(sanPhamId) {
             tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-3">Có lỗi xảy ra khi tải danh sách đơn giữ.</td></tr>`;
         });
 }
+
+function xemDonGiuBoHoa(mauId) {
+    const modalEl = document.getElementById('modalDonGiu');
+    const modal = new bootstrap.Modal(modalEl);
+    const loading = document.getElementById('modalLoading');
+    const content = document.getElementById('modalContent');
+    const subTitle = document.getElementById('modalSubTitle');
+    const tbody = document.getElementById('dsDonGiuBody');
+
+    loading.style.display = 'block';
+    content.style.display = 'none';
+    subTitle.innerText = 'Đang tải thông tin bó hoa...';
+    tbody.innerHTML = '';
+
+    modal.show();
+
+    fetch(`/admin/ton-kho/bo-hoa/${mauId}/giu`)
+        .then(res => res.json())
+        .then(data => {
+            loading.style.display = 'none';
+            content.style.display = 'block';
+
+            subTitle.innerText = `${data.san_pham.ten_san_pham} (#BH${data.san_pham.ma_san_pham}) · Size ${data.san_pham.size}`;
+            document.getElementById('mThucTe').innerText = data.san_pham.ton_thuc_te + ' ' + data.san_pham.don_vi_tinh;
+            document.getElementById('mDangGiu').innerText = data.san_pham.ton_dang_giu + ' ' + data.san_pham.don_vi_tinh;
+            document.getElementById('mKhaDung').innerText = data.san_pham.ton_kha_dung + ' ' + data.san_pham.don_vi_tinh;
+
+            if (data.reservations.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-3">Hiện không có đơn hàng nào giữ bó hoa thuộc mẫu này.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.reservations.map(r => `
+                <tr>
+                    <td><strong>#${r.ma_hoa_don}</strong></td>
+                    <td>
+                        <div class="fw-semibold">${r.khach_hang}</div>
+                        <small class="text-muted">${r.so_dien_thoai || ''}</small>
+                    </td>
+                    <td><span class="badge bg-warning text-dark fw-bold">${r.so_luong} bó</span></td>
+                    <td><span class="badge bg-purple-subtle text-purple border">${r.so_lo}</span></td>
+                    <td><small class="text-secondary">${r.ten_bo_hoa}</small></td>
+                    <td><small class="text-muted">${r.thoi_gian}</small></td>
+                </tr>
+            `).join('');
+        })
+        .catch(err => {
+            loading.style.display = 'none';
+            subTitle.innerText = 'Lỗi tải dữ liệu';
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-3">Có lỗi xảy ra khi tải danh sách đơn giữ.</td></tr>`;
+        });
+}
+
+function xemChiTietBoHoa(mauId) {
+    xemDonGiuBoHoa(mauId);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const loaiTonKhoSelect = document.querySelector('select[name="loai_ton_kho"]');
+    const loaiSanPhamSelect = document.querySelector('select[name="loai_san_pham"]');
+
+    function syncLoaiSanPhamState() {
+        if (!loaiTonKhoSelect || !loaiSanPhamSelect) return;
+        if (loaiTonKhoSelect.value === 'bo_hoa') {
+            loaiSanPhamSelect.value = '';
+            loaiSanPhamSelect.disabled = true;
+            loaiSanPhamSelect.setAttribute('title', 'Kho bó hoa thành phẩm không áp dụng phân loại nguyên vật liệu');
+        } else {
+            loaiSanPhamSelect.disabled = false;
+            loaiSanPhamSelect.removeAttribute('title');
+        }
+    }
+
+    if (loaiTonKhoSelect) {
+        loaiTonKhoSelect.addEventListener('change', syncLoaiSanPhamState);
+        syncLoaiSanPhamState();
+    }
+});
 </script>
 @endpush

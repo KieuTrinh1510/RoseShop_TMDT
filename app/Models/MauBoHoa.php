@@ -67,4 +67,37 @@ class MauBoHoa extends Model
     {
         return $query->where('trang_thai', 'INACTIVE');
     }
+
+    public function getTonThucTeAttribute(): int
+    {
+        return (int) $this->boHoas()
+            ->where('loai_bo_hoa', 'HE_THONG')
+            ->where('trang_thai', 'ACTIVE')
+            ->whereNull('ma_hoa_don')
+            ->where('so_luong', '>', 0)
+            ->sum('so_luong');
+    }
+
+    public function getTonDangGiuAttribute(): int
+    {
+        $boIds = $this->boHoas()
+            ->where('loai_bo_hoa', 'HE_THONG')
+            ->where('trang_thai', 'ACTIVE')
+            ->whereNull('ma_hoa_don')
+            ->where('so_luong', '>', 0)
+            ->pluck('ma_bo_hoa');
+
+        if ($boIds->isEmpty()) {
+            return 0;
+        }
+
+        return (int) \App\Models\InventoryReservation::whereIn('ma_bo_hoa', $boIds)
+            ->where('trang_thai', \App\Models\InventoryReservation::STATUS_RESERVED)
+            ->sum('so_luong');
+    }
+
+    public function getTonKhaDungAttribute(): int
+    {
+        return max(0, $this->ton_thuc_te - $this->ton_dang_giu);
+    }
 }
