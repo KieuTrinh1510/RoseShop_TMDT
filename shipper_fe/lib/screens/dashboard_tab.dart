@@ -4,8 +4,8 @@
 
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-import '../widgets/pretty_json.dart';
-import '../widgets/common.dart';
+import '../widgets/common/pretty_json.dart';
+import '../widgets/common/common.dart';
 
 class DashboardTab extends StatefulWidget {
   const DashboardTab({super.key});

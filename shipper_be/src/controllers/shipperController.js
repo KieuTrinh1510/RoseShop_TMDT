@@ -66,3 +66,6 @@ exports.markDelivered = (req, res) =>
 
 exports.getTimeoutRemaining = (req, res) =>
     chay(res, () => deliveryService.getTimeoutRemaining(layMaNhanVien(req), req.params.id));
+
+exports.xuLyQuaHan = (req, res) =>
+    chay(res, () => deliveryService.xuLyQuaHan(layMaNhanVien(req), req.params.id));

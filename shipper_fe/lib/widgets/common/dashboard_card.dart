@@ -1,8 +1,9 @@
 // lib/widgets/dashboard_card.dart
 import 'package:flutter/material.dart';
 import 'glass_container.dart';
+import '../../theme/pink_theme.dart';
 
-const kNavy = Color(0xFF0B0B1A);
+const kNavy = Pink.plum;
 
 class DashboardCard extends StatelessWidget {
   final String title;

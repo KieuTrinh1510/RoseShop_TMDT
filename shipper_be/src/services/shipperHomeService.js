@@ -2,25 +2,14 @@
 // Logic màn hình HOME của shipper:
 //   - trạng thái ONLINE/OFFLINE
 //   - số đơn đang giữ -/10 (đủ 10 thì không nhận thêm)
-//   - tiền COD cần nộp
-//   - số thông báo chưa đọc (tạm = 0, sẽ nối với thongBaoService sau)
+//   - tiền COD cần nộp + tiền phạt giao trễ
+//   - số thông báo chưa đọc
 
 const NhanVien = require('../models/NhanVien');
 const HoaDon = require('../models/HoaDon');
 const { GIOI_HAN_DON } = require('./shipperStatusService');
-
-function taoLoi(status, code, message) {
-    const err = new Error(message);
-    err.status = status;
-    err.code = code;
-    return err;
-}
-
-// TODO: khi làm thongBaoService thì thay bằng
-// require('./thongBaoService').demChuaDoc(maNhanVien)
-async function demThongBaoChuaDoc(maNhanVien) {
-    return 0;
-}
+const thongBaoService = require('./thongBaoService');
+const { taoLoi } = require('../utils/loi');
 
 async function getHome(maNhanVien) {
     const shipper = await NhanVien.findById(maNhanVien);
@@ -31,7 +20,7 @@ async function getHome(maNhanVien) {
     // 2 truy vấn độc lập -> chạy song song
     const [cod, soThongBao] = await Promise.all([
         HoaDon.tinhTienCanNop(maNhanVien),
-        demThongBaoChuaDoc(maNhanVien),
+        thongBaoService.demChuaDoc(maNhanVien),
     ]);
 
     const soDon = shipper.so_don_hien_tai || 0;
@@ -58,6 +47,8 @@ async function getHome(maNhanVien) {
         cod: {
             tien_can_nop: cod.tongTien,
             so_don: cod.soDon,
+            // Tiền phạt giao trễ cộng dồn (UC4.2.10). App tự quyết định hiện riêng hay cộng vào tien_can_nop.
+            tien_phat: Number(shipper.tien_phat) || 0,
         },
         thong_bao: {
             chua_doc: soThongBao,

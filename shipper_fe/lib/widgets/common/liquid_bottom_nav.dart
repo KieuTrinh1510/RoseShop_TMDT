@@ -31,7 +31,7 @@ class _LiquidBottomNavState extends State<LiquidBottomNav>
   static const double barH = 72;
   static const double topExtra = 30; // vùng phía trên cho vòng tròn nổi
   static const double circleD = 54;
-  static const Color navy = Color(0xFF0B0B1A);
+  static const Color navy = Color(0xFF3A1230);
 
   // value = vị trí (theo index, số thực) của indicator -> luôn trượt mượt,
   // bấm liên tục vẫn retarget từ vị trí hiện tại, không bị giật.

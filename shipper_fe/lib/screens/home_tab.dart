@@ -2,13 +2,13 @@
 // Màn hình Home: header (avatar + tên + chuông), toggle online, card số đơn, card COD.
 
 import 'package:flutter/material.dart';
-import '../controllers/home_controller.dart';
-import '../widgets/common.dart';
-import '../widgets/dashboard_card.dart';
-import '../widgets/glass_container.dart';
-import '../widgets/notification_bell.dart';
-import '../widgets/skeleton.dart';
-import '../widgets/staggered_fade_slide.dart';
+import '../controllers/trang_chu_controller.dart';
+import '../widgets/common/common.dart';
+import '../widgets/common/dashboard_card.dart';
+import '../widgets/common/glass_container.dart';
+import '../widgets/common/chuong_thong_bao.dart';
+import '../widgets/common/skeleton.dart';
+import '../widgets/common/staggered_fade_slide.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});

@@ -3,14 +3,13 @@
 
 import 'package:flutter/material.dart';
 import '../controllers/lich_su_controller.dart';
-import '../widgets/common.dart';
-import '../widgets/glass_container.dart';
-import '../widgets/pretty_json.dart';
-import '../widgets/skeleton.dart';
-import '../widgets/staggered_fade_slide.dart';
-import 'order_detail_screen.dart';
-
-const kNavy = Color(0xFF0B0B1A);
+import '../widgets/common/common.dart';
+import '../widgets/common/glass_container.dart';
+import '../widgets/common/pretty_json.dart';
+import '../widgets/common/skeleton.dart';
+import '../widgets/common/staggered_fade_slide.dart';
+import 'don_hang/chi_tiet_don_hang_screen.dart';
+import '../widgets/common/dashboard_card.dart';
 
 class HistoryTab extends StatefulWidget {
   const HistoryTab({super.key});

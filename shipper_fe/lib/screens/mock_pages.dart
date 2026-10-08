@@ -3,10 +3,10 @@
 // Sau này thay từng trang bằng tab thật (StatusTab, DashboardTab, OrdersTab, HistoryTab).
 import 'package:flutter/material.dart';
 import '../config.dart';
-import '../widgets/dashboard_card.dart';
-import '../widgets/glass_container.dart';
-import '../widgets/staggered_fade_slide.dart';
-import 'login_screen.dart';
+import '../widgets/common/dashboard_card.dart';
+import '../widgets/common/glass_container.dart';
+import '../widgets/common/staggered_fade_slide.dart';
+import 'dang_nhap_screen.dart';
 
 // Chừa chỗ phía dưới cho thanh nav nổi (72 + 30 + margin + safe area)
 double _bottomSpace(BuildContext context) =>

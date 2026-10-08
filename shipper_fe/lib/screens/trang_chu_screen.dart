@@ -3,11 +3,12 @@
 // đã mở; tab chưa bấm vào thì chưa build (lazy) để không gọi API thừa.
 
 import 'package:flutter/material.dart';
-import '../widgets/liquid_bottom_nav.dart';
+import '../widgets/common/liquid_bottom_nav.dart';
 import 'home_tab.dart';
-import 'orders_tab.dart';
-import 'history_tab.dart';
+import 'don_hang/danh_sach_don_hang_tab.dart';
+import 'lich_su_tab.dart';
 import 'profile_tab.dart';
+import '../../theme/pink_theme.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -57,10 +58,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final bottomInset = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF7B808D),
+      backgroundColor: Pink.blush,
       body: Stack(
         children: [
-          const _Background(),
+          const PinkBackground(),
           Positioned.fill(
             child: IndexedStack(
               index: _index,
