@@ -55,18 +55,17 @@ class UC4_MauBoHoaStockAndNameTest extends TestCase
             // ignore
         }
 
-        // Xóa triệt để nếu có record lọt ra ngoài transaction
-        $testMauIds = DB::table('mau_bo_hoa')->where('ten_mau', 'LIKE', '%Test%')->orWhere('ten_mau', 'LIKE', '%Hoa Mẫu%')->orWhere('ten_mau', 'LIKE', '%Mẫu Độc Nhất%')->orWhere('ten_mau', 'LIKE', '%Hoa Đua Race%')->orWhere('ten_mau', 'LIKE', '%Hoa Hồng %')->orWhere('ten_mau', 'LIKE', '%Hoa Hong %')->pluck('ma_mau_bo_hoa')->toArray();
-        if (!empty($testMauIds)) {
-            DB::table('chi_tiet_mau_bo_hoa')->whereIn('ma_mau_bo_hoa', $testMauIds)->delete();
-            DB::table('mau_bo_hoa')->whereIn('ma_mau_bo_hoa', $testMauIds)->delete();
+        if (!empty($this->createdMauIds)) {
+            DB::table('chi_tiet_mau_bo_hoa')->whereIn('ma_mau_bo_hoa', $this->createdMauIds)->delete();
+            DB::table('mau_bo_hoa')->whereIn('ma_mau_bo_hoa', $this->createdMauIds)->delete();
         }
 
-        $testSpIds = DB::table('san_pham')->where('ten_san_pham', 'LIKE', '%test%')->orWhere('ten_san_pham', 'LIKE', '%Test%')->pluck('ma_san_pham')->toArray();
-        if (!empty($testSpIds)) {
-            DB::table('inventory_reservations')->whereIn('ma_san_pham', $testSpIds)->delete();
-            DB::table('chi_tiet_mau_bo_hoa')->whereIn('ma_san_pham', $testSpIds)->delete();
-            DB::table('san_pham')->whereIn('ma_san_pham', $testSpIds)->delete();
+        if (!empty($this->createdSpIds)) {
+            DB::table('inventory_reservations')->whereIn('ma_san_pham', $this->createdSpIds)->delete();
+            DB::table('chi_tiet_mau_bo_hoa')->whereIn('ma_san_pham', $this->createdSpIds)->delete();
+            DB::table('chi_tiet_bo_hoa')->whereIn('ma_san_pham', $this->createdSpIds)->delete();
+            DB::table('chi_tiet_nhap')->whereIn('ma_san_pham', $this->createdSpIds)->delete();
+            DB::table('san_pham')->whereIn('ma_san_pham', $this->createdSpIds)->delete();
         }
 
         if (isset($this->adminUser)) {

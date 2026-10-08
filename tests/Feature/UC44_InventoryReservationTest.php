@@ -36,6 +36,7 @@ class UC44_InventoryReservationTest extends TestCase
         ]);
         DB::purge('mysql');
         DB::reconnect('mysql');
+        DB::beginTransaction();
 
         // Seed basic phu phi for size S and ROUND
         PhuPhiBoHoa::firstOrCreate(['loai' => 'SIZE', 'gia_tri' => 'S'], ['phu_phi' => 20000]);
@@ -48,6 +49,16 @@ class UC44_InventoryReservationTest extends TestCase
             'vnpay.url'         => 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
             'vnpay.return_url'  => 'http://localhost/vnpay/return',
         ]);
+    }
+
+    protected function tearDown(): void
+    {
+        try {
+            DB::rollBack();
+        } catch (\Throwable $e) {
+            // ignore
+        }
+        parent::tearDown();
     }
 
     protected function createAdminUser(): NguoiDung

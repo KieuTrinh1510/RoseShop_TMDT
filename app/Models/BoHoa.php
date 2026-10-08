@@ -112,4 +112,22 @@ class BoHoa extends Model
             'ma_bo_hoa'
         );
     }
+
+    public function getTonThucTeAttribute(): int
+    {
+        return ($this->trang_thai === 'ACTIVE' && is_null($this->ma_hoa_don)) ? (int) $this->so_luong : 0;
+    }
+
+    public function getTonDangGiuAttribute(): int
+    {
+        if ($this->relationLoaded('reservations')) {
+            return (int) $this->reservations->where('trang_thai', InventoryReservation::STATUS_RESERVED)->sum('so_luong');
+        }
+        return (int) $this->reservations()->where('trang_thai', InventoryReservation::STATUS_RESERVED)->sum('so_luong');
+    }
+
+    public function getTonKhaDungAttribute(): int
+    {
+        return max(0, $this->ton_thuc_te - $this->ton_dang_giu);
+    }
 }

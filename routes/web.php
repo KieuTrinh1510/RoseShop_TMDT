@@ -161,6 +161,7 @@ Route::middleware(['auth', 'role:ADMIN'])->group(function () {
     Route::get('/admin/thanh-toan',             fn() => view('admin.placeholder', ['title' => 'Thanh toán']))->name('admin.thanh-toan');
     Route::get('/admin/ton-kho',                [TonKhoController::class, 'index'])->name('admin.ton-kho');
     Route::get('/admin/ton-kho/{id}/giu',        [TonKhoController::class, 'chiTietGiu'])->name('admin.ton-kho.giu');
+    Route::get('/admin/ton-kho/bo-hoa/{id}/giu', [TonKhoController::class, 'chiTietGiuBoHoa'])->name('admin.ton-kho.bo-hoa.giu');
     // Quản lý Shipper (ADMIN only - UC2.4)
     Route::prefix('admin/quan-ly-shipper')->name('admin.shipper.')->controller(AdminShipperController::class)->group(function () {
         Route::get('/',                               'index')->name('index');

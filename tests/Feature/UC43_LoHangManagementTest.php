@@ -33,6 +33,17 @@ class UC43_LoHangManagementTest extends TestCase
         ]);
         DB::purge('mysql');
         DB::reconnect('mysql');
+        DB::beginTransaction();
+    }
+
+    protected function tearDown(): void
+    {
+        try {
+            DB::rollBack();
+        } catch (\Throwable $e) {
+            // ignore
+        }
+        parent::tearDown();
     }
 
     protected function createUser(string $role, string $prefix = 'user'): NguoiDung
