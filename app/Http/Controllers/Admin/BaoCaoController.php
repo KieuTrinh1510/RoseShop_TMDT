@@ -697,134 +697,216 @@ foreach ($sanPhams as $sp) {
     }
 
     
-   private function dataDoanhThu(Request $request): array
-{
-    $tuNgay = $request->input('tu_ngay', Carbon::now()->startOfMonth()->format('Y-m-d'));
-    $denNgay = $request->input('den_ngay', Carbon::now()->format('Y-m-d'));
-    $kieuHienThi = $request->input('kieu_hien_thi', 'thang');
+    private function dataDoanhThu(Request $request): array
+    {
+        $tuNgay = $request->input('tu_ngay', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $denNgay = $request->input('den_ngay', Carbon::now()->format('Y-m-d'));
+        $kieuHienThi = $request->input('kieu_hien_thi', 'thang');
+        $nhomKinhDoanh = $request->input('nhom_kinh_doanh');
+        $pttt = $request->input('phuong_thuc_thanh_toan');
 
-    $start = Carbon::parse($tuNgay)->startOfDay();
-    $end = Carbon::parse($denNgay)->endOfDay();
+        $start = Carbon::parse($tuNgay)->startOfDay();
+        $end = Carbon::parse($denNgay)->endOfDay();
 
-    $query = DB::table('hoa_don as hd')
-        ->join('chi_tiet_hoa_don as ct', 'hd.ma_hoa_don', '=', 'ct.ma_hoa_don')
-        ->join('san_pham as sp', 'ct.ma_san_pham', '=', 'sp.ma_san_pham')
-        ->where('hd.trang_thai', 'DELIVERED')
-        ->whereBetween('hd.ngay_dat', [$start, $end]);
+        // Nguồn 1: Sản phẩm bán lẻ (chi_tiet_hoa_don)
+        $spRows = collect();
+        if (empty($nhomKinhDoanh) || $nhomKinhDoanh === 'hoa_le') {
+            $spQuery = DB::table('hoa_don as hd')
+                ->join('chi_tiet_hoa_don as ct', 'hd.ma_hoa_don', '=', 'ct.ma_hoa_don')
+                ->join('san_pham as sp', 'ct.ma_san_pham', '=', 'sp.ma_san_pham')
+                ->leftJoin('chi_tiet_nhap as ctn', 'ct.ma_chi_tiet_nhap', '=', 'ctn.ma_chi_tiet_nhap')
+                ->where('hd.trang_thai', 'DELIVERED')
+                ->whereBetween('hd.ngay_dat', [$start, $end]);
 
-    $tongDonHang = DB::table('hoa_don')
-        ->where('trang_thai', 'DELIVERED')
-        ->whereBetween('ngay_dat', [$start, $end])
-        ->count();
-    $tongSanPhamBan = (clone $query)
-    ->sum('ct.so_luong');
+            if ($pttt === 'COD') {
+                $spQuery->where('hd.phuong_thuc_thanh_toan', 'COD');
+            } elseif ($pttt === 'NGAN_HANG') {
+                $spQuery->where('hd.phuong_thuc_thanh_toan', '!=', 'COD');
+            }
 
-    $tongDoanhThu = (clone $query)
-        ->selectRaw('SUM(ct.so_luong * ct.gia_ban_snapshot) as tong')
-        ->value('tong') ?? 0;
-
-    $tongVon = (clone $query)
-        ->selectRaw('SUM(ct.so_luong * ct.gia_nhap_snapshot) as tong')
-        ->value('tong') ?? 0;
-
-    $tongLoiNhuan = $tongDoanhThu - $tongVon;
-
-    $giaTriDonTrungBinh = $tongDonHang > 0
-        ? round($tongDoanhThu / $tongDonHang)
-        : 0;
-
-        if ($kieuHienThi === 'ngay') {
-
-            $groupFormat = "DATE(hd.ngay_dat)";
-
-        } elseif ($kieuHienThi === 'quy') {
-
-            $groupFormat = "CONCAT('Quý ', QUARTER(hd.ngay_dat), '/', YEAR(hd.ngay_dat))";
-
-        } elseif ($kieuHienThi === 'nam') {
-
-            $groupFormat = "YEAR(hd.ngay_dat)";
-
-        } else {
-
-            $groupFormat = "DATE_FORMAT(hd.ngay_dat, '%m/%Y')";
+            $spRows = $spQuery->selectRaw("
+                hd.ma_hoa_don,
+                hd.ngay_dat,
+                sp.ma_san_pham as item_id,
+                sp.ten_san_pham as item_name,
+                sp.hinh_anh as item_image,
+                'hoa_le' as nhom_hang,
+                CASE WHEN sp.loai_san_pham = 'HOA_TUOI' THEN 'Hoa lẻ' ELSE 'Sản phẩm lẻ' END as ten_nhom,
+                ct.so_luong as so_luong,
+                (ct.so_luong * ct.gia_ban_snapshot) as doanh_thu,
+                (ct.so_luong * COALESCE(ct.gia_nhap_snapshot, ctn.gia_nhap, 0)) as gia_von
+            ")->get();
         }
-    $chiTietDoanhThu = (clone $query)
-        ->selectRaw("
-            $groupFormat as thoi_gian,
-            COUNT(DISTINCT hd.ma_hoa_don) as so_don_hang,
-SUM(ct.so_luong) as tong_san_pham_ban,
-SUM(ct.so_luong * ct.gia_ban_snapshot) as doanh_thu,
-            SUM(ct.so_luong * ct.gia_nhap_snapshot) as gia_von,
-            SUM((ct.gia_ban_snapshot - ct.gia_nhap_snapshot) * ct.so_luong) as loi_nhuan
-        ")
-        ->groupBy(DB::raw($groupFormat))
-        ->orderBy('thoi_gian')
-        ->get();
-    $duLieuTheoMoc = $chiTietDoanhThu->keyBy('thoi_gian');
 
-$mocThoiGian = collect();
+        // Nguồn 2: Bó hoa thành phẩm & Bó hoa khác (bo_hoa)
+        $boRows = collect();
+        if (empty($nhomKinhDoanh) || in_array($nhomKinhDoanh, ['bo_hoa_co_san', 'custom_mix'])) {
+            $boQuery = DB::table('hoa_don as hd')
+                ->join('bo_hoa as bo', 'hd.ma_hoa_don', '=', 'bo.ma_hoa_don')
+                ->where('hd.trang_thai', 'DELIVERED')
+                ->whereBetween('hd.ngay_dat', [$start, $end]);
 
-$current = $start->copy();
+            if ($nhomKinhDoanh === 'bo_hoa_co_san') {
+                $boQuery->where('bo.loai_bo_hoa', '!=', 'TUY_CHON');
+            } elseif ($nhomKinhDoanh === 'custom_mix') {
+                $boQuery->where('bo.loai_bo_hoa', '=', 'TUY_CHON');
+            }
 
-while ($current <= $end) {
-    if ($kieuHienThi === 'ngay') {
-        $key = $current->format('Y-m-d');
-        $current->addDay();
-    } elseif ($kieuHienThi === 'quy') {
-        $key = 'Quý ' . $current->quarter . '/' . $current->year;
-        $current->addQuarter();
-    } elseif ($kieuHienThi === 'nam') {
-        $key = $current->format('Y');
-        $current->addYear();
-    } else {
-        $key = $current->format('m/Y');
-        $current->addMonth();
+            if ($pttt === 'COD') {
+                $boQuery->where('hd.phuong_thuc_thanh_toan', 'COD');
+            } elseif ($pttt === 'NGAN_HANG') {
+                $boQuery->where('hd.phuong_thuc_thanh_toan', '!=', 'COD');
+            }
+
+            $boRows = $boQuery->selectRaw("
+                hd.ma_hoa_don,
+                hd.ngay_dat,
+                bo.ma_bo_hoa as item_id,
+                bo.ten_bo_hoa as item_name,
+                bo.hinh_anh as item_image,
+                CASE WHEN bo.loai_bo_hoa = 'TUY_CHON' THEN 'custom_mix' ELSE 'bo_hoa_co_san' END as nhom_hang,
+                CASE WHEN bo.loai_bo_hoa = 'TUY_CHON' THEN 'Custom Mix' ELSE 'Bó hoa' END as ten_nhom,
+                1 as so_luong,
+                bo.gia_ban as doanh_thu,
+                COALESCE((
+                    SELECT SUM(ctbh.so_luong * ctn.gia_nhap)
+                    FROM chi_tiet_bo_hoa ctbh
+                    JOIN chi_tiet_nhap ctn ON ctbh.ma_chi_tiet_nhap = ctn.ma_chi_tiet_nhap
+                    WHERE ctbh.ma_bo_hoa = bo.ma_bo_hoa
+                ), 0) as gia_von
+            ")->get();
+        }
+
+        $allItems = $spRows->concat($boRows);
+
+        // Tổng đơn hàng
+        if (!empty($nhomKinhDoanh)) {
+            $tongDonHang = $allItems->pluck('ma_hoa_don')->unique()->count();
+        } else {
+            $hdCountQuery = DB::table('hoa_don')
+                ->where('trang_thai', 'DELIVERED')
+                ->whereBetween('ngay_dat', [$start, $end]);
+
+            if ($pttt === 'COD') {
+                $hdCountQuery->where('phuong_thuc_thanh_toan', 'COD');
+            } elseif ($pttt === 'NGAN_HANG') {
+                $hdCountQuery->where('phuong_thuc_thanh_toan', '!=', 'COD');
+            }
+            $tongDonHang = $hdCountQuery->count();
+        }
+
+        $tongSanPhamBan = (int) $allItems->sum('so_luong');
+        $tongDoanhThu = (float) $allItems->sum('doanh_thu');
+        $tongVon = (float) $allItems->sum('gia_von');
+        $tongLoiNhuan = $tongDoanhThu - $tongVon;
+        $giaTriDonTrungBinh = $tongDonHang > 0 ? round($tongDoanhThu / $tongDonHang) : 0;
+
+        // Nhóm timeline
+        $grouped = $allItems->groupBy(function ($it) use ($kieuHienThi) {
+            $d = Carbon::parse($it->ngay_dat);
+            if ($kieuHienThi === 'ngay') {
+                return $d->format('Y-m-d');
+            }
+            if ($kieuHienThi === 'quy') {
+                return 'Quý ' . $d->quarter . '/' . $d->year;
+            }
+            if ($kieuHienThi === 'nam') {
+                return $d->format('Y');
+            }
+            return $d->format('m/Y');
+        });
+
+        $duLieuTheoMoc = $grouped->map(function ($items, $moc) {
+            $dt = (float) $items->sum('doanh_thu');
+            $cost = (float) $items->sum('gia_von');
+            return (object) [
+                'thoi_gian' => $moc,
+                'so_don_hang' => (int) $items->pluck('ma_hoa_don')->unique()->count(),
+                'tong_san_pham_ban' => (int) $items->sum('so_luong'),
+                'doanh_thu' => $dt,
+                'gia_von' => $cost,
+                'loi_nhuan' => $dt - $cost,
+            ];
+        });
+
+        $mocThoiGian = collect();
+        $current = $start->copy();
+        while ($current <= $end) {
+            if ($kieuHienThi === 'ngay') {
+                $key = $current->format('Y-m-d');
+                $current->addDay();
+            } elseif ($kieuHienThi === 'quy') {
+                $key = 'Quý ' . $current->quarter . '/' . $current->year;
+                $current->addQuarter();
+            } elseif ($kieuHienThi === 'nam') {
+                $key = $current->format('Y');
+                $current->addYear();
+            } else {
+                $key = $current->format('m/Y');
+                $current->addMonth();
+            }
+            $mocThoiGian->push($key);
+        }
+
+        $chiTietDoanhThu = $mocThoiGian->unique()->map(function ($moc) use ($duLieuTheoMoc) {
+            $row = $duLieuTheoMoc->get($moc);
+            return (object) [
+                'thoi_gian' => $moc,
+                'so_don_hang' => (int) ($row->so_don_hang ?? 0),
+                'tong_san_pham_ban' => (int) ($row->tong_san_pham_ban ?? 0),
+                'doanh_thu' => (float) ($row->doanh_thu ?? 0),
+                'gia_von' => (float) ($row->gia_von ?? 0),
+                'loi_nhuan' => (float) ($row->loi_nhuan ?? 0),
+            ];
+        });
+
+        // Top 5 mặt hàng theo doanh thu
+        $topSanPham = $allItems->groupBy('item_name')->map(function ($items, $name) {
+            $first = $items->first();
+            $dt = (float) $items->sum('doanh_thu');
+            $cost = (float) $items->sum('gia_von');
+            return (object) [
+                'ten_san_pham' => $name,
+                'hinh_anh' => $first->item_image,
+                'nhom_hang' => $first->nhom_hang,
+                'ten_nhom' => $first->ten_nhom,
+                'tong_san_pham_ban' => (int) $items->sum('so_luong'),
+                'doanh_thu' => $dt,
+                'gia_von' => $cost,
+                'loi_nhuan' => $dt - $cost,
+            ];
+        })->sortByDesc('doanh_thu')->values()->take(5);
+
+        // Top 5 mặt hàng theo lợi nhuận
+        $topLoiNhuan = $allItems->groupBy('item_name')->map(function ($items, $name) {
+            $first = $items->first();
+            $dt = (float) $items->sum('doanh_thu');
+            $cost = (float) $items->sum('gia_von');
+            return (object) [
+                'ten_san_pham' => $name,
+                'hinh_anh' => $first->item_image,
+                'nhom_hang' => $first->nhom_hang,
+                'ten_nhom' => $first->ten_nhom,
+                'tong_san_pham_ban' => (int) $items->sum('so_luong'),
+                'doanh_thu' => $dt,
+                'gia_von' => $cost,
+                'loi_nhuan' => $dt - $cost,
+            ];
+        })->sortByDesc('loi_nhuan')->values()->take(5);
+
+        return [
+            'kieuHienThi' => $kieuHienThi,
+            'tongDonHang' => $tongDonHang,
+            'tongSanPhamBan' => $tongSanPhamBan,
+            'tongDoanhThu' => $tongDoanhThu,
+            'tongVon' => $tongVon,
+            'tongLoiNhuan' => $tongLoiNhuan,
+            'giaTriDonTrungBinh' => $giaTriDonTrungBinh,
+            'chiTietDoanhThu' => $chiTietDoanhThu,
+            'topSanPham' => $topSanPham,
+            'topLoiNhuan' => $topLoiNhuan,
+        ];
     }
-
-    $mocThoiGian->push($key);
-}
-
-$chiTietDoanhThu = $mocThoiGian->unique()->map(function ($moc) use ($duLieuTheoMoc) {
-    $row = $duLieuTheoMoc->get($moc);
-
-    return (object) [
-        'thoi_gian' => $moc,
-'so_don_hang' => (int) ($row->so_don_hang ?? 0),
-'tong_san_pham_ban' => (int) ($row->tong_san_pham_ban ?? 0),
-'doanh_thu' => (float) ($row->doanh_thu ?? 0),
-        'gia_von' => $row->gia_von ?? 0,
-        'loi_nhuan' => $row->loi_nhuan ?? 0,
-    ];
-});
-
-
-
-    $topSanPham = (clone $query)
-        ->selectRaw("
-            sp.ten_san_pham,
-            sp.hinh_anh,
-            SUM(ct.so_luong) as tong_san_pham_ban,
-            SUM(ct.so_luong * ct.gia_ban_snapshot) as doanh_thu
-        ")
-        ->groupBy('sp.ma_san_pham', 'sp.ten_san_pham', 'sp.hinh_anh')
-        ->orderByDesc('doanh_thu')
-        ->limit(5)
-        ->get();
-
-    return [
-     
-        'kieuHienThi' => $kieuHienThi,
-        'tongDonHang' => $tongDonHang,
-        'tongSanPhamBan' => $tongSanPhamBan,
-        'tongDoanhThu' => $tongDoanhThu,
-        'tongVon' => $tongVon,
-        'tongLoiNhuan' => $tongLoiNhuan,
-        'giaTriDonTrungBinh' => $giaTriDonTrungBinh,
-        'chiTietDoanhThu' => $chiTietDoanhThu,
-        'topSanPham' => $topSanPham,
-    ];
-}
 
     private function dataSanPham(Request $request): array
     // {
