@@ -3,6 +3,7 @@
 @push('styles')
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/Admin/PhieuNhap.css') }}">
     <link rel="stylesheet" href="{{ asset('css/Admin/NhaCungCap.css') }}">
     <style>
         .badge-ton-thuc-te { background: #e0f2fe; color: #0369a1; font-weight: 600; padding: 4px 10px; border-radius: 6px; }
@@ -31,21 +32,30 @@
 @endpush
 
 @section('content')
-<div class="ncc-container">
+<div class="rs-management-page">
 
     {{-- Page Header --}}
-    <div class="rs-page-header">
-        <div class="rs-page-header-text">
-            <h1 class="rs-page-title">Quản lý tồn kho </h1>
-            <p class="rs-page-subtitle">Kiểm soát tồn thực tế, số lượng đang giữ theo đơn và tính toán tồn khả dụng phục vụ bán hàng.</p>
+    <div class="rs-header-block">
+        <div class="rs-header-left">
+            <div class="rs-header-icon-box">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                    <line x1="12" y1="22.08" x2="12" y2="12"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="rs-header-title">Quản lý tồn kho</h1>
+                <p class="rs-header-subtitle">Kiểm soát tồn thực tế, số lượng đang giữ theo đơn và tính toán tồn khả dụng phục vụ bán hàng</p>
+            </div>
         </div>
-        <div class="ncc-header-actions">
-            <a href="{{ route('phieu-nhap.index') }}" class="ncc-btn-primary">
-                <i class="bi bi-box-seam"></i>
+        <div class="d-flex gap-2">
+            <a href="{{ route('phieu-nhap.index') }}" class="rs-btn-create">
+                <i class="bi bi-box-seam me-1"></i>
                 <span>Xem phiếu nhập</span>
             </a>
-            <a href="{{ route('admin.lo-hang') }}" class="ncc-btn-outline" style="margin-left: 8px; border: 1px solid #d0d5dd; padding: 8px 14px; border-radius: 8px; text-decoration: none; color: #344054; font-weight: 500;">
-                <i class="bi bi-layers"></i>
+            <a href="{{ route('admin.lo-hang') }}" class="rs-btn-back" style="height: 42px; border-radius: 12px;">
+                <i class="bi bi-layers me-1"></i>
                 <span>Xem theo lô hàng</span>
             </a>
         </div>
@@ -242,9 +252,26 @@
             </table>
         </div>
 
-        @if($items->hasPages())
-            <div class="ncc-pagination-wrapper p-3 border-top">
-                {{ $items->links() }}
+        @if($items->total() > 0)
+            <div class="rs-table-footer p-3 border-top">
+                <div class="rs-footer-left">
+                    <div class="rs-per-page-inline">
+                        <span class="rs-per-page-label">Số hàng mỗi trang</span>
+                        <select class="rs-per-page-select" onchange="location = this.value;">
+                            @foreach([10, 20, 50, 100] as $perPage)
+                                <option value="{{ request()->fullUrlWithQuery(['per_page' => $perPage]) }}" {{ request('per_page', 10) == $perPage ? 'selected' : '' }}>
+                                    {{ $perPage }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="rs-records-count">
+                        {{ $items->firstItem() ?? 0 }}-{{ $items->lastItem() ?? 0 }} / {{ $items->total() }} bản ghi
+                    </div>
+                </div>
+                <div class="rs-footer-pagination">
+                    {{ $items->appends(request()->query())->links() }}
+                </div>
             </div>
         @endif
     </div>

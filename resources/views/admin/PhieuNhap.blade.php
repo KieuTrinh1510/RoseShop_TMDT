@@ -158,7 +158,18 @@
 
                         <td class="fw-semibold text-dark">{{ $pn->nhaCungCap->ten_nha_cung_cap ?? $pn->ten_nha_cung_cap ?? '—' }}</td>
 
-                        <td style="text-align:center;">{{ $pn->nhaCungCap->so_dien_thoai ?? $pn->so_dien_thoai_ncc ?? '—' }}</td>
+                        <td style="text-align:center; white-space:nowrap;">
+                            @php
+                                $sdt = $pn->nhaCungCap->so_dien_thoai ?? $pn->so_dien_thoai_ncc;
+                            @endphp
+                            @if($sdt)
+                                <a href="tel:{{ $sdt }}" class="text-decoration-none fw-medium" style="color:#475467;" title="Bấm để gọi {{ $sdt }}">
+                                    <i class="bi bi-telephone me-1" style="color:#EC3D8F;"></i>{{ $sdt }}
+                                </a>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </td>
 
                         {{-- Trạng thái --}}
                         <td style="text-align:center;">

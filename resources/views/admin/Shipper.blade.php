@@ -202,7 +202,15 @@
 
                             {{-- SĐT & Email --}}
                             <td>
-                                <div style="color: #0f172a; font-weight: 500; font-family: monospace; font-size: 13px;">{{ $sp->so_dien_thoai }}</div>
+                                @if($sp->so_dien_thoai)
+                                    <div>
+                                        <a href="tel:{{ $sp->so_dien_thoai }}" class="text-decoration-none fw-medium" style="color:#475467; font-size:13px;" title="Bấm để gọi {{ $sp->so_dien_thoai }}">
+                                            <i class="bi bi-telephone me-1" style="color:#EC3D8F;"></i>{{ $sp->so_dien_thoai }}
+                                        </a>
+                                    </div>
+                                @else
+                                    <div style="color: #64748b; font-size: 13px;">—</div>
+                                @endif
                                 <div style="font-size: 12px; color: #64748b;">{{ $sp->email ?: '—' }}</div>
                             </td>
 

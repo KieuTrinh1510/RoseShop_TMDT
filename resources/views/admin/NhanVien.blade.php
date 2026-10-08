@@ -220,7 +220,15 @@
                             <td>
                                 <span class="rs-text-bold">{{ $nv->ten_nhan_vien }}</span>
                             </td>
-                            <td style="white-space: nowrap; font-family: monospace; font-size: 13px;">{{ $nv->so_dien_thoai ?: '—' }}</td>
+                            <td style="white-space: nowrap; font-size: 13px;">
+                                @if($nv->so_dien_thoai)
+                                    <a href="tel:{{ $nv->so_dien_thoai }}" class="text-decoration-none fw-medium" style="color:#475467;" title="Bấm để gọi {{ $nv->so_dien_thoai }}">
+                                        <i class="bi bi-telephone me-1" style="color:#EC3D8F;"></i>{{ $nv->so_dien_thoai }}
+                                    </a>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
+                            </td>
                             <td>{{ $nv->email ?: '—' }}</td>
                             <td style="white-space: nowrap;">
                                 <span class="rs-role-badge {{ $isShipper ? 'shipper' : '' }}">

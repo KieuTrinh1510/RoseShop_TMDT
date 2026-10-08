@@ -3,29 +3,36 @@
 @push('styles')
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/Admin/PhieuNhap.css') }}">
     <link rel="stylesheet" href="{{ asset('css/Admin/NhaCungCap.css') }}">
-    <style>
-        .ncc-filter-grid {
-            grid-template-columns: 1.5fr 1.3fr 1.2fr 1fr auto;
-        }
-    </style>
 @endpush
 
 @section('content')
-<div class="ncc-container">
+<div class="rs-management-page">
 
     {{-- Page Header --}}
-    <div class="rs-page-header">
-        <div class="rs-page-header-text">
-            <h1 class="rs-page-title">Quản lý lô hàng</h1>
-            <p class="rs-page-subtitle">Theo dõi danh sách các lô hàng, kiểm soát tồn kho theo lô và đánh giá chất lượng nguồn hàng.</p>
+    <div class="rs-header-block">
+        <div class="rs-header-left">
+            <div class="rs-header-icon-box">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m7.5 4.27 9 5.15"/>
+                    <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+                    <path d="m3.3 7 8.7 5 8.7-5"/>
+                    <path d="M12 22V12"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="rs-header-title">Quản lý lô hàng</h1>
+                <p class="rs-header-subtitle">Theo dõi danh sách các lô hàng, kiểm soát tồn kho theo lô và đánh giá chất lượng nguồn hàng</p>
+            </div>
         </div>
-        <div class="ncc-header-actions">
-            <a href="{{ route('phieu-nhap.index') }}" class="ncc-btn-primary">
-                <i class="bi bi-plus-circle"></i>
-                <span>Tạo phiếu nhập mới</span>
-            </a>
-        </div>
+        <a href="{{ route('phieu-nhap.index') }}" class="rs-btn-create">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14"/>
+                <path d="M12 5v14"/>
+            </svg>
+            <span>Tạo phiếu nhập mới</span>
+        </a>
     </div>
 
     {{-- Flash Notifications --}}
@@ -242,9 +249,26 @@
             </table>
         </div>
 
-        @if($loHangs->hasPages())
-            <div class="p-3 border-top d-flex justify-content-end">
-                {{ $loHangs->links('pagination::bootstrap-5') }}
+        @if($loHangs->total() > 0)
+            <div class="rs-table-footer p-3 border-top">
+                <div class="rs-footer-left">
+                    <div class="rs-per-page-inline">
+                        <span class="rs-per-page-label">Số hàng mỗi trang</span>
+                        <select class="rs-per-page-select" onchange="location = this.value;">
+                            @foreach([10, 20, 50, 100] as $perPage)
+                                <option value="{{ request()->fullUrlWithQuery(['per_page' => $perPage]) }}" {{ request('per_page', 10) == $perPage ? 'selected' : '' }}>
+                                    {{ $perPage }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="rs-records-count">
+                        {{ $loHangs->firstItem() ?? 0 }}-{{ $loHangs->lastItem() ?? 0 }} / {{ $loHangs->total() }} bản ghi
+                    </div>
+                </div>
+                <div class="rs-footer-pagination">
+                    {{ $loHangs->appends(request()->query())->links() }}
+                </div>
             </div>
         @endif
     </div>

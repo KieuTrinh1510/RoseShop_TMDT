@@ -2,7 +2,9 @@
    CSS Quản lý Nhà cung cấp (RoseShop Admin)
    ========================================================================== */
 .ncc-container {
-    padding: 0;
+    padding: 24px 32px 24px 32px !important;
+    background-color: #F8F9FA !important;
+    min-height: 100vh;
 }
 
 .ncc-header-actions {

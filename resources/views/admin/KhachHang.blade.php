@@ -213,8 +213,14 @@
                             </td>
 
                             {{-- 4. Liên hệ (Số điện thoại) --}}
-                            <td style="font-weight: 500; font-family: monospace; font-size: 13px;">
-                                {{ $kh->so_dien_thoai }}
+                            <td style="font-weight: 500; font-size: 13px; white-space: nowrap;">
+                                @if($kh->so_dien_thoai)
+                                    <a href="tel:{{ $kh->so_dien_thoai }}" class="text-decoration-none fw-medium" style="color:#475467;" title="Bấm để gọi {{ $kh->so_dien_thoai }}">
+                                        <i class="bi bi-telephone me-1" style="color:#EC3D8F;"></i>{{ $kh->so_dien_thoai }}
+                                    </a>
+                                @else
+                                    <span class="text-muted">—</span>
+                                @endif
                             </td>
 
                             {{-- 5. Điểm --}}
