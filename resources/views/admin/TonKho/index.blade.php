@@ -270,7 +270,57 @@
                     </div>
                 </div>
                 <div class="rs-footer-pagination">
-                    {{ $items->appends(request()->query())->links() }}
+                    <ul class="rs-pagination">
+                        @if ($items->onFirstPage())
+                            <li class="page-item disabled"><span class="page-link">&lsaquo;</span></li>
+                        @else
+                            <li class="page-item"><a class="page-link" href="{{ $items->previousPageUrl() }}" rel="prev">&lsaquo;</a></li>
+                        @endif
+
+                        @php
+                            $currentPage = $items->currentPage();
+                            $lastPage = $items->lastPage();
+                            $pages = [];
+
+                            if ($lastPage <= 3) {
+                                for ($i = 1; $i <= $lastPage; $i++) {
+                                    $pages[] = $i;
+                                }
+                            } else {
+                                if ($currentPage == 1) {
+                                    $pages = [1, '...', $lastPage];
+                                } elseif ($currentPage == $lastPage) {
+                                    $pages = [1, '...', $lastPage];
+                                } else {
+                                    $pages[] = 1;
+                                    if ($currentPage > 2) {
+                                        $pages[] = '...';
+                                    }
+                                    $pages[] = $currentPage;
+                                    if ($currentPage < $lastPage - 1) {
+                                        $pages[] = '...';
+                                    }
+                                    $pages[] = $lastPage;
+                                }
+                            }
+                        @endphp
+
+                        @foreach ($pages as $p)
+                            @if ($p === '...')
+                                <li class="page-item disabled"><span class="page-link ellipsis">&hellip;</span></li>
+                            @elseif ($p == $currentPage)
+                                <li class="page-item active"><span class="page-link">{{ $p }}</span></li>
+                            @else
+                                <li class="page-item"><a class="page-link" href="{{ $items->url($p) }}">{{ $p }}</a></li>
+                            @endif
+                        @endforeach
+
+                        @if ($items->hasMorePages())
+                            <li class="page-item"><a class="page-link" href="{{ $items->nextPageUrl() }}" rel="next">&rsaquo;</a></li>
+                        @else
+                            <li class="page-item disabled"><span class="page-link">&rsaquo;</span></li>
+                        @endif
+                    </ul>
                 </div>
             </div>
         @endif
