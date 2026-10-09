@@ -30,5 +30,10 @@ router.post('/orders/:id/delivered', controller.markDelivered);  // SHIPPING -> 
 // Đồng hồ 3h hoa tươi
 router.get('/orders/:id/timeout', controller.getTimeoutRemaining); // chỉ đọc
 router.post('/orders/:id/overdue', controller.xuLyQuaHan);
+// Thông báo
+router.get('/notifications', controller.getNotifications);
+router.get('/notifications/unread-count', controller.getUnreadCount);
+router.patch('/notifications/:id/read', controller.markNotificationRead);
+router.delete('/notifications/:id', controller.deleteNotification);
 
 module.exports = router;

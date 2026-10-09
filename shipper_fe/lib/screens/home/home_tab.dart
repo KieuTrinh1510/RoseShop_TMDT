@@ -1,32 +1,90 @@
-// lib/screens/home_tab.dart
-// Màn hình Home: header (avatar + tên + chuông), toggle online, card số đơn, card COD.
+// lib/screens/home/home_tab.dart
+// Màn hình Home: header (avatar + tên + chuông), toggle online,
+// card số đơn, card tiền cần nộp.
+
+import 'dart:async';
 
 import 'package:flutter/material.dart';
-import '../controllers/trang_chu_controller.dart';
-import '../widgets/common/common.dart';
-import '../widgets/common/dashboard_card.dart';
-import '../widgets/common/glass_container.dart';
-import '../widgets/common/chuong_thong_bao.dart';
-import '../widgets/common/skeleton.dart';
-import '../widgets/common/staggered_fade_slide.dart';
+import '../../controllers/home/home_controller.dart';
+import '../../theme/pink_theme.dart';
+import '../../widgets/common/common.dart';
+import '../../widgets/common/glass_container.dart';
+import '../../widgets/common/skeleton.dart';
+import '../../widgets/common/staggered_fade_slide.dart';
+import '../../widgets/home/dashboard_card.dart';
+import '../../widgets/home/chuong_thong_bao.dart';
+import '../thong_bao/thong_bao_screen.dart';
 
 class HomeTab extends StatefulWidget {
-  const HomeTab({super.key});
+  /// true khi tab đang hiển thị (HomeScreen truyền xuống).
+  final bool active;
+
+  /// Callback điều hướng khi user tap thông báo "đơn mới".
+  final void Function(int maHoaDon)? onOpenOrder;
+
+  const HomeTab({super.key, this.active = true, this.onOpenOrder});
+
   @override
   State<HomeTab> createState() => _HomeTabState();
 }
 
-class _HomeTabState extends State<HomeTab> {
+class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
   late final HomeController _c = HomeController();
+
+  // ── Tự làm mới (không cần kéo thả) ─────────────────────────────
+  static const _autoRefreshEvery = Duration(seconds: 15);
+  Timer? _timer;
+  bool _refreshing = false; // chặn 2 request chạy chồng nhau
+  bool _inForeground = true;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _c.load();
+    _startTimer();
+  }
+
+  @override
+  void didUpdateWidget(covariant HomeTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active != oldWidget.active) {
+      if (widget.active) _autoRefresh();
+      _startTimer();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final fg = state == AppLifecycleState.resumed;
+    if (fg == _inForeground) return;
+    _inForeground = fg;
+    if (fg && widget.active) _autoRefresh();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = null;
+    if (widget.active && _inForeground) {
+      _timer = Timer.periodic(_autoRefreshEvery, (_) => _autoRefresh());
+    }
+  }
+
+  Future<void> _autoRefresh() async {
+    if (!mounted || _refreshing || _c.loading) return;
+    _refreshing = true;
+    try {
+      await _c.load(refresh: true);
+    } finally {
+      _refreshing = false;
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _timer?.cancel();
     _c.dispose();
     super.dispose();
   }
@@ -36,10 +94,8 @@ class _HomeTabState extends State<HomeTab> {
     return ListenableBuilder(
       listenable: _c,
       builder: (context, _) {
-        // Lần đầu chưa có dữ liệu → skeleton
         if (_c.loading && _c.data == null) return const HomeSkeleton();
 
-        // Lỗi lần đầu, không có gì để hiển thị → ErrorBox
         if (_c.error != null && _c.data == null) {
           return SafeArea(
             bottom: false,
@@ -82,7 +138,10 @@ class _HomeTabState extends State<HomeTab> {
         Container(
           width: 52,
           height: 52,
-          decoration: const BoxDecoration(shape: BoxShape.circle, color: kNavy),
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: Pink.plum,
+          ),
           alignment: Alignment.center,
           child: Text(
             _c.chuCaiDau,
@@ -103,7 +162,7 @@ class _HomeTabState extends State<HomeTab> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  color: kNavy,
+                  color: Pink.plum,
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
                 ),
@@ -111,17 +170,26 @@ class _HomeTabState extends State<HomeTab> {
               const SizedBox(height: 2),
               Text(
                 'Mã nhân viên: ${_c.maNhanVien}',
-                style: TextStyle(color: kNavy.withOpacity(0.6), fontSize: 13),
+                style: TextStyle(
+                  color: Pink.plum.withOpacity(0.6),
+                  fontSize: 13,
+                ),
               ),
             ],
           ),
         ),
         NotificationBell(
           count: _c.thongBaoChuaDoc,
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Chưa có API danh sách thông báo')),
+          color: Pink.plum,
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ThongBaoScreen(onOpenOrder: widget.onOpenOrder),
+              ),
             );
+            // Sau khi quay lại: refresh badge (số chưa đọc đã giảm khi user đọc trong màn thông báo)
+            _autoRefresh();
           },
         ),
       ],
@@ -140,13 +208,13 @@ class _HomeTabState extends State<HomeTab> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: isOnline
-                  ? Colors.green.withOpacity(0.15)
-                  : Colors.grey.withOpacity(0.2),
+                  ? Pink.leaf.withOpacity(0.15)
+                  : Pink.grey.withOpacity(0.2),
             ),
             alignment: Alignment.center,
             child: Icon(
               isOnline ? Icons.wifi_tethering : Icons.wifi_tethering_off,
-              color: isOnline ? Colors.green.shade700 : Colors.grey.shade700,
+              color: isOnline ? Pink.leaf : Pink.grey,
             ),
           ),
           const SizedBox(width: 12),
@@ -157,7 +225,7 @@ class _HomeTabState extends State<HomeTab> {
                 Text(
                   isOnline ? 'Đang ONLINE' : 'Đang OFFLINE',
                   style: const TextStyle(
-                    color: kNavy,
+                    color: Pink.plum,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
@@ -169,7 +237,10 @@ class _HomeTabState extends State<HomeTab> {
                             ? 'Đã đủ ${_c.gioiHanDon}/${_c.gioiHanDon} đơn'
                             : 'Sẵn sàng nhận đơn mới')
                       : 'Bật để nhận đơn mới',
-                  style: TextStyle(color: kNavy.withOpacity(0.6), fontSize: 12),
+                  style: TextStyle(
+                    color: Pink.plum.withOpacity(0.6),
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
@@ -185,6 +256,7 @@ class _HomeTabState extends State<HomeTab> {
             ),
           Switch(
             value: isOnline,
+            activeColor: Pink.rose,
             onChanged: _c.toggling
                 ? null
                 : (v) async {
@@ -201,7 +273,7 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  // ── Grid 2 card: số đơn + tiền COD ───────────────────────────
+  // ── Grid 2 card: số đơn + tiền cần nộp ────────────────────────
   Widget _buildStatsGrid() {
     return LayoutBuilder(
       builder: (context, c) {
@@ -225,15 +297,82 @@ class _HomeTabState extends State<HomeTab> {
             SizedBox(
               width: w,
               child: DashboardCard(
-                title: 'Tiền COD cần nộp',
+                title: 'Tiền cần nộp',
                 value: _formatTien(_c.codCanNop),
-                subtitle: '${_c.codSoDon} đơn đã giao',
+                subtitle: _c.codPhu,
                 icon: Icons.payments_rounded,
+                onTap: () => _showCodBreakdown(context),
               ),
             ),
           ],
         );
       },
+    );
+  }
+
+  void _showCodBreakdown(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        padding: EdgeInsets.fromLTRB(
+          24,
+          20,
+          24,
+          24 + MediaQuery.of(context).padding.bottom,
+        ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Chi tiết khoản cần nộp',
+              style: TextStyle(
+                color: Pink.plum,
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _codRow('Tiền COD đã thu', _c.tienCod),
+            _codRow('Tiền phạt giao trễ', _c.tienPhat),
+            const Divider(height: 28),
+            _codRow('Tổng cần nộp', _c.codCanNop, bold: true),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _codRow(String label, double value, {bool bold = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: Pink.plum.withOpacity(bold ? 1 : 0.7),
+                fontSize: bold ? 15 : 14,
+                fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+          ),
+          Text(
+            _formatTien(value),
+            style: TextStyle(
+              color: Pink.plum,
+              fontSize: bold ? 18 : 15,
+              fontWeight: bold ? FontWeight.w800 : FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

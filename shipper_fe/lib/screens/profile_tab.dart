@@ -3,7 +3,7 @@
 
 import 'package:flutter/material.dart';
 import '../config.dart';
-import '../widgets/common/dashboard_card.dart';
+import '../widgets/home/dashboard_card.dart';
 import '../widgets/common/glass_container.dart';
 import '../widgets/common/staggered_fade_slide.dart';
 import 'dang_nhap_screen.dart';

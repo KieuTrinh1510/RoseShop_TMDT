@@ -8,7 +8,8 @@
 //   5. overdue   : UC4.2.10 – app gọi khi đồng hồ về 0 / mở lại màn hình mà đã quá 3h:
 //                  cộng 15 điểm cho khách, phạt shipper 15.000đ, mỗi đơn đúng 1 lần.
 //
-// Cần thêm cột: ALTER TABLE hoa_don ADD COLUMN ngay_den_noi DATETIME NULL;
+// Tiền mặt: khi giao đơn CHUA_THANH_TOAN (COD hoặc NGAN_HANG khách chưa CK),
+// shipper thu tiền mặt ngoài đời → set da_thu_tien_mat = true để tính vào khoản cần nộp.
 
 const { Op } = require('sequelize');
 const sequelize = require('../config/database');
@@ -115,7 +116,7 @@ async function confirmPickup(maNhanVien, id) {
         await thongBaoService.tao({
             maNguoiDung: hoaDon.ma_khach_hang,
             loai: thongBaoService.LOAI.SHIPPING,
-            noiDung: thongBaoService.noiDungDangGiao(hoaDon.maHienThi, moTaSanPham(dsChiTiet)),
+            noiDung: thongBaoService.noiDungDangGiao(hoaDon.maHienThi, moTaSanPham(dsChiTiet), laHoaTuoi),
             maHoaDon,
         });
     } catch (err) {
@@ -194,18 +195,31 @@ async function markDelivered(maNhanVien, id) {
         throw taoLoi(422, 'NOT_ARRIVED', 'Bạn cần báo "đã đến điểm giao" trước khi hoàn thành đơn hàng.');
     }
 
+    // Chụp lại trước transaction: đơn này shipper có thu tiền mặt không?
+    //   CHUA_THANH_TOAN → COD hoặc NGAN_HANG-khách-chưa-CK → shipper vừa thu tiền mặt
+    //   DA_THANH_TOAN   → khách đã CK trước → shipper không giữ tiền
+    const thuTienMat = hoaDon.trang_thai_thanh_toan === 'CHUA_THANH_TOAN';
+
     const ngayGiao = new Date();
 
     // Đổi trạng thái đơn + trừ số đơn của shipper trong CÙNG 1 transaction.
     // Điều kiện trong UPDATE chống bấm 2 lần trừ số đơn 2 lần.
     // BR-3: quá 3h vẫn được hoàn thành, nên không chặn theo da_phat_tre / thời gian.
     await sequelize.transaction(async (t) => {
+        const updateFields = {
+            trang_thai: 'DELIVERED',
+            ngay_giao: ngayGiao,
+        };
+
+        // Chỉ set DA_THANH_TOAN khi khách chưa trả (shipper vừa thu mặt).
+        // Nếu khách đã CK trước → giữ nguyên DA_THANH_TOAN, không đụng da_thu_tien_mat.
+        if (thuTienMat) {
+            updateFields.trang_thai_thanh_toan = 'DA_THANH_TOAN';
+            updateFields.da_thu_tien_mat = true;
+        }
+
         const [soDong] = await HoaDon.update(
-            {
-                trang_thai: 'DELIVERED',
-                ngay_giao: ngayGiao,
-                trang_thai_thanh_toan: 'DA_THANH_TOAN',
-            },
+            updateFields,
             {
                 where: {
                     ma_hoa_don: maHoaDon,
@@ -220,7 +234,7 @@ async function markDelivered(maNhanVien, id) {
             throw taoLoi(422, 'INVALID_STATE', 'Đơn hàng không ở trạng thái SHIPPING hoặc chưa báo đến điểm giao.');
         }
 
-        await shipperStatusService.decrementOrderCount(maNhanVien, t);
+
     });
 
     // Báo khách hoàn thành. Lỗi gửi thông báo không làm hỏng việc giao hàng.
@@ -236,11 +250,12 @@ async function markDelivered(maNhanVien, id) {
         console.error(`[Delivery] Gửi thông báo "hoàn thành" đơn ${maHoaDon} thất bại:`, err.message);
     }
 
-    // Tiền COD shipper phải nộp sau khi giao (để app hiện ngay)
+    // Tiền cần nộp sau khi giao (đã gồm đơn vừa giao) + tiền phạt tích luỹ
     const cod = await HoaDon.tinhTienCanNop(maNhanVien);
-    const laCod = hoaDon.phuong_thuc_thanh_toan === 'COD';
+    const shipper = await NhanVien.findById(maNhanVien);
+    const tienPhat = Number(shipper?.tien_phat) || 0;
 
-    console.log(`[Delivery] Shipper ${maNhanVien} giao thành công đơn ${maHoaDon}`);
+    console.log(`[Delivery] Shipper ${maNhanVien} giao thành công đơn ${maHoaDon} (thu tiền mặt: ${thuTienMat})`);
 
     return {
         ma_hoa_don: maHoaDon,
@@ -248,11 +263,13 @@ async function markDelivered(maNhanVien, id) {
         ngay_giao: ngayGiao,
         thanh_toan: {
             phuong_thuc: hoaDon.phuong_thuc_thanh_toan,
-            la_cod: laCod,
-            tien_cod_vua_thu: laCod ? Number(hoaDon.tong_tien) : 0,
+            da_thu_tien_mat: thuTienMat,
+            tien_vua_thu: thuTienMat ? Number(hoaDon.tong_tien) : 0,
         },
         cod: {
-            tien_can_nop: cod.tongTien,
+            tien_cod: cod.tongTien,
+            tien_phat: tienPhat,
+            tien_can_nop: cod.tongTien + tienPhat,
             so_don: cod.soDon,
         },
     };

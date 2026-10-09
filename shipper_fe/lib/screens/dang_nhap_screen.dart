@@ -3,7 +3,7 @@
 
 import 'package:flutter/material.dart';
 import '../config.dart';
-import 'trang_chu_screen.dart';
+import 'home/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

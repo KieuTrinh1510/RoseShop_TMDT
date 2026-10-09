@@ -2,14 +2,14 @@
 // Lịch sử đơn ĐÃ giao (DELIVERED). Chỉ phân trang, không lọc.
 
 import 'package:flutter/material.dart';
-import '../controllers/lich_su_controller.dart';
+import '../controllers/lich_su/lich_su_controller.dart';
 import '../widgets/common/common.dart';
 import '../widgets/common/glass_container.dart';
 import '../widgets/common/pretty_json.dart';
 import '../widgets/common/skeleton.dart';
 import '../widgets/common/staggered_fade_slide.dart';
 import 'don_hang/chi_tiet_don_hang_screen.dart';
-import '../widgets/common/dashboard_card.dart';
+import '../widgets/home/dashboard_card.dart';
 
 class HistoryTab extends StatefulWidget {
   const HistoryTab({super.key});

@@ -1,24 +1,29 @@
-// lib/screens/hoa_don/danh_sach_hoa_don_tab.dart
+// lib/screens/don_hang/danh_sach_don_hang_tab.dart
 // Danh sách đơn CHƯA giao (CONFIRMED + SHIPPING), lọc trạng thái + phân trang.
 // Mỗi card: mã đơn, trạng thái, nhãn COD / Hoa tươi, tên khách, địa chỉ, SĐT.
 // Bấm vào card -> OrderDetailScreen.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import '../../controllers/don_hang_controller.dart';
+import '../../controllers/don_hang/don_hang_controller.dart';
 import '../../theme/pink_theme.dart';
 import '../../utils/format.dart';
 import '../../widgets/common/glass_container.dart';
 import '../../widgets/common/skeleton.dart';
 import '../../widgets/common/staggered_fade_slide.dart';
-import 'chi_tiet_don_hang_screen.dart'; // ← đổi path
+import 'chi_tiet_don_hang_screen.dart';
 
 class OrdersTab extends StatefulWidget {
-  const OrdersTab({super.key});
+  /// true khi tab đang hiển thị (HomeScreen truyền xuống).
+  final bool active;
+  const OrdersTab({super.key, this.active = true});
   @override
-  State<OrdersTab> createState() => _OrdersTabState();
+  State<OrdersTab> createState() => OrdersTabState(); // ← đổi public
 }
 
-class _OrdersTabState extends State<OrdersTab> {
+// Đổi từ _OrdersTabState → OrdersTabState để HomeScreen giữ được GlobalKey
+class OrdersTabState extends State<OrdersTab> with WidgetsBindingObserver {
   late final DonHangController _c = DonHangController();
 
   static const _filters = <String?, String>{
@@ -27,16 +32,79 @@ class _OrdersTabState extends State<OrdersTab> {
     'SHIPPING': 'Đang giao',
   };
 
+  // ── Tự làm mới (không cần kéo thả) ─────────────────────────────
+  static const _autoRefreshEvery = Duration(seconds: 15);
+  Timer? _timer;
+  bool _refreshing = false;
+  bool _inForeground = true;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _c.load();
+    _startTimer();
+  }
+
+  @override
+  void didUpdateWidget(covariant OrdersTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active != oldWidget.active) {
+      if (widget.active) _autoRefresh();
+      _startTimer();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final fg = state == AppLifecycleState.resumed;
+    if (fg == _inForeground) return;
+    _inForeground = fg;
+    if (fg && widget.active) _autoRefresh();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = null;
+    if (widget.active && _inForeground) {
+      _timer = Timer.periodic(_autoRefreshEvery, (_) => _autoRefresh());
+    }
+  }
+
+  Future<void> _autoRefresh() async {
+    if (!mounted || _refreshing || _c.loading) return;
+    _refreshing = true;
+    try {
+      await _c.refresh();
+    } finally {
+      _refreshing = false;
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _timer?.cancel();
     _c.dispose();
     super.dispose();
+  }
+
+  /// Gọi từ HomeScreen khi user tap thông báo "đơn mới":
+  /// mở thẳng màn hình chi tiết đơn đó.
+  ///
+  /// Lưu ý: nếu danh sách đang lọc theo trạng thái khác, đơn này có thể
+  /// không nằm trong list — nhưng vẫn mở chi tiết bình thường, không sao.
+  void openOrder(int maHoaDon) {
+    if (!mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => OrderDetailScreen(maHoaDon: '$maHoaDon'),
+      ),
+    ).then((_) {
+      if (mounted) _c.refresh();
+    });
   }
 
   @override
@@ -44,7 +112,6 @@ class _OrdersTabState extends State<OrdersTab> {
     return ListenableBuilder(
       listenable: _c,
       builder: (context, _) {
-        // Lần đầu chưa có dữ liệu -> skeleton
         if (_c.loading && _c.items.isEmpty) return const _OrdersSkeleton();
 
         if (_c.error != null && _c.items.isEmpty) {
@@ -149,7 +216,6 @@ class _OrdersTabState extends State<OrdersTab> {
   Widget _buildList() {
     final bottomPad = 130 + MediaQuery.of(context).padding.bottom;
 
-    // Rỗng -> vẫn cho kéo để refresh
     if (_c.items.isEmpty) {
       return RefreshIndicator(
         color: Pink.rose,
@@ -188,10 +254,9 @@ class _OrdersTabState extends State<OrdersTab> {
         itemBuilder: (context, i) {
           final item = _c.items[i];
           final id = jStr(item['ma_hoa_don'], '$i');
-          // Key theo mã đơn: card cũ giữ nguyên, card mới mới fade-in
           return StaggeredFadeSlide(
             key: ValueKey('don-$id'),
-            index: i + 1, // 0 là header
+            index: i + 1,
             child: _OrderCard(
               item: item,
               onTap: () {

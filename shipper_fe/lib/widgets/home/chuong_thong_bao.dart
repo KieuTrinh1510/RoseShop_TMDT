@@ -1,4 +1,4 @@
-// lib/widgets/notification_bell.dart
+// lib/widgets/home/chuong_thong_bao.dart
 // Icon chuông + badge đỏ hiển thị số chưa đọc. Bấm → callback.
 import 'package:flutter/material.dart';
 

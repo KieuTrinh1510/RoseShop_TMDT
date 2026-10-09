@@ -2,7 +2,7 @@
 // Danh sách đơn CHƯA giao (CONFIRMED + SHIPPING) + lọc trạng thái + phân trang.
 
 import 'package:flutter/foundation.dart';
-import '../services/api_service.dart';
+import '../../services/api_service.dart';
 
 class DonHangController extends ChangeNotifier {
   bool loading = true;
@@ -16,6 +16,20 @@ class DonHangController extends ChangeNotifier {
 
   /// null = tất cả; 'CONFIRMED' / 'SHIPPING' để lọc.
   String? trangThai;
+
+  // Chống notifyListeners() sau khi dispose (request còn bay mà tab đã đóng).
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  @override
+  void notifyListeners() {
+    if (!_disposed) super.notifyListeners();
+  }
 
   Future<void> load({int? toPage, bool refresh = false}) async {
     if (toPage != null) page = toPage;

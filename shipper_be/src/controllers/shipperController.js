@@ -4,6 +4,7 @@
 const statusService = require('../services/shipperStatusService');
 const orderService = require('../services/shipperOrderService');
 const deliveryService = require('../services/shipperDeliveryService');
+const thongBaoService = require('../services/thongBaoService');
 
 // Mã shipper lấy từ user đã đăng nhập (giống Auth::user()->ma_nguoi_dung bên PHP)
 function layMaNhanVien(req) {
@@ -69,3 +70,26 @@ exports.getTimeoutRemaining = (req, res) =>
 
 exports.xuLyQuaHan = (req, res) =>
     chay(res, () => deliveryService.xuLyQuaHan(layMaNhanVien(req), req.params.id));
+exports.getNotifications = (req, res) =>
+    chay(res, () => thongBaoService.danhSach(layMaNhanVien(req), {
+        loai: req.query.loai,
+        limit: req.query.limit,
+    }));
+
+exports.getUnreadCount = (req, res) =>
+    chay(res, async () => ({
+        count: await thongBaoService.demChuaDoc(layMaNhanVien(req)),
+    }));
+
+exports.markNotificationRead = (req, res) =>
+    chay(res, async () => ({
+        ok: await thongBaoService.danhDauDaDoc(
+            Number(req.params.id),
+            layMaNhanVien(req)
+        ),
+    }));
+
+exports.deleteNotification = (req, res) =>
+    chay(res, async () => ({
+        ok: await thongBaoService.xoa(Number(req.params.id), layMaNhanVien(req)),
+    }));

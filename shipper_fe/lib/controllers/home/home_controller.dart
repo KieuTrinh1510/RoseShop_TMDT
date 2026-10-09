@@ -4,7 +4,7 @@
 // Screen chỉ ListenableBuilder + gọi action, không tự gọi ApiService.
 
 import 'package:flutter/foundation.dart';
-import '../services/api_service.dart';
+import '../../services/api_service.dart';
 
 class HomeController extends ChangeNotifier {
   bool loading = true;
@@ -15,6 +15,20 @@ class HomeController extends ChangeNotifier {
 
   /// Chặn bấm toggle liên tục trong lúc request đang bay.
   bool toggling = false;
+
+  // Chống notifyListeners() sau khi dispose (request còn bay mà tab đã đóng).
+  bool _disposed = false;
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
+  }
+
+  @override
+  void notifyListeners() {
+    if (!_disposed) super.notifyListeners();
+  }
 
   // ── Getter đọc dữ liệu (đều có fallback an toàn) ───────────────
   String get tenNhanVien => _str(_dig(['shipper', 'ten_nhan_vien']));
@@ -33,6 +47,7 @@ class HomeController extends ChangeNotifier {
   int get gioiHanDon => _int(_dig(['don_hang', 'gioi_han_don']), fallback: 10);
   bool get isFull => _dig(['don_hang', 'is_full']) == true;
 
+  // Giữ nguyên: đọc thẳng từ backend
   double get codCanNop => _num(_dig(['cod', 'tien_can_nop']));
   int get codSoDon => _int(_dig(['cod', 'so_don']));
 
@@ -130,5 +145,15 @@ class HomeController extends ChangeNotifier {
   static double _num(dynamic v) {
     if (v is num) return v.toDouble();
     return double.tryParse(v?.toString() ?? '') ?? 0;
+  }
+
+  double get tienCod => _num(_dig(['cod', 'tien_cod']));
+  double get tienPhat => _num(_dig(['cod', 'tien_phat']));
+  String get codPhu {
+    final cod = tienCod;
+    final phat = tienPhat;
+    if (cod == 0 && phat == 0) return 'Chưa có đơn nào cần nộp';
+    if (phat == 0) return '$codSoDon đơn • Chạm để xem chi tiết';
+    return '$codSoDon đơn + phạt • Chạm để xem';
   }
 }

@@ -1,13 +1,10 @@
 // src/services/shipperHomeService.js
-// Logic màn hình HOME của shipper:
-//   - trạng thái ONLINE/OFFLINE
-//   - số đơn đang giữ -/10 (đủ 10 thì không nhận thêm)
-//   - tiền COD cần nộp + tiền phạt giao trễ
-//   - số thông báo chưa đọc
+// Logic màn hình HOME của shipper.
+// Số đơn đếm LIVE từ hoa_don — không đọc cột nhan_vien.so_don_hien_tai.
 
 const NhanVien = require('../models/NhanVien');
 const HoaDon = require('../models/HoaDon');
-const { GIOI_HAN_DON } = require('./shipperStatusService');
+const { GIOI_HAN_DON, demDonDangGiu } = require('./shipperStatusService');
 const thongBaoService = require('./thongBaoService');
 const { taoLoi } = require('../utils/loi');
 
@@ -17,15 +14,18 @@ async function getHome(maNhanVien) {
         throw taoLoi(404, 'SHIPPER_NOT_FOUND', 'Không tìm thấy shipper.');
     }
 
-    // 2 truy vấn độc lập -> chạy song song
-    const [cod, soThongBao] = await Promise.all([
+    // 3 truy vấn độc lập -> chạy song song
+    const [soDon, cod, soThongBao] = await Promise.all([
+        demDonDangGiu(maNhanVien),
         HoaDon.tinhTienCanNop(maNhanVien),
         thongBaoService.demChuaDoc(maNhanVien),
     ]);
 
-    const soDon = shipper.so_don_hien_tai || 0;
     const isFull = soDon >= GIOI_HAN_DON;
     const isOnline = shipper.trang_thai_hoat_dong === 'ONLINE';
+
+    const tienCod = cod.tongTien;
+    const tienPhat = Number(shipper.tien_phat) || 0;
 
     return {
         shipper: {
@@ -45,10 +45,10 @@ async function getHome(maNhanVien) {
             co_the_nhan_don: isOnline && !isFull,
         },
         cod: {
-            tien_can_nop: cod.tongTien,
+            tien_can_nop: tienCod + tienPhat,
+            tien_cod: tienCod,
+            tien_phat: tienPhat,
             so_don: cod.soDon,
-            // Tiền phạt giao trễ cộng dồn (UC4.2.10). App tự quyết định hiện riêng hay cộng vào tien_can_nop.
-            tien_phat: Number(shipper.tien_phat) || 0,
         },
         thong_bao: {
             chua_doc: soThongBao,

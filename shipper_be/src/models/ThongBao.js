@@ -10,12 +10,17 @@ ThongBao.init({
         primaryKey: true,
         autoIncrement: true,
     },
-    ma_nguoi_dung: DataTypes.INTEGER,   // người nhận (khách hoặc shipper)
+    ma_nguoi_dung: DataTypes.INTEGER,
     loai: {
-        type: DataTypes.STRING(20),     // shipping | arrived | apology | penalty | info
+        // order_new | payment | penalty | shipping | arrived | delivered | apology | confirmed | cancelled | info
+        type: DataTypes.STRING(20),
         defaultValue: 'info',
     },
     noi_dung: DataTypes.TEXT,
+    du_lieu: {
+        type: DataTypes.JSON,
+        allowNull: true,
+    },
     ma_hoa_don: DataTypes.INTEGER,
     da_doc: {
         type: DataTypes.BOOLEAN,

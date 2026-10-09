@@ -95,9 +95,16 @@
         <div class="table-box">
 
             <div class="table-meta">
-                <span>Tổng: <strong>{{ $donHangs->total() }}</strong> đơn đang chờ duyệt</span>
-                <span>Trang {{ $donHangs->currentPage() }} / {{ $donHangs->lastPage() }}</span>
-            </div>
+        <span>Tổng: <strong>{{ $donHangs->total() }}</strong> đơn đang chờ duyệt</span>
+        <span>Trang {{ $donHangs->currentPage() }} / {{ $donHangs->lastPage() }}</span>
+    </div>
+    {{-- ⚠️ Cảnh báo không có shipper khả dụng --}}
+    @if($shippers->isEmpty())
+        <div style="padding:12px;background:#fff3cd;border-radius:6px;margin:0 0 12px 0;color:#856404">
+            ⚠️ Không có shipper nào đang ONLINE hoặc tất cả đã đủ 10/10 đơn.
+            Vui lòng chờ shipper bật trạng thái hoặc giao bớt đơn.
+        </div>
+    @endif
 
             <div class="tbl-wrap">
                 <table>
@@ -166,15 +173,15 @@
                             --}}
                             <td>
                                 <select class="shipper-select"
-                                        id="shipper-{{ $dh->ma_hoa_don }}"
-                                        data-id="{{ $dh->ma_hoa_don }}">
-                                    <option value="">— Chọn shipper —</option>
-                                    @foreach($shippers as $sp)
-                                        <option value="{{ $sp->ma_nhan_vien }}">
-                                            {{ $sp->ten_nhan_vien }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                            id="shipper-{{ $dh->ma_hoa_don }}"
+                    data-id="{{ $dh->ma_hoa_don }}">
+                     <option value="">— Chọn shipper —</option>
+                         @foreach($shippers as $sp)
+                      <option value="{{ $sp->ma_nhan_vien }}" data-ten="{{ $sp->ten_nhan_vien }}">
+                      {{ $sp->ten_nhan_vien }} ({{ $sp->so_don_live }}/10)
+                       </option>
+                             @endforeach
+                            </select>
                             </td>
 
                             {{-- Hành động --}}
@@ -285,6 +292,21 @@
     }
 
     
+    // Cập nhật số đơn của shipper ở TẤT CẢ dropdown trong trang (không cần reload).
+    // Đủ 10/10 thì gỡ shipper khỏi danh sách.
+    function updateShipperCount(maNv, soDon) {
+        document.querySelectorAll('.shipper-select').forEach(sel => {
+            const opt = sel.querySelector(`option[value="${maNv}"]`);
+            if (!opt) return;
+            if (soDon >= 10) {
+                if (sel.value == maNv) sel.value = '';
+                opt.remove();
+            } else {
+                opt.textContent = `${opt.dataset.ten} (${soDon}/10)`;
+            }
+        });
+    }
+
     function confirmOrder(id) {
         const sel = document.getElementById('shipper-' + id);
 
@@ -312,6 +334,7 @@
         .then(r => r.json())
         .then(res => {
             if (res.success) {
+                if (res.shipper) updateShipperCount(res.shipper.ma_nhan_vien, res.shipper.so_don);
                 removeRow(id);
                 showToast(res.message, 'success');
             } else {

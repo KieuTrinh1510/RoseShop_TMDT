@@ -81,7 +81,7 @@ class NhanVienController extends Controller
                          ->with('success', 'Xóa nhân viên thành công!');
     }
 
-    public function payback($ma_nhan_vien)
+        public function payback($ma_nhan_vien)
     {
         $nhanVien = NhanVien::findOrFail($ma_nhan_vien);
 
@@ -92,32 +92,67 @@ class NhanVienController extends Controller
             ], 422);
         }
 
-        $soTienDaTra = HoaDon::where('ma_nhan_vien_giao', $ma_nhan_vien)
+        // Đơn shipper đã giao + shipper đang giữ tiền mặt + chưa nộp shop
+        $dsDon = HoaDon::where('ma_nhan_vien_giao', $ma_nhan_vien)
             ->where('trang_thai', 'DELIVERED')
             ->where('trang_thai_thanh_toan', 'DA_THANH_TOAN')
-            ->where('phuong_thuc_thanh_toan', 'COD')
-            ->sum('tong_tien');
+            ->where('da_thu_tien_mat', true)
+            ->orderBy('ngay_giao')
+            ->get(['ma_hoa_don', 'tong_tien', 'ngay_giao']);
 
-        if ($soTienDaTra == 0) {
+        $tongCod  = (float) $dsDon->sum('tong_tien');
+        $tienPhat = (float) ($nhanVien->tien_phat ?? 0);
+
+        if ($tongCod <= 0 && $tienPhat <= 0) {
             return response()->json([
                 'success' => false,
                 'message' => 'Shipper ' . $nhanVien->ten_nhan_vien . ' không có khoản nào cần nộp.',
             ], 422);
         }
 
-        $updated = HoaDon::where('ma_nhan_vien_giao', $ma_nhan_vien)
-            ->where('trang_thai', 'DELIVERED')
-            ->where('trang_thai_thanh_toan', 'DA_THANH_TOAN')
-            ->where('phuong_thuc_thanh_toan', 'COD')
-            ->update(['trang_thai_thanh_toan' => 'DA_NOP']);
+        DB::transaction(function () use ($nhanVien, $dsDon, $tongCod, $tienPhat) {
+            // 1) Đánh dấu các đơn đã nộp
+            if ($dsDon->isNotEmpty()) {
+                HoaDon::whereIn('ma_hoa_don', $dsDon->pluck('ma_hoa_don'))
+                    ->update(['trang_thai_thanh_toan' => 'DA_NOP']);
+            }
+
+            // 2) Reset tiền phạt
+            $nhanVien->update(['tien_phat' => 0]);
+
+            // 3) Thông báo cho shipper kèm breakdown để app show chi tiết
+            $dsBreak = $dsDon->map(fn ($d) => [
+                'ma_hoa_don'  => (int) $d->ma_hoa_don,
+                'ma_hien_thi' => '#HD-' . str_pad($d->ma_hoa_don, 4, '0', STR_PAD_LEFT),
+                'tien'        => (float) $d->tong_tien,
+            ])->values()->all();
+
+            $tongNop = $tongCod + $tienPhat;
+
+            \App\Models\ThongBao::gui(
+                (int) $nhanVien->ma_nhan_vien,
+                'payment',
+                '💰 Đã xác nhận nộp ' . number_format($tongNop, 0, ',', '.')
+                    . ' đ. Cảm ơn bạn đã hoàn tất khoản cần nộp!',
+                null,
+                [
+                    'tong_cod'  => $tongCod,
+                    'tien_phat' => $tienPhat,
+                    'tong_nop'  => $tongNop,
+                    'so_don'    => $dsDon->count(),
+                    'ds_don'    => $dsBreak,
+                ]
+            );
+        });
 
         return response()->json([
-            'success'      => true,
-            'so_tien'      => $soTienDaTra,
-            'so_don'       => $updated,
-            'message'      => 'Đã xác nhận ' . $nhanVien->ten_nhan_vien . ' nộp '
-                              . number_format($soTienDaTra, 0, ',', '.') . ' đ ('
-                              . $updated . ' đơn).',
+            'success'   => true,
+            'so_tien'   => $tongCod,
+            'tien_phat' => $tienPhat,
+            'so_don'    => $dsDon->count(),
+            'message'   => 'Đã xác nhận ' . $nhanVien->ten_nhan_vien . ' nộp '
+                         . number_format($tongCod + $tienPhat, 0, ',', '.') . ' đ ('
+                         . $dsDon->count() . ' đơn).',
         ]);
     }
 }

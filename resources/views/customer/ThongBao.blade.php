@@ -100,6 +100,13 @@
                             'icon_bg'    => '#fce8ef',
                             'icon_color' => '#e75480',
                         ],
+                        'delivered' => [
+                            'label'      => 'Giao hàng thành công',
+                            'icon'       => 'fa-check-double',
+                            'border'     => '#10b981',
+                            'icon_bg'    => '#ecfdf5',
+                            'icon_color' => '#059669',
+                        ],
                     };
                 @endphp
                 <div class="notif-card" id="notif-{{ $tb['id'] }}"

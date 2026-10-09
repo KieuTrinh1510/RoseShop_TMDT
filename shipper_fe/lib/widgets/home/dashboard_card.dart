@@ -1,6 +1,6 @@
-// lib/widgets/dashboard_card.dart
+// lib/widgets/home/dashboard_card.dart
 import 'package:flutter/material.dart';
-import 'glass_container.dart';
+import '../common/glass_container.dart';
 import '../../theme/pink_theme.dart';
 
 const kNavy = Pink.plum;
@@ -10,6 +10,7 @@ class DashboardCard extends StatelessWidget {
   final String value;
   final String subtitle;
   final IconData icon;
+  final VoidCallback? onTap;
 
   const DashboardCard({
     super.key,
@@ -17,11 +18,12 @@ class DashboardCard extends StatelessWidget {
     required this.value,
     required this.subtitle,
     required this.icon,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GlassContainer(
+    final card = GlassContainer(
       borderRadius: 24,
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -68,6 +70,13 @@ class DashboardCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+
+    if (onTap == null) return card;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: card,
     );
   }
 }
