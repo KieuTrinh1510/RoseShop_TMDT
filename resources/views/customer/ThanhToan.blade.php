@@ -36,65 +36,51 @@
         @csrf
         <div class="checkout-layout">
 
-            {{-- LEFT: Thông tin --}}
+            {{-- LEFT: Thông tin & Địa chỉ Shopee --}}
             <div class="checkout-panel">
-                <h3>📋 Thông Tin Giao Hàng</h3>
+                {{-- SHOPEE SHIPPING ADDRESS CARD --}}
+                <div class="shopee-address-card">
+                    <div class="shopee-address-stripe"></div>
+                    <div class="shopee-address-inner">
+                        <div class="shopee-address-header">
+                            <svg class="shopee-pin-icon" viewBox="0 0 24 24">
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                            </svg>
+                            <span>Địa Chỉ Nhận Hàng</span>
+                        </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Tên người nhận <span>*</span></label>
-                        <input type="text" name="ten_nguoi_nhan"
-                               value="{{ old('ten_nguoi_nhan', optional($user->khachHang)->ten_khach_hang) }}"
-                               placeholder="Họ và tên"
-                               class="{{ $errors->has('ten_nguoi_nhan') ? 'input-error' : '' }}">
-                        @error('ten_nguoi_nhan')<div class="error-msg">{{ $message }}</div>@enderror
-                    </div>
-                    <div class="form-group">
-                        <label>Số điện thoại <span>*</span></label>
-                        <input type="text" name="so_dien_thoai"
-                               value="{{ old('so_dien_thoai', optional($user->khachHang)->so_dien_thoai) }}"
-                               placeholder="0xxxxxxxxx"
-                               class="{{ $errors->has('so_dien_thoai') ? 'input-error' : '' }}">
-                        @error('so_dien_thoai')<div class="error-msg">{{ $message }}</div>@enderror
-                    </div>
-                </div>
+                        <div id="shopeeAddressPreview" class="shopee-address-content">
+                            @if(isset($diaChiHienTai) && $diaChiHienTai)
+                                <div class="shopee-address-details">
+                                    <div class="shopee-user-info">
+                                        <span id="dispTenNguoiNhan">{{ $diaChiHienTai->ten_nguoi_nhan }}</span>
+                                        <span id="dispSoDienThoai" style="margin-left: 8px;">{{ $diaChiHienTai->so_dien_thoai }}</span>
+                                    </div>
+                                    <div class="shopee-address-text" id="dispDiaChiChiTiet">
+                                        {{ $diaChiHienTai->dia_chi_day_du }}
+                                    </div>
+                                    <span class="badge-shopee-default" id="dispBadgeDefault" style="{{ $diaChiHienTai->la_mac_dinh ? '' : 'display:none;' }}">Mặc định</span>
+                                </div>
+                                <div class="shopee-address-actions">
+                                    <button type="button" class="btn-shopee-change" onclick="openAddressListModal()">Thay Đổi</button>
+                                </div>
+                            @else
+                                <div class="shopee-address-empty">
+                                    <span>Bạn chưa có địa chỉ nhận hàng. Vui lòng thêm địa chỉ nhận hàng để tiếp tục đặt hàng.</span>
+                                </div>
+                                <div class="shopee-address-actions">
+                                    <button type="button" class="btn-shopee-add-new" onclick="openAddressCreateModal()">+ Thêm Địa Chỉ Mới</button>
+                                </div>
+                            @endif
+                        </div>
 
-                <div class="form-row full">
-                    <div class="form-group">
-                        <label>Tỉnh/Thành phố</label>
-                        <input type="text" value="Hà Nội" readonly
-                               style="background:#f9fafb;color:#9ca3af;cursor:not-allowed;">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Quận/Huyện <span>*</span></label>
-                        <select id="tt_quan_huyen" name="quan_huyen"
-                                class="{{ $errors->has('quan_huyen') ? 'input-error' : '' }}" required>
-                            <option value="">Chọn quận/huyện</option>
-                        </select>
-                        @error('quan_huyen')<div class="error-msg">{{ $message }}</div>@enderror
-                    </div>
-                    <div class="form-group">
-                        <label>Xã/Phường <span>*</span></label>
-                        <select id="tt_xa_phuong" name="xa_phuong"
-                                class="{{ $errors->has('xa_phuong') ? 'input-error' : '' }}" required>
-                            <option value="">Chọn xã/phường</option>
-                        </select>
-                        @error('xa_phuong')<div class="error-msg">{{ $message }}</div>@enderror
-                    </div>
-                </div>
-
-                <div class="form-row full">
-                    <div class="form-group">
-                        <label>Địa chỉ chi tiết <span>*</span></label>
-                        <input type="text" name="dia_chi_chi_tiet"
-                               value="{{ $ttChiTiet }}"
-                               placeholder="Số nhà, tên đường, ngõ..."
-                               class="{{ $errors->has('dia_chi_chi_tiet') ? 'input-error' : '' }}" required>
-                        @error('dia_chi_chi_tiet')<div class="error-msg">{{ $message }}</div>@enderror
-                        <div class="field-note">📍 Giao hàng nhanh trong 60 phút nội thành Hà Nội</div>
+                        {{-- Hidden inputs submitted with form --}}
+                        <input type="hidden" name="ten_nguoi_nhan" id="inputTenNguoiNhan" value="{{ old('ten_nguoi_nhan', $diaChiHienTai->ten_nguoi_nhan ?? optional($user->khachHang)->ten_khach_hang) }}">
+                        <input type="hidden" name="so_dien_thoai" id="inputSoDienThoai" value="{{ old('so_dien_thoai', $diaChiHienTai->so_dien_thoai ?? optional($user->khachHang)->so_dien_thoai) }}">
+                        <input type="hidden" name="quan_huyen" id="inputQuanHuyen" value="{{ old('quan_huyen', $diaChiHienTai->quan_huyen ?? 'Cầu Giấy') }}">
+                        <input type="hidden" name="xa_phuong" id="inputXaPhuong" value="{{ old('xa_phuong', $diaChiHienTai->xa_phuong ?? 'Dịch Vọng Hậu') }}">
+                        <input type="hidden" name="dia_chi_chi_tiet" id="inputDiaChiChiTiet" value="{{ old('dia_chi_chi_tiet', $diaChiHienTai->dia_chi_chi_tiet ?? '') }}">
+                        <input type="hidden" name="ma_dia_chi" id="inputMaDiaChi" value="{{ $diaChiHienTai->ma_dia_chi ?? '' }}">
                     </div>
                 </div>
 
@@ -255,75 +241,51 @@
         @csrf
         <div class="checkout-layout">
 
-            {{-- LEFT: Thông tin --}}
+            {{-- LEFT: Thông tin & Địa chỉ Shopee --}}
             <div class="checkout-panel">
-                <h3>📋 Thông Tin Giao Hàng</h3>
+                {{-- SHOPEE SHIPPING ADDRESS CARD --}}
+                <div class="shopee-address-card">
+                    <div class="shopee-address-stripe"></div>
+                    <div class="shopee-address-inner">
+                        <div class="shopee-address-header">
+                            <svg class="shopee-pin-icon" viewBox="0 0 24 24">
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                            </svg>
+                            <span>Địa Chỉ Nhận Hàng</span>
+                        </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Tên người nhận <span>*</span></label>
-                        <input type="text" name="ten_nguoi_nhan"
-                               value="{{ old('ten_nguoi_nhan', optional($user->khachHang)->ten_khach_hang) }}"
-                               placeholder="Họ và tên"
-                               class="{{ $errors->has('ten_nguoi_nhan') ? 'input-error' : '' }}">
-                        @error('ten_nguoi_nhan')<div class="error-msg">{{ $message }}</div>@enderror
-                    </div>
-                    <div class="form-group">
-                        <label>Số điện thoại <span>*</span></label>
-                        <input type="text" name="so_dien_thoai"
-                               value="{{ old('so_dien_thoai', optional($user->khachHang)->so_dien_thoai) }}"
-                               placeholder="0xxxxxxxxx"
-                               class="{{ $errors->has('so_dien_thoai') ? 'input-error' : '' }}">
-                        @error('so_dien_thoai')<div class="error-msg">{{ $message }}</div>@enderror
-                    </div>
-                </div>
+                        <div id="shopeeAddressPreview" class="shopee-address-content">
+                            @if(isset($diaChiHienTai) && $diaChiHienTai)
+                                <div class="shopee-address-details">
+                                    <div class="shopee-user-info">
+                                        <span id="dispTenNguoiNhan">{{ $diaChiHienTai->ten_nguoi_nhan }}</span>
+                                        <span id="dispSoDienThoai" style="margin-left: 8px;">{{ $diaChiHienTai->so_dien_thoai }}</span>
+                                    </div>
+                                    <div class="shopee-address-text" id="dispDiaChiChiTiet">
+                                        {{ $diaChiHienTai->dia_chi_day_du }}
+                                    </div>
+                                    <span class="badge-shopee-default" id="dispBadgeDefault" style="{{ $diaChiHienTai->la_mac_dinh ? '' : 'display:none;' }}">Mặc định</span>
+                                </div>
+                                <div class="shopee-address-actions">
+                                    <button type="button" class="btn-shopee-change" onclick="openAddressListModal()">Thay Đổi</button>
+                                </div>
+                            @else
+                                <div class="shopee-address-empty">
+                                    <span>Bạn chưa có địa chỉ nhận hàng. Vui lòng thêm địa chỉ nhận hàng để tiếp tục đặt hàng.</span>
+                                </div>
+                                <div class="shopee-address-actions">
+                                    <button type="button" class="btn-shopee-add-new" onclick="openAddressCreateModal()">+ Thêm Địa Chỉ Mới</button>
+                                </div>
+                            @endif
+                        </div>
 
-                {{-- Địa chỉ giao hàng dạng select --}}
-                @php
-                    $diaChiKH   = optional($user->khachHang)->dia_chi ?? '';
-                    $parts      = array_map('trim', explode(',', $diaChiKH));
-                    if (count($parts) >= 1 && strtolower(end($parts)) === 'hà nội') array_pop($parts);
-                    $ttQuan     = old('quan_huyen',       count($parts) >= 2 ? $parts[count($parts)-1] : '');
-                    $ttPhuong   = old('xa_phuong',        count($parts) >= 3 ? $parts[count($parts)-2] : '');
-                    $ttChiTiet  = old('dia_chi_chi_tiet', count($parts) >= 1 ? implode(', ', array_slice($parts, 0, count($parts)-2)) : $diaChiKH);
-                @endphp
-
-                <div class="form-row full">
-                    <div class="form-group">
-                        <label>Tỉnh/Thành phố</label>
-                        <input type="text" value="Hà Nội" readonly
-                               style="background:#f9fafb;color:#9ca3af;cursor:not-allowed;">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Quận/Huyện <span>*</span></label>
-                        <select id="tt_quan_huyen" name="quan_huyen"
-                                class="{{ $errors->has('quan_huyen') ? 'input-error' : '' }}" required>
-                            <option value="">Chọn quận/huyện</option>
-                        </select>
-                        @error('quan_huyen')<div class="error-msg">{{ $message }}</div>@enderror
-                    </div>
-                    <div class="form-group">
-                        <label>Xã/Phường <span>*</span></label>
-                        <select id="tt_xa_phuong" name="xa_phuong"
-                                class="{{ $errors->has('xa_phuong') ? 'input-error' : '' }}" required>
-                            <option value="">Chọn xã/phường</option>
-                        </select>
-                        @error('xa_phuong')<div class="error-msg">{{ $message }}</div>@enderror
-                    </div>
-                </div>
-
-                <div class="form-row full">
-                    <div class="form-group">
-                        <label>Địa chỉ chi tiết <span>*</span></label>
-                        <input type="text" name="dia_chi_chi_tiet"
-                               value="{{ $ttChiTiet }}"
-                               placeholder="Số nhà, tên đường, ngõ..."
-                               class="{{ $errors->has('dia_chi_chi_tiet') ? 'input-error' : '' }}" required>
-                        @error('dia_chi_chi_tiet')<div class="error-msg">{{ $message }}</div>@enderror
-                        <div class="field-note">📍 Giao hàng nhanh trong 60 phút nội thành Hà Nội</div>
+                        {{-- Hidden inputs submitted with form --}}
+                        <input type="hidden" name="ten_nguoi_nhan" id="inputTenNguoiNhan" value="{{ old('ten_nguoi_nhan', $diaChiHienTai->ten_nguoi_nhan ?? optional($user->khachHang)->ten_khach_hang) }}">
+                        <input type="hidden" name="so_dien_thoai" id="inputSoDienThoai" value="{{ old('so_dien_thoai', $diaChiHienTai->so_dien_thoai ?? optional($user->khachHang)->so_dien_thoai) }}">
+                        <input type="hidden" name="quan_huyen" id="inputQuanHuyen" value="{{ old('quan_huyen', $diaChiHienTai->quan_huyen ?? 'Cầu Giấy') }}">
+                        <input type="hidden" name="xa_phuong" id="inputXaPhuong" value="{{ old('xa_phuong', $diaChiHienTai->xa_phuong ?? 'Dịch Vọng Hậu') }}">
+                        <input type="hidden" name="dia_chi_chi_tiet" id="inputDiaChiChiTiet" value="{{ old('dia_chi_chi_tiet', $diaChiHienTai->dia_chi_chi_tiet ?? '') }}">
+                        <input type="hidden" name="ma_dia_chi" id="inputMaDiaChi" value="{{ $diaChiHienTai->ma_dia_chi ?? '' }}">
                     </div>
                 </div>
 
@@ -451,6 +413,95 @@
 
 </div>
 @endif
+
+{{-- MODAL 1: SỔ ĐỊA CHỈ (SHOPEE STYLE) --}}
+<div class="shopee-modal-overlay" id="modalAddressList" style="display:none;" onclick="if(event.target===this) closeAddressListModal()">
+    <div class="shopee-modal-box">
+        <div class="shopee-modal-header">
+            <h3>Địa Chỉ Của Tôi</h3>
+            <button type="button" class="btn-modal-close" onclick="closeAddressListModal()">&times;</button>
+        </div>
+        <div class="shopee-modal-body">
+            <div id="addressItemsContainer" class="address-items-list"></div>
+            <button type="button" class="btn-shopee-add-address-dashed" onclick="openAddressCreateModal()">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                    <path d="M7 0V14M0 7H14" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                Thêm Địa Chỉ Mới
+            </button>
+        </div>
+        <div class="shopee-modal-footer">
+            <button type="button" class="btn-modal-cancel" onclick="closeAddressListModal()">Hủy</button>
+            <button type="button" class="btn-modal-confirm" onclick="applySelectedAddress()">Xác Nhận</button>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL 2: THÊM / CẬP NHẬT ĐỊA CHỈ (SHOPEE STYLE) --}}
+<div class="shopee-modal-overlay" id="modalAddressForm" style="display:none;" onclick="if(event.target===this) closeAddressFormModal()">
+    <div class="shopee-modal-box modal-box-lg">
+        <div class="shopee-modal-header">
+            <h3 id="modalAddressFormTitle">Địa Chỉ Mới</h3>
+            <button type="button" class="btn-modal-close" onclick="closeAddressFormModal()">&times;</button>
+        </div>
+        <form id="formAddressModal" onsubmit="submitAddressForm(event)">
+            <input type="hidden" id="form_ma_dia_chi" value="">
+            <div class="shopee-modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Họ và tên <span>*</span></label>
+                        <input type="text" id="modal_ten_nguoi_nhan" required placeholder="Họ và tên người nhận" maxlength="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Số điện thoại <span>*</span></label>
+                        <input type="tel" id="modal_so_dien_thoai" required placeholder="Số điện thoại (10 chữ số)" pattern="[0-9]{10}" maxlength="10">
+                    </div>
+                </div>
+
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label>Tỉnh/Thành phố</label>
+                        <input type="text" value="Hà Nội" readonly style="background:#f9fafb;color:#6b7280;cursor:not-allowed;">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Quận/Huyện <span>*</span></label>
+                        <select id="modal_quan_huyen" required onchange="onModalQuanChange()">
+                            <option value="">Chọn quận/huyện</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Xã/Phường <span>*</span></label>
+                        <select id="modal_xa_phuong" required>
+                            <option value="">Chọn xã/phường</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row full">
+                    <div class="form-group">
+                        <label>Địa chỉ cụ thể <span>*</span></label>
+                        <input type="text" id="modal_dia_chi_chi_tiet" required placeholder="Số nhà, tên ngõ, tên đường..." maxlength="255">
+                    </div>
+                </div>
+
+                <div class="form-check-default">
+                    <label>
+                        <input type="checkbox" id="modal_la_mac_dinh">
+                        <span>Đặt làm địa chỉ mặc định</span>
+                    </label>
+                </div>
+                <div id="modalAddressError" class="modal-error-msg" style="display:none;"></div>
+            </div>
+            <div class="shopee-modal-footer">
+                <button type="button" class="btn-modal-cancel" onclick="closeAddressFormModal()">Trở Lại</button>
+                <button type="submit" class="btn-modal-confirm" id="btnSaveAddress">Hoàn Thành</button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
@@ -478,33 +529,237 @@ const hanoiData = {
     "Chương Mỹ": ["Chúc Sơn","Đại Yên","Đồng Phú","Đồng Lạc","Hòa Chính","Hoàng Diệu","Hoàng Văn Thụ","Hữu Văn","Lam Điền","Long Sơn","Mỹ Lương","Nam Phương Tiến","Ngọc Hòa","Phú Nam An","Phụng Châu","Quảng Bị","Tốt Động","Thủy Xuân Tiên","Thanh Bình","Trung Hòa","Trường Yên","Xuân Mai"],
 };
 
-const selQuan   = document.getElementById('tt_quan_huyen');
-const selPhuong = document.getElementById('tt_xa_phuong');
+// ── SỔ ĐỊA CHỈ & THAY ĐỔI / THÊM ĐỊA CHỈ KIỂU SHOPEE ────────────────────────
+let addresses = @json($danhSachDiaChi ?? []);
+let selectedAddressId = {{ $diaChiHienTai->ma_dia_chi ?? 'null' }};
 
-if (selQuan && selPhuong) {
-    Object.keys(hanoiData).sort().forEach(q => {
-        const opt = document.createElement('option');
-        opt.value = q; opt.textContent = q;
-        selQuan.appendChild(opt);
-    });
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
-    function updateTTPhuong(selectedPhuong) {
-        selPhuong.innerHTML = '<option value="">Chọn xã/phường</option>';
-        (hanoiData[selQuan.value] || []).forEach(p => {
-            const opt = document.createElement('option');
-            opt.value = p; opt.textContent = p;
-            if (p === selectedPhuong) opt.selected = true;
-            selPhuong.appendChild(opt);
-        });
+function openAddressListModal() {
+    renderAddressList();
+    const modal = document.getElementById('modalAddressList');
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeAddressListModal() {
+    const modal = document.getElementById('modalAddressList');
+    if (modal) modal.style.display = 'none';
+}
+
+function renderAddressList() {
+    const container = document.getElementById('addressItemsContainer');
+    if (!container) return;
+
+    if (!addresses || addresses.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:24px; color:#6b7280;">Chưa có địa chỉ nhận hàng nào được lưu.</div>';
+        return;
     }
 
-    selQuan.addEventListener('change', () => updateTTPhuong(''));
+    container.innerHTML = addresses.map(addr => `
+        <div class="shopee-address-item ${addr.ma_dia_chi === selectedAddressId ? 'item-selected' : ''}" onclick="selectAddressRadio(${addr.ma_dia_chi})">
+            <div class="address-item-radio">
+                <input type="radio" name="selected_addr_radio" value="${addr.ma_dia_chi}" ${addr.ma_dia_chi === selectedAddressId ? 'checked' : ''}>
+            </div>
+            <div class="address-item-info">
+                <div class="address-item-top">
+                    <strong class="item-name">${escapeHtml(addr.ten_nguoi_nhan)}</strong>
+                    <span class="item-sep">|</span>
+                    <span class="item-phone">${escapeHtml(addr.so_dien_thoai)}</span>
+                    ${addr.la_mac_dinh ? '<span class="badge-shopee-default">Mặc định</span>' : ''}
+                </div>
+                <div class="address-item-detail">${escapeHtml(addr.dia_chi_day_du)}</div>
+            </div>
+            <div class="address-item-actions">
+                <button type="button" class="btn-item-edit" onclick="event.stopPropagation(); editAddress(${addr.ma_dia_chi})">Cập nhật</button>
+            </div>
+        </div>
+    `).join('');
+}
 
-    const initQuan   = "{{ $ttQuan ?? '' }}";
-    const initPhuong = "{{ $ttPhuong ?? '' }}";
-    if (initQuan) {
-        selQuan.value = initQuan;
-        updateTTPhuong(initPhuong);
+function selectAddressRadio(id) {
+    selectedAddressId = id;
+    renderAddressList();
+}
+
+function applySelectedAddress() {
+    const chosen = addresses.find(a => a.ma_dia_chi === selectedAddressId);
+    if (!chosen) {
+        alert('Vui lòng chọn một địa chỉ.');
+        return;
+    }
+    updateCheckoutAddressUI(chosen);
+    closeAddressListModal();
+}
+
+function updateCheckoutAddressUI(addr) {
+    if (!addr) return;
+    const preview = document.getElementById('shopeeAddressPreview');
+    if (preview) {
+        preview.innerHTML = `
+            <div class="shopee-address-details">
+                <div class="shopee-user-info">
+                    <span id="dispTenNguoiNhan">${escapeHtml(addr.ten_nguoi_nhan)}</span>
+                    <span id="dispSoDienThoai" style="margin-left: 8px;">${escapeHtml(addr.so_dien_thoai)}</span>
+                </div>
+                <div class="shopee-address-text" id="dispDiaChiChiTiet">
+                    ${escapeHtml(addr.dia_chi_day_du)}
+                </div>
+                <span class="badge-shopee-default" id="dispBadgeDefault" style="${addr.la_mac_dinh ? '' : 'display:none;'}">Mặc định</span>
+            </div>
+            <div class="shopee-address-actions">
+                <button type="button" class="btn-shopee-change" onclick="openAddressListModal()">Thay Đổi</button>
+            </div>
+        `;
+    }
+
+    const setVal = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.value = val || '';
+    };
+
+    setVal('inputTenNguoiNhan', addr.ten_nguoi_nhan);
+    setVal('inputSoDienThoai', addr.so_dien_thoai);
+    setVal('inputQuanHuyen', addr.quan_huyen);
+    setVal('inputXaPhuong', addr.xa_phuong);
+    setVal('inputDiaChiChiTiet', addr.dia_chi_chi_tiet);
+    setVal('inputMaDiaChi', addr.ma_dia_chi);
+}
+
+function initModalHanoiDistricts() {
+    const sel = document.getElementById('modal_quan_huyen');
+    if (!sel || sel.options.length > 1) return;
+    Object.keys(hanoiData).sort().forEach(q => {
+        const opt = document.createElement('option');
+        opt.value = q;
+        opt.textContent = q;
+        sel.appendChild(opt);
+    });
+}
+
+function onModalQuanChange(selectedPhuong = '') {
+    const selQuan = document.getElementById('modal_quan_huyen');
+    const selPhuong = document.getElementById('modal_xa_phuong');
+    if (!selQuan || !selPhuong) return;
+
+    selPhuong.innerHTML = '<option value="">Chọn xã/phường</option>';
+    (hanoiData[selQuan.value] || []).forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = p;
+        if (p === selectedPhuong) opt.selected = true;
+        selPhuong.appendChild(opt);
+    });
+}
+
+function openAddressCreateModal(editData = null) {
+    initModalHanoiDistricts();
+    const modal = document.getElementById('modalAddressForm');
+    const title = document.getElementById('modalAddressFormTitle');
+    const form = document.getElementById('formAddressModal');
+    const errDiv = document.getElementById('modalAddressError');
+    if (errDiv) errDiv.style.display = 'none';
+
+    if (editData) {
+        title.textContent = 'Cập Nhật Địa Chỉ';
+        document.getElementById('form_ma_dia_chi').value = editData.ma_dia_chi;
+        document.getElementById('modal_ten_nguoi_nhan').value = editData.ten_nguoi_nhan || '';
+        document.getElementById('modal_so_dien_thoai').value = editData.so_dien_thoai || '';
+        document.getElementById('modal_quan_huyen').value = editData.quan_huyen || '';
+        onModalQuanChange(editData.xa_phuong || '');
+        document.getElementById('modal_dia_chi_chi_tiet').value = editData.dia_chi_chi_tiet || '';
+        document.getElementById('modal_la_mac_dinh').checked = !!editData.la_mac_dinh;
+    } else {
+        title.textContent = 'Địa Chỉ Mới';
+        form.reset();
+        document.getElementById('form_ma_dia_chi').value = '';
+        document.getElementById('modal_ten_nguoi_nhan').value = "{{ optional($user->khachHang)->ten_khach_hang ?? '' }}";
+        document.getElementById('modal_so_dien_thoai').value = "{{ optional($user->khachHang)->so_dien_thoai ?? '' }}";
+        document.getElementById('modal_la_mac_dinh').checked = (addresses.length === 0);
+        onModalQuanChange('');
+    }
+
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeAddressFormModal() {
+    const modal = document.getElementById('modalAddressForm');
+    if (modal) modal.style.display = 'none';
+}
+
+function editAddress(id) {
+    const item = addresses.find(a => a.ma_dia_chi === id);
+    if (!item) return;
+    openAddressCreateModal(item);
+}
+
+async function submitAddressForm(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSaveAddress');
+    btn.disabled = true;
+    btn.textContent = 'Đang lưu...';
+
+    const errDiv = document.getElementById('modalAddressError');
+    errDiv.style.display = 'none';
+
+    const id = document.getElementById('form_ma_dia_chi').value;
+    const isEdit = !!id;
+    const url = isEdit ? `/customer/dia-chi/${id}` : '/customer/dia-chi';
+    const method = isEdit ? 'PUT' : 'POST';
+
+    const payload = {
+        ten_nguoi_nhan: document.getElementById('modal_ten_nguoi_nhan').value.trim(),
+        so_dien_thoai: document.getElementById('modal_so_dien_thoai').value.trim(),
+        quan_huyen: document.getElementById('modal_quan_huyen').value,
+        xa_phuong: document.getElementById('modal_xa_phuong').value,
+        dia_chi_chi_tiet: document.getElementById('modal_dia_chi_chi_tiet').value.trim(),
+        la_mac_dinh: document.getElementById('modal_la_mac_dinh').checked,
+    };
+
+    try {
+        const res = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+            let msg = data.message || 'Đã có lỗi xảy ra.';
+            if (data.errors) {
+                msg = Object.values(data.errors).flat().join('<br>');
+            }
+            errDiv.innerHTML = msg;
+            errDiv.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Hoàn Thành';
+            return;
+        }
+
+        addresses = data.danh_sach || [];
+        selectedAddressId = data.data.ma_dia_chi;
+        updateCheckoutAddressUI(data.data);
+        renderAddressList();
+
+        closeAddressFormModal();
+        closeAddressListModal();
+    } catch (err) {
+        errDiv.textContent = 'Lỗi kết nối mạng hoặc hệ thống.';
+        errDiv.style.display = 'block';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Hoàn Thành';
     }
 }
 
@@ -531,7 +786,7 @@ function updateOrderButtonLabel(value) {
         : '🛍️ Đặt Hàng (COD)';
 }
 
-@if(!isset($boHoaCheckout))
+@if(!isset($dsBoHoa) || count($dsBoHoa) === 0)
 // ── Áp điểm tích lũy (chỉ cho đơn sản phẩm thường) ──────────────────────────
 const DIEM_QUY_DOI = 1000;
 const tongTienGoc  = {{ collect($gioHang)->sum(fn($i) => $i['gia_ban'] * $i['so_luong']) }};

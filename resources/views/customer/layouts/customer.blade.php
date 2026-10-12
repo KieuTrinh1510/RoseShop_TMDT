@@ -6,11 +6,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="stylesheet" href="{{ asset('css/Customer/Dashboard.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/Customer/Dashboard.css') }}?v={{ filemtime(public_path('css/Customer/Dashboard.css')) }}">
     <title>@yield('title', '🌸 Cửa Hàng Hoa Tươi')</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Be+Vietnam+Pro:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Google Fonts: Be Vietnam Pro (Đồng bộ font chữ chung giống Admin) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
 
     <style>
+        /* ===== Đồng bộ Font chữ Be Vietnam Pro toàn hệ thống giống Admin ===== */
+        :root {
+            --font-main: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --rs-font: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        html, body, button, input, select, textarea {
+            font-family: var(--font-main) !important;
+        }
+
+        h1, h2, h3, h4, h5, h6, p, label {
+            font-family: var(--font-main);
+        }
+
+        /* Bảo vệ bộ icon Font Awesome không bị ghi đè font chữ */
+        .fa, .fas, .far, .fal, .fad, .fab,
+        .fa-solid, .fa-regular, .fa-brands,
+        [class*="fa-"], [class^="fa-"] {
+            font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands", "FontAwesome" !important;
+        }
+        .fa::before, .fas::before, .far::before, .fal::before, .fad::before, .fab::before,
+        .fa-solid::before, .fa-regular::before, .fa-brands::before,
+        [class*="fa-"]::before, [class^="fa-"]::before {
+            font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands", "FontAwesome" !important;
+        }
+
         /* ===== Sticky Header Wrapper (Cố định toàn bộ Header khi lướt web) ===== */
         .site-header-wrapper {
             position: sticky;
@@ -161,15 +190,7 @@
             padding-left: 18px;
         }
 
-        /* ✅ Chấm đỏ thông báo chưa đọc */
-        .notification-item { position: relative; display: inline-block; }
-        .notif-dot {
-            position: absolute; top: -2px; right: -4px;
-            width: 8px; height: 8px; background: #e11d48;
-            border-radius: 50%; box-shadow: 0 0 0 2px #fff;
-            display: none;
-        }
-        .notif-dot.has-notif { display: block; }
+        /* Chấm đỏ thông báo chưa đọc được định nghĩa đồng bộ trong Dashboard.css */
     </style>
     @yield('head-styles')
 </head>
@@ -220,46 +241,75 @@
         @auth
             <div class="header-actions">
 
+                <!-- 1. Chuông thông báo -->
                 <div class="header-action-item">
-                    <a href="{{ route('customer.thong-bao') }}" class="notification-item">
+                    <a href="{{ route('customer.thong-bao') }}" class="header-action-btn notification-item" title="Thông báo">
                         <i class="fa-regular fa-bell"></i>
-                        <span class="notif-dot" id="notifDot"></span>
+                        <span class="header-badge notif-badge notif-dot" id="notifDot"></span>
                     </a>
                 </div>
 
-                <div class="header-action-item">
+                <div class="header-action-divider"></div>
+
+                <!-- 2. Giỏ hàng -->
+                 <div class="header-action-item">
+                    <a href="{{ route('customer.gio-hang') }}" class="header-action-btn cart-icon-btn" id="cartDropdownBtn" title="Giỏ hàng">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                        <span class="header-badge cart-badge" id="cartBadge">{{ $tongItemGio }}</span>
+                    </a>
+                </div>
+                <div class="header-action-divider"></div>
+                 
+                <!-- <div class="header-action-item">
                     <div class="cart-dropdown-wrapper">
-                        <button class="cart-icon-btn" id="cartDropdownBtn">
-                            <span class="icon">🛒</span>
-                            <span class="cart-badge" id="cartBadge">{{ $tongItemGio }}</span>
+                        <button type="button" class="header-action-btn cart-icon-btn" id="cartDropdownBtn" title="Giỏ hàng">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                            <span class="header-badge cart-badge" id="cartBadge">{{ $tongItemGio }}</span>
                         </button>
 
                         <div class="cart-dropdown-menu" id="cartDropdownMenu">
-    <a href="{{ route('customer.gio-hang') }}">🛒 Xem giỏ hàng</a>
+                            <a href="{{ route('customer.gio-hang') }}">
+                                <i class="fa-solid fa-bag-shopping" style="color: #be185d;"></i>
+                                <span>Xem giỏ hàng</span>
+                            </a>
 
-    @if($soItemGioBoHoa > 0)
-        <a href="{{ route('customer.bo-hoa.gio.index') }}">
-            💐 Giỏ bó hoa ({{ $soItemGioBoHoa }})
-        </a>
-    @endif
-</div>
+                            @if($soItemGioBoHoa > 0)
+                                <a href="{{ route('customer.bo-hoa.gio.index') }}">
+                                    <i class="fa-solid fa-seedling" style="color: #e11d48;"></i>
+                                    <span>Giỏ bó hoa ({{ $soItemGioBoHoa }})</span>
+                                </a>
+                            @endif
+                        </div>
                     </div>
                 </div>
 
+                <div class="header-action-divider"></div> -->
+
+                <!-- 3. Tài khoản người dùng -->
                 <div class="header-action-item">
-                    <a href="{{ route('customer.profile.edit') }}" class="user-profile-link">
-                        <span class="user-avatar">👤</span>
-                        <div class="user-info">
-                            <span>Xin chào,</span>
-                            <strong>{{ $user->ten_dang_nhap ?? auth()->user()->ten_dang_nhap ?? '' }}</strong>
+                    <a href="{{ route('customer.profile.edit') }}" class="header-user-btn user-profile-link" title="Thông tin tài khoản">
+                        <div class="header-user-avatar">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <div class="header-user-info user-info">
+                            <span class="header-user-greeting">Xin chào,</span>
+                            <strong class="header-user-name">{{ $user->ten_dang_nhap ?? auth()->user()->ten_dang_nhap ?? '' }}</strong>
                         </div>
                     </a>
                 </div>
 
-                <form method="POST" action="{{ route('logout') }}" class="logout-form">
-                    @csrf
-                    <button type="submit" class="logout-btn">Đăng xuất</button>
-                </form>
+                <div class="header-action-divider"></div>
+
+                <!-- 4. Nút Đăng xuất -->
+                <div class="header-action-item">
+                    <form method="POST" action="{{ route('logout') }}" class="logout-form">
+                        @csrf
+                        <button type="submit" class="header-logout-btn logout-btn" title="Đăng xuất">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                            <span>Đăng xuất</span>
+                        </button>
+                    </form>
+                </div>
 
             </div>
         @else
@@ -517,7 +567,7 @@
         setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    // ✅ Kiểm tra thông báo chưa đọc → hiện chấm đỏ trên chuông
+    // ✅ Kiểm tra thông báo chưa đọc → hiện số lượng/chấm đỏ trên chuông
     @auth
     (function checkNotifDot() {
         fetch('/customer/thong-bao/so-chua-doc', {
@@ -526,7 +576,15 @@
         .then(r => r.json())
         .then(data => {
             const dot = document.getElementById('notifDot');
-            if (dot && data.count > 0) dot.classList.add('has-notif');
+            if (!dot) return;
+            const count = data.count || data.so_chua_doc || 0;
+            if (count > 0) {
+                dot.textContent = count > 99 ? '99+' : count;
+                dot.classList.add('has-notif');
+            } else {
+                dot.textContent = '';
+                dot.classList.remove('has-notif');
+            }
         })
         .catch(() => {});
     })();

@@ -125,6 +125,44 @@ class CustomerCustomMixTest extends TestCase
         } catch (\Throwable $e) {
             // ignore
         }
+
+        try {
+            if (!empty($this->createdSpIds)) {
+                $lots = ChiTietNhap::whereIn('ma_san_pham', $this->createdSpIds)->pluck('ma_chi_tiet_nhap');
+                \App\Models\BaoCaoHangHong::whereIn('ma_chi_tiet_nhap', $lots)->delete();
+                \App\Models\DanhGiaLoHang::whereIn('ma_chi_tiet_nhap', $lots)->delete();
+                ChiTietNhap::whereIn('ma_san_pham', $this->createdSpIds)->delete();
+                SanPham::whereIn('ma_san_pham', $this->createdSpIds)->delete();
+            }
+
+            if (isset($this->customer)) {
+                $boIds = BoHoa::where('ma_khach_hang', $this->customer->ma_khach_hang)->pluck('ma_bo_hoa');
+                CustomMixImage::whereIn('ma_bo_hoa', $boIds)->delete();
+                \App\Models\ChiTietBoHoa::whereIn('ma_bo_hoa', $boIds)->delete();
+                BoHoa::whereIn('ma_bo_hoa', $boIds)->delete();
+
+                $hdIds = HoaDon::where('ma_khach_hang', $this->customer->ma_khach_hang)->pluck('ma_hoa_don');
+                InventoryReservation::whereIn('ma_hoa_don', $hdIds)->delete();
+                \App\Models\ChiTietHoaDon::whereIn('ma_hoa_don', $hdIds)->delete();
+                HoaDon::whereIn('ma_hoa_don', $hdIds)->delete();
+
+                $this->customer->delete();
+            }
+
+            if (isset($this->user)) {
+                $this->user->delete();
+            }
+
+            if (isset($this->pn)) {
+                $hasLots = ChiTietNhap::where('ma_phieu_nhap', $this->pn->ma_phieu_nhap)->exists();
+                if (!$hasLots) {
+                    $this->pn->delete();
+                }
+            }
+        } catch (\Throwable $e) {
+            // ignore cleanup errors
+        }
+
         parent::tearDown();
     }
 

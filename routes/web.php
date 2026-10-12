@@ -26,6 +26,7 @@ use App\Http\Controllers\Customer\CustomerProfileController;
 use App\Http\Controllers\Customer\ChiTietSanPhamController;
 use App\Http\Controllers\Customer\GioHangController;
 use App\Http\Controllers\Customer\ThanhToanController;
+use App\Http\Controllers\Customer\DiaChiController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 
 use Illuminate\Support\Facades\Route;
@@ -345,8 +346,15 @@ Route::middleware(['auth', 'role:KHACH_HANG'])->group(function () {
     Route::post('/customer/gio-hang/checkout', [GioHangController::class, 'checkout'])
         ->name('customer.gio-hang.checkout');
     Route::get('/customer/thanh-toan', [ThanhToanController::class, 'index'])->name('customer.thanh-toan');
-
     Route::post('/customer/thanh-toan', [ThanhToanController::class, 'store'])->name('customer.thanh-toan.store');
+
+    // Sổ địa chỉ nhận hàng (Shopee style)
+    Route::get('/customer/dia-chi',                 [DiaChiController::class, 'index'])->name('customer.dia-chi.index');
+    Route::post('/customer/dia-chi',                [DiaChiController::class, 'store'])->name('customer.dia-chi.store');
+    Route::put('/customer/dia-chi/{id}',            [DiaChiController::class, 'update'])->name('customer.dia-chi.update');
+    Route::patch('/customer/dia-chi/{id}/mac-dinh', [DiaChiController::class, 'setMacDinh'])->name('customer.dia-chi.mac-dinh');
+    Route::delete('/customer/dia-chi/{id}',         [DiaChiController::class, 'destroy'])->name('customer.dia-chi.destroy');
+
     Route::get('/customer/thong-bao',[CustomerThongBaoController::class, 'index'])->name('customer.thong-bao');
 
     Route::get('/customer/thong-bao/so-chua-doc',[CustomerThongBaoController::class, 'soChuaDoc'])->name('customer.thong-bao.so-chua-doc');

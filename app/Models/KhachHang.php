@@ -44,4 +44,17 @@ class KhachHang extends Model
     {
         return $this->hasMany(LichSuViPhamCod::class, 'ma_khach_hang', 'ma_khach_hang')->orderBy('id', 'desc');
     }
+
+    public function danhSachDiaChi()
+    {
+        return $this->hasMany(DiaChiKhachHang::class, 'ma_khach_hang', 'ma_khach_hang')
+            ->orderByDesc('la_mac_dinh')
+            ->orderByDesc('ma_dia_chi');
+    }
+
+    public function diaChiMacDinh()
+    {
+        return $this->hasOne(DiaChiKhachHang::class, 'ma_khach_hang', 'ma_khach_hang')
+            ->where('la_mac_dinh', true);
+    }
 }

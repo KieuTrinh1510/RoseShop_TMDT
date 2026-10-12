@@ -5,13 +5,13 @@
 @section('head-styles')
 <style>
 .gbh-wrap{max-width:1100px;margin:40px auto;padding:0 20px 60px;color:#33282e}
-.gbh-head{font:700 30px 'Playfair Display',serif;margin:0 0 8px}
+.gbh-head{font:700 30px 'Be Vietnam Pro',sans-serif;margin:0 0 8px}
 .gbh-sub{color:#725e67;margin:0 0 24px}
 .gbh-list{display:flex;flex-direction:column;gap:16px}
 .gbh-card{background:#fff;border:1px solid #eadbe1;border-radius:14px;padding:16px;display:flex;gap:16px;align-items:flex-start}
 .gbh-img{width:110px;height:110px;border-radius:10px;object-fit:cover;background:#f8f4f6;flex-shrink:0}
 .gbh-info{flex:1;min-width:0}
-.gbh-name{font:600 18px 'Playfair Display',serif;margin:0 0 4px}
+.gbh-name{font:600 18px 'Be Vietnam Pro',sans-serif;margin:0 0 4px}
 .gbh-meta{font-size:13px;color:#725e67;margin-bottom:4px}
 .gbh-thiep{font-size:13px;color:#8e3555;margin-top:4px}
 .gbh-note{font-size:12px;color:#999;margin-top:6px;font-style:italic}

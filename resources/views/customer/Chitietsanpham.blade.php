@@ -98,10 +98,10 @@
             <div class="action-row" style="display:flex;gap:12px;flex-wrap:wrap;">
                 <button type="submit" class="btn-cart" style="flex:1;min-width:180px;"
                         formaction="{{ route('customer.bo-hoa.gio.add') }}">
-                    🛒 Thêm vào giỏ
+                   Thêm vào giỏ
                 </button>
                 <button type="submit" class="btn-buy-now" style="flex:1;min-width:180px;">
-                    ⚡ Mua ngay
+                    Mua ngay
                 </button>
             </div>
 
@@ -423,19 +423,19 @@
         <div class="action-row">
             @auth
                 <button class="btn-cart" id="btnAddCart" onclick="addToCart()" disabled>
-                    🛒 Thêm vào giỏ hàng
+               Thêm vào giỏ hàng
                 </button>
                 <button class="btn-buy-now" id="btnBuyNow" onclick="addToCartAndRedirect()" disabled>
-                    ⚡ Mua ngay
+                    Mua ngay
                 </button>
             @else
                 <button class="btn-cart" onclick="navigateTo('{{ route('login') }}')">
-                    🛒 Đăng nhập để đặt hoa
+                Đăng nhập để đặt hoa
                 </button>
             @endauth
 
             <a href="https://zalo.me/0357634696" target="_blank" class="btn-contact">
-                💬 Tư vấn Zalo
+            Tư vấn Zalo
             </a>
         </div>
         @else
@@ -591,7 +591,7 @@ function renderSummary() {
 
         if (btnCart) {
             btnCart.disabled = false;
-            btnCart.textContent = `🛒 Thêm vào giỏ (${totalQty} sp – ${fmt(totalPrice)})`;
+            btnCart.textContent = `Thêm vào giỏ `;
         }
         if (btnBuy) btnBuy.disabled = false;
     } else {

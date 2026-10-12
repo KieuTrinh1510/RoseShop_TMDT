@@ -5,7 +5,7 @@
 }
 
 .checkout-heading {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Be Vietnam Pro', sans-serif;
     font-size: 1.7rem;
     color: #be185d;
     margin-bottom: 24px;
@@ -58,7 +58,7 @@
 }
 
 .checkout-panel h3 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Be Vietnam Pro', sans-serif;
     color: #be185d;
     font-size: 1.1rem;
     margin-bottom: 20px;
@@ -149,7 +149,7 @@
 }
 
 .order-summary-panel h3 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Be Vietnam Pro', sans-serif;
     color: #be185d;
     font-size: 1.1rem;
     margin-bottom: 16px;
@@ -464,4 +464,394 @@
 
 .points-msg.err {
     color: #dc2626;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SHOPEE SHIPPING ADDRESS CARD & MODALS
+   ═══════════════════════════════════════════════════════════════════════════ */
+.shopee-address-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 14px rgba(190, 24, 93, 0.08);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 24px;
+    border: 1px solid #fce7f3;
+}
+
+.shopee-address-stripe {
+    height: 4px;
+    width: 100%;
+    background-position-x: -30px;
+    background-size: 116px 4px;
+    background-image: repeating-linear-gradient(45deg, #6fa6d6, #6fa6d6 33px, transparent 0, transparent 41px, #f43f5e 0, #f43f5e 74px, transparent 0, transparent 82px);
+}
+
+.shopee-address-inner {
+    padding: 20px 24px;
+}
+
+.shopee-address-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.08rem;
+    font-weight: 700;
+    color: #be185d;
+    margin-bottom: 12px;
+}
+
+.shopee-pin-icon {
+    width: 20px;
+    height: 20px;
+    fill: #e11d48;
+    flex-shrink: 0;
+}
+
+.shopee-address-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    background: #fffdfd;
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px dashed #fbcfe8;
+}
+
+.shopee-address-details {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1;
+    flex-wrap: wrap;
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+.shopee-user-info {
+    font-weight: 700;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.shopee-address-text {
+    color: #4b5563;
+    flex: 1;
+    min-width: 200px;
+}
+
+.badge-shopee-default {
+    display: inline-block;
+    padding: 2px 7px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #e11d48;
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.btn-shopee-change {
+    padding: 7px 16px;
+    background: #fff;
+    color: #be185d;
+    border: 1px solid #f472b6;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+.btn-shopee-change:hover {
+    background: #fdf2f8;
+    color: #9d174d;
+    box-shadow: 0 2px 6px rgba(244, 114, 182, 0.2);
+}
+
+.shopee-address-empty {
+    color: #6b7280;
+    font-size: 0.92rem;
+}
+
+.btn-shopee-add-new {
+    padding: 8px 18px;
+    background: linear-gradient(135deg, #e11d48, #be185d);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(225, 29, 72, 0.25);
+    transition: opacity 0.2s;
+}
+.btn-shopee-add-new:hover {
+    opacity: 0.92;
+}
+
+/* MODALS */
+.shopee-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    animation: fadeInModal 0.2s ease;
+}
+
+@keyframes fadeInModal {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.shopee-modal-box {
+    background: #fff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 580px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    animation: slideUpModal 0.25s ease;
+}
+
+.modal-box-lg {
+    max-width: 620px;
+}
+
+@keyframes slideUpModal {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.shopee-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 24px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.shopee-modal-header h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.btn-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    line-height: 1;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.15s;
+}
+.btn-modal-close:hover {
+    color: #1f2937;
+}
+
+.shopee-modal-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.shopee-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 14px 24px;
+    border-top: 1px solid #f1f5f9;
+    background: #fafafa;
+}
+
+.btn-modal-cancel {
+    padding: 9px 20px;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    color: #4b5563;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.btn-modal-cancel:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+}
+
+.btn-modal-confirm {
+    padding: 9px 22px;
+    background: linear-gradient(135deg, #e11d48, #be185d);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(225, 29, 72, 0.25);
+    transition: opacity 0.15s;
+}
+.btn-modal-confirm:hover {
+    opacity: 0.92;
+}
+
+/* Address List Items in Modal */
+.address-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.shopee-address-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.shopee-address-item:hover {
+    border-color: #fbcfe8;
+    background: #fffbfd;
+}
+.shopee-address-item.item-selected {
+    border-color: #f43f5e;
+    background: #fff5f7;
+}
+
+.address-item-radio {
+    padding-top: 3px;
+}
+.address-item-radio input[type="radio"] {
+    accent-color: #e11d48;
+    width: 17px;
+    height: 17px;
+    cursor: pointer;
+}
+
+.address-item-info {
+    flex: 1;
+}
+
+.address-item-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+}
+
+.item-name {
+    font-size: 14px;
+    color: #111827;
+    font-weight: 700;
+}
+
+.item-sep {
+    color: #d1d5db;
+}
+
+.item-phone {
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.address-item-detail {
+    font-size: 13px;
+    color: #4b5563;
+    line-height: 1.4;
+}
+
+.address-item-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-end;
+}
+
+.btn-item-edit {
+    background: none;
+    border: none;
+    color: #2563eb;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 2px 4px;
+}
+.btn-item-edit:hover {
+    text-decoration: underline;
+}
+
+.btn-shopee-add-address-dashed {
+    width: 100%;
+    padding: 12px;
+    background: #fff;
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 10px;
+    color: #be185d;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-shopee-add-address-dashed:hover {
+    background: #fdf2f8;
+    border-color: #f472b6;
+}
+
+.form-check-default {
+    margin-top: 10px;
+}
+.form-check-default label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #4b5563;
+    cursor: pointer;
+}
+.form-check-default input[type="checkbox"] {
+    accent-color: #e11d48;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.modal-error-msg {
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    border-radius: 8px;
+    color: #be123c;
+    font-size: 13px;
 }
