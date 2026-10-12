@@ -24,6 +24,7 @@ class ChiTietNhap extends Model
         'gia_nhap',
         'gia_ban',          
         'so_luong_con_lai', 
+        'ngay_het_han',
     ];
 
     protected $casts = [
@@ -31,6 +32,7 @@ class ChiTietNhap extends Model
         'gia_nhap' => 'decimal:2',
         'gia_ban' => 'decimal:2',
         'so_luong_con_lai' => 'integer',
+        'ngay_het_han' => 'date',
     ];
 
     public function phieuNhap()

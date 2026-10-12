@@ -125,33 +125,67 @@
 ═══════════════════════════════════════════════════════════ --}}
 <div class="detail-wrap">
     <div>
-        <div class="gallery-main">
-            <div class="gallery-placeholder">💐</div>
+        <div class="gallery-main" style="background:#fff; border:1px solid #fce7f3; border-radius:16px; padding:12px; box-shadow:0 4px 12px rgba(236,72,153,0.06);">
+            @if(!empty($anhMau) && count($anhMau) > 0)
+                <div style="position:relative; width:100%; border-radius:12px; overflow:hidden; border:1px solid #fbcfe8; background:#fff5f7;">
+                    <img id="mainTuTaoImg" src="{{ $anhMau[0]['url'] }}" alt="{{ $anhMau[0]['original_name'] ?? 'Ảnh mẫu' }}" style="width:100%; max-height:420px; object-fit:contain; border-radius:12px; display:block; margin:0 auto;">
+                </div>
+                @if(count($anhMau) > 1)
+                    <div style="display:flex; gap:10px; margin-top:12px; justify-content:center;">
+                        @foreach($anhMau as $idx => $img)
+                            <div style="width:72px; height:72px; border-radius:10px; overflow:hidden; border:2px solid {{ $idx === 0 ? '#ec4899' : '#e5e7eb' }}; cursor:pointer; transition:all 0.2s; box-shadow:0 2px 4px rgba(0,0,0,0.05);"
+                                 onclick="document.getElementById('mainTuTaoImg').src = '{{ $img['url'] }}'; this.parentElement.querySelectorAll('div').forEach(el => el.style.borderColor = '#e5e7eb'); this.style.borderColor = '#ec4899';">
+                                <img src="{{ $img['url'] }}" alt="Ảnh mẫu {{ $idx + 1 }}" style="width:100%; height:100%; object-fit:cover;">
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+                <div style="margin-top:12px; padding:10px 14px; background:#fff1f2; border-radius:8px; border-left:3px solid #ec4899; font-size:12px; color:#9f1239; line-height:1.5;">
+                    💡 <strong>Lưu ý:</strong> Ảnh mẫu chỉ dùng để tham khảo về phong cách và cách phối. Bó hoa thực tế được thực hiện dựa trên thành phần và số lượng đã được xác nhận trong Custom Mix.
+                </div>
+            @else
+                <div class="gallery-placeholder" style="font-size:72px; padding:40px 0; text-align:center;">💐</div>
+                <div style="text-align:center; padding:10px; font-size:13px; color:#9ca3af; font-style:italic;">
+                    Không có ảnh mẫu đính kèm
+                </div>
+            @endif
         </div>
     </div>
     <div class="info-panel">
-        <div class="info-category-tag">💐 Bó hoa tự tạo</div>
-        <h1 class="info-title">{{ $preview['ten_bo_hoa'] }}</h1>
+        <div class="info-category-tag" style="background:#fdf2f8; color:#be185d; border:1px solid #fbcfe8; display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:20px; font-weight:600; font-size:13px;">
+            💐 Bó hoa tự tạo (Custom Mix)
+        </div>
+        <h1 class="info-title" style="margin-top:8px;">{{ $preview['ten_bo_hoa'] }}</h1>
 
-        <div class="meta-strip">
+        <div class="meta-strip" style="display:flex; gap:10px; flex-wrap:wrap; margin:12px 0;">
             <div class="meta-chip">Kiểu dáng: <strong>{{ \App\Http\Controllers\Admin\BoHoaController::KIEU_DANG[$preview['kieu_bo_hoa']] ?? $preview['kieu_bo_hoa'] }}</strong></div>
             <div class="meta-chip">Size: <strong>{{ $preview['size'] }}</strong></div>
             <div class="meta-chip">Số bó: <strong>{{ $preview['so_luong'] }}</strong></div>
         </div>
 
-        <div class="price-table-wrap">
-            <div class="price-table-label">💰 Giá tạm tính</div>
-            <p class="price-val">{{ number_format($quote['gia_moi_bo'], 0, ',', '.') }}₫ / bó</p>
-            <p style="font-size:13px;color:#725e67;margin-top:6px;">
-                Nguyên liệu: {{ number_format($quote['tien_nguyen_lieu'], 0, ',', '.') }}₫
-                · Phụ phí: {{ number_format($quote['phu_phi']['tong'], 0, ',', '.') }}₫
-                · Tổng: <strong>{{ number_format($quote['tong_tien'], 0, ',', '.') }}₫</strong>
+        <div class="price-table-wrap" style="background:#fff5f7; border:1px solid #fce7f3; border-radius:12px; padding:16px; margin-bottom:16px;">
+            <div class="price-table-label" style="font-weight:600; color:#831843;">💰 Giá tạm tính</div>
+            <p class="price-val" id="priceValTuTao" style="font-size:24px; font-weight:700; color:#db2777; margin:6px 0;">
+                {{ number_format($quote['gia_moi_bo'], 0, ',', '.') }}₫ <span style="font-size:15px; font-weight:400; color:#6b7280;">/ bó</span>
             </p>
+            <div style="font-size:13px; color:#4b5563; line-height:1.6;" id="priceBreakdownTuTao">
+                <div>• Tiền hoa: <strong>{{ number_format($quote['chi_tiet_tien']['hoa'] ?? 0, 0, ',', '.') }}₫</strong></div>
+                <div>• Tiền giấy gói: <strong>{{ number_format($quote['chi_tiet_tien']['giay'] ?? 0, 0, ',', '.') }}₫</strong> · Ruy băng: <strong>{{ number_format($quote['chi_tiet_tien']['ruy_bang'] ?? 0, 0, ',', '.') }}₫</strong> · Xốp: <strong>{{ number_format($quote['chi_tiet_tien']['xop'] ?? 0, 0, ',', '.') }}₫</strong></div>
+                @if(!empty($quote['chi_tiet_tien']['phu_kien']))
+                    <div>• Tiền phụ kiện: <strong>{{ number_format($quote['chi_tiet_tien']['phu_kien'], 0, ',', '.') }}₫</strong></div>
+                @endif
+                <div>• Phụ phí: <strong>{{ number_format($quote['phu_phi']['tong'], 0, ',', '.') }}₫</strong> (Size: {{ number_format($quote['phu_phi']['kich_thuoc'] ?? 0, 0, ',', '.') }}₫ · Kiểu dáng: {{ number_format($quote['phu_phi']['kieu_dang'] ?? 0, 0, ',', '.') }}₫)</div>
+                <div id="thiepTotalNotice" style="display:none; color:#be185d; font-weight:600;"></div>
+                <hr style="border:none; border-top:1px dashed #fbcfe8; margin:8px 0;">
+                <div style="font-size:15px;">
+                    Tổng cộng ({{ $preview['so_luong'] }} bó): <strong id="priceTotalTuTao" style="color:#db2777; font-size:18px;">{{ number_format($quote['tong_tien'], 0, ',', '.') }}₫</strong>
+                </div>
+            </div>
         </div>
 
-        <div class="info-desc">
-            <div class="info-desc-label">Thành phần bó hoa</div>
-            <ul>
+        <div class="info-desc" style="background:#fff; border:1px solid #f3f4f6; border-radius:12px; padding:16px; margin-bottom:16px;">
+            <div class="info-desc-label" style="font-weight:600; color:#1f2937; margin-bottom:8px;">Thành phần bó hoa (cho 1 bó)</div>
+            <ul style="padding-left:20px; margin:0; line-height:1.6; font-size:14px;">
                 @foreach($chiTietPreview->groupBy('vai_tro') as $vaiTro => $items)
                     <li>
                         <strong>{{ \App\Http\Controllers\Admin\BoHoaController::VAI_TRO[$vaiTro] ?? $vaiTro }}:</strong>
@@ -160,33 +194,52 @@
                 @endforeach
             </ul>
             @if(!empty($preview['concept']))
-                <p style="margin-top:12px;"><em>Concept: {{ $preview['concept'] }}</em></p>
+                <p style="margin-top:10px; font-size:13px; color:#4b5563;"><em>Concept thiết kế: {{ $preview['concept'] }}</em></p>
             @endif
         </div>
 
-        <div style="margin:16px 0; padding:14px; background:#fffbeb; border-radius:10px; font-size:13px; color:#92400e;">
-            ⚠️ Đây là bản xem trước — chưa tạo đơn. Nhấn "Xác nhận mua hàng" để chốt thiết kế và chuyển sang thanh toán.
+        <div style="margin:16px 0; padding:14px; background:#fffbeb; border-radius:10px; font-size:13px; color:#92400e; border:1px solid #fef3c7;">
+            ⚠️ <strong>Lưu ý:</strong> Đây là bản xem trước — kho chưa bị trừ hay giữ chỗ. Sau khi nhấn "Xác nhận mua hàng", hệ thống sẽ chuyển sang bước thanh toán và giữ chỗ nguyên liệu.
         </div>
 
-        <div class="action-row" style="margin-bottom:14px;">
-            <a href="{{ route('customer.bo-hoa.tu-tao') }}" class="btn-cart" style="text-decoration:none; text-align:center; display:inline-flex; align-items:center; justify-content:center;">
-                ← Thay đổi bó hoa
-            </a>
-        </div>
-
-        <form method="POST" action="{{ route('customer.bo-hoa.tu-tao.mua') }}" class="action-row">
+        <form method="POST" action="{{ route('customer.bo-hoa.tu-tao.mua') }}" id="formTuTaoMua">
             @csrf
-            <label style="display:flex;align-items:center;gap:8px;margin:0 0 6px;">
-                <input type="checkbox" id="coThiepTuTao" name="co_thiep" value="1"
-                       style="width:auto;" {{ old('co_thiep') ? 'checked' : '' }}>
-                Thêm thiệp gửi kèm (không phụ phí)
-            </label>
-            <div id="thiepBlockTuTao" style="display:{{ old('co_thiep') ? 'block' : 'none' }};">
-                <label>Nội dung thiệp
-                    <textarea name="loi_nhan" maxlength="2000" placeholder="Ví dụ: Chúc mừng sinh nhật em!">{{ old('loi_nhan') }}</textarea>
+
+            @if(isset($dsThiep) && $dsThiep->count() > 0)
+            <div style="margin-bottom:14px; background:#faf5ff; border:1px solid #f3e8ff; border-radius:10px; padding:12px 14px;">
+                <label style="font-weight:600; color:#6b21a8; display:block; margin-bottom:6px; font-size:14px;">
+                    💌 Chọn thiệp chúc mừng (tùy chọn — 1 thiệp / bó):
                 </label>
+                <select name="ma_thiep" id="thiepSelectTuTao" style="width:100%; padding:10px 12px; border:1px solid #d8b4fe; border-radius:8px; background:#fff; font-size:14px; outline:none;">
+                    <option value="" data-gia="0">-- Không lấy thiệp --</option>
+                    @foreach($dsThiep as $t)
+                        <option value="{{ $t->ma_san_pham }}" data-gia="{{ $t->gia_ban_hien_tai }}"
+                            {{ old('ma_thiep') == $t->ma_san_pham ? 'selected' : '' }}>
+                            {{ $t->ten_san_pham }} (+{{ number_format($t->gia_ban_hien_tai, 0, ',', '.') }}₫ / bó)
+                        </option>
+                    @endforeach
+                </select>
+                <div style="font-size:12px; color:#7e22ce; margin-top:4px;">
+                    * Lưu ý: Giá thiệp sẽ tự động nhân với số lượng bó hoa ({{ $preview['so_luong'] }} bó).
+                </div>
             </div>
-            <button class="btn-buy-now">⚡ Xác nhận mua hàng</button>
+            @endif
+
+            <div style="margin-bottom:16px;">
+                <label style="font-weight:600; color:#374151; display:block; margin-bottom:6px; font-size:14px;">
+                    Lời nhắn trên thiệp (nếu có):
+                </label>
+                <textarea name="loi_nhan" maxlength="2000" rows="3" style="width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; box-sizing:border-box;" placeholder="Nhập lời chúc bạn muốn viết gửi người nhận...">{{ old('loi_nhan') }}</textarea>
+            </div>
+
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                <a href="{{ route('customer.bo-hoa.tu-tao') }}" class="btn-cart" style="text-decoration:none; text-align:center; display:inline-flex; align-items:center; justify-content:center; flex:1; min-width:160px; padding:12px 18px; border-radius:10px; background:#f3f4f6; color:#374151; font-weight:600; border:1px solid #e5e7eb;">
+                    ← Thay đổi thiết kế
+                </a>
+                <button type="submit" class="btn-buy-now" style="flex:2; min-width:200px; text-align:center; font-size:15px; font-weight:700; padding:12px 20px; border-radius:10px; background:linear-gradient(135deg, #ec4899 0%, #db2777 100%); color:#fff; border:none; cursor:pointer; box-shadow:0 4px 12px rgba(219,39,119,0.25);">
+                    ⚡ Xác nhận mua hàng (Direct Checkout)
+                </button>
+            </div>
         </form>
     </div>
 </div>
@@ -658,6 +711,37 @@ async function addToCartAndRedirect() {
         priceEl.innerHTML = new Intl.NumberFormat('vi-VN').format(tong) + '₫ / bó';
     }
     sel.addEventListener('change', update);
+})();
+
+(function() {
+    const giaMoiBoGoc = {{ isset($quote) && ($type ?? '') === 'bo-hoa-tu-tao' ? (float) $quote['gia_moi_bo'] : 0 }};
+    const soLuongBo = {{ isset($preview) && isset($preview['so_luong']) ? (int) $preview['so_luong'] : 1 }};
+    const sel = document.getElementById('thiepSelectTuTao');
+    const priceVal = document.getElementById('priceValTuTao');
+    const priceTotal = document.getElementById('priceTotalTuTao');
+    const thiepNotice = document.getElementById('thiepTotalNotice');
+
+    if (!sel || !priceVal || !priceTotal || !giaMoiBoGoc) return;
+
+    function recalc() {
+        const opt = sel.options[sel.selectedIndex];
+        const giaThiep = parseInt(opt ? (opt.dataset.gia || 0) : 0);
+        const giaMoiBoMoi = giaMoiBoGoc + giaThiep;
+        const tongMoi = giaMoiBoMoi * soLuongBo;
+
+        priceVal.innerHTML = new Intl.NumberFormat('vi-VN').format(giaMoiBoMoi) + '₫ <span style="font-size:15px; font-weight:400; color:#6b7280;">/ bó</span>';
+        priceTotal.textContent = new Intl.NumberFormat('vi-VN').format(tongMoi) + '₫';
+
+        if (giaThiep > 0) {
+            thiepNotice.style.display = 'block';
+            thiepNotice.textContent = '• Thiệp (' + soLuongBo + ' cái): +' + new Intl.NumberFormat('vi-VN').format(giaThiep * soLuongBo) + '₫ (' + new Intl.NumberFormat('vi-VN').format(giaThiep) + '₫/cái)';
+        } else {
+            thiepNotice.style.display = 'none';
+        }
+    }
+
+    sel.addEventListener('change', recalc);
+    recalc();
 })();
 </script>
 @endsection

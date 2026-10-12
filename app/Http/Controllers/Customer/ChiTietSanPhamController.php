@@ -117,28 +117,25 @@ class ChiTietSanPhamController extends Controller
         }
 
         return view('customer.ChiTietSanPham', [
-            'type' => 'bo-hoa-tu-tao',
-            'preview' => $nhap,
+            'type'           => 'bo-hoa-tu-tao',
+            'preview'        => $nhap,
             'chiTietPreview' => $chiTietPreview,
-            'quote' => $quote,
+            'quote'          => $quote,
+            'dsThiep'        => $this->danhSachThiep(),
         ]);
     }
 
     /**
-     * Danh sách thiệp đang bán + còn tồn kho (CONFIRMED).
+     * Danh sách thiệp đang bán + còn tồn kho khả dụng (CONFIRMED, chưa hết hạn).
      * Chỉ những thiệp này mới cho khách chọn ở form chi tiết bó hoa.
      */
     private function danhSachThiep()
     {
         return SanPham::where('loai_san_pham', 'THIEP')
             ->where('trang_thai', 'DANG_BAN')
-            ->with(['chiTietNhaps' => function ($q) {
-                $q->where('so_luong_con_lai', '>', 0)
-                  ->whereHas('phieuNhap', fn($q2) => $q2->where('trang_thai', 'CONFIRMED'));
-            }])
             ->orderBy('ten_san_pham')
             ->get()
-            ->filter(fn ($sp) => $sp->chiTietNhaps->sum('so_luong_con_lai') > 0)
+            ->filter(fn ($sp) => \App\Services\InventoryReservationService::getAvailableForIngredient($sp->ma_san_pham) > 0)
             ->values();
     }
 }

@@ -104,6 +104,15 @@ class BoHoa extends Model
         return $query->where('loai_bo_hoa', 'HE_THONG');
     }
 
+    public function customMixImages()
+    {
+        return $this->hasMany(
+            CustomMixImage::class,
+            'ma_bo_hoa',
+            'ma_bo_hoa'
+        )->orderBy('sort_order');
+    }
+
     public function reservations()
     {
         return $this->hasMany(
