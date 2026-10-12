@@ -64,6 +64,11 @@ class SanPhamController extends Controller
             $query->where('loai_san_pham', $request->loai_san_pham);
         }
 
+        $perPage = (int) $request->input('per_page', 10);
+        if (!in_array($perPage, [10, 20, 50, 100])) {
+            $perPage = 10;
+        }
+
         $danhSachSanPham = $query
             ->with(['chiTietNhaps' => function ($q) {
                 $q->where('so_luong_con_lai', '>', 0)
@@ -71,7 +76,7 @@ class SanPhamController extends Controller
                   ->orderBy('gia_ban', 'asc');
             }])
             ->orderBy('ma_san_pham', 'desc')
-            ->paginate(5)->withQueryString();
+            ->paginate($perPage)->withQueryString();
 
         $danhSachLoai      = $this->danhSachLoai;
         $danhSachLoaiBanRa = collect($this->danhSachLoai)->except($this->maLoaiNguyenLieu);
