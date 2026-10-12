@@ -31,8 +31,8 @@ class LoHangController extends Controller
             $query->where(function ($q) use ($kw) {
                 if (is_numeric($kw)) {
                     $q->orWhere('ma_chi_tiet_nhap', (int) $kw)
-                      ->orWhere('ma_phieu_nhap', (int) $kw)
-                      ->orWhere('ma_san_pham', (int) $kw);
+                        ->orWhere('ma_phieu_nhap', (int) $kw)
+                        ->orWhere('ma_san_pham', (int) $kw);
                 }
                 $q->orWhereHas('sanPham', function ($sq) use ($kw) {
                     $sq->where('ten_san_pham', 'LIKE', '%' . $kw . '%');
@@ -117,14 +117,14 @@ class LoHangController extends Controller
         // Mốc Nhập kho ban đầu
         $ngayNhap = $loHang->phieuNhap?->ngay_nhap ?? $loHang->created_at;
         $timeline->push([
-            'loai'              => 'NHAP_KHO',
-            'tieu_de'           => 'Nhập kho ban đầu',
+            'loai' => 'NHAP_KHO',
+            'tieu_de' => 'Nhập kho ban đầu',
             'so_luong_thay_doi' => +$loHang->so_luong,
-            'thoi_gian'         => $ngayNhap,
-            'nguoi_thuc_hien'   => $loHang->phieuNhap?->nhanVien?->ten_nhan_vien ?? 'Hệ thống',
-            'chi_tiet'          => 'Nhập kho theo Phiếu nhập #PN-' . $loHang->ma_phieu_nhap . ' (NCC: ' . ($loHang->phieuNhap?->ten_nha_cung_cap ?? '—') . ')',
-            'badge_class'       => 'bg-primary',
-            'icon'              => 'bi-box-arrow-in-down',
+            'thoi_gian' => $ngayNhap,
+            'nguoi_thuc_hien' => $loHang->phieuNhap?->nhanVien?->ten_nhan_vien ?? 'Hệ thống',
+            'chi_tiet' => 'Nhập kho theo Phiếu nhập #PN-' . $loHang->ma_phieu_nhap . ' (NCC: ' . ($loHang->phieuNhap?->ten_nha_cung_cap ?? '—') . ')',
+            'badge_class' => 'bg-primary',
+            'icon' => 'bi-box-arrow-in-down',
         ]);
 
         // Mốc Các lần xuất kho bán hàng (CONSUMED)
@@ -132,28 +132,28 @@ class LoHangController extends Controller
             $loaiSp = $xuat->boHoa ? "Bó hoa: {$xuat->boHoa->ten_bo_hoa}" : "Sản phẩm đơn lẻ";
             $khach = $xuat->hoaDon?->khachHang?->ho_ten ?? ($xuat->hoaDon?->so_dien_thoai ? "SĐT: {$xuat->hoaDon->so_dien_thoai}" : 'Khách mua');
             $timeline->push([
-                'loai'              => 'XUAT_KHO',
-                'tieu_de'           => 'Xuất kho bán hàng',
+                'loai' => 'XUAT_KHO',
+                'tieu_de' => 'Xuất kho bán hàng',
                 'so_luong_thay_doi' => -$xuat->so_luong,
-                'thoi_gian'         => $xuat->updated_at ?? $xuat->created_at,
-                'nguoi_thuc_hien'   => $khach,
-                'chi_tiet'          => "Xuất cho đơn hàng #{$xuat->ma_hoa_don} ({$loaiSp})",
-                'badge_class'       => 'bg-success',
-                'icon'              => 'bi-cart-check',
+                'thoi_gian' => $xuat->updated_at ?? $xuat->created_at,
+                'nguoi_thuc_hien' => $khach,
+                'chi_tiet' => "Xuất cho đơn hàng #{$xuat->ma_hoa_don} ({$loaiSp})",
+                'badge_class' => 'bg-success',
+                'icon' => 'bi-cart-check',
             ]);
         }
 
         // Mốc Các lần hàng hỏng / hao hụt
         foreach ($loHang->baoCaoHangHongs as $hong) {
             $timeline->push([
-                'loai'              => 'HANG_HONG',
-                'tieu_de'           => 'Hàng hỏng / hao hụt',
+                'loai' => 'HANG_HONG',
+                'tieu_de' => 'Hàng hỏng / hao hụt',
                 'so_luong_thay_doi' => -$hong->so_luong_hong,
-                'thoi_gian'         => $hong->thoi_gian_bao_cao ?? $hong->created_at,
-                'nguoi_thuc_hien'   => $hong->nhanVien?->ten_nhan_vien ?? 'Nhân viên kho',
-                'chi_tiet'          => 'Báo hỏng: ' . ($hong->ly_do ?: 'Không ghi nhận') . ($hong->ghi_chu ? " ({$hong->ghi_chu})" : ''),
-                'badge_class'       => 'bg-danger',
-                'icon'              => 'bi-trash3',
+                'thoi_gian' => $hong->thoi_gian_bao_cao ?? $hong->created_at,
+                'nguoi_thuc_hien' => $hong->nhanVien?->ten_nhan_vien ?? 'Nhân viên kho',
+                'chi_tiet' => 'Báo hỏng: ' . ($hong->ly_do ?: 'Không ghi nhận') . ($hong->ghi_chu ? " ({$hong->ghi_chu})" : ''),
+                'badge_class' => 'bg-danger',
+                'icon' => 'bi-trash3',
             ]);
         }
 
@@ -192,19 +192,19 @@ class LoHangController extends Controller
         }
 
         $request->validate([
-            'ket_qua'      => ['required', 'in:DAT,CO_VAN_DE,KHONG_DAT'],
+            'ket_qua' => ['required', 'in:DAT,CO_VAN_DE,KHONG_DAT'],
             'so_luong_loi' => ['nullable', 'integer', 'min:0', 'max:' . $chiTietNhap->so_luong],
-            'ly_do'        => ['nullable', 'string', 'max:255', 'required_if:ket_qua,CO_VAN_DE,KHONG_DAT'],
-            'ghi_chu'      => ['nullable', 'string', 'max:1000'],
+            'ly_do' => ['nullable', 'string', 'max:255', 'required_if:ket_qua,CO_VAN_DE,KHONG_DAT'],
+            'ghi_chu' => ['nullable', 'string', 'max:1000'],
         ], [
-            'ket_qua.required'       => 'Vui lòng chọn kết quả đánh giá.',
-            'ket_qua.in'             => 'Kết quả đánh giá không hợp lệ.',
-            'so_luong_loi.integer'   => 'Số lượng lỗi phải là số nguyên.',
-            'so_luong_loi.min'       => 'Số lượng lỗi không được âm.',
-            'so_luong_loi.max'       => 'Số lượng lỗi không được vượt quá số lượng ban đầu của lô (' . $chiTietNhap->so_luong . ').',
-            'ly_do.required_if'      => 'Vui lòng nhập lý do khi lô Có vấn đề hoặc Không đạt.',
-            'ly_do.max'              => 'Lý do không được vượt quá 255 ký tự.',
-            'ghi_chu.max'            => 'Ghi chú không được vượt quá 1000 ký tự.',
+            'ket_qua.required' => 'Vui lòng chọn kết quả đánh giá.',
+            'ket_qua.in' => 'Kết quả đánh giá không hợp lệ.',
+            'so_luong_loi.integer' => 'Số lượng lỗi phải là số nguyên.',
+            'so_luong_loi.min' => 'Số lượng lỗi không được âm.',
+            'so_luong_loi.max' => 'Số lượng lỗi không được vượt quá số lượng ban đầu của lô (' . $chiTietNhap->so_luong . ').',
+            'ly_do.required_if' => 'Vui lòng nhập lý do khi lô Có vấn đề hoặc Không đạt.',
+            'ly_do.max' => 'Lý do không được vượt quá 255 ký tự.',
+            'ghi_chu.max' => 'Ghi chú không được vượt quá 1000 ký tự.',
         ]);
 
         $user = Auth::user();
@@ -213,11 +213,11 @@ class LoHangController extends Controller
         DanhGiaLoHang::updateOrCreate(
             ['ma_chi_tiet_nhap' => $chiTietNhap->ma_chi_tiet_nhap],
             [
-                'ma_nhan_vien'       => $maNhanVien,
-                'ket_qua'            => $request->ket_qua,
-                'so_luong_loi'       => (int) ($request->so_luong_loi ?? 0),
-                'ly_do'              => $request->ly_do,
-                'ghi_chu'            => $request->ghi_chu,
+                'ma_nhan_vien' => $maNhanVien,
+                'ket_qua' => $request->ket_qua,
+                'so_luong_loi' => (int) ($request->so_luong_loi ?? 0),
+                'ly_do' => $request->ly_do,
+                'ghi_chu' => $request->ghi_chu,
                 'thoi_gian_danh_gia' => now(),
             ]
         );

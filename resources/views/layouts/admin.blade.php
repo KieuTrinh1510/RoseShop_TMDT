@@ -590,9 +590,9 @@
                             <a href="{{ route('bao-cao.san-pham') }}" class="submenu-item {{ request()->routeIs('bao-cao.san-pham*') ? 'active' : '' }}">
                                 Sản phẩm
                             </a>
-                            <a href="{{ route('admin.bao-cao.kho') }}" class="submenu-item {{ request()->routeIs('admin.bao-cao.kho*') ? 'active' : '' }}">
+                            <!-- <a href="{{ route('admin.bao-cao.kho') }}" class="submenu-item {{ request()->routeIs('admin.bao-cao.kho*') ? 'active' : '' }}">
                                 Kho
-                            </a>
+                            </a> -->
                             <a href="{{ route('admin.bao-cao.giao-hang') }}" class="submenu-item {{ request()->routeIs('admin.bao-cao.giao-hang*') ? 'active' : '' }}">
                                 Hoạt động giao hàng
                             </a>

@@ -95,6 +95,21 @@ class HoaDonController extends Controller
 
             $chiTiet = $chiTiet->concat($boLines);
 
+            // Bổ sung thông tin bó hoa Custom Mix và ảnh mẫu nếu có
+            $customBouquet = \App\Models\BoHoa::where('ma_hoa_don', $id)
+                ->where('loai_bo_hoa', 'TUY_CHON')
+                ->with('customMixImages')
+                ->first();
+
+            $anhMauCustom = [];
+            if ($customBouquet && $customBouquet->customMixImages->isNotEmpty()) {
+                $anhMauCustom = $customBouquet->customMixImages->map(fn ($img) => [
+                    'id'   => $img->id,
+                    'url'  => $img->url,
+                    'name' => $img->original_name ?? 'Ảnh mẫu',
+                ])->all();
+            }
+
             return response()->json([
                 'success' => true,
                 'data'    => [
@@ -118,6 +133,14 @@ class HoaDonController extends Controller
                         ? ['ten_nhan_vien' => $hoaDon->shipper->ten_nhan_vien]
                         : null,
                     'chi_tiet_hoa_don'        => $chiTiet,
+                    'custom_bouquet'          => $customBouquet ? [
+                        'ten_bo_hoa'  => $customBouquet->ten_bo_hoa,
+                        'size'        => $customBouquet->size,
+                        'kieu_bo_hoa' => $customBouquet->kieu_bo_hoa,
+                        'concept'     => $customBouquet->concept,
+                        'loi_nhan'    => $customBouquet->loi_nhan,
+                    ] : null,
+                    'anh_mau_custom'          => $anhMauCustom,
                 ],
             ]);
         }

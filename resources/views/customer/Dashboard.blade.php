@@ -5,7 +5,7 @@
 
 @section('content')
 <div class="main-wrap">
-    <section class="home-block">
+    <!-- <section class="home-block">
         <div class="home-block-title">
             <h2>Mua bó hoa</h2>
             <a href="{{ route('customer.bo-hoa.he-thong') }}">Khám phá bó hoa →</a>
@@ -14,7 +14,7 @@
             Chọn <a href="{{ route('customer.bo-hoa.he-thong') }}">bó hoa cửa hàng đề xuất</a>
             hoặc <a href="{{ route('customer.bo-hoa.tu-tao') }}">tự tạo bó theo sở thích</a>.
         </p>
-    </section>
+    </section> -->
 
     @if(request('q'))
 

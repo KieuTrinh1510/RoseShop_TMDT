@@ -332,6 +332,22 @@
             productsHtml = '<tr><td colspan="4" style="text-align:center;color:#888;padding:12px">Không có sản phẩm</td></tr>';
         }
 
+        let sampleImagesHtml = '';
+        if (d.anh_mau_custom && d.anh_mau_custom.length > 0) {
+            sampleImagesHtml = `
+            <div class="panel-section">
+                <div class="panel-section-title">Ảnh Mẫu Khách Gửi (Custom Mix)</div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;">
+                    ${d.anh_mau_custom.map(img => `
+                        <a href="${img.url}" target="_blank" title="${img.original_name || 'Xem ảnh gốc'}" style="display:block; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; width:80px; height:80px; box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+                            <img src="${img.url}" alt="${img.original_name || 'Ảnh mẫu'}" style="width:100%; height:100%; object-fit:cover;" />
+                        </a>
+                    `).join('')}
+                </div>
+                <small style="color:#64748b; display:block; margin-top:6px; font-size:12px;">Ảnh mẫu dùng để thợ cắm hoa tham khảo phong cách phối bó tự chọn.</small>
+            </div>`;
+        }
+
         document.getElementById('panel-body').innerHTML = `
         <div class="panel-section">
             <div class="panel-section-title">Thông Tin Hóa Đơn</div>
@@ -357,6 +373,8 @@
             <div class="info-row"><span class="info-label">SĐT nhận</span><span class="info-value">${d.so_dien_thoai ?? '—'}</span></div>
             <div class="info-row"><span class="info-label">NV giao</span><span class="info-value">${d.nhan_vien_giao?.ten_nhan_vien ?? '—'}</span></div>
         </div>
+
+        ${sampleImagesHtml}
 
         <div class="panel-section">
             <div class="panel-section-title">Chi Tiết Sản Phẩm</div>
