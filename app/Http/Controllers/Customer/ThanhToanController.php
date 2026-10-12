@@ -7,6 +7,8 @@ use App\Models\HoaDon;
 use App\Models\ChiTietHoaDon;
 use App\Models\ChiTietNhap;
 use App\Models\SanPham;
+use App\Models\KhachHang;
+use App\Models\DiaChiKhachHang;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -25,8 +27,12 @@ class ThanhToanController extends Controller
 
     public function index()
     {
-        $user    = Auth::user()->load('khachHang');
-        $khachId = $user->khachHang->getKey();
+        $user      = Auth::user()->load('khachHang');
+        $khachHang = $user->khachHang;
+        $khachId   = $khachHang->getKey();
+
+        $danhSachDiaChi = $this->layDanhSachDiaChi($khachHang);
+        $diaChiHienTai  = $danhSachDiaChi->firstWhere('la_mac_dinh', true) ?? $danhSachDiaChi->first();
 
         // ─── Nhánh 1: Giỏ bó hoa mẫu (nhiều bó) ────────────────────────
         if (session()->has('gio_bo_hoa')) {
@@ -54,10 +60,12 @@ class ThanhToanController extends Controller
             }
             $diemSuDung = session('diem_su_dung', 0);
             return view('customer.ThanhToan', [
-                'user'       => $user,
-                'dsBoHoa'    => $dsCheckout,
-                'gioHang'    => [],
-                'diemSuDung' => $diemSuDung,
+                'user'           => $user,
+                'dsBoHoa'        => $dsCheckout,
+                'gioHang'        => [],
+                'diemSuDung'     => $diemSuDung,
+                'danhSachDiaChi' => $danhSachDiaChi,
+                'diaChiHienTai'  => $diaChiHienTai,
             ]);
         }
 
@@ -75,10 +83,12 @@ class ThanhToanController extends Controller
             }
             $diemSuDung = session('diem_su_dung', 0);
             return view('customer.ThanhToan', [
-                'user'       => $user,
-                'dsBoHoa'    => $dsBoHoa,
-                'gioHang'    => [],
-                'diemSuDung' => $diemSuDung,
+                'user'           => $user,
+                'dsBoHoa'        => $dsBoHoa,
+                'gioHang'        => [],
+                'diemSuDung'     => $diemSuDung,
+                'danhSachDiaChi' => $danhSachDiaChi,
+                'diaChiHienTai'  => $diaChiHienTai,
             ]);
         }
 
@@ -101,7 +111,7 @@ class ThanhToanController extends Controller
 
         $diemSuDung = session('diem_su_dung', 0);
 
-        return view('customer.ThanhToan', compact('user', 'gioHang', 'diemSuDung'));
+        return view('customer.ThanhToan', compact('user', 'gioHang', 'diemSuDung', 'danhSachDiaChi', 'diaChiHienTai'));
     }
 
     public function store(Request $request)
@@ -129,6 +139,9 @@ class ThanhToanController extends Controller
         $diemSuDung = (int) session('diem_su_dung', 0);
         $diaChiGiao = $request->dia_chi_chi_tiet . ', ' . $request->xa_phuong
             . ', ' . $request->quan_huyen . ', Hà Nội';
+
+        // Tự động lưu địa chỉ vào sổ địa chỉ nếu chưa có hoặc có thay đổi
+        $this->luuDiaChiVaoSo($khachHang, $request, $diaChiGiao);
 
         $donData = [
             'phuong_thuc_thanh_toan' => $request->phuong_thuc_thanh_toan,
@@ -377,5 +390,76 @@ class ThanhToanController extends Controller
         $hoaDon->vnpay_response_code  = $vnpayMeta['vnpay_response_code'] ?? null;
         $hoaDon->trang_thai_thanh_toan = 'DA_THANH_TOAN';
         $hoaDon->save();
+    }
+
+    /**
+     * Lấy danh sách địa chỉ đã lưu hoặc tự khởi tạo từ dia_chi hồ sơ
+     */
+    private function layDanhSachDiaChi(KhachHang $khachHang)
+    {
+        $danhSach = $khachHang->danhSachDiaChi()->get();
+
+        if ($danhSach->isEmpty() && !empty($khachHang->dia_chi)) {
+            $raw = trim($khachHang->dia_chi);
+            $parts = array_map('trim', explode(',', $raw));
+            if (count($parts) >= 1 && strtolower(end($parts)) === 'hà nội') {
+                array_pop($parts);
+            }
+            $quan = count($parts) >= 2 ? $parts[count($parts) - 1] : 'Cầu Giấy';
+            $phuong = count($parts) >= 3 ? $parts[count($parts) - 2] : 'Dịch Vọng Hậu';
+            $chiTiet = count($parts) >= 1 ? implode(', ', array_slice($parts, 0, max(1, count($parts) - 2))) : $raw;
+
+            $diaChiDayDu = $chiTiet . ', ' . $phuong . ', ' . $quan . ', Hà Nội';
+
+            $diaChiMoi = DiaChiKhachHang::create([
+                'ma_khach_hang'    => $khachHang->ma_khach_hang,
+                'ten_nguoi_nhan'   => $khachHang->ten_khach_hang ?: 'Khách Hàng',
+                'so_dien_thoai'    => $khachHang->so_dien_thoai ?: '0988888888',
+                'quan_huyen'       => $quan ?: 'Cầu Giấy',
+                'xa_phuong'        => $phuong ?: 'Dịch Vọng Hậu',
+                'dia_chi_chi_tiet' => $chiTiet ?: 'Địa chỉ chi tiết',
+                'dia_chi_day_du'   => $diaChiDayDu,
+                'la_mac_dinh'      => true,
+            ]);
+
+            $danhSach = collect([$diaChiMoi]);
+        }
+
+        return $danhSach;
+    }
+
+    /**
+     * Tự động lưu địa chỉ vào sổ địa chỉ khi khách đặt hàng
+     */
+    private function luuDiaChiVaoSo(KhachHang $khachHang, Request $request, string $diaChiGiao): void
+    {
+        try {
+            $exist = DiaChiKhachHang::where('ma_khach_hang', $khachHang->ma_khach_hang)
+                ->where('dia_chi_day_du', $diaChiGiao)
+                ->where('so_dien_thoai', $request->so_dien_thoai)
+                ->first();
+
+            if (!$exist) {
+                $hasAny = DiaChiKhachHang::where('ma_khach_hang', $khachHang->ma_khach_hang)->exists();
+                $laMacDinh = !$hasAny;
+
+                DiaChiKhachHang::create([
+                    'ma_khach_hang'    => $khachHang->ma_khach_hang,
+                    'ten_nguoi_nhan'   => $request->ten_nguoi_nhan,
+                    'so_dien_thoai'    => $request->so_dien_thoai,
+                    'quan_huyen'       => $request->quan_huyen,
+                    'xa_phuong'        => $request->xa_phuong,
+                    'dia_chi_chi_tiet' => $request->dia_chi_chi_tiet,
+                    'dia_chi_day_du'   => $diaChiGiao,
+                    'la_mac_dinh'      => $laMacDinh,
+                ]);
+
+                if ($laMacDinh) {
+                    $khachHang->update(['dia_chi' => $diaChiGiao]);
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Không thể lưu địa chỉ vào sổ địa chỉ: ' . $e->getMessage());
+        }
     }
 }

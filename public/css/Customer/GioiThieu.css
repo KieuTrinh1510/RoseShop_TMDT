@@ -31,14 +31,16 @@
 .about-hero-text span {
     color: var(--primary);
     font-size: 34px;
-    font-family: 'Playfair Display', serif;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-weight: 600;
     font-style: italic;
 }
 
 .about-hero-text h1 {
     font-size: 58px;
     color: var(--primary);
-    font-family: 'Playfair Display', serif;
+    font-family: 'Be Vietnam Pro', sans-serif;
+    font-weight: 700;
     margin: 8px 0 18px;
 }
 
