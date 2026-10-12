@@ -487,6 +487,24 @@
             background-color: #D82677 !important;
             color: #ffffff !important;
         }
+        .rs-price-lot-list {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f1f5f9;
+        }
+        .rs-price-lot-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .rs-price-lot-list::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        .rs-price-lot-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .rs-price-lot-list::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
     </style>
 @endpush
 
@@ -670,14 +688,57 @@
                             </td>
 
                             <td style="text-align:right;">
-                                @if($loCoHang->isNotEmpty())
+                                @php
+                                    // Nhóm các lô theo giá bán để không bị tràn dòng khi nhập nhiều lô cùng giá hoặc khác giá
+                                    $nhomGia = $loCoHang->groupBy(function($item) {
+                                        return (string) round((float) $item->gia_ban);
+                                    })->map(function($items, $gia) {
+                                        return [
+                                            'gia_ban'       => (float) $gia,
+                                            'tong_so_luong' => $items->sum('so_luong_con_lai'),
+                                            'so_lo'         => $items->count(),
+                                        ];
+                                    })->sortBy('gia_ban')->values();
+                                    $tongMocGia = $nhomGia->count();
+                                @endphp
+
+                                @if($tongMocGia > 0)
                                     <div class="d-flex flex-column align-items-end gap-1">
-                                        @foreach($loCoHang as $ct)
-                                            <div style="font-size:12px;">
-                                                <span class="fw-semibold" style="color:#059669;">{{ number_format($ct->gia_ban, 0, ',', '.') }} ₫</span>
-                                                <small class="text-muted">({{ $ct->so_luong_con_lai }} sp)</small>
+                                        {{-- Hiển thị tối đa 2 mức giá đầu nếu > 3 mức giá, hoặc hiển thị cả 3 nếu <= 3 --}}
+                                        @php $soLuongHienThi = ($tongMocGia > 3) ? 2 : $tongMocGia; @endphp
+                                        @foreach($nhomGia->take($soLuongHienThi) as $g)
+                                            <div class="d-flex align-items-center justify-content-end gap-1" style="font-size:12px;" title="{{ $g['so_lo'] }} lô hàng (Tổng {{ number_format($g['tong_so_luong']) }} sp)">
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold" style="font-size:11.5px; padding:3px 6px;">
+                                                    {{ number_format($g['gia_ban'], 0, ',', '.') }} đ
+                                                </span>
+                                                <span class="badge bg-dark text-white" style="font-size:11px; padding:3px 6px; border-radius:6px;">
+                                                    <i class="bi bi-box-seam me-1"></i>{{ number_format($g['tong_so_luong']) }}
+                                                </span>
                                             </div>
                                         @endforeach
+
+                                        {{-- Nếu có nhiều hơn số hiển thị ban đầu, tạo khối mở rộng có scroll mượt không vỡ giao diện --}}
+                                        @if($tongMocGia > $soLuongHienThi)
+                                            <button type="button"
+                                                    class="btn btn-link p-0 text-decoration-none text-primary"
+                                                    style="font-size:11px; font-weight:600; cursor:pointer;"
+                                                    onclick="toggleMorePrices(this, 'more-prices-sp-{{ $sp->ma_san_pham }}', {{ $tongMocGia - $soLuongHienThi }})">
+                                                +{{ $tongMocGia - $soLuongHienThi }} mức giá khác <i class="bi bi-chevron-down ms-1"></i>
+                                            </button>
+
+                                            <div id="more-prices-sp-{{ $sp->ma_san_pham }}" class="rs-price-lot-list d-none flex-column align-items-end gap-1 w-100 pt-1 mt-1 border-top" style="max-height: 85px; overflow-y: auto;">
+                                                @foreach($nhomGia->slice($soLuongHienThi) as $g)
+                                                    <div class="d-flex align-items-center justify-content-end gap-1" style="font-size:12px;" title="{{ $g['so_lo'] }} lô hàng (Tổng {{ number_format($g['tong_so_luong']) }} sp)">
+                                                        <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold" style="font-size:11.5px; padding:3px 6px;">
+                                                            {{ number_format($g['gia_ban'], 0, ',', '.') }} đ
+                                                        </span>
+                                                        <span class="badge bg-dark text-white" style="font-size:11px; padding:3px 6px; border-radius:6px;">
+                                                            <i class="bi bi-box-seam me-1"></i>{{ number_format($g['tong_so_luong']) }}
+                                                        </span>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
                                     </div>
                                 @else
                                     <span class="text-muted fst-italic" style="font-size:12px;">Chưa nhập</span>
@@ -1230,6 +1291,20 @@
         const target = document.getElementById('donViTinhHienThi');
         if (target) target.value = DON_VI_THEO_LOAI[this.value] ?? '';
     });
+
+    function toggleMorePrices(btn, targetId, count) {
+        const el = document.getElementById(targetId);
+        if (!el) return;
+        if (el.classList.contains('d-none')) {
+            el.classList.remove('d-none');
+            el.classList.add('d-flex');
+            btn.innerHTML = 'Thu gọn <i class="bi bi-chevron-up ms-1"></i>';
+        } else {
+            el.classList.add('d-none');
+            el.classList.remove('d-flex');
+            btn.innerHTML = '+' + count + ' mức giá khác <i class="bi bi-chevron-down ms-1"></i>';
+        }
+    }
 </script>
 @endpush
 @endsection
