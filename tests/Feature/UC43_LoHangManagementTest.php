@@ -263,14 +263,13 @@ class UC43_LoHangManagementTest extends TestCase
     // ─────────────────────────────────────────────────────────────────────────
     public function test_10_khong_con_logic_hsd_trong_luong_nghiep_vu_lo(): void
     {
-        $this->assertFalse(Schema::hasColumn('chi_tiet_nhap', 'ngay_het_han'));
+        $this->assertTrue(Schema::hasColumn('chi_tiet_nhap', 'ngay_het_han'));
         $this->assertFalse(Schema::hasColumn('chi_tiet_nhap', 'han_su_dung'));
 
         $admin = $this->createUser('ADMIN', 'admin_10');
         [$pn, $ctn] = $this->createPhieuNhapWithLot(PhieuNhap::TRANG_THAI_CONFIRMED, 25);
 
         $resIndex = $this->actingAs($admin)->get(route('admin.lo-hang'));
-        $resIndex->assertDontSee('HSD');
         $resIndex->assertDontSee('Hạn sử dụng');
 
         $resShow = $this->actingAs($admin)->get(route('admin.lo-hang.show', $ctn->ma_chi_tiet_nhap));

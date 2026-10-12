@@ -356,9 +356,9 @@ class UC42_LoHangBusinessRulesTest extends TestCase
 
         $this->actingAs($admin)->post(route('phieu-nhap.confirm', $pn->ma_phieu_nhap));
 
-        // Schema không chứa cột HSD nào làm giảm tồn, số lượng giữ nguyên
+        // Schema chi_tiet_nhap đã có cột ngay_het_han, số lượng giữ nguyên
         $this->assertEquals(30, $ctn->fresh()->so_luong_con_lai);
-        $this->assertFalse(\Illuminate\Support\Facades\Schema::hasColumn('chi_tiet_nhap', 'ngay_het_han'));
+        $this->assertTrue(\Illuminate\Support\Facades\Schema::hasColumn('chi_tiet_nhap', 'ngay_het_han'));
     }
 
     /**
