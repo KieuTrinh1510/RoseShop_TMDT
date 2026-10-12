@@ -653,7 +653,7 @@
                     <i class="bi bi-x-circle-fill"></i>
                 </button>
                 <div class="row g-2 align-items-end">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">Sản phẩm <span class="text-danger">*</span></label>
                         <select name="san_pham[]" class="form-select" required>
                             ${optionsSanPham}
@@ -667,12 +667,16 @@
                         <label class="form-label">Giá nhập (₫) <span class="text-danger">*</span></label>
                         <input type="number" name="gia_nhap[]" class="form-control inp-gia-nhap" min="0" placeholder="0" required>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">
                             Giá bán (₫)
-                            <span class="text-muted" style="font-size:0.75rem; font-weight:normal;">— để trống = +50%</span>
+                            <span class="text-muted" style="font-size:0.75rem; font-weight:normal;">(+50%)</span>
                         </label>
                         <input type="number" name="gia_ban[]" class="form-control inp-gia-ban" min="0" placeholder="Tự tính nếu để trống">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label" title="Dành cho hoa tươi (mặc định +7 ngày nếu để trống)">HSD (hoa)</label>
+                        <input type="date" name="ngay_het_han[]" class="form-control" title="Mặc định +7 ngày kể từ ngày nhập nếu là hoa tươi">
                     </div>
                     <div class="col-md-1"></div>
                 </div>
@@ -710,7 +714,7 @@
         container.innerHTML = `
             <div class="dong-chi-tiet" id="dong_0">
                 <div class="row g-2 align-items-end">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label">Sản phẩm <span class="text-danger">*</span></label>
                         <select name="san_pham[]" class="form-select" required>${optionsSanPham}</select>
                     </div>
@@ -722,12 +726,16 @@
                         <label class="form-label">Giá nhập (₫) <span class="text-danger">*</span></label>
                         <input type="number" name="gia_nhap[]" class="form-control inp-gia-nhap" min="0" placeholder="0" required>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">
                             Giá bán (₫)
-                            <span class="text-muted" style="font-size:0.75rem; font-weight:normal;">— để trống = +50%</span>
+                            <span class="text-muted" style="font-size:0.75rem; font-weight:normal;">(+50%)</span>
                         </label>
                         <input type="number" name="gia_ban[]" class="form-control inp-gia-ban" min="0" placeholder="Tự tính nếu để trống">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label" title="Dành cho hoa tươi (mặc định +7 ngày nếu để trống)">HSD (hoa)</label>
+                        <input type="date" name="ngay_het_han[]" class="form-control" title="Mặc định +7 ngày kể từ ngày nhập nếu là hoa tươi">
                     </div>
                     <div class="col-md-1"></div>
                 </div>
@@ -798,7 +806,7 @@
                             <div class="dong-chi-tiet" id="${dongId}">
                                 ${nutXoa}
                                 <div class="row g-2 align-items-end">
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <label class="form-label">Sản phẩm <span class="text-danger">*</span></label>
                                         <select name="san_pham[]" class="form-select" required>${opts}</select>
                                     </div>
@@ -812,13 +820,19 @@
                                         <input type="number" name="gia_nhap[]" class="form-control inp-gia-nhap"
                                                min="0" value="${ct.gia_nhap}" required>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-2">
                                         <label class="form-label">
                                             Giá bán (₫)
-                                            <span class="text-muted" style="font-size:0.75rem; font-weight:normal;">— để trống = +50%</span>
+                                            <span class="text-muted" style="font-size:0.75rem; font-weight:normal;">(+50%)</span>
                                         </label>
                                         <input type="number" name="gia_ban[]" class="form-control inp-gia-ban"
                                                min="0" value="${ct.gia_ban ?? ''}" placeholder="Tự tính nếu để trống">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label" title="Dành cho hoa tươi (mặc định +7 ngày nếu để trống)">HSD (hoa)</label>
+                                        <input type="date" name="ngay_het_han[]" class="form-control"
+                                               value="${ct.ngay_het_han ? ct.ngay_het_han.substring(0, 10) : ''}"
+                                               title="Mặc định +7 ngày kể từ ngày nhập nếu là hoa tươi">
                                     </div>
                                     <div class="col-md-1"></div>
                                 </div>

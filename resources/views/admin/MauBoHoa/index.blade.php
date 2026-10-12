@@ -904,7 +904,7 @@
         }
         .create-grid {
             display: grid;
-            grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto;
+            grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.3fr) auto;
             gap: 14px;
             align-items: flex-end;
             background: #FFFDFE;
@@ -1278,6 +1278,7 @@
                                     <th>Size</th>
                                     <th>Kiểu dáng</th>
                                     <th>Concept</th>
+                                    <th style="min-width: 120px;">Thời hạn</th>
                                     <th class="text-end">Giá dự kiến</th>
                                     <th class="text-center">Trạng thái</th>
                                     <th class="text-end" style="width: 140px;">Thao tác</th>
@@ -1313,6 +1314,20 @@
                                                 {{ $concepts[$m->concept] ?? $m->concept }}
                                             </span>
                                         </td>
+                                        <td>
+                                            <div class="d-flex flex-column gap-1" style="font-size:12px;">
+                                                <div class="text-nowrap" title="Ngày tạo mẫu bó hoa">
+                                                    <span class="text-muted"><i class="bi bi-calendar-event me-1"></i>Tạo:</span>
+                                                    <span class="fw-medium text-dark">{{ $m->created_at ? $m->created_at->format('d/m/Y') : '—' }}</span>
+                                                </div>
+                                                <div class="text-nowrap" title="Hạn sử dụng khuyến nghị cho hoa tươi">
+                                                    <span class="text-muted"><i class="bi bi-hourglass-split me-1"></i>HSD:</span>
+                                                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle fw-semibold" style="font-size:11px;">
+                                                        {{ $m->han_su_dung_ngay ?? 5 }} ngày
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </td>
                                         <td class="text-end fw-bold" style="color:var(--rose-primary);">
                                             {{ number_format($giaEst, 0, ',', '.') }} đ
                                         </td>
@@ -1345,7 +1360,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center py-4 text-muted">
+                                        <td colspan="9" class="text-center py-4 text-muted">
                                             Chưa có mẫu bó hoa nào. Hãy chuyển sang tab <strong>Tạo mẫu</strong> để thêm mẫu mới.
                                         </td>
                                     </tr>
@@ -1411,7 +1426,7 @@
                                         <select name="kieu_bo_hoa" id="select-tpl-kieu" class="form-select" required>
                                             <option value="">-- Chọn kiểu dáng --</option>
                                             @foreach($kieusBo as $kCode => $kName)
-                                                @php($pRecord = $phuPhiMap->get("KIEU_DANG|{$kCode}"))
+                                                @php $pRecord = $phuPhiMap->get("KIEU_DANG|{$kCode}"); @endphp
                                                 <option value="{{ $kCode }}" data-phi="{{ $pRecord?->phu_phi ?? 0 }}">
                                                     {{ $kName }} (+{{ number_format($pRecord?->phu_phi ?? 0, 0, ',', '.') }} đ)
                                                 </option>
@@ -1423,7 +1438,7 @@
                                         <select name="size" id="select-tpl-size" class="form-select" required>
                                             <option value="">-- Chọn size --</option>
                                             @foreach($sizesBo as $sCode => $stems)
-                                                @php($pRecord = $phuPhiMap->get("SIZE|{$sCode}"))
+                                                @php $pRecord = $phuPhiMap->get("SIZE|{$sCode}"); @endphp
                                                 <option value="{{ $sCode }}"
                                                         data-stems="{{ $stems }}"
                                                         data-phi="{{ $pRecord?->phu_phi ?? 0 }}"
@@ -1448,6 +1463,10 @@
                                                 <option value="{{ $cCode }}">{{ $cName }}</option>
                                             @endforeach
                                         </select>
+                                    </div>
+                                    <div class="form-group-custom" style="max-width: 170px;">
+                                        <label>HSD hoa tươi (ngày)</label>
+                                        <input type="number" name="han_su_dung_ngay" id="input-tpl-hsd" class="form-control" min="1" max="60" value="5" placeholder="5">
                                     </div>
                                     <div class="form-group-custom">
                                         <label>Ảnh mẫu</label>
@@ -1719,6 +1738,13 @@
                                 </div>
 
                                 <div class="field">
+                                    <label class="form-label small fw-semibold">Ngày hết hạn <span class="text-danger">*</span></label>
+                                    <input type="date" name="ngay_het_han" id="input-ready-hsd" class="form-control"
+                                           value="{{ date('Y-m-d', strtotime('+5 days')) }}"
+                                           min="{{ date('Y-m-d') }}" required>
+                                </div>
+
+                                <div class="field">
                                     <button type="button" class="btn-action-secondary w-100" id="btn-check-material">
                                         <i class="bi bi-search me-1"></i>Kiểm tra nguyên liệu
                                     </button>
@@ -1788,6 +1814,7 @@
                                         <th>Tên bó hoa</th>
                                         <th>Mẫu nguồn</th>
                                         <th>Size / Kiểu</th>
+                                        <th style="min-width: 140px;">Thời hạn</th>
                                         <th class="text-center">Tồn thực tế</th>
                                         <th class="text-center">Đang giữ</th>
                                         <th class="text-center">Khả dụng</th>
@@ -1824,6 +1851,47 @@
                                             <td>
                                                 <span class="badge bg-light text-dark border">{{ $bo->size }}</span>
                                                 <span class="text-muted ms-1 small">{{ $kieusBo[$bo->kieu_bo_hoa] ?? $bo->kieu_bo_hoa }}</span>
+                                            </td>
+                                            <td>
+                                                @php
+                                                    $ngayTao = $bo->created_at ?? $boModel?->created_at;
+                                                    $ngayHetHan = $bo->ngay_het_han ?? $boModel?->ngay_het_han;
+                                                    $ngayTaoCarbon = $ngayTao ? \Carbon\Carbon::parse($ngayTao) : null;
+                                                    if (!$ngayHetHan && $ngayTaoCarbon) {
+                                                        $ngayHetHan = $ngayTaoCarbon->copy()->addDays(5)->toDateString();
+                                                    }
+                                                @endphp
+                                                <div class="d-flex flex-column gap-1" style="font-size:12px;">
+                                                    <div class="text-nowrap" title="Ngày cắm/tạo bó hoa">
+                                                        <span class="text-muted"><i class="bi bi-calendar-event me-1"></i>Tạo:</span>
+                                                        <span class="fw-semibold text-dark">{{ $ngayTao ? \Carbon\Carbon::parse($ngayTao)->format('d/m/Y') : '—' }}</span>
+                                                    </div>
+                                                    <div class="text-nowrap">
+                                                        <span class="text-muted"><i class="bi bi-hourglass-split me-1"></i>HSD:</span>
+                                                        @if($ngayHetHan)
+                                                            @php
+                                                                $hsdBo = \Carbon\Carbon::parse($ngayHetHan)->startOfDay();
+                                                                $today = \Carbon\Carbon::today();
+                                                                $diffBo = $today->diffInDays($hsdBo, false);
+                                                            @endphp
+                                                            @if($diffBo < 0)
+                                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold" style="font-size:10.5px; padding:2px 5px;" title="Bó hoa đã quá hạn {{ abs($diffBo) }} ngày">
+                                                                    {{ $hsdBo->format('d/m/Y') }} (Quá hạn)
+                                                                </span>
+                                                            @elseif($diffBo <= 2)
+                                                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fw-semibold" style="font-size:10.5px; padding:2px 5px;" title="Sắp hết hạn trong {{ $diffBo }} ngày">
+                                                                    {{ $hsdBo->format('d/m/Y') }} (Còn {{ $diffBo }}n)
+                                                                </span>
+                                                            @else
+                                                                <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold" style="font-size:10.5px; padding:2px 5px;" title="Hạn sử dụng còn {{ $diffBo }} ngày">
+                                                                    {{ $hsdBo->format('d/m/Y') }} (Còn {{ $diffBo }}n)
+                                                                </span>
+                                                            @endif
+                                                        @else
+                                                            <span class="text-muted fst-italic">—</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
                                             </td>
                                             <td class="text-center font-monospace">
                                                 <strong>{{ $bo->so_luong }}</strong>
@@ -1864,7 +1932,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="10" class="text-center py-5 text-muted">
+                                            <td colspan="11" class="text-center py-5 text-muted">
                                                 <i class="bi bi-flower1 fs-2 d-block mb-2 text-secondary"></i>
                                                 <p class="mb-2 fw-semibold">Chưa có bó hoa sẵn nào trong kho.</p>
                                                 <button type="button" class="btn btn-sm btn-action-primary" id="btn-empty-create-premade">

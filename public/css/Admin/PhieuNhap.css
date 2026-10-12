@@ -921,6 +921,7 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
     border-radius: 6px !important;
     display: inline-flex !important;
     align-items: center !important;
+    white-space: nowrap !important;
 }
 
 .badge-quality-covande {
@@ -933,6 +934,7 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
     border-radius: 6px !important;
     display: inline-flex !important;
     align-items: center !important;
+    white-space: nowrap !important;
 }
 
 .badge-quality-khongdat {
@@ -945,6 +947,7 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
     border-radius: 6px !important;
     display: inline-flex !important;
     align-items: center !important;
+    white-space: nowrap !important;
 }
 
 .badge-quality-chuadanhgia {
@@ -957,6 +960,7 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
     border-radius: 6px !important;
     display: inline-flex !important;
     align-items: center !important;
+    white-space: nowrap !important;
 }
 
 /* ==========================================================================

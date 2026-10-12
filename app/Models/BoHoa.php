@@ -33,6 +33,7 @@ class BoHoa extends Model
         'loi_nhan',
         'hinh_anh',
         'trang_thai',
+        'ngay_het_han',
     ];
 
     protected $casts = [
@@ -46,6 +47,7 @@ class BoHoa extends Model
         'size'          => 'string',
         'concept'       => 'string',
         'trang_thai'    => 'string',
+        'ngay_het_han'  => 'date',
     ];
 
     public function khachHang()

@@ -26,13 +26,15 @@ class MauBoHoa extends Model
         'size',
         'concept',
         'trang_thai',
+        'han_su_dung_ngay',
     ];
 
     protected $casts = [
-        'kieu_bo_hoa' => 'string',
-        'size'        => 'string',
-        'concept'     => 'string',
-        'trang_thai'  => 'string',
+        'kieu_bo_hoa'       => 'string',
+        'size'              => 'string',
+        'concept'           => 'string',
+        'trang_thai'        => 'string',
+        'han_su_dung_ngay'  => 'integer',
     ];
 
     public function chiTietMauBoHoa()

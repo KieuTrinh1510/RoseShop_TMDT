@@ -8,6 +8,15 @@
         .ncc-filter-grid {
             grid-template-columns: 1.5fr 1.3fr 1.2fr 1fr auto;
         }
+        .badge-quality-dat,
+        .badge-quality-covande,
+        .badge-quality-khongdat,
+        .badge-quality-chuadanhgia {
+            white-space: nowrap !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
     </style>
 @endpush
 
@@ -113,7 +122,7 @@
                         <th class="text-center">Còn lại</th>
                         <th class="text-end">Giá nhập</th>
                         <th class="text-center">Trạng thái</th>
-                        <th class="text-center">Chất lượng</th>
+                        <th class="text-center" style="min-width: 125px; white-space: nowrap;">Chất lượng</th>
                         <th class="text-center" style="min-width: 140px;">Hao hụt & Lỗi QC</th>
                         <th class="text-end" style="width: 140px;">Thao tác</th>
                     </tr>
@@ -134,8 +143,41 @@
                             </td>
                             <td>
                                 <span class="fw-semibold">#PN-{{ $lo->ma_phieu_nhap }}</span>
-                                <div style="font-size:11px; color:#667085;">
-                                    {{ $lo->created_at ? $lo->created_at->format('d/m/Y') : '—' }}
+                                <div class="mt-1 d-flex flex-column gap-1" style="font-size:11.5px; line-height:1.35;">
+                                    <div class="text-nowrap" title="Ngày nhập lô hàng">
+                                        <span class="text-muted"><i class="bi bi-calendar-event me-1"></i>Nhập:</span>
+                                        <span class="fw-medium text-dark">{{ $lo->phieuNhap?->ngay_nhap ? \Carbon\Carbon::parse($lo->phieuNhap->ngay_nhap)->format('d/m/Y') : ($lo->created_at ? $lo->created_at->format('d/m/Y') : '—') }}</span>
+                                    </div>
+                                    @php
+                                        $isLoaiHoa = in_array($lo->sanPham?->loai_san_pham, [\App\Models\SanPham::LOAI_HOA_TUOI, \App\Models\SanPham::LOAI_CHAU_HOA_TUOI]);
+                                        $hsd = $lo->ngay_het_han ? \Carbon\Carbon::parse($lo->ngay_het_han)->startOfDay() : ($isLoaiHoa && $lo->created_at ? $lo->created_at->copy()->addDays(7)->startOfDay() : null);
+                                    @endphp
+                                    @if($isLoaiHoa || $lo->ngay_het_han)
+                                        <div class="text-nowrap">
+                                            <span class="text-muted"><i class="bi bi-hourglass-split me-1"></i>Hết hạn:</span>
+                                            @if($hsd)
+                                                @php
+                                                    $today = \Carbon\Carbon::today();
+                                                    $diffDays = $today->diffInDays($hsd, false);
+                                                @endphp
+                                                @if($diffDays < 0)
+                                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold" style="font-size:10.5px; padding:2px 5px;" title="Lô hoa đã quá hạn {{ abs($diffDays) }} ngày">
+                                                        {{ $hsd->format('d/m/Y') }} (Quá hạn)
+                                                    </span>
+                                                @elseif($diffDays <= 2)
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fw-semibold" style="font-size:10.5px; padding:2px 5px;" title="Sắp hết hạn trong {{ $diffDays }} ngày">
+                                                        {{ $hsd->format('d/m/Y') }} (Còn {{ $diffDays }}n)
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold" style="font-size:10.5px; padding:2px 5px;" title="Còn {{ $diffDays }} ngày sử dụng">
+                                                        {{ $hsd->format('d/m/Y') }}
+                                                    </span>
+                                                @endif
+                                            @else
+                                                <span class="text-muted fst-italic">—</span>
+                                            @endif
+                                        </div>
+                                    @endif
                                 </div>
                             </td>
                             <td>
@@ -171,25 +213,17 @@
                                     <span class="badge bg-secondary" style="font-size:11px; font-weight:600;">HẾT HÀNG</span>
                                 @endif
                             </td>
-                            <td class="text-center">
+                            <td class="text-center" style="white-space: nowrap;">
                                 @if($dg)
                                     @if($dg->ket_qua === 'DAT')
-                                        <span class="badge-quality-dat">
-                                            <i class="bi bi-check-circle me-1"></i>Đạt
-                                        </span>
+                                        <span class="badge-quality-dat"><i class="bi bi-check-circle me-1"></i>Đạt</span>
                                     @elseif($dg->ket_qua === 'CO_VAN_DE')
-                                        <span class="badge-quality-covande" title="{{ $dg->ly_do }}">
-                                            <i class="bi bi-exclamation-triangle me-1"></i>Có vấn đề
-                                        </span>
+                                        <span class="badge-quality-covande" title="{{ $dg->ly_do }}"><i class="bi bi-exclamation-triangle me-1"></i>Có vấn đề</span>
                                     @elseif($dg->ket_qua === 'KHONG_DAT')
-                                        <span class="badge-quality-khongdat" title="{{ $dg->ly_do }}">
-                                            <i class="bi bi-x-circle me-1"></i>Không đạt
-                                        </span>
+                                        <span class="badge-quality-khongdat" title="{{ $dg->ly_do }}"><i class="bi bi-x-circle me-1"></i>Không đạt</span>
                                     @endif
                                 @else
-                                    <span class="badge-quality-chuadanhgia">
-                                        Chưa đánh giá
-                                    </span>
+                                    <span class="badge-quality-chuadanhgia">Chưa đánh giá</span>
                                 @endif
                             </td>
                             <td style="font-size: 12px; line-height: 1.4;">

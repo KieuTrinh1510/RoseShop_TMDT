@@ -93,6 +93,8 @@ class BoHoaController extends Controller
                 'so_luong'      => $totalQty,
                 'gia_ban'       => $giaMotBo,   // ← luôn khớp modal & trang khách
                 'bo_dau_tien'   => $first,
+                'created_at'    => $first->created_at,
+                'ngay_het_han'  => $first->ngay_het_han ?? ($first->created_at ? $first->created_at->copy()->addDays($first->mauBoHoa?->han_su_dung_ngay ?? 5) : null),
                 'so_bien_the'   => $group->count(),
             ];
         })->values();
@@ -370,7 +372,7 @@ class BoHoaController extends Controller
                 ->where('so_luong_con_lai', '>', 0)
                 ->whereHas('phieuNhap', fn ($q) => $q->where('trang_thai', 'CONFIRMED'))
                 ->orderBy('ma_chi_tiet_nhap')->lockForUpdate()->get()
-                ->sortBy(fn ($lot) => [$lot->phieuNhap->ngay_nhap?->timestamp ?? 0, $lot->getKey()]);
+                ->sortBy(fn ($lot) => [$lot->phieuNhap->ngay_nhap?->timestamp ?? 0, $lot->ma_chi_tiet_nhap]);
 
             if ($tong < 1 || $sp->so_luong < $tong || $lots->sum('so_luong_con_lai') < $tong) {
                 self::loi("{$sp->ten_san_pham} không đủ tồn kho khả dụng (cần {$tong}, còn {$lots->sum('so_luong_con_lai')}).");
@@ -663,6 +665,7 @@ class BoHoaController extends Controller
             $d = $r->validate([
                 'ma_mau_bo_hoa' => 'required|integer|exists:mau_bo_hoa,ma_mau_bo_hoa',
                 'so_luong'      => 'required|integer|min:1|max:100',
+                'ngay_het_han'  => 'nullable|date',
             ], [
                 'ma_mau_bo_hoa.required' => 'Vui lòng chọn mẫu bó hoa.',
                 'ma_mau_bo_hoa.exists'   => 'Mẫu bó hoa không tồn tại.',
@@ -678,6 +681,10 @@ class BoHoaController extends Controller
                 self::loi('Mẫu "' . $mau->ten_mau . '" đang ở trạng thái ẨN. Vui lòng bật "Cho sử dụng" trước khi tạo bó hoa.');
             }
 
+            $ngayHetHan = !empty($d['ngay_het_han'])
+                ? $d['ngay_het_han']
+                : now()->addDays($mau->han_su_dung_ngay ?? 5)->format('Y-m-d');
+
             $formula = [
                 'size'       => $mau->size,
                 'thanh_phan' => $mau->chiTietMauBoHoa->map(fn ($c) => [
@@ -689,7 +696,7 @@ class BoHoaController extends Controller
             self::kiemTraCongThuc($formula);
             self::kiemTraNguyenLieuDangBan($formula['thanh_phan']);
 
-            $ids = DB::transaction(function () use ($d, $mau, $formula) {
+            $ids = DB::transaction(function () use ($d, $mau, $formula, $ngayHetHan) {
                 $ids = [];
                 for ($i = 0; $i < $d['so_luong']; $i++) {
                     $rows = self::phanBo($formula['thanh_phan']);
@@ -705,6 +712,7 @@ class BoHoaController extends Controller
                     $bo->so_luong      = 1;
                     $bo->gia_ban       = $gia['gia_moi_bo'];
                     $bo->trang_thai    = 'ACTIVE';
+                    $bo->ngay_het_han  = $ngayHetHan;
                     $bo->save();
 
                     self::luuChiTiet($bo, $rows);

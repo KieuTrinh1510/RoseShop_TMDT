@@ -243,7 +243,7 @@
                                 <th class="text-center">Còn lại</th>
                                 <th class="text-center">Trạng thái</th>
                                 <th class="text-end">Giá nhập</th>
-                                <th class="text-center">Đánh giá chất lượng</th>
+                                <th class="text-center" style="min-width: 130px; white-space: nowrap;">Đánh giá chất lượng</th>
                                 <th class="text-center">Hàng hỏng</th>
                                 <th class="text-end" style="width: 140px;">Thao tác</th>
                             </tr>
@@ -298,25 +298,17 @@
                                     <td class="text-end fw-semibold">
                                         {{ number_format($lo->gia_nhap, 0, ',', '.') }} đ
                                     </td>
-                                    <td class="text-center">
+                                    <td class="text-center" style="white-space: nowrap;">
                                         @if($dg)
                                             @if($dg->ket_qua === 'DAT')
-                                                <span class="badge-quality-dat" title="Đánh giá: Đạt">
-                                                    <i class="bi bi-check-circle me-1"></i>Đạt
-                                                </span>
+                                                <span class="badge-quality-dat" title="Đánh giá: Đạt"><i class="bi bi-check-circle me-1"></i>Đạt</span>
                                             @elseif($dg->ket_qua === 'CO_VAN_DE')
-                                                <span class="badge-quality-covande" title="{{ $dg->ly_do }}">
-                                                    <i class="bi bi-exclamation-triangle me-1"></i>Có vấn đề
-                                                </span>
+                                                <span class="badge-quality-covande" title="{{ $dg->ly_do }}"><i class="bi bi-exclamation-triangle me-1"></i>Có vấn đề</span>
                                             @elseif($dg->ket_qua === 'KHONG_DAT')
-                                                <span class="badge-quality-khongdat" title="{{ $dg->ly_do }}">
-                                                    <i class="bi bi-x-circle me-1"></i>Không đạt
-                                                </span>
+                                                <span class="badge-quality-khongdat" title="{{ $dg->ly_do }}"><i class="bi bi-x-circle me-1"></i>Không đạt</span>
                                             @endif
                                         @else
-                                            <span class="badge-quality-chuadanhgia">
-                                                Chưa đánh giá
-                                            </span>
+                                            <span class="badge-quality-chuadanhgia">Chưa đánh giá</span>
                                         @endif
                                     </td>
                                     <td class="text-center">

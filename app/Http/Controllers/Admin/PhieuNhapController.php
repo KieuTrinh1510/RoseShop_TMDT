@@ -139,6 +139,12 @@ class PhieuNhapController extends Controller
                     ? (float) $giaBanNhap
                     : (float) $giaNhap * 1.5;
 
+                $sp = SanPham::find($maSanPham);
+                $ngayHetHan = !empty($request->ngay_het_han[$index]) ? $request->ngay_het_han[$index] : null;
+                if (!$ngayHetHan && $sp && in_array($sp->loai_san_pham, [SanPham::LOAI_HOA_TUOI, SanPham::LOAI_CHAU_HOA_TUOI])) {
+                    $ngayHetHan = \Carbon\Carbon::parse($request->ngay_nhap)->addDays(7)->format('Y-m-d');
+                }
+
                 ChiTietNhap::create([
                     'ma_phieu_nhap'    => $phieuNhap->ma_phieu_nhap,
                     'ma_san_pham'      => $maSanPham,
@@ -146,6 +152,7 @@ class PhieuNhapController extends Controller
                     'gia_nhap'         => $giaNhap,
                     'gia_ban'          => $giaBan,
                     'so_luong_con_lai' => $request->so_luong[$index],
+                    'ngay_het_han'     => $ngayHetHan,
                 ]);
             }
         });
@@ -227,6 +234,12 @@ class PhieuNhapController extends Controller
                     ? (float) $giaBanNhap
                     : (float) $giaNhap * 1.5;
 
+                $sp = SanPham::find($maSanPham);
+                $ngayHetHan = !empty($request->ngay_het_han[$index]) ? $request->ngay_het_han[$index] : null;
+                if (!$ngayHetHan && $sp && in_array($sp->loai_san_pham, [SanPham::LOAI_HOA_TUOI, SanPham::LOAI_CHAU_HOA_TUOI])) {
+                    $ngayHetHan = \Carbon\Carbon::parse($request->ngay_nhap)->addDays(7)->format('Y-m-d');
+                }
+
                 ChiTietNhap::create([
                     'ma_phieu_nhap'    => $phieuNhap->ma_phieu_nhap,
                     'ma_san_pham'      => $maSanPham,
@@ -234,6 +247,7 @@ class PhieuNhapController extends Controller
                     'gia_nhap'         => $giaNhap,
                     'gia_ban'          => $giaBan,
                     'so_luong_con_lai' => $request->so_luong[$index],
+                    'ngay_het_han'     => $ngayHetHan,
                 ]);
             }
         });

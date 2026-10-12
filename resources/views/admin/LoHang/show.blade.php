@@ -102,6 +102,47 @@
                 </div>
 
                 <div class="ncc-info-item">
+                    <span class="label">Ngày nhập lô</span>
+                    <span class="value">
+                        <i class="bi bi-calendar-event me-1 text-muted"></i>
+                        {{ $loHang->phieuNhap?->ngay_nhap ? \Carbon\Carbon::parse($loHang->phieuNhap->ngay_nhap)->format('d/m/Y') : ($loHang->created_at ? $loHang->created_at->format('d/m/Y') : '—') }}
+                    </span>
+                </div>
+
+                @php
+                    $isLoaiHoaShow = in_array($loHang->sanPham?->loai_san_pham, [\App\Models\SanPham::LOAI_HOA_TUOI, \App\Models\SanPham::LOAI_CHAU_HOA_TUOI]);
+                    $hsdShow = $loHang->ngay_het_han ? \Carbon\Carbon::parse($loHang->ngay_het_han)->startOfDay() : ($isLoaiHoaShow && $loHang->created_at ? $loHang->created_at->copy()->addDays(7)->startOfDay() : null);
+                @endphp
+                @if($isLoaiHoaShow || $loHang->ngay_het_han)
+                    <div class="ncc-info-item">
+                        <span class="label">Ngày hết hạn</span>
+                        <span class="value">
+                            @if($hsdShow)
+                                @php
+                                    $today = \Carbon\Carbon::today();
+                                    $diffShow = $today->diffInDays($hsdShow, false);
+                                @endphp
+                                @if($diffShow < 0)
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
+                                        <i class="bi bi-exclamation-octagon me-1"></i>{{ $hsdShow->format('d/m/Y') }} (Đã quá hạn {{ abs($diffShow) }} ngày)
+                                    </span>
+                                @elseif($diffShow <= 2)
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1">
+                                        <i class="bi bi-clock-history me-1"></i>{{ $hsdShow->format('d/m/Y') }} (Sắp hết hạn - Còn {{ $diffShow }} ngày)
+                                    </span>
+                                @else
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                        <i class="bi bi-calendar-check me-1"></i>{{ $hsdShow->format('d/m/Y') }} (Còn {{ $diffShow }} ngày)
+                                    </span>
+                                @endif
+                            @else
+                                <span class="text-muted fst-italic">Chưa thiết lập</span>
+                            @endif
+                        </span>
+                    </div>
+                @endif
+
+                <div class="ncc-info-item">
                     <span class="label">Nhà cung cấp</span>
                     <span class="value">
                         @if($loHang->phieuNhap?->nhaCungCap)
@@ -368,7 +409,7 @@
                             <tr>
                                 <th>Thời gian</th>
                                 <th>Người đánh giá</th>
-                                <th class="text-center">Kết quả</th>
+                                <th class="text-center" style="min-width: 110px; white-space: nowrap;">Kết quả</th>
                                 <th class="text-center">Số lượng lỗi</th>
                                 <th>Lý do</th>
                                 <th>Ghi chú</th>
@@ -383,7 +424,7 @@
                                     <td>
                                         {{ $dg->nhanVien->ten_nhan_vien ?? 'Hệ thống' }}
                                     </td>
-                                    <td class="text-center">
+                                    <td class="text-center" style="white-space: nowrap;">
                                         @if($dg->ket_qua === 'DAT')
                                             <span class="badge-quality-dat">Đạt</span>
                                         @elseif($dg->ket_qua === 'CO_VAN_DE')

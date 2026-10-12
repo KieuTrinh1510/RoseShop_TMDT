@@ -562,6 +562,10 @@
     font-size: 11px;
     padding: 4px 8px;
     border-radius: 6px;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
 }
 
 .badge-quality-covande {
@@ -572,6 +576,10 @@
     font-size: 11px;
     padding: 4px 8px;
     border-radius: 6px;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
 }
 
 .badge-quality-khongdat {
@@ -582,6 +590,10 @@
     font-size: 11px;
     padding: 4px 8px;
     border-radius: 6px;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
 }
 
 .badge-quality-chuadanhgia {
@@ -592,5 +604,9 @@
     font-size: 11px;
     padding: 4px 8px;
     border-radius: 6px;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
 }
 
