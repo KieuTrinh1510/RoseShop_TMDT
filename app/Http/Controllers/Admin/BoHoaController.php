@@ -367,11 +367,17 @@ class BoHoaController extends Controller
             if ($khachMua && $sp->trang_thai !== 'DANG_BAN') self::loi("{$sp->ten_san_pham} đã ngừng bán.");
 
             $tong = (int) $items->sum('so_luong');
-            $lots = ChiTietNhap::with('phieuNhap')
+            $lotsQuery = ChiTietNhap::with('phieuNhap')
                 ->where('ma_san_pham', $id)
                 ->where('so_luong_con_lai', '>', 0)
-                ->whereHas('phieuNhap', fn ($q) => $q->where('trang_thai', 'CONFIRMED'))
-                ->orderBy('ma_chi_tiet_nhap')->lockForUpdate()->get()
+                ->whereHas('phieuNhap', fn ($q) => $q->where('trang_thai', 'CONFIRMED'));
+            if (\Illuminate\Support\Facades\Schema::hasColumn('chi_tiet_nhap', 'ngay_het_han')) {
+                $lotsQuery->where(function ($q) {
+                    $q->whereNull('ngay_het_han')
+                      ->orWhere('ngay_het_han', '>=', now()->toDateString());
+                });
+            }
+            $lots = $lotsQuery->orderBy('ma_chi_tiet_nhap')->lockForUpdate()->get()
                 ->sortBy(fn ($lot) => [$lot->phieuNhap->ngay_nhap?->timestamp ?? 0, $lot->ma_chi_tiet_nhap]);
 
             if ($tong < 1 || $sp->so_luong < $tong || $lots->sum('so_luong_con_lai') < $tong) {
@@ -386,7 +392,7 @@ class BoHoaController extends Controller
                     $gia = (float) ($sp->gia_ban_hien_tai ?? 0);
                     $result[] = [
                         'ma_san_pham'       => (int) $id,
-                        'ma_chi_tiet_nhap'  => $lot->getKey(),
+                        'ma_chi_tiet_nhap'  => $lot->ma_chi_tiet_nhap,
                         'vai_tro'           => $row['vai_tro'] ?? null,
                         'so_luong'          => $lay,
                         'gia_nhap_snapshot' => $lot->gia_nhap,
@@ -425,8 +431,24 @@ class BoHoaController extends Controller
         $nl  = collect($rows)->sum(fn ($r) => $r['gia_ban_snapshot'] * $r['so_luong']);
         $von = collect($rows)->sum(fn ($r) => $r['gia_nhap_snapshot'] * $r['so_luong']);
         $gia = round($nl / $soBo + $phi['tong'], 2);
+
+        $byRole = collect($rows)->groupBy('vai_tro');
+        $tienHoa = $byRole->filter(fn ($items, $role) => in_array($role, ['HOA_CHINH', 'HOA_TRANG_TRI']))
+            ->flatten(1)->sum(fn ($r) => $r['gia_ban_snapshot'] * $r['so_luong']);
+        $tienGiay  = ($byRole->get('GIAY_GOI') ?? collect())->sum(fn ($r) => $r['gia_ban_snapshot'] * $r['so_luong']);
+        $tienRuy   = ($byRole->get('RUY_BANG') ?? collect())->sum(fn ($r) => $r['gia_ban_snapshot'] * $r['so_luong']);
+        $tienXop   = ($byRole->get('XOP') ?? collect())->sum(fn ($r) => $r['gia_ban_snapshot'] * $r['so_luong']);
+        $tienPK    = ($byRole->get('PHU_KIEN_TRANG_TRI') ?? collect())->sum(fn ($r) => $r['gia_ban_snapshot'] * $r['so_luong']);
+        $tienThiep = ($byRole->get('THIEP') ?? collect())->sum(fn ($r) => $r['gia_ban_snapshot'] * $r['so_luong']);
+
         return [
             'tien_nguyen_lieu' => round($nl, 2),
+            'tien_hoa'         => round($tienHoa, 2),
+            'tien_giay'        => round($tienGiay, 2),
+            'tien_ruy_bang'    => round($tienRuy, 2),
+            'tien_xop'         => round($tienXop, 2),
+            'tien_phu_kien'    => round($tienPK, 2),
+            'tien_thiep'       => round($tienThiep, 2),
             'phu_phi'          => $phi,
             'gia_moi_bo'       => $gia,
             'gia_von_moi_bo'   => round($von / $soBo, 2),
@@ -889,11 +911,21 @@ class BoHoaController extends Controller
 
     public static function kiemTraTrungHoaChinh(array $d): void
     {
-        $chinhIds = collect($d['thanh_phan'])->where('vai_tro', 'HOA_CHINH')->pluck('ma_san_pham')->unique();
-        foreach ($d['thanh_phan'] as $row) {
-            if ($row['vai_tro'] === 'HOA_TRANG_TRI' && $chinhIds->contains($row['ma_san_pham'])) {
-                self::loi('Hoa trang trí không được trùng với hoa chính.');
-            }
+        $chinhIds = collect($d['thanh_phan'])->where('vai_tro', 'HOA_CHINH')->pluck('ma_san_pham');
+        $decorIds = collect($d['thanh_phan'])->where('vai_tro', 'HOA_TRANG_TRI')->pluck('ma_san_pham');
+
+        // Chống chọn cùng một hoa nhiều lần trong cùng một nhóm vai trò
+        if ($chinhIds->count() !== $chinhIds->unique()->count()) {
+            self::loi('Mỗi loại hoa chính chỉ được chọn một lần trong bó.');
+        }
+        if ($decorIds->count() !== $decorIds->unique()->count()) {
+            self::loi('Mỗi loại hoa trang trí chỉ được chọn một lần trong bó.');
+        }
+
+        // Chống trùng hoa giữa hoa chính và hoa trang trí (hai chiều)
+        $intersect = $chinhIds->unique()->intersect($decorIds->unique());
+        if ($intersect->isNotEmpty()) {
+            self::loi('Hoa đã chọn làm hoa chính không được chọn làm hoa trang trí và ngược lại.');
         }
     }
 }

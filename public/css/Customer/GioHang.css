@@ -5,7 +5,7 @@
 }
 
 .cart-heading {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Be Vietnam Pro', sans-serif;
     font-size: 1.7rem;
     color: #be185d;
     margin-bottom: 24px;
@@ -248,11 +248,11 @@
     box-shadow: 0 2px 16px rgba(190, 24, 93, .08);
     padding: 24px;
     position: sticky;
-    top: 100px;
+    top: 175px;
 }
 
 .cart-summary-panel h3 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Be Vietnam Pro', sans-serif;
     color: #be185d;
     font-size: 1.1rem;
     margin-bottom: 18px;

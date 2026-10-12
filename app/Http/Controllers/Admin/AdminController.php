@@ -60,29 +60,29 @@ class AdminController extends Controller
             ->limit(5)
             ->get();
         $doanhThu7Ngay = DB::table('hoa_don')
-    ->where('trang_thai', 'DELIVERED')
-    ->whereDate('ngay_dat', '>=', now()->subDays(6)->toDateString())
-    ->selectRaw('DATE(ngay_dat) as ngay, SUM(tong_tien) as doanh_thu')
-    ->groupByRaw('DATE(ngay_dat)')
-    ->orderBy('ngay')
-    ->get();
-    $range = request('range', '7days');
+            ->where('trang_thai', 'DELIVERED')
+            ->whereDate('ngay_dat', '>=', now()->subDays(6)->toDateString())
+            ->selectRaw('DATE(ngay_dat) as ngay, SUM(tong_tien) as doanh_thu')
+            ->groupByRaw('DATE(ngay_dat)')
+            ->orderBy('ngay')
+            ->get();
+        $range = request('range', '7days');
 
-$startDate = match ($range) {
-    'today' => now()->startOfDay(),
-    '30days' => now()->subDays(29)->startOfDay(),
-    'month' => now()->startOfMonth(),
-    'year' => now()->startOfYear(),
-    default => now()->subDays(6)->startOfDay(),
-};
+        $startDate = match ($range) {
+            'today' => now()->startOfDay(),
+            '30days' => now()->subDays(29)->startOfDay(),
+            'month' => now()->startOfMonth(),
+            'year' => now()->startOfYear(),
+            default => now()->subDays(6)->startOfDay(),
+        };
 
-$doanhThuTheoNgay = DB::table('hoa_don')
-    ->where('trang_thai', 'DELIVERED')
-    ->whereDate('ngay_dat', '>=', $startDate)
-    ->selectRaw('DATE(ngay_dat) as ngay, SUM(tong_tien) as doanh_thu')
-    ->groupByRaw('DATE(ngay_dat)')
-    ->orderBy('ngay')
-    ->get();
+        $doanhThuTheoNgay = DB::table('hoa_don')
+            ->where('trang_thai', 'DELIVERED')
+            ->whereDate('ngay_dat', '>=', $startDate)
+            ->selectRaw('DATE(ngay_dat) as ngay, SUM(tong_tien) as doanh_thu')
+            ->groupByRaw('DATE(ngay_dat)')
+            ->orderBy('ngay')
+            ->get();
         return view('admin.AdminStaffDashboard', compact(
             'user',
             'tongSanPham',

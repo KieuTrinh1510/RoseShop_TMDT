@@ -118,7 +118,7 @@
 }
 
 .info-title {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Be Vietnam Pro', sans-serif;
     font-size: 2rem;
     color: var(--dark);
     line-height: 1.25;
@@ -437,7 +437,7 @@
 }
 
 .price-val {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Be Vietnam Pro', sans-serif;
     font-size: 1.05rem;
     color: var(--primary);
     font-weight: 700;
@@ -545,7 +545,7 @@
 }
 
 .cart-total-price {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Be Vietnam Pro', sans-serif;
     font-size: 1.15rem;
     color: var(--primary);
     font-weight: 700;

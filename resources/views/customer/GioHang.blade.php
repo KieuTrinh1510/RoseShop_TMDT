@@ -43,14 +43,14 @@
     <div class="cart-layout">
 
         {{-- LEFT: Bảng sản phẩm --}}
-        <div class="cart-table-wrap">
+        <div class="cart-table-wrap" style="width:900px; margin-left: -60px;">
             <table class="cart-table">
                 <thead>
                     <tr>
                         <th style="width:40px; text-align: center;">
                             <input type="checkbox" id="selectAll" title="Chọn tất cả">
                         </th>
-                        <th>Sản Phẩm</th>
+                        <th style="width: 34%; min-width: 320px;">Sản Phẩm</th>
                         <th>Giá</th>
                         <th>Số Lượng</th>
                         <th>Tạm Tính</th>
@@ -76,7 +76,10 @@
                                 @endif
                                 <div>
                                     <div class="cart-product-name">{{ $item['ten_san_pham'] }}</div>
-                                    <div class="cart-product-lot">Lô #{{ $item['ma_chi_tiet_nhap'] }}</div>
+                                    <!-- <div class="cart-product-lot">Lô #{{ $item['ma_chi_tiet_nhap'] }}</div> -->
+                                     <div class="cart-product-lot">
+                                    Sản phẩm: {{ $item['so_luong_con_lai'] }} 
+                                    </div>
                                 </div>
                             </div>
                         </td>

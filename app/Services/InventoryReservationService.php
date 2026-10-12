@@ -42,6 +42,94 @@ class InventoryReservationService
     }
 
     /**
+     * Lấy tồn kho khả dụng chuẩn hóa cho một nguyên liệu làm bó hoa:
+     * Available = max(0, min(on_hand, valid_lot_stock) - reserved)
+     * với valid_lot_stock chỉ tính các lô CONFIRMED, còn tồn (>0) và chưa quá hạn HSD.
+     */
+    public static function getAvailableForIngredient(int $maSanPham): int
+    {
+        $sp = SanPham::find($maSanPham);
+        if (!$sp || $sp->trang_thai !== 'DANG_BAN') {
+            return 0;
+        }
+
+        $reserved = self::getReservedForProduct($maSanPham);
+        $onHand = (int) $sp->so_luong;
+
+        $hasLots = ChiTietNhap::where('ma_san_pham', $maSanPham)->exists();
+        if ($hasLots) {
+            $lotQuery = ChiTietNhap::where('ma_san_pham', $maSanPham)
+                ->where('so_luong_con_lai', '>', 0)
+                ->whereHas('phieuNhap', fn ($q) => $q->where('trang_thai', 'CONFIRMED'));
+            if (\Illuminate\Support\Facades\Schema::hasColumn('chi_tiet_nhap', 'ngay_het_han')) {
+                $lotQuery->where(function ($q) {
+                    $q->whereNull('ngay_het_han')
+                      ->orWhere('ngay_het_han', '>=', now()->toDateString());
+                });
+            }
+            $confirmedStock = (int) $lotQuery->sum('so_luong_con_lai');
+            $onHand = min($onHand, $confirmedStock);
+        }
+
+        return max(0, $onHand - $reserved);
+    }
+
+    /**
+     * Lấy tồn kho khả dụng hàng loạt (batch) cho danh sách nguyên liệu.
+     */
+    public static function getBatchAvailableForIngredients(array $spIds): array
+    {
+        if (empty($spIds)) {
+            return [];
+        }
+
+        $reservedMap = InventoryReservation::whereIn('ma_san_pham', $spIds)
+            ->where('trang_thai', InventoryReservation::STATUS_RESERVED)
+            ->groupBy('ma_san_pham')
+            ->selectRaw('ma_san_pham, SUM(so_luong) as tong_giu')
+            ->pluck('tong_giu', 'ma_san_pham');
+
+        $lotQuery = ChiTietNhap::whereIn('ma_san_pham', $spIds)
+            ->where('so_luong_con_lai', '>', 0)
+            ->whereHas('phieuNhap', fn ($q) => $q->where('trang_thai', 'CONFIRMED'));
+        if (\Illuminate\Support\Facades\Schema::hasColumn('chi_tiet_nhap', 'ngay_het_han')) {
+            $lotQuery->where(function ($q) {
+                $q->whereNull('ngay_het_han')
+                  ->orWhere('ngay_het_han', '>=', now()->toDateString());
+            });
+        }
+        $lotStockMap = $lotQuery->groupBy('ma_san_pham')
+            ->selectRaw('ma_san_pham, SUM(so_luong_con_lai) as tong_lot')
+            ->pluck('tong_lot', 'ma_san_pham');
+
+        $hasLotsMap = ChiTietNhap::whereIn('ma_san_pham', $spIds)
+            ->select('ma_san_pham')
+            ->distinct()
+            ->pluck('ma_san_pham')
+            ->flip();
+
+        $products = SanPham::whereIn('ma_san_pham', $spIds)->get();
+        $results = [];
+
+        foreach ($products as $sp) {
+            if ($sp->trang_thai !== 'DANG_BAN') {
+                $results[$sp->ma_san_pham] = 0;
+                continue;
+            }
+            $onHand = (int) $sp->so_luong;
+            if (isset($hasLotsMap[$sp->ma_san_pham])) {
+                $lotStock = (int) ($lotStockMap[$sp->ma_san_pham] ?? 0);
+                $onHand = min($onHand, $lotStock);
+            }
+            $reserved = (int) ($reservedMap[$sp->ma_san_pham] ?? 0);
+            $results[$sp->ma_san_pham] = max(0, $onHand - $reserved);
+        }
+
+        return $results;
+    }
+
+
+    /**
      * Lấy tổng số lượng đang giữ (RESERVED) của một bó hoa thành phẩm cụ thể.
      */
     public static function getReservedForBouquet(int $maBoHoa): int
@@ -143,11 +231,19 @@ class InventoryReservationService
             }
 
             // Lấy các lô từ phiếu nhập đã CONFIRMED theo FIFO
-            $lots = ChiTietNhap::with('phieuNhap')
+            $lotsQuery = ChiTietNhap::with('phieuNhap')
                 ->where('ma_san_pham', $spId)
                 ->where('so_luong_con_lai', '>', 0)
-                ->whereHas('phieuNhap', fn ($q) => $q->where('trang_thai', 'CONFIRMED'))
-                ->orderBy('ma_chi_tiet_nhap')
+                ->whereHas('phieuNhap', fn ($q) => $q->where('trang_thai', 'CONFIRMED'));
+
+            if (\Illuminate\Support\Facades\Schema::hasColumn('chi_tiet_nhap', 'ngay_het_han')) {
+                $lotsQuery->where(function ($q) {
+                    $q->whereNull('ngay_het_han')
+                      ->orWhere('ngay_het_han', '>=', now()->toDateString());
+                });
+            }
+
+            $lots = $lotsQuery->orderBy('ma_chi_tiet_nhap')
                 ->lockForUpdate()
                 ->get()
                 ->sortBy(fn ($lot) => [$lot->phieuNhap->ngay_nhap?->timestamp ?? 0, $lot->ma_chi_tiet_nhap]);
@@ -291,11 +387,19 @@ class InventoryReservationService
             }
 
             // Lấy các lô từ phiếu nhập đã CONFIRMED theo FIFO
-            $lots = ChiTietNhap::with('phieuNhap')
+            $lotsQuery = ChiTietNhap::with('phieuNhap')
                 ->where('ma_san_pham', $spId)
                 ->where('so_luong_con_lai', '>', 0)
-                ->whereHas('phieuNhap', fn ($q) => $q->where('trang_thai', 'CONFIRMED'))
-                ->orderBy('ma_chi_tiet_nhap')
+                ->whereHas('phieuNhap', fn ($q) => $q->where('trang_thai', 'CONFIRMED'));
+
+            if (\Illuminate\Support\Facades\Schema::hasColumn('chi_tiet_nhap', 'ngay_het_han')) {
+                $lotsQuery->where(function ($q) {
+                    $q->whereNull('ngay_het_han')
+                      ->orWhere('ngay_het_han', '>=', now()->toDateString());
+                });
+            }
+
+            $lots = $lotsQuery->orderBy('ma_chi_tiet_nhap')
                 ->lockForUpdate()
                 ->get()
                 ->sortBy(fn ($lot) => [$lot->phieuNhap->ngay_nhap?->timestamp ?? 0, $lot->ma_chi_tiet_nhap]);
