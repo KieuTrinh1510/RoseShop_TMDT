@@ -5,6 +5,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../controllers/profile/app_settings_controller.dart';
+import '../../utils/app_strings.dart';
+import '../../widgets/common/user_avatar.dart';
 import '../../controllers/home/home_controller.dart';
 import '../../theme/pink_theme.dart';
 import '../../widgets/common/common.dart';
@@ -12,8 +15,8 @@ import '../../widgets/common/glass_container.dart';
 import '../../widgets/common/skeleton.dart';
 import '../../widgets/common/staggered_fade_slide.dart';
 import '../../widgets/home/dashboard_card.dart';
-import '../../widgets/home/chuong_thong_bao.dart';
-import '../thong_bao/thong_bao_screen.dart';
+import '../../widgets/home/notification_bell.dart';
+import '../notification/notification_screen.dart';
 
 class HomeTab extends StatefulWidget {
   /// true khi tab đang hiển thị (HomeScreen truyền xuống).
@@ -92,7 +95,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: _c,
+      listenable: Listenable.merge([_c, AppSettings.instance]),
       builder: (context, _) {
         if (_c.loading && _c.data == null) return const HomeSkeleton();
 
@@ -135,30 +138,14 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
   Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
-        Container(
-          width: 52,
-          height: 52,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: Pink.plum,
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            _c.chuCaiDau,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
+        const UserAvatar(size: 52),
         const SizedBox(width: 14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Xin chào, ${_c.tenNhanVien}!',
+                tr('home_hello', {'name': _c.tenNhanVien}),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
@@ -169,7 +156,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
               ),
               const SizedBox(height: 2),
               Text(
-                'Mã nhân viên: ${_c.maNhanVien}',
+                '${tr('employee_id')}: ${_c.maNhanVien}',
                 style: TextStyle(
                   color: Pink.plum.withOpacity(0.6),
                   fontSize: 13,
@@ -223,7 +210,7 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isOnline ? 'Đang ONLINE' : 'Đang OFFLINE',
+                  isOnline ? tr('online_on') : tr('online_off'),
                   style: const TextStyle(
                     color: Pink.plum,
                     fontSize: 16,
@@ -234,9 +221,9 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
                 Text(
                   isOnline
                       ? (_c.isFull
-                            ? 'Đã đủ ${_c.gioiHanDon}/${_c.gioiHanDon} đơn'
-                            : 'Sẵn sàng nhận đơn mới')
-                      : 'Bật để nhận đơn mới',
+                            ? tr('full_msg', {'n': '${_c.gioiHanDon}'})
+                            : tr('ready'))
+                      : tr('turn_on'),
                   style: TextStyle(
                     color: Pink.plum.withOpacity(0.6),
                     fontSize: 12,
@@ -286,18 +273,16 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
             SizedBox(
               width: w,
               child: DashboardCard(
-                title: 'Đơn đang xử lý',
+                title: tr('card_processing'),
                 value: '${_c.soDonHienTai}/${_c.gioiHanDon}',
-                subtitle: _c.isFull
-                    ? 'Đã đầy, không nhận thêm'
-                    : 'Có thể nhận thêm đơn',
+                subtitle: _c.isFull ? tr('card_full') : tr('card_can_more'),
                 icon: Icons.inventory_2_rounded,
               ),
             ),
             SizedBox(
               width: w,
               child: DashboardCard(
-                title: 'Tiền cần nộp',
+                title: tr('card_cod'),
                 value: _formatTien(_c.codCanNop),
                 subtitle: _c.codPhu,
                 icon: Icons.payments_rounded,
@@ -329,19 +314,19 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Chi tiết khoản cần nộp',
-              style: TextStyle(
+            Text(
+              tr('cod_detail_title'),
+              style: const TextStyle(
                 color: Pink.plum,
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
               ),
             ),
             const SizedBox(height: 16),
-            _codRow('Tiền COD đã thu', _c.tienCod),
-            _codRow('Tiền phạt giao trễ', _c.tienPhat),
+            _codRow(tr('cod_collected'), _c.tienCod),
+            _codRow(tr('late_fee'), _c.tienPhat),
             const Divider(height: 28),
-            _codRow('Tổng cần nộp', _c.codCanNop, bold: true),
+            _codRow(tr('cod_total'), _c.codCanNop, bold: true),
           ],
         ),
       ),
@@ -376,9 +361,11 @@ class _HomeTabState extends State<HomeTab> with WidgetsBindingObserver {
     );
   }
 
-  static String _formatTien(double v) {
-    if (v <= 0) return '0đ';
-    final s = v.toStringAsFixed(0);
+  // Nhận num để chấp nhận cả int (backend) lẫn double.
+  static String _formatTien(num v) {
+    final n = v.toDouble();
+    if (n <= 0) return '0đ';
+    final s = n.toStringAsFixed(0);
     final buf = StringBuffer();
     for (int i = 0; i < s.length; i++) {
       if (i > 0 && (s.length - i) % 3 == 0) buf.write('.');

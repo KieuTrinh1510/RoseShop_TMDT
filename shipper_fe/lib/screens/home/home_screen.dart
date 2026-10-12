@@ -3,12 +3,14 @@
 // IndexedStack giữ state các tab đã mở; tab chưa bấm vào thì chưa build (lazy).
 
 import 'package:flutter/material.dart';
+import '../../controllers/profile/app_settings_controller.dart';
+import '../../utils/app_strings.dart';
 import '../../widgets/common/liquid_bottom_nav.dart';
 import '../../theme/pink_theme.dart';
 import 'home_tab.dart';
-import '../don_hang/danh_sach_don_hang_tab.dart';
-import '../lich_su_tab.dart';
-import '../profile_tab.dart';
+import '../orders/order_list_tab.dart';
+import '../history/history_tab.dart';
+import '../profile/profile_tab.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,11 +25,11 @@ class HomeScreenState extends State<HomeScreen> {
   /// Key để điều khiển OrdersTab từ bên ngoài (mở chi tiết đơn khi tap thông báo).
   final GlobalKey<OrdersTabState> _ordersKey = GlobalKey<OrdersTabState>();
 
-  static const _items = [
-    NavItemData(icon: Icons.home_rounded, label: 'Trang chủ'),
-    NavItemData(icon: Icons.receipt_long_rounded, label: 'Đơn hàng'),
-    NavItemData(icon: Icons.history_rounded, label: 'Lịch sử'),
-    NavItemData(icon: Icons.person_rounded, label: 'Hồ sơ'),
+  List<NavItemData> get _items => [
+    NavItemData(icon: Icons.home_rounded, label: tr('nav_home')),
+    NavItemData(icon: Icons.receipt_long_rounded, label: tr('nav_orders')),
+    NavItemData(icon: Icons.history_rounded, label: tr('nav_history')),
+    NavItemData(icon: Icons.person_rounded, label: tr('nav_profile')),
   ];
 
   void _onTap(int i) {
@@ -73,28 +75,31 @@ class HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
 
-    return Scaffold(
-      backgroundColor: Pink.blush,
-      body: Stack(
-        children: [
-          const PinkBackground(),
-          Positioned.fill(
-            child: IndexedStack(
-              index: _index,
-              children: List.generate(4, _tabAt),
+    return ListenableBuilder(
+      listenable: AppSettings.instance,
+      builder: (context, _) => Scaffold(
+        backgroundColor: Pink.blush,
+        body: Stack(
+          children: [
+            const PinkBackground(),
+            Positioned.fill(
+              child: IndexedStack(
+                index: _index,
+                children: List.generate(4, _tabAt),
+              ),
             ),
-          ),
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 12 + bottomInset,
-            child: LiquidBottomNav(
-              items: _items,
-              currentIndex: _index,
-              onTap: _onTap,
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 12 + bottomInset,
+              child: LiquidBottomNav(
+                items: _items,
+                currentIndex: _index,
+                onTap: _onTap,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

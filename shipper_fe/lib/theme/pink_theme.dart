@@ -3,6 +3,8 @@
 
 import 'package:flutter/material.dart';
 import '../widgets/common/glass_container.dart';
+import '../utils/app_strings.dart';
+import '../controllers/profile/app_settings_controller.dart';
 
 class Pink {
   Pink._();
@@ -169,15 +171,18 @@ class StatusStyle {
 
 /// Nhãn + màu theo trạng thái đơn. [nhan] là nhan_trang_thai backend trả về (nếu có).
 StatusStyle statusStyle(String tt, [String? nhan]) {
+  // Nhãn từ backend là tiếng Việt -> chỉ dùng khi app đang ở tiếng Việt.
   String pick(String fallback) =>
-      (nhan != null && nhan.isNotEmpty) ? nhan : fallback;
+      (AppSettings.instance.language == 'vi' && nhan != null && nhan.isNotEmpty)
+      ? nhan
+      : fallback;
   switch (tt) {
     case 'CONFIRMED':
-      return StatusStyle(pick('Chờ lấy'), Pink.orange);
+      return StatusStyle(pick(tr('f_confirmed')), Pink.orange);
     case 'SHIPPING':
-      return StatusStyle(pick('Đang giao'), Pink.roseDeep);
+      return StatusStyle(pick(tr('f_shipping')), Pink.roseDeep);
     case 'DELIVERED':
-      return StatusStyle(pick('Đã giao'), Pink.leaf);
+      return StatusStyle(pick(tr('st_delivered')), Pink.leaf);
     default:
       return StatusStyle(pick(tt.isEmpty ? '—' : tt), Pink.grey);
   }
@@ -289,7 +294,7 @@ class PinkErrorBox extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               PinkGradientButton(
-                label: 'Thử lại',
+                label: tr('retry'),
                 icon: Icons.refresh_rounded,
                 onPressed: onRetry,
                 expand: false,
