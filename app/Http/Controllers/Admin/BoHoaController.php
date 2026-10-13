@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\{BoHoa, MauBoHoa, PhuPhiBoHoa, SanPham, ChiTietNhap, HoaDon, BaoCaoHangHong};
+use App\Models\{BoHoa, MauBoHoa, PhuPhiBoHoa, SanPham, ChiTietNhap, HoaDon, BaoCaoHangHong, InventoryReservation};
+use App\Services\InventoryReservationService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
@@ -92,6 +93,8 @@ class BoHoaController extends Controller
                 'so_luong'      => $totalQty,
                 'gia_ban'       => $giaMotBo,   // ← luôn khớp modal & trang khách
                 'bo_dau_tien'   => $first,
+                'created_at'    => $first->created_at,
+                'ngay_het_han'  => $first->ngay_het_han ?? ($first->created_at ? $first->created_at->copy()->addDays($first->mauBoHoa?->han_su_dung_ngay ?? 5) : null),
                 'so_bien_the'   => $group->count(),
             ];
         })->values();
@@ -126,25 +129,59 @@ class BoHoaController extends Controller
             $m->so_bo_hoa_chua_ban = (int) ($soBoTheoMau[$m->ma_mau_bo_hoa] ?? 0);
         });
 
+        $reservedMap = InventoryReservation::where('trang_thai', InventoryReservation::STATUS_RESERVED)
+            ->groupBy('ma_san_pham')
+            ->selectRaw('ma_san_pham, SUM(so_luong) as tong_giu')
+            ->pluck('tong_giu', 'ma_san_pham');
+
+        $lotStockMap = ChiTietNhap::whereHas('phieuNhap', fn ($q) => $q->where('trang_thai', 'CONFIRMED'))
+            ->where('so_luong_con_lai', '>', 0)
+            ->groupBy('ma_san_pham')
+            ->selectRaw('ma_san_pham, SUM(so_luong_con_lai) as tong_lot')
+            ->pluck('tong_lot', 'ma_san_pham');
+
+        $nguyenLieuBoHoa = SanPham::where('trang_thai', 'DANG_BAN')
+            ->orderBy('ten_san_pham')
+            ->get();
+
+        $tonKhoKhaDungMap = [];
+
+        $nguyenLieuBoHoa->each(function (SanPham $sp) use ($reservedMap, $lotStockMap, &$tonKhoKhaDungMap) {
+            $onHand = (int) $sp->so_luong;
+            $reserved = (int) ($reservedMap[$sp->ma_san_pham] ?? 0);
+            $hasLots = isset($lotStockMap[$sp->ma_san_pham]);
+            $lotAvail = $hasLots ? (int) $lotStockMap[$sp->ma_san_pham] : $onHand;
+            $available = max(0, min($onHand, $lotAvail) - $reserved);
+            $dvt = $sp->don_vi_tinh_text ?: ($sp->don_vi_tinh ?: 'cái');
+
+            $sp->setAttribute('ton_thuc_te', $onHand);
+            $sp->setAttribute('ton_dang_giu', $reserved);
+            $sp->setAttribute('ton_kha_dung', $available);
+            $sp->setAttribute('don_vi_tinh_label', $dvt);
+
+            $tonKhoKhaDungMap[$sp->ma_san_pham] = $available;
+        });
+
         return [
-            'danhSachBoHoa'   => $danhSachBoHoa,
-            'mauBoHoas'       => $mauList,
-            // Chỉ hiện nguyên vật liệu ĐANG BÁN trong dropdown chọn thành phần.
-            'nguyenLieuBoHoa' => SanPham::where('trang_thai', 'DANG_BAN')
-                ->orderBy('ten_san_pham')
-                ->get(),
-            'phuPhiBoHoa'     => PhuPhiBoHoa::all(),
+            'danhSachBoHoa'    => $danhSachBoHoa,
+            'mauBoHoas'        => $mauList,
+            'nguyenLieuBoHoa'  => $nguyenLieuBoHoa,
+            'tonKhoKhaDungMap' => $tonKhoKhaDungMap,
+            'phuPhiBoHoa'      => PhuPhiBoHoa::all(),
         ];
+    }
+
+    public static function normalizeTenMau(string $name): string
+    {
+        return trim(preg_replace('/\s+/u', ' ', $name));
     }
 
     public static function validateBo(Request $r, bool $isTemplate = false): array
     {
         $rules = [
             'ten_bo_hoa'   => 'required|string|max:100',
-            'size'         => ['required', Rule::in(array_keys(self::SO_BONG)),
-                               Rule::exists('phu_phi_bo_hoa', 'gia_tri')->where('loai', 'SIZE')],
-            'kieu_bo_hoa'  => ['required', Rule::in(array_keys(self::KIEU_DANG)),
-                               Rule::exists('phu_phi_bo_hoa', 'gia_tri')->where('loai', 'KIEU_DANG')],
+            'size'         => ['required', Rule::in(array_keys(self::SO_BONG))],
+            'kieu_bo_hoa'  => ['required', Rule::in(array_keys(self::KIEU_DANG))],
             'concept'      => ['nullable', Rule::in(array_keys(self::CONCEPT))],
             'mo_ta'        => 'nullable|string|max:2000',
             'hinh_anh'     => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
@@ -178,12 +215,29 @@ class BoHoaController extends Controller
             'thanh_phan.*.vai_tro' => 'vai trò',
         ]);
 
+        if ($isTemplate) {
+            $tenChuan = self::normalizeTenMau($d['ten_bo_hoa']);
+            if ($tenChuan === '') {
+                throw ValidationException::withMessages(['ten_bo_hoa' => 'Vui lòng nhập tên mẫu bó hoa.']);
+            }
+            $exists = MauBoHoa::whereRaw('LOWER(TRIM(ten_mau)) = ?', [mb_strtolower($tenChuan, 'UTF-8')])->exists();
+            if ($exists) {
+                throw ValidationException::withMessages(['ten_bo_hoa' => 'Tên mẫu bó hoa đã tồn tại.']);
+            }
+            $d['ten_bo_hoa'] = $tenChuan;
+        }
+
         $d['thanh_phan'] = array_map(
             fn ($row) => collect($row)->only(['ma_san_pham', 'vai_tro', 'so_luong'])->all(),
             $d['thanh_phan']
         );
         self::kiemTraCongThuc($d);
         self::kiemTraNguyenLieuDangBan($d['thanh_phan']);
+
+        if ($isTemplate) {
+            self::kiemTraTonKhaDungMau($d['thanh_phan']);
+        }
+
         return $d;
     }
 
@@ -233,6 +287,47 @@ class BoHoaController extends Controller
         if ($sum('PHU_KIEN_TRANG_TRI') > $maxPK) {
             self::loi("Size {$size} chỉ được tối đa {$maxPK} phụ kiện (có thể không chọn).");
         }
+
+        self::kiemTraTrungHoaChinh($d);
+    }
+
+    public static function kiemTraTonKhaDungMau(array $thanhPhan): void
+    {
+        $grouped = collect($thanhPhan)->groupBy('ma_san_pham');
+        $ids = $grouped->keys()->all();
+
+        $sanPhams = SanPham::whereIn('ma_san_pham', $ids)->get()->keyBy('ma_san_pham');
+
+        foreach ($grouped as $spId => $items) {
+            /** @var SanPham|null $sp */
+            $sp = $sanPhams->get($spId);
+            if (!$sp) {
+                self::loi("Sản phẩm ID #{$spId} không tồn tại.");
+            }
+            if ($sp->trang_thai !== 'DANG_BAN') {
+                self::loi("Sản phẩm \"{$sp->ten_san_pham}\" đã ngừng bán, không thể dùng tạo mẫu.");
+            }
+
+            $tongCan = (int) $items->sum('so_luong');
+            $reserved = InventoryReservationService::getReservedForProduct((int) $sp->ma_san_pham);
+            $hasLots = ChiTietNhap::where('ma_san_pham', $sp->ma_san_pham)->exists();
+            $onHand = (int) $sp->so_luong;
+            if ($hasLots) {
+                $confirmedLotStock = (int) ChiTietNhap::where('ma_san_pham', $sp->ma_san_pham)
+                    ->whereHas('phieuNhap', fn ($q) => $q->where('trang_thai', 'CONFIRMED'))
+                    ->sum('so_luong_con_lai');
+                $onHand = min($onHand, $confirmedLotStock);
+            }
+            $available = max(0, $onHand - $reserved);
+
+            if ($available <= 0) {
+                self::loi("{$sp->ten_san_pham} đã hết hàng khả dụng trong kho.");
+            }
+
+            if ($tongCan > $available) {
+                self::loi("{$sp->ten_san_pham} không còn đủ tồn khả dụng. Cần {$tongCan}, hiện còn {$available}.");
+            }
+        }
     }
 
     public static function kiemTraNguyenLieuDangBan(array $thanhPhan): void
@@ -254,13 +349,12 @@ class BoHoaController extends Controller
     {
         $s = PhuPhiBoHoa::where('loai', 'SIZE')->where('gia_tri', $size)->first();
         $k = PhuPhiBoHoa::where('loai', 'KIEU_DANG')->where('gia_tri', $kieu)->first();
-        if (!$s || !$k || $s->phu_phi < 0 || $k->phu_phi < 0) {
-            self::loi('Chưa cấu hình phụ phí hợp lệ cho size/kiểu dáng này.');
-        }
+        $phiSize = (float) ($s?->phu_phi ?? 0);
+        $phiKieu = (float) ($k?->phu_phi ?? 0);
         return [
-            'size'      => (float) $s->phu_phi,
-            'kieu_dang' => (float) $k->phu_phi,
-            'tong'      => round($s->phu_phi + $k->phu_phi, 2),
+            'size'      => $phiSize,
+            'kieu_dang' => $phiKieu,
+            'tong'      => round($phiSize + $phiKieu, 2),
         ];
     }
 
@@ -273,12 +367,18 @@ class BoHoaController extends Controller
             if ($khachMua && $sp->trang_thai !== 'DANG_BAN') self::loi("{$sp->ten_san_pham} đã ngừng bán.");
 
             $tong = (int) $items->sum('so_luong');
-            $lots = ChiTietNhap::with('phieuNhap')
+            $lotsQuery = ChiTietNhap::with('phieuNhap')
                 ->where('ma_san_pham', $id)
                 ->where('so_luong_con_lai', '>', 0)
-                ->whereHas('phieuNhap', fn ($q) => $q->where('trang_thai', 'CONFIRMED'))
-                ->orderBy('ma_chi_tiet_nhap')->lockForUpdate()->get()
-                ->sortBy(fn ($lot) => [$lot->phieuNhap->ngay_nhap?->timestamp ?? 0, $lot->getKey()]);
+                ->whereHas('phieuNhap', fn ($q) => $q->where('trang_thai', 'CONFIRMED'));
+            if (\Illuminate\Support\Facades\Schema::hasColumn('chi_tiet_nhap', 'ngay_het_han')) {
+                $lotsQuery->where(function ($q) {
+                    $q->whereNull('ngay_het_han')
+                      ->orWhere('ngay_het_han', '>=', now()->toDateString());
+                });
+            }
+            $lots = $lotsQuery->orderBy('ma_chi_tiet_nhap')->lockForUpdate()->get()
+                ->sortBy(fn ($lot) => [$lot->phieuNhap->ngay_nhap?->timestamp ?? 0, $lot->ma_chi_tiet_nhap]);
 
             if ($tong < 1 || $sp->so_luong < $tong || $lots->sum('so_luong_con_lai') < $tong) {
                 self::loi("{$sp->ten_san_pham} không đủ tồn kho khả dụng (cần {$tong}, còn {$lots->sum('so_luong_con_lai')}).");
@@ -292,7 +392,7 @@ class BoHoaController extends Controller
                     $gia = (float) ($sp->gia_ban_hien_tai ?? 0);
                     $result[] = [
                         'ma_san_pham'       => (int) $id,
-                        'ma_chi_tiet_nhap'  => $lot->getKey(),
+                        'ma_chi_tiet_nhap'  => $lot->ma_chi_tiet_nhap,
                         'vai_tro'           => $row['vai_tro'] ?? null,
                         'so_luong'          => $lay,
                         'gia_nhap_snapshot' => $lot->gia_nhap,
@@ -331,8 +431,24 @@ class BoHoaController extends Controller
         $nl  = collect($rows)->sum(fn ($r) => $r['gia_ban_snapshot'] * $r['so_luong']);
         $von = collect($rows)->sum(fn ($r) => $r['gia_nhap_snapshot'] * $r['so_luong']);
         $gia = round($nl / $soBo + $phi['tong'], 2);
+
+        $byRole = collect($rows)->groupBy('vai_tro');
+        $tienHoa = $byRole->filter(fn ($items, $role) => in_array($role, ['HOA_CHINH', 'HOA_TRANG_TRI']))
+            ->flatten(1)->sum(fn ($r) => $r['gia_ban_snapshot'] * $r['so_luong']);
+        $tienGiay  = ($byRole->get('GIAY_GOI') ?? collect())->sum(fn ($r) => $r['gia_ban_snapshot'] * $r['so_luong']);
+        $tienRuy   = ($byRole->get('RUY_BANG') ?? collect())->sum(fn ($r) => $r['gia_ban_snapshot'] * $r['so_luong']);
+        $tienXop   = ($byRole->get('XOP') ?? collect())->sum(fn ($r) => $r['gia_ban_snapshot'] * $r['so_luong']);
+        $tienPK    = ($byRole->get('PHU_KIEN_TRANG_TRI') ?? collect())->sum(fn ($r) => $r['gia_ban_snapshot'] * $r['so_luong']);
+        $tienThiep = ($byRole->get('THIEP') ?? collect())->sum(fn ($r) => $r['gia_ban_snapshot'] * $r['so_luong']);
+
         return [
             'tien_nguyen_lieu' => round($nl, 2),
+            'tien_hoa'         => round($tienHoa, 2),
+            'tien_giay'        => round($tienGiay, 2),
+            'tien_ruy_bang'    => round($tienRuy, 2),
+            'tien_xop'         => round($tienXop, 2),
+            'tien_phu_kien'    => round($tienPK, 2),
+            'tien_thiep'       => round($tienThiep, 2),
             'phu_phi'          => $phi,
             'gia_moi_bo'       => $gia,
             'gia_von_moi_bo'   => round($von / $soBo, 2),
@@ -458,10 +574,25 @@ class BoHoaController extends Controller
     {
         return $this->json(function () use ($r) {
             $d = self::validateBo($r, true);
-            $m = DB::transaction(function () use ($d) {
+            $tenChuan = self::normalizeTenMau($d['ten_bo_hoa']);
+            $d['ten_bo_hoa'] = $tenChuan;
+
+            $m = DB::transaction(function () use ($d, $tenChuan) {
+                // Chống race condition: lock & kiểm tra lại tên mẫu
+                $exists = MauBoHoa::whereRaw('LOWER(TRIM(ten_mau)) = ?', [mb_strtolower($tenChuan, 'UTF-8')])
+                    ->lockForUpdate()
+                    ->exists();
+                if ($exists) {
+                    throw ValidationException::withMessages(['ten_bo_hoa' => 'Tên mẫu bó hoa đã tồn tại.']);
+                }
+
+                // Kiểm tra lại tồn kho khả dụng bên trong transaction
+                self::kiemTraTonKhaDungMau($d['thanh_phan']);
+
+                // Tạo mẫu: KHÔNG TRỪ KHO, KHÔNG RESERVATION, KHÔNG CONSUMED
                 $mau = MauBoHoa::create([
                     ...collect($d)->only(['mo_ta', 'size', 'kieu_bo_hoa', 'concept'])->all(),
-                    'ten_mau'    => $d['ten_bo_hoa'],
+                    'ten_mau'    => $tenChuan,
                     'trang_thai' => 'INACTIVE',
                 ]);
                 $mau->chiTietMauBoHoa()->createMany($d['thanh_phan']);
@@ -556,6 +687,7 @@ class BoHoaController extends Controller
             $d = $r->validate([
                 'ma_mau_bo_hoa' => 'required|integer|exists:mau_bo_hoa,ma_mau_bo_hoa',
                 'so_luong'      => 'required|integer|min:1|max:100',
+                'ngay_het_han'  => 'nullable|date',
             ], [
                 'ma_mau_bo_hoa.required' => 'Vui lòng chọn mẫu bó hoa.',
                 'ma_mau_bo_hoa.exists'   => 'Mẫu bó hoa không tồn tại.',
@@ -571,6 +703,10 @@ class BoHoaController extends Controller
                 self::loi('Mẫu "' . $mau->ten_mau . '" đang ở trạng thái ẨN. Vui lòng bật "Cho sử dụng" trước khi tạo bó hoa.');
             }
 
+            $ngayHetHan = !empty($d['ngay_het_han'])
+                ? $d['ngay_het_han']
+                : now()->addDays($mau->han_su_dung_ngay ?? 5)->format('Y-m-d');
+
             $formula = [
                 'size'       => $mau->size,
                 'thanh_phan' => $mau->chiTietMauBoHoa->map(fn ($c) => [
@@ -582,7 +718,7 @@ class BoHoaController extends Controller
             self::kiemTraCongThuc($formula);
             self::kiemTraNguyenLieuDangBan($formula['thanh_phan']);
 
-            $ids = DB::transaction(function () use ($d, $mau, $formula) {
+            $ids = DB::transaction(function () use ($d, $mau, $formula, $ngayHetHan) {
                 $ids = [];
                 for ($i = 0; $i < $d['so_luong']; $i++) {
                     $rows = self::phanBo($formula['thanh_phan']);
@@ -598,6 +734,7 @@ class BoHoaController extends Controller
                     $bo->so_luong      = 1;
                     $bo->gia_ban       = $gia['gia_moi_bo'];
                     $bo->trang_thai    = 'ACTIVE';
+                    $bo->ngay_het_han  = $ngayHetHan;
                     $bo->save();
 
                     self::luuChiTiet($bo, $rows);
@@ -657,18 +794,6 @@ class BoHoaController extends Controller
                 $ghiChu   = $d['ghi_chu'] ?? null;
                 $prefix   = "Từ bó hoa #{$bo->ma_bo_hoa} - {$bo->ten_bo_hoa}";
                 $ghiChuFull = $ghiChu ? ($prefix . ' | ' . $ghiChu) : $prefix;
-
-                foreach ($bo->chiTietBoHoa as $ct) {
-                    BaoCaoHangHong::create([
-                        'ma_san_pham'       => $ct->ma_san_pham,
-                        'ma_chi_tiet_nhap'  => $ct->ma_chi_tiet_nhap,
-                        'ma_nhan_vien'      => $maNhanVien,
-                        'so_luong_hong'     => $ct->so_luong * $d['so_luong_hong'],
-                        'ly_do'             => $d['ly_do'],
-                        'ghi_chu'           => $ghiChuFull,
-                        'thoi_gian_bao_cao' => $thoiGian,
-                    ]);
-                }
 
                 $remaining = (int) $d['so_luong_hong'];
                 foreach ($group as $b) {
@@ -739,19 +864,43 @@ class BoHoaController extends Controller
         if (DB::transactionLevel() === 0 || $hd->trang_thai !== 'PENDING') {
             self::loi('Chỉ hoàn giữ kho của đơn PENDING trong transaction.');
         }
+
+        // 1. Nếu đơn hàng có bản ghi InventoryReservation, ưu tiên gọi releaseOrder để release chuẩn
+        if ($hd->reservations()->where('trang_thai', InventoryReservation::STATUS_RESERVED)->exists()) {
+            InventoryReservationService::releaseOrder($hd);
+        }
+
+        // 2. Xử lý các bó hoa thuộc đơn hàng này
         $bos = BoHoa::where('ma_hoa_don', $hd->getKey())->orderBy('ma_bo_hoa')->lockForUpdate()->get();
         foreach ($bos as $bo) {
-            $rows = $bo->chiTietBoHoa()->get()->toArray();
-            if (collect($rows)->contains(fn ($r) => !$r['ma_chi_tiet_nhap'])) {
-                self::loi('Thiếu lô đã giữ, không thể hoàn tự động.');
+            // A. Bó hoa thành phẩm có sẵn (HE_THONG hoặc có ma_mau_bo_hoa):
+            // Tuyệt đối KHÔNG gọi hoanKho (không tăng SanPham, không tăng ChiTietNhap vì nguyên liệu đã trừ lúc sản xuất).
+            if ($bo->loai_bo_hoa === 'HE_THONG' || $bo->ma_mau_bo_hoa) {
+                // Giải phóng reservation nếu còn sót
+                InventoryReservation::where('ma_bo_hoa', $bo->ma_bo_hoa)
+                    ->where('trang_thai', InventoryReservation::STATUS_RESERVED)
+                    ->update(['trang_thai' => InventoryReservation::STATUS_RELEASED]);
+
+                $bo->ma_hoa_don    = null;
+                $bo->ma_khach_hang = null;
+                $bo->loi_nhan      = null;
+                if ($bo->so_luong > 0) {
+                    $bo->trang_thai = 'ACTIVE';
+                }
+                $bo->save();
+            } else {
+                // B. Bó làm theo đơn / tùy chọn (TUY_CHON):
+                // Chưa trừ tồn kho vật lý lúc PENDING (chỉ reserve nguyên liệu), khi hủy thì release reservation,
+                // KHÔNG tăng tồn kho SanPham/ChiTietNhap. Đánh dấu bó hoa đã hủy.
+                InventoryReservation::where('ma_bo_hoa', $bo->ma_bo_hoa)
+                    ->where('trang_thai', InventoryReservation::STATUS_RESERVED)
+                    ->update(['trang_thai' => InventoryReservation::STATUS_RELEASED]);
+
+                $bo->trang_thai = 'CANCELLED';
+                $bo->save();
             }
-            self::hoanKho($rows);
-            $bo->ma_hoa_don    = null;
-            $bo->ma_khach_hang = null;
-            $bo->loi_nhan      = null;
-            $bo->trang_thai    = 'DRAFT';
-            $bo->save();
         }
+
         return $bos->isNotEmpty();
     }
 
@@ -762,11 +911,21 @@ class BoHoaController extends Controller
 
     public static function kiemTraTrungHoaChinh(array $d): void
     {
-        $chinhIds = collect($d['thanh_phan'])->where('vai_tro', 'HOA_CHINH')->pluck('ma_san_pham')->unique();
-        foreach ($d['thanh_phan'] as $row) {
-            if ($row['vai_tro'] === 'HOA_TRANG_TRI' && $chinhIds->contains($row['ma_san_pham'])) {
-                self::loi('Hoa trang trí không được trùng với hoa chính.');
-            }
+        $chinhIds = collect($d['thanh_phan'])->where('vai_tro', 'HOA_CHINH')->pluck('ma_san_pham');
+        $decorIds = collect($d['thanh_phan'])->where('vai_tro', 'HOA_TRANG_TRI')->pluck('ma_san_pham');
+
+        // Chống chọn cùng một hoa nhiều lần trong cùng một nhóm vai trò
+        if ($chinhIds->count() !== $chinhIds->unique()->count()) {
+            self::loi('Mỗi loại hoa chính chỉ được chọn một lần trong bó.');
+        }
+        if ($decorIds->count() !== $decorIds->unique()->count()) {
+            self::loi('Mỗi loại hoa trang trí chỉ được chọn một lần trong bó.');
+        }
+
+        // Chống trùng hoa giữa hoa chính và hoa trang trí (hai chiều)
+        $intersect = $chinhIds->unique()->intersect($decorIds->unique());
+        if ($intersect->isNotEmpty()) {
+            self::loi('Hoa đã chọn làm hoa chính không được chọn làm hoa trang trí và ngược lại.');
         }
     }
 }

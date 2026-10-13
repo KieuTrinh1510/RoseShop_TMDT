@@ -258,6 +258,107 @@
             color: #EC3D8F !important;
             font-weight: 600 !important;
         }
+
+        /* ==========================================================================
+           ĐỒNG BỘ PHÂN TRANG TOÀN BỘ HỆ THỐNG ADMIN ROSESHOP (MÀU HỒNG #f43f5e)
+           ========================================================================== */
+        :root {
+            --bs-pagination-active-bg: #f43f5e !important;
+            --bs-pagination-active-border-color: #f43f5e !important;
+            --bs-pagination-active-color: #ffffff !important;
+            --bs-pagination-color: #475467 !important;
+            --bs-pagination-hover-color: #f43f5e !important;
+            --bs-pagination-focus-color: #f43f5e !important;
+            --bs-pagination-focus-box-shadow: 0 0 0 0.2rem rgba(244, 63, 94, 0.25) !important;
+        }
+
+        .pagination,
+        .rs-pagination {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            list-style: none !important;
+            --bs-pagination-active-bg: #f43f5e !important;
+            --bs-pagination-active-border-color: #f43f5e !important;
+            --bs-pagination-active-color: #ffffff !important;
+            --bs-pagination-color: #475467 !important;
+            --bs-pagination-hover-color: #f43f5e !important;
+        }
+
+        .pagination .page-item,
+        .rs-pagination .page-item {
+            margin: 0 !important;
+            display: inline-block !important;
+        }
+
+        .pagination .page-link,
+        .rs-pagination .page-link {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            min-width: 32px !important;
+            height: 32px !important;
+            padding: 0 8px !important;
+            border-radius: 6px !important;
+            border: 1px solid #e2e8f0 !important;
+            background: #ffffff !important;
+            color: #475467 !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            text-decoration: none !important;
+            transition: all 0.15s ease !important;
+            cursor: pointer !important;
+            box-shadow: none !important;
+        }
+
+        .pagination .page-link:hover,
+        .rs-pagination .page-link:hover {
+            border-color: #f43f5e !important;
+            background: #fff1f2 !important;
+            color: #f43f5e !important;
+        }
+
+        /* Nút Active: Màu hồng RoseShop #f43f5e */
+        .pagination .page-item.active .page-link,
+        .rs-pagination .page-item.active .page-link,
+        .page-item.active .page-link,
+        .active > .page-link,
+        ul.pagination li.active a,
+        ul.pagination li.active span,
+        ul.rs-pagination li.active a,
+        ul.rs-pagination li.active span {
+            background-color: #f43f5e !important;
+            border-color: #f43f5e !important;
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            box-shadow: 0 2px 6px rgba(244, 63, 94, 0.35) !important;
+        }
+
+        /* Nút Disabled */
+        .pagination .page-item.disabled .page-link,
+        .rs-pagination .page-item.disabled .page-link,
+        .page-item.disabled .page-link {
+            color: #cbd5e1 !important;
+            border-color: #f1f5f9 !important;
+            background: #ffffff !important;
+            cursor: not-allowed !important;
+            pointer-events: none !important;
+            opacity: 0.6 !important;
+        }
+
+        /* Dấu ... (Ellipsis) */
+        .pagination .page-link.ellipsis,
+        .rs-pagination .page-link.ellipsis,
+        .page-link.ellipsis {
+            border: none !important;
+            background: transparent !important;
+            color: #94a3b8 !important;
+            cursor: default !important;
+            padding: 0 4px !important;
+            min-width: 24px !important;
+        }
     </style>
 </head>
 
@@ -378,23 +479,23 @@
                             Sản phẩm
                         </a>
                         @if($isAdmin)
-                            <a href="{{ route('admin.mau-bo-hoa') }}" class="submenu-item {{ request()->routeIs('admin.mau-bo-hoa*') ? 'active' : '' }}">
-                                Mẫu bó hoa
-                            </a>
                             <a href="{{ route('admin.nguyen-vat-lieu') }}" class="submenu-item {{ request()->routeIs('admin.nguyen-vat-lieu*') ? 'active' : '' }}">
                                 Nguyên vật liệu
+                            </a>
+                            <a href="{{ route('admin.mau-bo-hoa') }}" class="submenu-item {{ request()->routeIs('admin.mau-bo-hoa*') ? 'active' : '' }}">
+                                Mẫu bó hoa
                             </a>
                         @endif
                         <a href="{{ route('phieu-nhap.index') }}" class="submenu-item {{ request()->routeIs('phieu-nhap.*') ? 'active' : '' }}">
                             Phiếu nhập hàng
                         </a>
+                        <a href="{{ route('admin.nha-cung-cap') }}" class="submenu-item {{ request()->routeIs('admin.nha-cung-cap*') ? 'active' : '' }}">
+                            Nhà cung cấp
+                        </a>
+                        <a href="{{ route('admin.lo-hang') }}" class="submenu-item {{ request()->routeIs('admin.lo-hang*') ? 'active' : '' }}">
+                            Lô hàng
+                        </a>
                         @if($isAdmin)
-                            <a href="{{ route('admin.nha-cung-cap') }}" class="submenu-item {{ request()->routeIs('admin.nha-cung-cap*') ? 'active' : '' }}">
-                                Nhà cung cấp
-                            </a>
-                            <a href="{{ route('admin.lo-hang') }}" class="submenu-item {{ request()->routeIs('admin.lo-hang*') ? 'active' : '' }}">
-                                Lô hàng
-                            </a>
                             <a href="{{ route('admin.ton-kho') }}" class="submenu-item {{ request()->routeIs('admin.ton-kho*') ? 'active' : '' }}">
                                 Tồn kho
                             </a>
@@ -429,7 +530,7 @@
                             <a href="{{ route('nhan-vien.index') }}" class="submenu-item {{ request()->routeIs('nhan-vien.*') ? 'active' : '' }}">
                                 Nhân viên
                             </a>
-                            <a href="{{ route('admin.shipper') }}" class="submenu-item {{ request()->routeIs('admin.shipper*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.shipper.index') }}" class="submenu-item {{ request()->routeIs('admin.shipper*') ? 'active' : '' }}">
                                 Shipper
                             </a>
                         </div>
@@ -489,9 +590,9 @@
                             <a href="{{ route('bao-cao.san-pham') }}" class="submenu-item {{ request()->routeIs('bao-cao.san-pham*') ? 'active' : '' }}">
                                 Sản phẩm
                             </a>
-                            <a href="{{ route('admin.bao-cao.kho') }}" class="submenu-item {{ request()->routeIs('admin.bao-cao.kho*') ? 'active' : '' }}">
+                            <!-- <a href="{{ route('admin.bao-cao.kho') }}" class="submenu-item {{ request()->routeIs('admin.bao-cao.kho*') ? 'active' : '' }}">
                                 Kho
-                            </a>
+                            </a> -->
                             <a href="{{ route('admin.bao-cao.giao-hang') }}" class="submenu-item {{ request()->routeIs('admin.bao-cao.giao-hang*') ? 'active' : '' }}">
                                 Hoạt động giao hàng
                             </a>
@@ -608,6 +709,49 @@
                     tongQuanItem.classList.add('active');
                 });
             }
+
+            // Tự động kết thúc / đóng mọi thông báo alert sau 3 giây (3s)
+            function setupAutoDismiss(alertEl) {
+                if (!alertEl || alertEl.dataset.autoDismissed) return;
+                alertEl.dataset.autoDismissed = 'true';
+                setTimeout(function() {
+                    alertEl.style.transition = 'opacity 0.5s ease, transform 0.5s ease, max-height 0.5s ease, margin 0.5s ease, padding 0.5s ease';
+                    alertEl.style.opacity = '0';
+                    alertEl.style.transform = 'translateY(-10px)';
+                    setTimeout(function() {
+                        if (typeof bootstrap !== 'undefined' && bootstrap.Alert) {
+                            try {
+                                const bsAlert = bootstrap.Alert.getInstance(alertEl) || new bootstrap.Alert(alertEl);
+                                bsAlert.close();
+                            } catch (e) {
+                                alertEl.remove();
+                            }
+                        } else {
+                            alertEl.remove();
+                        }
+                    }, 500);
+                }, 3000);
+            }
+
+            // Kích hoạt cho các alert có sẵn khi tải trang
+            document.querySelectorAll('.alert:not(.alert-permanent)').forEach(setupAutoDismiss);
+
+            // Theo dõi và tự động áp dụng cho các alert được thêm động vào DOM
+            const alertObserver = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.nodeType === 1) {
+                            if (node.classList && node.classList.contains('alert') && !node.classList.contains('alert-permanent')) {
+                                setupAutoDismiss(node);
+                            } else if (node.querySelectorAll) {
+                                node.querySelectorAll('.alert:not(.alert-permanent)').forEach(setupAutoDismiss);
+                            }
+                        }
+                    });
+                });
+            });
+
+            alertObserver.observe(document.body, { childList: true, subtree: true });
         });
     </script>
 </div>

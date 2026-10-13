@@ -3,12 +3,16 @@
 use App\Http\Controllers\Admin\NguoiDungController;
 use App\Http\Controllers\Admin\KhachHangController;
 use App\Http\Controllers\Admin\NhanVienController;
+use App\Http\Controllers\Admin\ShipperController as AdminShipperController;
 use App\Http\Controllers\Admin\SanPham\SanPhamController;
 use App\Http\Controllers\Admin\SanPham\BoHoaController as SanPhamBoHoaController;
 use App\Http\Controllers\Admin\SanPham\NguyenVatLieuController;
 use App\Http\Controllers\Admin\HoaDonController;
 use App\Http\Controllers\Admin\DonHangController;
 use App\Http\Controllers\Admin\PhieuNhapController;
+use App\Http\Controllers\Admin\NhaCungCapController;
+use App\Http\Controllers\Admin\LoHangController;
+use App\Http\Controllers\Admin\TonKhoController;
 use App\Http\Controllers\Admin\BaoCaoController;
 use App\Http\Controllers\Shipper\ShipperController;
 use App\Http\Controllers\Shipper\NhanDonController;
@@ -16,12 +20,14 @@ use App\Http\Controllers\Shipper\ShipperProfileController;
 
 use App\Http\Controllers\Shipper\ShipperThongBaoController;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\SanPhamHetHanController;
 use App\Http\Controllers\Customer\ThongBaoController as CustomerThongBaoController;
 use App\Http\Controllers\Customer\CustomerController;
 use App\Http\Controllers\Customer\CustomerProfileController;
 use App\Http\Controllers\Customer\ChiTietSanPhamController;
 use App\Http\Controllers\Customer\GioHangController;
 use App\Http\Controllers\Customer\ThanhToanController;
+use App\Http\Controllers\Customer\DiaChiController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 
 use Illuminate\Support\Facades\Route;
@@ -139,24 +145,34 @@ Route::middleware(['auth', 'role:ADMIN'])->group(function () {
         Route::delete('/{id}',       [NguoiDungController::class, 'destroy'])->name('destroy');
         Route::get('/{id}/edit-data',[NguoiDungController::class, 'editData'])->name('edit-data');
         Route::post('/{id}/reset-password', [NguoiDungController::class, 'resetPassword'])->name('reset-password');
+        Route::get('/check-username', [NguoiDungController::class, 'checkUsername'])->name('check-username');
+        Route::patch('/{id}/toggle-status', [NguoiDungController::class, 'toggleStatus'])->name('toggle-status');
     });
 
     // Quản lý Nhân viên (bao gồm trả tiền - admin only)
     Route::prefix('nhan-vien')->name('nhan-vien.')->controller(NhanVienController::class)->group(function () {
-        Route::get('/',                   'index')->name('index');
-        Route::put('/{ma_nhan_vien}',     'update')->name('update');
-        Route::delete('/{ma_nhan_vien}',  'destroy')->name('destroy');
-        Route::post('/{ma}/tra-tien',     'payback')->name('payback');
+        Route::get('/',                               'index')->name('index');
+        Route::post('/',                              'store')->name('store');
+        Route::put('/{ma_nhan_vien}',                 'update')->name('update');
+        Route::delete('/{ma_nhan_vien}',              'destroy')->name('destroy');
+        Route::post('/{ma}/tra-tien',                 'payback')->name('payback');
+        Route::patch('/{ma_nhan_vien}/toggle-status', 'toggleStatus')->name('toggle-status');
     });
 
     // ─── Placeholder routes cho các menu đang phát triển (ADMIN only) ──
     Route::get('/admin/thanh-toan',             fn() => view('admin.placeholder', ['title' => 'Thanh toán']))->name('admin.thanh-toan');
-    Route::get('/admin/mau-bo-hoa',             fn() => view('admin.placeholder', ['title' => 'Mẫu bó hoa']))->name('admin.mau-bo-hoa');
-    Route::get('/admin/nguyen-vat-lieu',        fn() => view('admin.placeholder', ['title' => 'Nguyên vật liệu']))->name('admin.nguyen-vat-lieu');
-    Route::get('/admin/nha-cung-cap',           fn() => view('admin.placeholder', ['title' => 'Nhà cung cấp']))->name('admin.nha-cung-cap');
-    Route::get('/admin/lo-hang',                fn() => view('admin.placeholder', ['title' => 'Lô hàng']))->name('admin.lo-hang');
-    Route::get('/admin/ton-kho',                fn() => view('admin.placeholder', ['title' => 'Tồn kho']))->name('admin.ton-kho');
-    Route::get('/admin/quan-ly-shipper',        fn() => view('admin.placeholder', ['title' => 'Shipper']))->name('admin.shipper');
+    Route::get('/admin/ton-kho',                [TonKhoController::class, 'index'])->name('admin.ton-kho');
+    Route::get('/admin/ton-kho/{id}/giu',        [TonKhoController::class, 'chiTietGiu'])->name('admin.ton-kho.giu');
+    Route::get('/admin/ton-kho/bo-hoa/{id}/giu', [TonKhoController::class, 'chiTietGiuBoHoa'])->name('admin.ton-kho.bo-hoa.giu');
+    // Quản lý Shipper (ADMIN only - UC2.4)
+    Route::prefix('admin/quan-ly-shipper')->name('admin.shipper.')->controller(AdminShipperController::class)->group(function () {
+        Route::get('/',                               'index')->name('index');
+        Route::get('/{id}/detail',                    'detail')->name('detail');
+        Route::get('/{id}/lich-su-giao-hang',         'lichSuGiaoHang')->name('lich-su-giao-hang');
+        Route::patch('/{id}/toggle-status',           'toggleStatus')->name('toggle-status');
+        Route::delete('/{id}',                        'destroy')->name('destroy');
+    });
+    Route::get('/admin/shipper', fn() => redirect()->route('admin.shipper.index'))->name('admin.shipper');
     Route::get('/admin/giao-hang/phan-cong',    fn() => view('admin.placeholder', ['title' => 'Phân công giao hàng']))->name('admin.giao-hang.phan-cong');
     Route::get('/admin/giao-hang/theo-doi',     fn() => view('admin.placeholder', ['title' => 'Theo dõi giao hàng']))->name('admin.giao-hang.theo-doi');
     Route::get('/admin/giao-hang/hang-hoan',    fn() => view('admin.placeholder', ['title' => 'Hàng hoàn']))->name('admin.giao-hang.hang-hoan');
@@ -172,28 +188,35 @@ Route::middleware(['auth', 'role:ADMIN,NHAN_VIEN'])->group(function () {
 
     // Quản lý Khách hàng
     Route::prefix('khach-hang')->name('khach-hang.')->group(function () {
-        Route::get('/',        [KhachHangController::class, 'index'])->name('index');
-        Route::put('/{id}',    [KhachHangController::class, 'update'])->name('update');
-        Route::delete('/{id}', [KhachHangController::class, 'destroy'])->name('destroy');
+        Route::get('/',                     [KhachHangController::class, 'index'])->name('index');
+        Route::put('/{id}',                 [KhachHangController::class, 'update'])->name('update');
+        Route::patch('/{id}/toggle-status', [KhachHangController::class, 'toggleStatus'])->name('toggle-status');
+        Route::patch('/{id}/limit-cod',     [KhachHangController::class, 'limitCod'])->name('limit-cod');
+        Route::patch('/{id}/restore-cod',   [KhachHangController::class, 'restoreCod'])->name('restore-cod');
+        Route::delete('/{id}',              [KhachHangController::class, 'destroy'])->name('destroy');
     });
+
+    // Mẫu bó hoa & Nguyên vật liệu
+    Route::get('/admin/mau-bo-hoa',      [SanPhamBoHoaController::class,  'index'])->name('admin.mau-bo-hoa');
+    Route::get('/admin/nguyen-vat-lieu', [NguyenVatLieuController::class, 'index'])->name('admin.nguyen-vat-lieu');
 
     // Sản phẩm
     Route::prefix('san-pham')->name('san-pham.')->group(function () {
-    // Trang chính — quản lý sản phẩm đơn lẻ
-    Route::get('/', [SanPhamController::class, 'index'])->name('index');
+        // Trang chính — quản lý sản phẩm đơn lẻ
+        Route::get('/', [SanPhamController::class, 'index'])->name('index');
 
-    // 2 trang con — phải đặt TRƯỚC route động {id} để không bị nuốt
-    Route::get('/bo-hoa',          [SanPhamBoHoaController::class,  'index'])->name('bo-hoa.index');
-    Route::get('/nguyen-vat-lieu', [NguyenVatLieuController::class, 'index'])->name('nguyen-vat-lieu.index');
+        // Chuyển hướng các URL cũ sang route độc lập mới
+        Route::get('/bo-hoa',          fn() => redirect()->route('admin.mau-bo-hoa'))->name('bo-hoa.index');
+        Route::get('/nguyen-vat-lieu', fn() => redirect()->route('admin.nguyen-vat-lieu'))->name('nguyen-vat-lieu.index');
 
-    // CRUD sản phẩm — giữ nguyên path + name như cũ
-    Route::post('/',              [SanPhamController::class, 'store'])->name('store');
-    Route::get('/{id}/edit-data', [SanPhamController::class, 'editData'])->name('editData')->whereNumber('id');
-    Route::put('/{id}',           [SanPhamController::class, 'update'])->name('update')->whereNumber('id');
-    Route::patch('/{id}/toggle',  [SanPhamController::class, 'toggleTrangThai'])->name('toggle')->whereNumber('id');
-    Route::get('/{id}/lo-nhap',   [SanPhamController::class, 'loNhap'])->name('lo-nhap')->whereNumber('id');
-    Route::post('/bao-hang-hong', [SanPhamController::class, 'baoHangHong'])->name('bao-hang-hong');
-});
+        // CRUD sản phẩm — giữ nguyên path + name như cũ
+        Route::post('/',              [SanPhamController::class, 'store'])->name('store');
+        Route::get('/{id}/edit-data', [SanPhamController::class, 'editData'])->name('editData')->whereNumber('id');
+        Route::put('/{id}',           [SanPhamController::class, 'update'])->name('update')->whereNumber('id');
+        Route::patch('/{id}/toggle',  [SanPhamController::class, 'toggleTrangThai'])->name('toggle')->whereNumber('id');
+        Route::get('/{id}/lo-nhap',   [SanPhamController::class, 'loNhap'])->name('lo-nhap')->whereNumber('id');
+        Route::post('/bao-hang-hong', [SanPhamController::class, 'baoHangHong'])->name('bao-hang-hong');
+    });
 
     // Hóa đơn
     Route::prefix('hoa-don')->name('hoa-don.')->controller(HoaDonController::class)->group(function () {
@@ -224,6 +247,37 @@ Route::prefix('phieu-nhap')->name('phieu-nhap.')->controller(PhieuNhapController
     Route::delete('/{id}', 'destroy')->name('destroy');
  
     Route::post('/{id}/confirm', 'confirm')->name('confirm');
+
+    Route::post('/{id}/cancel', 'cancel')->name('cancel');
+    Route::post('/{id}/huy', 'cancel')->name('huy');
+
+    Route::get('/{id}', 'show')->name('show')->whereNumber('id');
+});
+
+Route::get('/admin/phieu-nhap/{id}', [PhieuNhapController::class, 'show'])->whereNumber('id');
+Route::post('/admin/phieu-nhap/{id}/huy', [PhieuNhapController::class, 'cancel'])->name('admin.phieu-nhap.cancel')->whereNumber('id');
+
+// Quản lý Nhà cung cấp (UC4.1) - Cả ADMIN và NHÂN VIÊN
+Route::prefix('admin/nha-cung-cap')->name('admin.nha-cung-cap.')->controller(NhaCungCapController::class)->group(function () {
+    Route::get('/',              'index')->name('index');
+    Route::get('/create',        'create')->name('create');
+    Route::post('/',             'store')->name('store');
+    Route::get('/{id}',          'show')->name('show')->whereNumber('id');
+    Route::get('/{id}/edit',     'edit')->name('edit')->whereNumber('id');
+    Route::put('/{id}',          'update')->name('update')->whereNumber('id');
+    Route::patch('/{id}/trang-thai', 'updateStatus')->name('status')->whereNumber('id');
+    Route::post('/lo-hang/{ma_chi_tiet_nhap}/danh-gia', 'danhGiaLo')->name('danh-gia-lo')->whereNumber('ma_chi_tiet_nhap');
+});
+Route::get('/admin/nha-cung-cap', [NhaCungCapController::class, 'index'])->name('admin.nha-cung-cap');
+
+// Quản lý Lô hàng & Đánh giá chất lượng lô (Cả ADMIN và NHÂN VIÊN)
+Route::middleware(['auth', 'role:ADMIN,NHAN_VIEN'])->group(function () {
+    Route::get('/admin/lo-hang', [LoHangController::class, 'index'])->name('admin.lo-hang');
+    Route::get('/admin/lo-hang/{id}', [LoHangController::class, 'show'])->name('admin.lo-hang.show')->whereNumber('id');
+    Route::post('/admin/lo-hang/{id}/danh-gia', [LoHangController::class, 'danhGia'])->name('admin.lo-hang.danh-gia')->whereNumber('id');
+
+    // Cảnh báo & Xử lý sản phẩm hết hạn (Lô hoa + Bó hoa)
+    Route::get('/admin/san-pham-het-han', [SanPhamHetHanController::class, 'index'])->name('admin.san-pham-het-han');
 });
 Route::get('/bao-cao',               [BaoCaoController::class, 'index'])->name('bao-cao.index');
 Route::get('/bao-cao/doanh-thu',     [BaoCaoController::class, 'doanhThu'])->name('bao-cao.doanh-thu');
@@ -296,8 +350,15 @@ Route::middleware(['auth', 'role:KHACH_HANG'])->group(function () {
     Route::post('/customer/gio-hang/checkout', [GioHangController::class, 'checkout'])
         ->name('customer.gio-hang.checkout');
     Route::get('/customer/thanh-toan', [ThanhToanController::class, 'index'])->name('customer.thanh-toan');
-
     Route::post('/customer/thanh-toan', [ThanhToanController::class, 'store'])->name('customer.thanh-toan.store');
+
+    // Sổ địa chỉ nhận hàng (Shopee style)
+    Route::get('/customer/dia-chi',                 [DiaChiController::class, 'index'])->name('customer.dia-chi.index');
+    Route::post('/customer/dia-chi',                [DiaChiController::class, 'store'])->name('customer.dia-chi.store');
+    Route::put('/customer/dia-chi/{id}',            [DiaChiController::class, 'update'])->name('customer.dia-chi.update');
+    Route::patch('/customer/dia-chi/{id}/mac-dinh', [DiaChiController::class, 'setMacDinh'])->name('customer.dia-chi.mac-dinh');
+    Route::delete('/customer/dia-chi/{id}',         [DiaChiController::class, 'destroy'])->name('customer.dia-chi.destroy');
+
     Route::get('/customer/thong-bao',[CustomerThongBaoController::class, 'index'])->name('customer.thong-bao');
 
     Route::get('/customer/thong-bao/so-chua-doc',[CustomerThongBaoController::class, 'soChuaDoc'])->name('customer.thong-bao.so-chua-doc');

@@ -26,14 +26,24 @@ return new class extends Migration {
 
             $table->enum('trang_thai', [
                 'DRAFT',
-                'CONFIRMED'
+                'CONFIRMED',
+                'CANCELLED',
             ])->default('DRAFT');
+
+            $table->text('ly_do_huy')->nullable();
+            $table->integer('nguoi_huy_id')->nullable();
+            $table->dateTime('huy_luc')->nullable();
 
             $table->timestamps();
 
             $table->foreign('ma_nhan_vien')
                 ->references('ma_nhan_vien')
                 ->on('nhan_vien');
+
+            $table->foreign('nguoi_huy_id')
+                ->references('ma_nguoi_dung')
+                ->on('nguoi_dung')
+                ->nullOnDelete();
         });
     }
 

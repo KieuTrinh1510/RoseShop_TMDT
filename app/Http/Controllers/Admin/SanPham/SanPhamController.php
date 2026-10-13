@@ -64,6 +64,11 @@ class SanPhamController extends Controller
             $query->where('loai_san_pham', $request->loai_san_pham);
         }
 
+        $perPage = (int) $request->input('per_page', 10);
+        if (!in_array($perPage, [10, 20, 50, 100])) {
+            $perPage = 10;
+        }
+
         $danhSachSanPham = $query
             ->with(['chiTietNhaps' => function ($q) {
                 $q->where('so_luong_con_lai', '>', 0)
@@ -71,7 +76,7 @@ class SanPhamController extends Controller
                   ->orderBy('gia_ban', 'asc');
             }])
             ->orderBy('ma_san_pham', 'desc')
-            ->paginate(5)->withQueryString();
+            ->paginate($perPage)->withQueryString();
 
         $danhSachLoai      = $this->danhSachLoai;
         $danhSachLoaiBanRa = collect($this->danhSachLoai)->except($this->maLoaiNguyenLieu);
@@ -303,6 +308,16 @@ class SanPhamController extends Controller
         $tenSp    = $sanPham->ten_san_pham;
         $slConLai = $chiTietNhap->fresh()->so_luong_con_lai;
         $maPN     = $chiTietNhap->ma_phieu_nhap;
+
+        if ($request->filled('redirect_to')) {
+            return redirect($request->redirect_to)
+                ->with('success', "Đã báo cáo {$slHong} sp hỏng của \"{$tenSp}\" tại lô Phiếu #{$maPN}. Tồn kho lô còn lại: {$slConLai} sp.");
+        }
+
+        if ($request->headers->get('referer') && str_contains($request->headers->get('referer'), 'lo-hang')) {
+            return redirect()->back()
+                ->with('success', "Đã báo cáo {$slHong} sp hỏng của \"{$tenSp}\" tại lô Phiếu #{$maPN}. Tồn kho lô còn lại: {$slConLai} sp.");
+        }
 
         $isNguyenLieu = in_array($sanPham->loai_san_pham, $this->maLoaiNguyenLieu, true);
         $route = $isNguyenLieu

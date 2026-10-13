@@ -23,12 +23,15 @@
     --rs-brand-light-bg: #FDEAF3;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
     font-family: var(--rs-font) !important;
 }
 
-html, body {
+html,
+body {
     margin: 0;
     padding: 0;
     font-family: var(--rs-font) !important;
@@ -58,7 +61,8 @@ html, body {
     min-width: 250px;
 }
 
-.rs-page-title, h1.rs-page-title {
+.rs-page-title,
+h1.rs-page-title {
     font-size: 28px !important;
     font-weight: 700 !important;
     color: var(--rs-primary-text) !important;
@@ -67,7 +71,8 @@ html, body {
     letter-spacing: -0.02em;
 }
 
-.rs-page-subtitle, p.rs-page-subtitle {
+.rs-page-subtitle,
+p.rs-page-subtitle {
     font-size: 14px !important;
     font-weight: 400 !important;
     color: var(--rs-muted-text) !important;
@@ -75,7 +80,8 @@ html, body {
     line-height: 1.4 !important;
 }
 
-.rs-section-title, h2.rs-section-title {
+.rs-section-title,
+h2.rs-section-title {
     font-size: 22px !important;
     font-weight: 700 !important;
     color: var(--rs-primary-text) !important;
@@ -84,7 +90,8 @@ html, body {
     letter-spacing: -0.01em;
 }
 
-.rs-card-title, h3.rs-card-title {
+.rs-card-title,
+h3.rs-card-title {
     font-size: 18px !important;
     font-weight: 600 !important;
     color: #344054 !important;
@@ -97,13 +104,17 @@ html, body {
    ========================================================================== */
 
 /* Tables */
-table, .table {
+table,
+.table {
     font-family: var(--rs-font) !important;
     width: 100%;
     border-collapse: collapse;
 }
 
-table th, .table th, th, thead th {
+table th,
+.table th,
+th,
+thead th {
     font-family: var(--rs-font) !important;
     font-size: 13px !important;
     font-weight: 600 !important;
@@ -116,7 +127,10 @@ table th, .table th, th, thead th {
     padding: 12px 14px !important;
 }
 
-table td, .table td, td, tbody td {
+table td,
+.table td,
+td,
+tbody td {
     font-family: var(--rs-font) !important;
     font-size: 14px !important;
     font-weight: 400 !important;
@@ -127,7 +141,9 @@ table td, .table td, td, tbody td {
 }
 
 /* Forms */
-label, .form-label, .filter-group label {
+label,
+.form-label,
+.filter-group label {
     font-family: var(--rs-font) !important;
     font-size: 13px !important;
     font-weight: 600 !important;
@@ -136,7 +152,11 @@ label, .form-label, .filter-group label {
     display: inline-block;
 }
 
-input, select, textarea, .form-control, .form-select {
+input,
+select,
+textarea,
+.form-control,
+.form-select {
     font-family: var(--rs-font) !important;
     font-size: 14px !important;
     font-weight: 400 !important;
@@ -148,12 +168,19 @@ input, select, textarea, .form-control, .form-select {
     transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
 }
 
-input:focus, select:focus, textarea:focus, .form-control:focus, .form-select:focus {
+input:focus,
+select:focus,
+textarea:focus,
+.form-control:focus,
+.form-select:focus {
     border-color: var(--rs-brand-primary) !important;
     box-shadow: 0 0 0 3px rgba(236, 61, 143, 0.12) !important;
 }
 
-input::placeholder, textarea::placeholder, select::placeholder, .form-control::placeholder {
+input::placeholder,
+textarea::placeholder,
+select::placeholder,
+.form-control::placeholder {
     font-family: var(--rs-font) !important;
     font-size: 14px !important;
     font-weight: 400 !important;
@@ -161,7 +188,10 @@ input::placeholder, textarea::placeholder, select::placeholder, .form-control::p
 }
 
 /* Buttons */
-button, .btn, input[type="button"], input[type="submit"] {
+button,
+.btn,
+input[type="button"],
+input[type="submit"] {
     font-family: var(--rs-font) !important;
     font-size: 14px !important;
     font-weight: 600 !important;
@@ -171,20 +201,26 @@ button, .btn, input[type="button"], input[type="submit"] {
     transition: all 0.15s ease;
 }
 
-.btn-primary, .btn-roseshop, .btn-dark {
+.btn-primary,
+.btn-roseshop,
+.btn-dark {
     background-color: var(--rs-brand-primary) !important;
     border-color: var(--rs-brand-primary) !important;
     color: var(--rs-white) !important;
 }
 
-.btn-primary:hover, .btn-roseshop:hover, .btn-dark:hover {
+.btn-primary:hover,
+.btn-roseshop:hover,
+.btn-dark:hover {
     background-color: var(--rs-brand-primary-hover) !important;
     border-color: var(--rs-brand-primary-hover) !important;
     color: var(--rs-white) !important;
 }
 
 /* Badges */
-.badge, .status-badge, .badge-status {
+.badge,
+.status-badge,
+.badge-status {
     font-family: var(--rs-font) !important;
     font-size: 12px !important;
     font-weight: 600 !important;
@@ -195,7 +231,10 @@ button, .btn, input[type="button"], input[type="submit"] {
 }
 
 /* Helper and Error text */
-.form-text, .help-block, .error-text, small {
+.form-text,
+.help-block,
+.error-text,
+small {
     font-family: var(--rs-font) !important;
     font-size: 12px !important;
     font-weight: 400 !important;
@@ -225,7 +264,7 @@ button, .btn, input[type="button"], input[type="submit"] {
     z-index: 100;
 }
 
-.sidebar > div:first-child {
+.sidebar>div:first-child {
     flex: 1 !important;
     min-height: 0 !important;
     display: flex !important;
@@ -456,21 +495,21 @@ button, .btn, input[type="button"], input[type="submit"] {
 
 /* Active & Open state on Menu Parent */
 .menu-parent.active,
-.menu-group.open > .menu-parent {
+.menu-group.open>.menu-parent {
     background-color: #FDEAF3 !important;
     color: #EC3D8F !important;
     border-radius: 8px !important;
 }
 
 .menu-parent.active .menu-parent-left span,
-.menu-group.open > .menu-parent .menu-parent-left span {
+.menu-group.open>.menu-parent .menu-parent-left span {
     color: #EC3D8F !important;
 }
 
 .menu-parent.active .menu-icon,
 .menu-parent.active .menu-chevron,
-.menu-group.open > .menu-parent .menu-icon,
-.menu-group.open > .menu-parent .menu-chevron {
+.menu-group.open>.menu-parent .menu-icon,
+.menu-group.open>.menu-parent .menu-chevron {
     color: #EC3D8F !important;
     stroke: #EC3D8F !important;
 }
@@ -600,18 +639,24 @@ button, .btn, input[type="button"], input[type="submit"] {
 /* Dashboard Stats Grid */
 .home-stats {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 18px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
     margin-bottom: 24px;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
+    .home-stats {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 992px) {
     .home-stats {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 576px) {
     .home-stats {
         grid-template-columns: 1fr;
     }
@@ -626,6 +671,16 @@ button, .btn, input[type="button"], input[type="submit"] {
     align-items: center;
     gap: 16px;
     box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+a.home-card:hover {
+    text-decoration: none;
+    color: inherit;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16, 24, 40, 0.08);
 }
 
 .home-icon {
@@ -655,6 +710,11 @@ button, .btn, input[type="button"], input[type="submit"] {
 .home-icon.purple {
     background: #F4EBFF;
     color: #6941C6;
+}
+
+.home-icon.orange {
+    background: #FEF0C7;
+    color: #DC6803;
 }
 
 .home-card p {
@@ -787,4 +847,95 @@ button, .btn, input[type="button"], input[type="submit"] {
 
 .dashboard-select:focus {
     border-color: var(--rs-brand-primary);
+}
+
+/* ==========================================================================
+   ĐỒNG BỘ PHÂN TRANG TOÀN BỘ HỆ THỐNG ADMIN ROSESHOP (MÀU HỒNG #f43f5e)
+   ========================================================================== */
+.pagination,
+.rs-pagination {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    list-style: none !important;
+    --bs-pagination-active-bg: #f43f5e !important;
+    --bs-pagination-active-border-color: #f43f5e !important;
+    --bs-pagination-active-color: #ffffff !important;
+    --bs-pagination-color: #475467 !important;
+    --bs-pagination-hover-color: #f43f5e !important;
+}
+
+.pagination .page-item,
+.rs-pagination .page-item {
+    margin: 0 !important;
+    display: inline-block !important;
+}
+
+.pagination .page-link,
+.rs-pagination .page-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    padding: 0 8px !important;
+    border-radius: 6px !important;
+    border: 1px solid #e2e8f0 !important;
+    background: #ffffff !important;
+    color: #475467 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    transition: all 0.15s ease !important;
+    cursor: pointer !important;
+    box-shadow: none !important;
+}
+
+.pagination .page-link:hover,
+.rs-pagination .page-link:hover {
+    border-color: #f43f5e !important;
+    background: #fff1f2 !important;
+    color: #f43f5e !important;
+}
+
+/* Nút Active: Màu hồng RoseShop #f43f5e */
+.pagination .page-item.active .page-link,
+.rs-pagination .page-item.active .page-link,
+.page-item.active .page-link,
+.active>.page-link,
+ul.pagination li.active a,
+ul.pagination li.active span,
+ul.rs-pagination li.active a,
+ul.rs-pagination li.active span {
+    background-color: #f43f5e !important;
+    border-color: #f43f5e !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 6px rgba(244, 63, 94, 0.35) !important;
+}
+
+/* Nút Disabled */
+.pagination .page-item.disabled .page-link,
+.rs-pagination .page-item.disabled .page-link,
+.page-item.disabled .page-link {
+    color: #cbd5e1 !important;
+    border-color: #f1f5f9 !important;
+    background: #ffffff !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+    opacity: 0.6 !important;
+}
+
+/* Dấu ... (Ellipsis) */
+.pagination .page-link.ellipsis,
+.rs-pagination .page-link.ellipsis,
+.page-link.ellipsis {
+    border: none !important;
+    background: transparent !important;
+    color: #94a3b8 !important;
+    cursor: default !important;
+    padding: 0 4px !important;
+    min-width: 24px !important;
 }

@@ -24,6 +24,7 @@ class ChiTietNhap extends Model
         'gia_nhap',
         'gia_ban',          
         'so_luong_con_lai', 
+        'ngay_het_han',
     ];
 
     protected $casts = [
@@ -31,6 +32,7 @@ class ChiTietNhap extends Model
         'gia_nhap' => 'decimal:2',
         'gia_ban' => 'decimal:2',
         'so_luong_con_lai' => 'integer',
+        'ngay_het_han' => 'date',
     ];
 
     public function phieuNhap()
@@ -41,5 +43,54 @@ class ChiTietNhap extends Model
     public function sanPham()
     {
         return $this->belongsTo(SanPham::class, 'ma_san_pham', 'ma_san_pham');
+    }
+
+    public function danhGiaLoHangs()
+    {
+        return $this->hasMany(DanhGiaLoHang::class, 'ma_chi_tiet_nhap', 'ma_chi_tiet_nhap');
+    }
+
+    public function danhGiaMoiNhat()
+    {
+        return $this->hasOne(DanhGiaLoHang::class, 'ma_chi_tiet_nhap', 'ma_chi_tiet_nhap')
+            ->latestOfMany('thoi_gian_danh_gia');
+    }
+
+    public function baoCaoHangHongs()
+    {
+        return $this->hasMany(BaoCaoHangHong::class, 'ma_chi_tiet_nhap', 'ma_chi_tiet_nhap');
+    }
+
+    public function reservations()
+    {
+        return $this->hasMany(InventoryReservation::class, 'ma_chi_tiet_nhap', 'ma_chi_tiet_nhap');
+    }
+
+    public function chiTietHoaDons()
+    {
+        return $this->hasMany(ChiTietHoaDon::class, 'ma_chi_tiet_nhap', 'ma_chi_tiet_nhap');
+    }
+
+    public function chiTietBoHoas()
+    {
+        return $this->hasMany(ChiTietBoHoa::class, 'ma_chi_tiet_nhap', 'ma_chi_tiet_nhap');
+    }
+
+    public function getTonThucTeAttribute(): int
+    {
+        return (int) $this->so_luong_con_lai;
+    }
+
+    public function getTonDangGiuAttribute(): int
+    {
+        if ($this->relationLoaded('reservations')) {
+            return (int) $this->reservations->where('trang_thai', InventoryReservation::STATUS_RESERVED)->sum('so_luong');
+        }
+        return (int) $this->reservations()->reserved()->sum('so_luong');
+    }
+
+    public function getTonKhaDungAttribute(): int
+    {
+        return max(0, $this->ton_thuc_te - $this->ton_dang_giu);
     }
 }

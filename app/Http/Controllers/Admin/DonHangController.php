@@ -95,12 +95,12 @@ class DonHangController extends Controller
         $msgDiem = ' Điểm: '.implode(', ', $parts).'.';
     }
 
-    $message = $xacNhan
-        ? "Đơn hàng {$maHD} đã được xác nhận và giao cho shipper."
-        : "Đơn hàng {$maHD} đã bị từ chối. Hàng đang giữ đã được hoàn kho."
-            .($request->filled('ly_do') ? ' Lý do: '.$request->ly_do : '')
-            ." Nếu đã thanh toán, vui lòng liên hệ cửa hàng để được hoàn tiền."
-            .$msgDiem;
+        $message = $xacNhan
+            ? "Đơn hàng {$maHD} đã được xác nhận và giao cho shipper."
+            : "Đơn hàng {$maHD} đã bị từ chối. Hàng đang giữ đã được hoàn kho."
+                .($request->filled('ly_do') ? ' Lý do: '.$request->ly_do : '')
+                ." Nếu đã thanh toán, vui lòng liên hệ cửa hàng để được hoàn tiền."
+                .$msgDiem;
 
     // ===== Thông báo cho khách hàng: nêu rõ số điểm đã hoàn (từ bản 1) =====
     $phanHoanDiem = (!$xacNhan && $diemDaDung > 0)
@@ -143,67 +143,44 @@ class DonHangController extends Controller
     return response()->json(['success' => true, 'message' => $message, 'shipper' => $shipperInfo]);
 }
 
-private function xuLyDon(int $id, bool $xacNhan, ?int $shipperId, int &$diemDaDungOut = 0, int &$diemDaCongOut = 0): HoaDon
-{
-    return DB::transaction(function () use ($id, $xacNhan, $shipperId, &$diemDaDungOut, &$diemDaCongOut) {
-        $hd = HoaDon::whereKey($id)->lockForUpdate()->firstOrFail();
-        if ($hd->trang_thai !== 'PENDING') BoHoaController::loi('Chỉ xử lý đơn PENDING. Đơn này đã được xử lý.');
-
-        if ($xacNhan) {
-            // ── Lock row shipper + validate (chống race condition khi 2 admin cùng gán) ──
-            $nv = NhanVien::whereKey($shipperId)->lockForUpdate()->first();
-            if (!$nv || $nv->chuc_vu !== 'SHIPPER') {
-                BoHoaController::loi('Vui lòng chọn nhân viên có chức vụ SHIPPER.');
-            }
-            if ($nv->trang_thai_hoat_dong !== 'ONLINE') {
-                BoHoaController::loi('Shipper đang OFFLINE, không thể chỉ định đơn.');
-            }
-            // Đếm live từ hoa_don (row shipper đã bị lock nên chống được race condition)
-            $soDonLive = HoaDon::where('ma_nhan_vien_giao', $nv->ma_nhan_vien)
-                ->whereIn('trang_thai', ['CONFIRMED', 'SHIPPING'])
-                ->count();
-            if ($soDonLive >= 10) {
-                BoHoaController::loi('Shipper đã đủ 10/10 đơn, không thể nhận thêm.');
-            }
-
-            if (!$hd->dia_chi_giao || !$hd->so_dien_thoai || !$hd->phuong_thuc_thanh_toan) {
-                BoHoaController::loi('Khách chưa hoàn tất thông tin giao hàng và phương thức thanh toán.');
-            }
-
-            // Lock reserved bouquets. Both types already left available stock at checkout.
-            \App\Models\BoHoa::where('ma_hoa_don', $id)->orderBy('ma_bo_hoa')->lockForUpdate()->get();
-
-            // KHÔNG còn ghi so_don_hien_tai: số đơn được đếm live từ hoa_don.
-
-        } else {
-            $laBo = BoHoaController::huyBoTrongDon($hd);
-            $items = $hd->chiTietHoaDon()->get();
-            // Bouquet allocations are returned by huyBoTrongDon() using their
-            // own lot records.  Returning ChiTietHoaDon as well would add the
-            // same stock back a second time.
-            if (!$laBo) BoHoaController::hoanKho($items->toArray());
-            if (!$laBo && $items->isNotEmpty()) {
-                $khach = KhachHang::whereKey($hd->ma_khach_hang)->lockForUpdate()->first();
-                if ($khach) {
-                    // ===== Logic điểm tích lũy (tính ngược từ dữ liệu có sẵn, từ bản 1) =====
-                    //  goc     = sum(gia_ban_snapshot × so_luong) từ chi tiết hóa đơn
-                    //  daDung  = (goc - tong_tien) / DIEM_QUY_DOI
-                    //            → nếu > 0 tức khách có dùng điểm khi đặt → hoàn lại khi hủy
-                    //  daCong  = floor(tong_tien / TICH_DIEM)
-                    //            → điểm đã cộng khi đặt đơn → thu hồi khi hủy
-                    $goc = $items->sum(fn ($ct) => $ct->gia_ban_snapshot * $ct->so_luong);
-                    $daDung = max(0, (int) round(($goc - $hd->tong_tien) / self::DIEM_QUY_DOI));
-                    $daCong = (int) floor($hd->tong_tien / self::TICH_DIEM);
-                    $khach->update(['diem_tich_luy' => max(0, $khach->diem_tich_luy + $daDung - $daCong)]);
-                    $diemDaDungOut = $daDung;
-                    $diemDaCongOut = $daCong;
+    private function xuLyDon(int $id, bool $xacNhan, ?int $shipperId, int &$diemDaDungOut = 0, int &$diemDaCongOut = 0): HoaDon
+    {
+        return DB::transaction(function () use ($id, $xacNhan, $shipperId, &$diemDaDungOut, &$diemDaCongOut) {
+            $hd = HoaDon::whereKey($id)->lockForUpdate()->firstOrFail();
+            if ($hd->trang_thai !== 'PENDING') BoHoaController::loi('Chỉ xử lý đơn PENDING. Đơn này đã được xử lý.');
+            if ($xacNhan) {
+                if (!NhanVien::whereKey($shipperId)->where('chuc_vu', 'SHIPPER')->exists()) BoHoaController::loi('Vui lòng chọn nhân viên có chức vụ SHIPPER.');
+                if (!$hd->dia_chi_giao || !$hd->so_dien_thoai || !$hd->phuong_thuc_thanh_toan) BoHoaController::loi('Khách chưa hoàn tất thông tin giao hàng và phương thức thanh toán.');
+                // Lock reserved bouquets. Both types already left available stock at checkout.
+                \App\Models\BoHoa::where('ma_hoa_don', $id)->orderBy('ma_bo_hoa')->lockForUpdate()->get();
+            } else {
+                $laBo = BoHoaController::huyBoTrongDon($hd);
+                $items = $hd->chiTietHoaDon()->get();
+                // Bouquet allocations are returned by huyBoTrongDon() using their
+                // own lot records.  Returning ChiTietHoaDon as well would add the
+                // same stock back a second time.
+                if (!$laBo) BoHoaController::hoanKho($items->toArray());
+                if (!$laBo && $items->isNotEmpty()) {
+                    $khach = KhachHang::whereKey($hd->ma_khach_hang)->lockForUpdate()->first();
+                    if ($khach) {
+                        // ===== Logic điểm tích lũy (tính ngược từ dữ liệu có sẵn, từ bản 1) =====
+                        //  goc     = sum(gia_ban_snapshot × so_luong) từ chi tiết hóa đơn
+                        //  daDung  = (goc - tong_tien) / DIEM_QUY_DOI
+                        //            → nếu > 0 tức khách có dùng điểm khi đặt → hoàn lại khi hủy
+                        //  daCong  = floor(tong_tien / TICH_DIEM)
+                        //            → điểm đã cộng khi đặt đơn → thu hồi khi hủy
+                        $goc = $items->sum(fn ($ct) => $ct->gia_ban_snapshot * $ct->so_luong);
+                        $daDung = max(0, (int) round(($goc - $hd->tong_tien) / self::DIEM_QUY_DOI));
+                        $daCong = (int) floor($hd->tong_tien / self::TICH_DIEM);
+                        $khach->update(['diem_tich_luy' => max(0, $khach->diem_tich_luy + $daDung - $daCong)]);
+                        $diemDaDungOut = $daDung;
+                        $diemDaCongOut = $daCong;
+                    }
                 }
             }
-        }
+            $hd->update($xacNhan ? ['trang_thai' => 'CONFIRMED', 'ma_nhan_vien_giao' => $shipperId] : ['trang_thai' => 'CANCELLED']);
+            return $hd->load('chiTietHoaDon.sanPham');
+        }, 3);
+    }
 
-        $hd->update($xacNhan
-            ? ['trang_thai' => 'CONFIRMED', 'ma_nhan_vien_giao' => $shipperId]
-            : ['trang_thai' => 'CANCELLED']);
-        return $hd->load('chiTietHoaDon.sanPham');
-    }, 3);
-}}
+}

@@ -55,4 +55,9 @@ class HoaDon extends Model
     {
         return $this->belongsTo(NhanVien::class, 'ma_nhan_vien_giao', 'ma_nhan_vien');
     }
+
+    public function reservations()
+    {
+        return $this->hasMany(InventoryReservation::class, 'ma_hoa_don', 'ma_hoa_don');
+    }
 }

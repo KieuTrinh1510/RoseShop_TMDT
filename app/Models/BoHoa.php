@@ -33,6 +33,7 @@ class BoHoa extends Model
         'loi_nhan',
         'hinh_anh',
         'trang_thai',
+        'ngay_het_han',
     ];
 
     protected $casts = [
@@ -46,6 +47,7 @@ class BoHoa extends Model
         'size'          => 'string',
         'concept'       => 'string',
         'trang_thai'    => 'string',
+        'ngay_het_han'  => 'date',
     ];
 
     public function khachHang()
@@ -102,5 +104,41 @@ class BoHoa extends Model
     public function scopeHeThong($query)
     {
         return $query->where('loai_bo_hoa', 'HE_THONG');
+    }
+
+    public function customMixImages()
+    {
+        return $this->hasMany(
+            CustomMixImage::class,
+            'ma_bo_hoa',
+            'ma_bo_hoa'
+        )->orderBy('sort_order');
+    }
+
+    public function reservations()
+    {
+        return $this->hasMany(
+            InventoryReservation::class,
+            'ma_bo_hoa',
+            'ma_bo_hoa'
+        );
+    }
+
+    public function getTonThucTeAttribute(): int
+    {
+        return ($this->trang_thai === 'ACTIVE' && is_null($this->ma_hoa_don)) ? (int) $this->so_luong : 0;
+    }
+
+    public function getTonDangGiuAttribute(): int
+    {
+        if ($this->relationLoaded('reservations')) {
+            return (int) $this->reservations->where('trang_thai', InventoryReservation::STATUS_RESERVED)->sum('so_luong');
+        }
+        return (int) $this->reservations()->where('trang_thai', InventoryReservation::STATUS_RESERVED)->sum('so_luong');
+    }
+
+    public function getTonKhaDungAttribute(): int
+    {
+        return max(0, $this->ton_thuc_te - $this->ton_dang_giu);
     }
 }

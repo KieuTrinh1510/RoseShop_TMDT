@@ -28,6 +28,6 @@ class BoHoaController extends BaseBoHoaController
 {
     public function index(Request $request)
     {
-        return view('admin.SanPham.QuanLyBoHoa', static::getDuLieuBoHoa($request));
+        return view('admin.MauBoHoa.index', static::getDuLieuBoHoa($request));
     }
 }

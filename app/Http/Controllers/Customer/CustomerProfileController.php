@@ -54,6 +54,29 @@ class CustomerProfileController extends Controller
             'dia_chi'        => $diaChiDayDu,
         ]);
 
+        $macDinh = $khachHang->diaChiMacDinh;
+        if ($macDinh) {
+            $macDinh->update([
+                'ten_nguoi_nhan'   => $request->ten_khach_hang,
+                'so_dien_thoai'    => $request->so_dien_thoai,
+                'quan_huyen'       => $request->quan_huyen,
+                'xa_phuong'        => $request->xa_phuong,
+                'dia_chi_chi_tiet' => $request->dia_chi_chi_tiet,
+                'dia_chi_day_du'   => $diaChiDayDu,
+            ]);
+        } else {
+            \App\Models\DiaChiKhachHang::create([
+                'ma_khach_hang'    => $khachHang->ma_khach_hang,
+                'ten_nguoi_nhan'   => $request->ten_khach_hang,
+                'so_dien_thoai'    => $request->so_dien_thoai,
+                'quan_huyen'       => $request->quan_huyen,
+                'xa_phuong'        => $request->xa_phuong,
+                'dia_chi_chi_tiet' => $request->dia_chi_chi_tiet,
+                'dia_chi_day_du'   => $diaChiDayDu,
+                'la_mac_dinh'      => true,
+            ]);
+        }
+
         return redirect()
             ->route('customer.profile.edit')
             ->with('success_info', 'Cập nhật thông tin thành công!');

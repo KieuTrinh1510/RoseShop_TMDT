@@ -95,7 +95,7 @@
                         </li>
                         <li class="nav-item">
                             <button class="nav-link" data-bs-toggle="tab" data-bs-target="#bo-san" type="button" role="tab">
-                                Tạo bó hoa sẵn
+                            Tạo bó hoa sẵn
                             </button>
                         </li>
                     </ul>

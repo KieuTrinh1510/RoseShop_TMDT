@@ -4,11 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="stylesheet" href="{{ asset('css/Customer/Profile.css') }}">
-    <title>Hồ sơ cá nhân · Cửa Hàng Hoa</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Be+Vietnam+Pro:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
+    <link rel="stylesheet" href="{{ asset('css/Customer/Profile.css') }}?v={{ file_exists(public_path('css/Customer/Profile.css')) ? filemtime(public_path('css/Customer/Profile.css')) : time() }}">
+    <style>
+        :root {
+            --rs-font: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        html, body, button, input, select, textarea {
+            font-family: var(--rs-font) !important;
+        }
+        h1, h2, h3, h4, h5, h6, p, label {
+            font-family: var(--rs-font);
+        }
+        .fa, .fas, .far, .fal, .fad, .fab,
+        .fa-solid, .fa-regular, .fa-brands,
+        [class*="fa-"], [class^="fa-"] {
+            font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands", "FontAwesome" !important;
+        }
+        .fa::before, .fas::before, .far::before, .fal::before, .fad::before, .fab::before,
+        .fa-solid::before, .fa-regular::before, .fa-brands::before,
+        [class*="fa-"]::before, [class^="fa-"]::before {
+            font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands", "FontAwesome" !important;
+        }
+    </style>
 </head>
 <body>
 

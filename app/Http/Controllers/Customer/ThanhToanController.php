@@ -7,6 +7,8 @@ use App\Models\HoaDon;
 use App\Models\ChiTietHoaDon;
 use App\Models\ChiTietNhap;
 use App\Models\SanPham;
+use App\Models\KhachHang;
+use App\Models\DiaChiKhachHang;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -25,8 +27,12 @@ class ThanhToanController extends Controller
 
     public function index()
     {
-        $user    = Auth::user()->load('khachHang');
-        $khachId = $user->khachHang->getKey();
+        $user      = Auth::user()->load('khachHang');
+        $khachHang = $user->khachHang;
+        $khachId   = $khachHang->getKey();
+
+        $danhSachDiaChi = $this->layDanhSachDiaChi($khachHang);
+        $diaChiHienTai  = $danhSachDiaChi->firstWhere('la_mac_dinh', true) ?? $danhSachDiaChi->first();
 
         // ─── Nhánh 1: Giỏ bó hoa mẫu (nhiều bó) ────────────────────────
         if (session()->has('gio_bo_hoa')) {
@@ -54,10 +60,12 @@ class ThanhToanController extends Controller
             }
             $diemSuDung = session('diem_su_dung', 0);
             return view('customer.ThanhToan', [
-                'user'       => $user,
-                'dsBoHoa'    => $dsCheckout,
-                'gioHang'    => [],
-                'diemSuDung' => $diemSuDung,
+                'user'           => $user,
+                'dsBoHoa'        => $dsCheckout,
+                'gioHang'        => [],
+                'diemSuDung'     => $diemSuDung,
+                'danhSachDiaChi' => $danhSachDiaChi,
+                'diaChiHienTai'  => $diaChiHienTai,
             ]);
         }
 
@@ -75,10 +83,12 @@ class ThanhToanController extends Controller
             }
             $diemSuDung = session('diem_su_dung', 0);
             return view('customer.ThanhToan', [
-                'user'       => $user,
-                'dsBoHoa'    => $dsBoHoa,
-                'gioHang'    => [],
-                'diemSuDung' => $diemSuDung,
+                'user'           => $user,
+                'dsBoHoa'        => $dsBoHoa,
+                'gioHang'        => [],
+                'diemSuDung'     => $diemSuDung,
+                'danhSachDiaChi' => $danhSachDiaChi,
+                'diaChiHienTai'  => $diaChiHienTai,
             ]);
         }
 
@@ -101,7 +111,7 @@ class ThanhToanController extends Controller
 
         $diemSuDung = session('diem_su_dung', 0);
 
-        return view('customer.ThanhToan', compact('user', 'gioHang', 'diemSuDung'));
+        return view('customer.ThanhToan', compact('user', 'gioHang', 'diemSuDung', 'danhSachDiaChi', 'diaChiHienTai'));
     }
 
     public function store(Request $request)
@@ -129,6 +139,9 @@ class ThanhToanController extends Controller
         $diemSuDung = (int) session('diem_su_dung', 0);
         $diaChiGiao = $request->dia_chi_chi_tiet . ', ' . $request->xa_phuong
             . ', ' . $request->quan_huyen . ', Hà Nội';
+
+        // Tự động lưu địa chỉ vào sổ địa chỉ nếu chưa có hoặc có thay đổi
+        $this->luuDiaChiVaoSo($khachHang, $request, $diaChiGiao);
 
         $donData = [
             'phuong_thuc_thanh_toan' => $request->phuong_thuc_thanh_toan,
@@ -218,16 +231,34 @@ class ThanhToanController extends Controller
                     'ngay_dat'               => now(),
                 ]);
 
-                if ($laVnpay) {
-                    $hoaDon->vnpay_cart_snapshot = [
-                        'loai_don'     => 'gio_hang',
-                        'gio_hang'     => $gioHang,
-                        'diem_su_dung' => $diemSuDung,
-                        'tong_tien'    => $tongTien,
-                    ];
-                    $hoaDon->save();
-                } else {
-                    $this->xuLyFifoVaHoanTat($hoaDon, $gioHang, $diemSuDung, $khachHang, $tongTien);
+                // 1. TẠO RESERVATION CHO TỪNG SẢN PHẨM & LÔ (KHÔNG TRỪ ON_HAND)
+                $allocatedRows = \App\Services\InventoryReservationService::reserveSingleItems($hoaDon, $gioHang);
+
+                // 2. LƯU CHI TIẾT HÓA ĐƠN
+                $grouped = collect($allocatedRows)->groupBy(
+                    fn ($r) => ($r['ma_san_pham'] ?? 0).'-'.($r['ma_chi_tiet_nhap'] ?? 0)
+                );
+
+                foreach ($grouped as $items) {
+                    $first = $items->first();
+                    $item  = collect($gioHang)->firstWhere('ma_san_pham', $first['ma_san_pham']);
+                    ChiTietHoaDon::create([
+                        'ma_hoa_don'        => $hoaDon->getKey(),
+                        'ma_san_pham'       => $first['ma_san_pham'],
+                        'ma_chi_tiet_nhap'  => $first['ma_chi_tiet_nhap'] ?? null,
+                        'so_luong'          => $items->sum('so_luong'),
+                        'gia_nhap_snapshot' => $first['gia_nhap_snapshot'] ?? 0,
+                        'gia_ban_snapshot'  => $item['gia_ban'] ?? ($first['gia_ban_snapshot'] ?? 0),
+                    ]);
+                }
+
+                if ($diemSuDung > 0 && $khachHang) {
+                    $khachHang->decrement('diem_tich_luy', $diemSuDung);
+                }
+
+                $diemMoi = (int) floor($tongTien / self::TICH_DIEM);
+                if ($diemMoi > 0 && $khachHang) {
+                    $khachHang->increment('diem_tich_luy', $diemMoi);
                 }
 
                 return $hoaDon;
@@ -299,6 +330,19 @@ class ThanhToanController extends Controller
             return;
         }
 
+        // Nếu đơn đã được tạo RESERVED lúc checkout (kiến trúc mới):
+        // Chỉ lưu thông tin giao dịch VNPay và đánh dấu DA_THANH_TOAN.
+        // Hàng giữ vẫn RESERVED chờ admin xác nhận (CONFIRM) mới trừ kho on_hand.
+        if ($hoaDon->reservations()->exists()) {
+            $hoaDon->vnpay_transaction_no = $vnpayMeta['vnpay_transaction_no'] ?? null;
+            $hoaDon->vnpay_bank_code      = $vnpayMeta['vnpay_bank_code'] ?? null;
+            $hoaDon->vnpay_pay_date       = $vnpayMeta['vnpay_pay_date'] ?? null;
+            $hoaDon->vnpay_response_code  = $vnpayMeta['vnpay_response_code'] ?? null;
+            $hoaDon->trang_thai_thanh_toan = 'DA_THANH_TOAN';
+            $hoaDon->save();
+            return;
+        }
+
         $snapshot = $hoaDon->vnpay_cart_snapshot;
 
         if (is_array($snapshot) && ($snapshot['loai_don'] ?? null) === 'bo_hoa') {
@@ -346,5 +390,76 @@ class ThanhToanController extends Controller
         $hoaDon->vnpay_response_code  = $vnpayMeta['vnpay_response_code'] ?? null;
         $hoaDon->trang_thai_thanh_toan = 'DA_THANH_TOAN';
         $hoaDon->save();
+    }
+
+    /**
+     * Lấy danh sách địa chỉ đã lưu hoặc tự khởi tạo từ dia_chi hồ sơ
+     */
+    private function layDanhSachDiaChi(KhachHang $khachHang)
+    {
+        $danhSach = $khachHang->danhSachDiaChi()->get();
+
+        if ($danhSach->isEmpty() && !empty($khachHang->dia_chi)) {
+            $raw = trim($khachHang->dia_chi);
+            $parts = array_map('trim', explode(',', $raw));
+            if (count($parts) >= 1 && strtolower(end($parts)) === 'hà nội') {
+                array_pop($parts);
+            }
+            $quan = count($parts) >= 2 ? $parts[count($parts) - 1] : 'Cầu Giấy';
+            $phuong = count($parts) >= 3 ? $parts[count($parts) - 2] : 'Dịch Vọng Hậu';
+            $chiTiet = count($parts) >= 1 ? implode(', ', array_slice($parts, 0, max(1, count($parts) - 2))) : $raw;
+
+            $diaChiDayDu = $chiTiet . ', ' . $phuong . ', ' . $quan . ', Hà Nội';
+
+            $diaChiMoi = DiaChiKhachHang::create([
+                'ma_khach_hang'    => $khachHang->ma_khach_hang,
+                'ten_nguoi_nhan'   => $khachHang->ten_khach_hang ?: 'Khách Hàng',
+                'so_dien_thoai'    => $khachHang->so_dien_thoai ?: '0988888888',
+                'quan_huyen'       => $quan ?: 'Cầu Giấy',
+                'xa_phuong'        => $phuong ?: 'Dịch Vọng Hậu',
+                'dia_chi_chi_tiet' => $chiTiet ?: 'Địa chỉ chi tiết',
+                'dia_chi_day_du'   => $diaChiDayDu,
+                'la_mac_dinh'      => true,
+            ]);
+
+            $danhSach = collect([$diaChiMoi]);
+        }
+
+        return $danhSach;
+    }
+
+    /**
+     * Tự động lưu địa chỉ vào sổ địa chỉ khi khách đặt hàng
+     */
+    private function luuDiaChiVaoSo(KhachHang $khachHang, Request $request, string $diaChiGiao): void
+    {
+        try {
+            $exist = DiaChiKhachHang::where('ma_khach_hang', $khachHang->ma_khach_hang)
+                ->where('dia_chi_day_du', $diaChiGiao)
+                ->where('so_dien_thoai', $request->so_dien_thoai)
+                ->first();
+
+            if (!$exist) {
+                $hasAny = DiaChiKhachHang::where('ma_khach_hang', $khachHang->ma_khach_hang)->exists();
+                $laMacDinh = !$hasAny;
+
+                DiaChiKhachHang::create([
+                    'ma_khach_hang'    => $khachHang->ma_khach_hang,
+                    'ten_nguoi_nhan'   => $request->ten_nguoi_nhan,
+                    'so_dien_thoai'    => $request->so_dien_thoai,
+                    'quan_huyen'       => $request->quan_huyen,
+                    'xa_phuong'        => $request->xa_phuong,
+                    'dia_chi_chi_tiet' => $request->dia_chi_chi_tiet,
+                    'dia_chi_day_du'   => $diaChiGiao,
+                    'la_mac_dinh'      => $laMacDinh,
+                ]);
+
+                if ($laMacDinh) {
+                    $khachHang->update(['dia_chi' => $diaChiGiao]);
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Không thể lưu địa chỉ vào sổ địa chỉ: ' . $e->getMessage());
+        }
     }
 }
