@@ -207,6 +207,7 @@
         }
         .rs-table {
             width: 100%;
+            min-width: 1180px;
             border-collapse: separate;
             border-spacing: 0;
             text-align: left;
@@ -217,12 +218,13 @@
         }
         .rs-table th {
             background-color: #F8F9FA !important;
-            padding: 14px 16px;
+            padding: 12px 10px;
             font-size: 13.5px;
             font-weight: 600;
             color: #475467 !important;
             text-transform: none;
             border-bottom: 1px solid #EAECF0 !important;
+            white-space: nowrap !important;
         }
         .rs-table tbody tr {
             border-bottom: 1px solid #EAECF0;
@@ -232,34 +234,72 @@
             background-color: #F9FAFB;
         }
         .rs-table td {
-            padding: 14px 16px;
-            font-size: 14px;
+            padding: 12px 10px;
+            font-size: 13.5px;
             color: #344054;
             vertical-align: middle;
             word-wrap: break-word;
             border-bottom: 1px solid #EAECF0;
         }
+        .rs-product-thumb {
+            width: 44px;
+            height: 44px;
+            min-width: 44px;
+            min-height: 44px;
+            max-width: 44px;
+            max-height: 44px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f1f5f9;
+        }
+        .rs-product-thumb-img {
+            width: 44px;
+            height: 44px;
+            min-width: 44px;
+            min-height: 44px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            display: block;
+        }
+        .rs-product-thumb-placeholder {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 20px;
+        }
         .badge-confirmed {
             display: inline-flex;
             align-items: center;
-            padding: 3px 10px;
+            justify-content: center;
+            padding: 3px 8px;
             border-radius: 12px;
             background-color: #ECFDF3;
             color: #027A48;
             border: 1px solid #ABEFC6;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 500;
+            white-space: nowrap !important;
         }
         .badge-cancelled {
             display: inline-flex;
             align-items: center;
-            padding: 3px 10px;
+            justify-content: center;
+            padding: 3px 8px;
             border-radius: 12px;
             background-color: #FEF3F2;
             color: #B42318;
             border: 1px solid #FECDCA;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 500;
+            white-space: nowrap !important;
         }
         .badge-draft {
             display: inline-flex;
@@ -513,19 +553,9 @@
 
     {{-- 1. HEADER TRANG: Tiêu đề + Nút Thêm sản phẩm mới (Đồng bộ Người dùng, Nhân viên, Khách hàng) --}}
     <div class="rs-header-block">
-        <div class="rs-header-left">
-            <div class="rs-header-icon-box">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="m7.5 4.27 9 5.15"/>
-                    <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
-                    <path d="m3.3 7 8.7 5 8.7-5"/>
-                    <path d="M12 22V12"/>
-                </svg>
-            </div>
-            <div>
-                <h1 class="rs-header-title">Quản lý sản phẩm</h1>
-                <p class="rs-header-subtitle">Theo dõi danh sách sản phẩm, thiết lập giá bán, kiểm soát tồn kho và trạng thái kinh doanh</p>
-            </div>
+        <div>
+            <h1 class="rs-header-title">Quản lý sản phẩm</h1>
+            <p class="rs-header-subtitle">Theo dõi danh sách sản phẩm, thiết lập giá bán, kiểm soát tồn kho và trạng thái kinh doanh</p>
         </div>
         <button type="button" class="rs-btn-create" onclick="openModalCreateSanPham()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -622,29 +652,29 @@
         <div class="rs-table-container">
             <table class="rs-table">
                 <colgroup>
+                    <col style="width: 100px;">
                     <col style="width: 90px;">
-                    <col style="width: 80px;">
-                    <col style="width: 220px;">
-                    <col style="width: 140px;">
-                    <col style="width: 100px;">
-                    <col style="width: 160px;">
-                    <col style="width: 130px;">
-                    <col style="width: 100px;">
-                    <col style="width: 120px;">
+                    <col style="width: 230px;">
                     <col style="width: 125px;">
+                    <col style="width: 80px;">
+                    <col style="width: 155px;">
+                    <col style="width: 125px;">
+                    <col style="width: 95px;">
+                    <col style="width: 110px;">
+                    <col style="width: 110px;">
                 </colgroup>
                 <thead>
                     <tr>
-                        <th style="text-align: center;">Mã SP</th>
-                        <th style="text-align: center;">Hình ảnh</th>
+                        <th style="text-align: center; white-space: nowrap;">Mã SP</th>
+                        <th style="text-align: center; white-space: nowrap;">Hình ảnh</th>
                         <th style="text-align: left;">Tên sản phẩm</th>
-                        <th style="text-align: center;">Loại sản phẩm</th>
-                        <th style="text-align: center;">Đơn vị</th>
-                        <th style="text-align: right;">Giá nhập / niêm yết</th>
-                        <th style="text-align: right;">Giá bán hiện tại</th>
-                        <th style="text-align: center;">Tồn kho</th>
-                        <th style="text-align: center;">Trạng thái</th>
-                        <th style="text-align: center;">Thao tác</th>
+                        <th style="text-align: center; white-space: nowrap;">Loại sản phẩm</th>
+                        <th style="text-align: center; white-space: nowrap;">Đơn vị</th>
+                        <th style="text-align: right; white-space: nowrap;">Giá nhập / niêm yết</th>
+                        <th style="text-align: right; white-space: nowrap;">Giá bán hiện tại</th>
+                        <th style="text-align: center; white-space: nowrap;">Tồn kho</th>
+                        <th style="text-align: center; white-space: nowrap;">Trạng thái</th>
+                        <th style="text-align: center; white-space: nowrap;">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -654,18 +684,23 @@
                             $tongConLai = $loCoHang->sum('so_luong_con_lai');
                         @endphp
                         <tr>
-                            <td style="text-align: center; font-weight: 700; color: #EC3D8F; font-family: monospace; font-size: 13px;">
+                            <td style="text-align: center; font-weight: 700; color: #EC3D8F; font-family: monospace; font-size: 11px; white-space: nowrap;">
                                 SP-{{ str_pad($sp->ma_san_pham, 4, '0', STR_PAD_LEFT) }}
                             </td>
 
-                            <td style="text-align:center;">
-                                @if($sp->hinh_anh)
-                                    <img src="{{ asset($sp->hinh_anh) }}" alt="{{ $sp->ten_san_pham }}" style="width:48px; height:48px; object-fit:cover; border-radius:8px; border:1px solid #e2e8f0;">
-                                @else
-                                    <div style="width:48px; height:48px; background:#f1f5f9; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; color:#94a3b8;">
-                                        <i class="bi bi-image fs-5"></i>
-                                    </div>
-                                @endif
+                            <td style="text-align: center; vertical-align: middle;">
+                                <div class="rs-product-thumb">
+                                    @if($sp->hinh_anh)
+                                        <img src="{{ asset($sp->hinh_anh) }}" 
+                                             alt="{{ $sp->ten_san_pham }}" 
+                                             class="rs-product-thumb-img"
+                                             onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'rs-product-thumb-placeholder\'><i class=\'bi bi-image\'></i></div>';">
+                                    @else
+                                        <div class="rs-product-thumb-placeholder">
+                                            <i class="bi bi-image"></i>
+                                        </div>
+                                    @endif
+                                </div>
                             </td>
 
                             <td>
@@ -757,7 +792,7 @@
                                 @endif
                             </td>
 
-                            <td style="text-align:center;">
+                            <td style="text-align:center; white-space: nowrap;">
                                 @if($sp->trang_thai === 'DANG_BAN')
                                     <span class="badge-confirmed"><i class="bi bi-check-circle me-1"></i>Đang bán</span>
                                 @else
@@ -951,19 +986,19 @@
                         </div>
                     </div>
 
-                    <div class="col-md-4" id="khuVucDonVi">
+                    <div class="col-md-6" id="khuVucDonVi">
                         <label class="form-label fw-semibold">Đơn vị tính</label>
                         <input type="text" class="form-control" id="donViTinhHienThi" readonly
-                               placeholder="Chọn loại sản phẩm..." style="border-radius:8px;">
+                               placeholder="Chọn loại sản phẩm..." style="border-radius:8px; padding:8px 12px;">
                     </div>
 
                     <div class="col-md-4" id="khuVucSoLuong" style="display:none;">
                         <label class="form-label fw-semibold">Số lượng tồn kho</label>
-                        <input type="text" id="inp_so_luong" class="form-control bg-light" readonly style="border-radius:8px;">
+                        <input type="text" id="inp_so_luong" class="form-control bg-light" readonly style="border-radius:8px; padding:8px 12px;">
                         <small class="text-muted"><i class="bi bi-lock-fill me-1"></i>Chỉ thay đổi qua phiếu nhập hàng</small>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-6" id="khuVucGiaBan">
                         <label class="form-label fw-semibold">Giá bán hiện tại (₫)</label>
                         <input type="number" name="gia_ban_hien_tai" id="inp_gia_ban"
                                class="form-control" min="0" step="1000"
@@ -1138,6 +1173,10 @@
                     DON_VI_THEO_LOAI[sp.loai_san_pham] ?? sp.don_vi_tinh ?? '';
 
                 document.getElementById('khuVucSoLuong').style.display = 'block';
+                document.getElementById('khuVucDonVi').className = 'col-md-4';
+                if (document.getElementById('khuVucGiaBan')) {
+                    document.getElementById('khuVucGiaBan').className = 'col-md-4';
+                }
                 document.getElementById('inp_so_luong').value = sp.ton_kho_thuc_te ?? sp.so_luong;
 
                 document.getElementById('inp_loai').style.display = 'none';
@@ -1187,6 +1226,10 @@
         document.getElementById('loaiHienThi').style.display = 'none';
         document.getElementById('loaiRequired').style.display = 'inline';
         document.getElementById('khuVucSoLuong').style.display = 'none';
+        document.getElementById('khuVucDonVi').className = 'col-md-6';
+        if (document.getElementById('khuVucGiaBan')) {
+            document.getElementById('khuVucGiaBan').className = 'col-md-6';
+        }
         document.getElementById('khuVucAnhHienTai').style.display = 'none';
         document.getElementById('xemTruocAnh').style.display = 'none';
         document.getElementById('donViTinhHienThi').value = '';

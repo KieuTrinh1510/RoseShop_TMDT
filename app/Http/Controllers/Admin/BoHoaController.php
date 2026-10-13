@@ -100,7 +100,10 @@ class BoHoaController extends Controller
         })->values();
 
         $page    = max(1, (int) $r->input('page_bo_hoa', 1));
-        $perPage = 5;
+        $perPage = (int) $r->input('per_page_bo_hoa', 10);
+        if (!in_array($perPage, [10, 20, 50, 100])) {
+            $perPage = 10;
+        }
 
         $danhSachBoHoa = new LengthAwarePaginator(
             $merged->forPage($page, $perPage)->values(),
