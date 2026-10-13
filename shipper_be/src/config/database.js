@@ -12,6 +12,9 @@ const sequelize = new Sequelize(
         host: process.env.DB_HOST,
         port: Number(process.env.DB_PORT),
         dialect: 'mysql',
+        // Phải khớp múi giờ mà Laravel ghi vào DB (config/database.php 'timezone' => '+07:00').
+        // Mặc định Sequelize là +00:00 -> ngay_dat đọc lên bị lệch 7 tiếng.
+        timezone: '+07:00',
         dialectOptions: process.env.MYSQL_ATTR_SSL_CA
             ? {
                 ssl: {

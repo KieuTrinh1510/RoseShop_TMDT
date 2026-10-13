@@ -4,6 +4,7 @@ const { Model, DataTypes, Op, fn, col } = require('sequelize');
 const sequelize = require('../config/database');
 const KhachHang = require('./KhachHang');
 const NhanVien = require('./NhanVien');
+const SanPham = require('./SanPham');
 
 class HoaDon extends Model {
 
@@ -19,18 +20,32 @@ class HoaDon extends Model {
         });
     }
 
-    // Danh sách đơn cần giao của shipper
+    // Danh sách đơn cần giao của shipper (kèm chi tiết + sản phẩm để biết đơn có hoa tươi)
     static async findDonCanGiao(ma_nhan_vien_giao) {
+        // require trễ để tránh vòng: ChiTietHoaDon.js cũng require HoaDon.js
+        const ChiTietHoaDon = require('./ChiTietHoaDon');
+
         return HoaDon.findAll({
             where: {
                 ma_nhan_vien_giao,
                 trang_thai: { [Op.in]: ['CONFIRMED', 'SHIPPING'] },
             },
-            include: [{
-                model: KhachHang,
-                as: 'khachHang',
-                attributes: ['ma_khach_hang', 'ten_khach_hang', 'so_dien_thoai'],
-            }],
+            include: [
+                {
+                    model: KhachHang,
+                    as: 'khachHang',
+                    attributes: ['ma_khach_hang', 'ten_khach_hang', 'so_dien_thoai'],
+                },
+                {
+                    model: ChiTietHoaDon,
+                    as: 'chiTietHoaDon',
+                    include: [{
+                        model: SanPham,
+                        as: 'sanPham',
+                        attributes: ['ma_san_pham', 'ten_san_pham', 'loai_san_pham', 'hinh_anh'],
+                    }],
+                },
+            ],
             order: [['ngay_dat', 'DESC']],
         });
     }
@@ -57,7 +72,9 @@ class HoaDon extends Model {
         });
     }
 
-    // Tính tiền COD cần nộp
+    // Tiền shipper phải nộp = tổng các đơn shipper ĐÃ THU TIỀN MẶT + CHƯA NỘP shop.
+    // Gồm: COD (khách trả khi giao) + NGAN_HANG khách chưa CK mà shipper thu mặt.
+    // Không gồm: NGAN_HANG khách đã CK trước (tiền vào shop, shipper không giữ).
     static async tinhTienCanNop(ma_nhan_vien_giao) {
         const result = await HoaDon.findOne({
             attributes: [
@@ -67,8 +84,8 @@ class HoaDon extends Model {
             where: {
                 ma_nhan_vien_giao,
                 trang_thai: 'DELIVERED',
-                trang_thai_thanh_toan: 'DA_THANH_TOAN',
-                phuong_thuc_thanh_toan: 'COD',
+                trang_thai_thanh_toan: 'DA_THANH_TOAN',  // chưa chuyển sang DA_NOP
+                da_thu_tien_mat: true,                    // shipper đang giữ tiền mặt
             },
             raw: true,
         });
@@ -105,14 +122,15 @@ class HoaDon extends Model {
         return `#HD-${String(this.ma_hoa_don).padStart(4, '0')}`;
     }
 
+    // Shipper cần thu tiền mặt khi giao không?
+    // Áp dụng cho MỌI phương thức miễn là khách chưa thanh toán.
     get canThuTienMat() {
-        return this.trang_thai_thanh_toan === 'CHUA_THANH_TOAN'
-            && this.phuong_thuc_thanh_toan === 'COD';
+        return this.trang_thai_thanh_toan === 'CHUA_THANH_TOAN';
     }
 
+    // Chỉ đúng khi đã nạp chiTietHoaDon -> sanPham (include khi truy vấn)
     get laHoaTuoi() {
-        // Sẽ chính xác nếu caller nạp chiTietHoaDon vào
-        return (this._chiTiet || []).some(ct => ct.sanPham?.laHoaTuoi);
+        return (this.chiTietHoaDon || []).some((ct) => ct.sanPham?.laHoaTuoi);
     }
 }
 
@@ -129,9 +147,22 @@ HoaDon.init({
     tong_tien: DataTypes.DECIMAL(12, 2),
     trang_thai: DataTypes.STRING,
     trang_thai_thanh_toan: DataTypes.STRING,
+
+    da_thu_tien_mat: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
+
     phuong_thuc_thanh_toan: DataTypes.STRING,
     dia_chi_giao: DataTypes.TEXT,
     so_dien_thoai: DataTypes.STRING(20),
+
+    ngay_bat_giao: DataTypes.DATE,   // shipper bấm "Nhận hàng"
+    ngay_den_noi: DataTypes.DATE,    // shipper bấm "Đã đến điểm giao"
+    da_phat_tre: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
 }, {
     sequelize,
     modelName: 'HoaDon',

@@ -41,7 +41,19 @@ class DonHangController extends Controller
         }
 
         $donHangs = $query->orderByDesc('ngay_dat')->paginate(15)->withQueryString();
-        $shippers = NhanVien::where('chuc_vu', 'SHIPPER')->get();
+        $shippers = NhanVien::where('chuc_vu', 'SHIPPER')
+    ->where('trang_thai_hoat_dong', 'ONLINE')
+    ->get()
+    ->map(function ($nv) {
+        // Đếm live từ hoa_don — không tin cột so_don_hien_tai
+        // (Node không còn ghi cột, và PHP cũng sẽ bỏ ghi)
+        $nv->so_don_live = HoaDon::where('ma_nhan_vien_giao', $nv->ma_nhan_vien)
+            ->whereIn('trang_thai', ['CONFIRMED', 'SHIPPING'])
+            ->count();
+        return $nv;
+    })
+    ->filter(fn ($nv) => $nv->so_don_live < 10)
+    ->values();
 
         $boTheoDon = \App\Models\BoHoa::whereIn('ma_hoa_don', $donHangs->pluck('ma_hoa_don'))->get()->groupBy('ma_hoa_don');
         return view('admin.DonHang', compact('donHangs', 'shippers', 'boTheoDon'));
@@ -58,62 +70,78 @@ class DonHangController extends Controller
     }
 
     private function xuLy(Request $request, int $id, bool $xacNhan)
-    {
-        // Điểm hoàn (nếu hủy đơn) được xuLyDon() ghi ra ngoài qua tham chiếu,
-        // dùng để hiển thị chi tiết cho khách hàng và admin (lấy ý tưởng từ bản cũ).
-        $diemDaDung = 0;
-        $diemDaCong = 0;
+{
+    // Điểm hoàn (nếu hủy đơn) được xuLyDon() ghi ra ngoài qua tham chiếu,
+    // dùng để hiển thị chi tiết cho khách hàng và admin (lấy ý tưởng từ bản cũ).
+    $diemDaDung = 0;
+    $diemDaCong = 0;
 
-        try {
-            $request->validate(['ly_do' => 'nullable|string|max:1000']);
-            $hd = $this->xuLyDon($id, $xacNhan,
-                $request->filled('ma_nhan_vien_giao') ? (int) $request->ma_nhan_vien_giao : null,
-                $diemDaDung, $diemDaCong);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['success' => false, 'message' => collect($e->errors())->flatten()->first()], 422);
-        }
-        $maHD = '#HD-'.str_pad($id, 4, '0', STR_PAD_LEFT);
+    try {
+        $request->validate(['ly_do' => 'nullable|string|max:1000']);
+        $hd = $this->xuLyDon($id, $xacNhan,
+            $request->filled('ma_nhan_vien_giao') ? (int) $request->ma_nhan_vien_giao : null,
+            $diemDaDung, $diemDaCong);
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json(['success' => false, 'message' => collect($e->errors())->flatten()->first()], 422);
+    }
+    $maHD = '#HD-'.str_pad($id, 4, '0', STR_PAD_LEFT);
 
-        // ===== Thông báo cho admin: nêu rõ số điểm đã hoàn / thu hồi (từ bản 1) =====
-        $msgDiem = '';
-        if (!$xacNhan && ($diemDaDung > 0 || $diemDaCong > 0)) {
-            $parts = [];
-            if ($diemDaDung > 0) $parts[] = "hoàn {$diemDaDung} điểm đã dùng";
-            if ($diemDaCong > 0) $parts[] = "thu hồi {$diemDaCong} điểm tích lũy đã cộng";
-            $msgDiem = ' Điểm: '.implode(', ', $parts).'.';
-        }
+    // ===== Thông báo cho admin: nêu rõ số điểm đã hoàn / thu hồi (từ bản 1) =====
+    $msgDiem = '';
+    if (!$xacNhan && ($diemDaDung > 0 || $diemDaCong > 0)) {
+        $parts = [];
+        if ($diemDaDung > 0) $parts[] = "hoàn {$diemDaDung} điểm đã dùng";
+        if ($diemDaCong > 0) $parts[] = "thu hồi {$diemDaCong} điểm tích lũy đã cộng";
+        $msgDiem = ' Điểm: '.implode(', ', $parts).'.';
+    }
 
         $message = $xacNhan
             ? "Đơn hàng {$maHD} đã được xác nhận và giao cho shipper."
-            : "Đơn hàng {$maHD} đã bị từ chối. Tồn giữ đã được giải phóng."
+            : "Đơn hàng {$maHD} đã bị từ chối. Hàng đang giữ đã được hoàn kho."
                 .($request->filled('ly_do') ? ' Lý do: '.$request->ly_do : '')
                 ." Nếu đã thanh toán, vui lòng liên hệ cửa hàng để được hoàn tiền."
                 .$msgDiem;
 
-        // ===== Thông báo cho khách hàng: nêu rõ số điểm đã hoàn (từ bản 1) =====
-        $phanHoanDiem = (!$xacNhan && $diemDaDung > 0)
-            ? " Đã hoàn lại {$diemDaDung} điểm tích lũy bạn đã sử dụng."
-            : '';
-        $noiDungKhach = $xacNhan
-            ? "✅ Đơn hàng {$maHD} của bạn đã được xác nhận và đang chờ shipper lấy hàng!"
-            : "❌ Đơn hàng {$maHD} của bạn đã bị từ chối.{$phanHoanDiem}"
-                ." Nếu bạn đã thanh toán, vui lòng liên hệ cửa hàng để được hoàn tiền.";
+    // ===== Thông báo cho khách hàng: nêu rõ số điểm đã hoàn (từ bản 1) =====
+    $phanHoanDiem = (!$xacNhan && $diemDaDung > 0)
+        ? " Đã hoàn lại {$diemDaDung} điểm tích lũy bạn đã sử dụng."
+        : '';
+    $noiDungKhach = $xacNhan
+        ? "✅ Đơn hàng {$maHD} của bạn đã được xác nhận và đang chờ shipper lấy hàng!"
+        : "❌ Đơn hàng {$maHD} của bạn đã bị từ chối.{$phanHoanDiem}"
+            ." Nếu bạn đã thanh toán, vui lòng liên hệ cửa hàng để được hoàn tiền.";
 
-        $key = "thong_bao_khach_{$hd->ma_khach_hang}";
-        $ds = Cache::get($key, []);
-        array_unshift($ds, ['id' => uniqid('tb_', true), 'noi_dung' => $noiDungKhach,
-            'loai' => $xacNhan ? 'confirmed' : 'cancelled', 'thoi_gian' => now()->format('H:i, d/m/Y')]);
-        Cache::put($key, array_slice($ds, 0, 20), now()->addDays(7));
+    $key = "thong_bao_khach_{$hd->ma_khach_hang}";
+    $ds = Cache::get($key, []);
+    array_unshift($ds, ['id' => uniqid('tb_', true), 'noi_dung' => $noiDungKhach,
+        'loai' => $xacNhan ? 'confirmed' : 'cancelled', 'thoi_gian' => now()->format('H:i, d/m/Y')]);
+    Cache::put($key, array_slice($ds, 0, 20), now()->addDays(7));
         if ($xacNhan) {
-            $hang = $hd->chiTietHoaDon->groupBy(fn ($ct) => 'sp_'.$ct->ma_san_pham)
-                ->map(fn ($rows) => ($rows->first()->sanPham->ten_san_pham ?? 'Sản phẩm').' (×'.$rows->sum('so_luong').')')->join(', ');
-            $boText = \App\Models\BoHoa::where('ma_hoa_don', $id)->get()->map(fn ($bo) => $bo->ten_bo_hoa.' (×'.$bo->so_luong.')')->join(', ');
-            $hang = trim($hang.', '.$boText, ', ');
-            ShipperThongBaoController::push((int) $hd->ma_nhan_vien_giao,
-                "Bạn có đơn hàng {$maHD}: {$hang}. Giao đến: {$hd->dia_chi_giao}.", 'info');
-        }
-        return response()->json(['success' => true, 'message' => $message]);
+        $hang = $hd->chiTietHoaDon->groupBy(fn ($ct) => 'sp_'.$ct->ma_san_pham)
+            ->map(fn ($rows) => ($rows->first()->sanPham->ten_san_pham ?? 'Sản phẩm').' (×'.$rows->sum('so_luong').')')->join(', ');
+        $boText = \App\Models\BoHoa::where('ma_hoa_don', $id)->get()
+            ->map(fn ($bo) => $bo->ten_bo_hoa.' (×'.$bo->so_luong.')')->join(', ');
+        $hang = trim($hang.', '.$boText, ', ');
+
+        \App\Models\ThongBao::gui(
+            (int) $hd->ma_nhan_vien_giao,
+            'order_new',
+            "🔔 Bạn có đơn hàng mới {$maHD}: {$hang}. Giao đến: {$hd->dia_chi_giao}.",
+            (int) $hd->ma_hoa_don
+        );
     }
+    // Số đơn live của shipper vừa được gán, để JS cập nhật dropdown không cần reload
+    $shipperInfo = null;
+    if ($xacNhan && $hd->ma_nhan_vien_giao) {
+        $shipperInfo = [
+            'ma_nhan_vien' => (int) $hd->ma_nhan_vien_giao,
+            'so_don'       => HoaDon::where('ma_nhan_vien_giao', $hd->ma_nhan_vien_giao)
+                ->whereIn('trang_thai', ['CONFIRMED', 'SHIPPING'])
+                ->count(),
+        ];
+    }
+    return response()->json(['success' => true, 'message' => $message, 'shipper' => $shipperInfo]);
+}
 
     private function xuLyDon(int $id, bool $xacNhan, ?int $shipperId, int &$diemDaDungOut = 0, int &$diemDaCongOut = 0): HoaDon
     {
@@ -123,26 +151,24 @@ class DonHangController extends Controller
             if ($xacNhan) {
                 if (!NhanVien::whereKey($shipperId)->where('chuc_vu', 'SHIPPER')->exists()) BoHoaController::loi('Vui lòng chọn nhân viên có chức vụ SHIPPER.');
                 if (!$hd->dia_chi_giao || !$hd->so_dien_thoai || !$hd->phuong_thuc_thanh_toan) BoHoaController::loi('Khách chưa hoàn tất thông tin giao hàng và phương thức thanh toán.');
-
-                // CONFIRM: RESERVED -> CONSUMED (trừ on_hand của sản phẩm và lô hàng)
-                if ($hd->reservations()->where('trang_thai', \App\Models\InventoryReservation::STATUS_RESERVED)->exists()) {
-                    \App\Services\InventoryReservationService::confirmOrder($hd);
-                }
+                // Lock reserved bouquets. Both types already left available stock at checkout.
+                \App\Models\BoHoa::where('ma_hoa_don', $id)->orderBy('ma_bo_hoa')->lockForUpdate()->get();
             } else {
-                // CANCEL/REJECT: RESERVED -> RELEASED (KHÔNG cộng on_hand vì chưa từng bị trừ)
-                if ($hd->reservations()->where('trang_thai', \App\Models\InventoryReservation::STATUS_RESERVED)->exists()) {
-                    \App\Services\InventoryReservationService::releaseOrder($hd);
-                } else {
-                    // Fallback tương thích ngược cho đơn cũ không có bản ghi reservation
-                    $laBo = BoHoaController::huyBoTrongDon($hd);
-                    $items = $hd->chiTietHoaDon()->get();
-                    if (!$laBo) BoHoaController::hoanKho($items->toArray());
-                }
-
+                $laBo = BoHoaController::huyBoTrongDon($hd);
                 $items = $hd->chiTietHoaDon()->get();
-                if ($items->isNotEmpty()) {
+                // Bouquet allocations are returned by huyBoTrongDon() using their
+                // own lot records.  Returning ChiTietHoaDon as well would add the
+                // same stock back a second time.
+                if (!$laBo) BoHoaController::hoanKho($items->toArray());
+                if (!$laBo && $items->isNotEmpty()) {
                     $khach = KhachHang::whereKey($hd->ma_khach_hang)->lockForUpdate()->first();
                     if ($khach) {
+                        // ===== Logic điểm tích lũy (tính ngược từ dữ liệu có sẵn, từ bản 1) =====
+                        //  goc     = sum(gia_ban_snapshot × so_luong) từ chi tiết hóa đơn
+                        //  daDung  = (goc - tong_tien) / DIEM_QUY_DOI
+                        //            → nếu > 0 tức khách có dùng điểm khi đặt → hoàn lại khi hủy
+                        //  daCong  = floor(tong_tien / TICH_DIEM)
+                        //            → điểm đã cộng khi đặt đơn → thu hồi khi hủy
                         $goc = $items->sum(fn ($ct) => $ct->gia_ban_snapshot * $ct->so_luong);
                         $daDung = max(0, (int) round(($goc - $hd->tong_tien) / self::DIEM_QUY_DOI));
                         $daCong = (int) floor($hd->tong_tien / self::TICH_DIEM);

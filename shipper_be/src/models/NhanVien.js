@@ -72,6 +72,10 @@ NhanVien.init({
         type: DataTypes.INTEGER,
         defaultValue: 0,
     },
+    tien_phat: {
+        type: DataTypes.DECIMAL(12, 2),
+        defaultValue: 0,
+    },
 
 }, {
     sequelize,

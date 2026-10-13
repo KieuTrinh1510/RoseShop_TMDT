@@ -1,7 +1,8 @@
-require("dotenv").config();
+// src/server.js
+require("dotenv").config(); // phải chạy TRƯỚC khi require database/redis
 
 const app = require("./app");
-const pool = require("./config/database");
+const sequelize = require("./config/database"); // Sequelize instance (không phải mysql2 pool)
 
 const PORT = process.env.PORT || 3000;
 
@@ -9,8 +10,7 @@ app.listen(PORT, async () => {
     console.log(`Server running at http://localhost:${PORT}`);
 
     try {
-        await pool.query("SELECT 1");
-
+        await sequelize.authenticate();
         console.log("Database connected successfully!");
     } catch (error) {
         console.error("Database connection failed!");
