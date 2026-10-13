@@ -82,6 +82,10 @@ class AuthenticatedSessionController extends Controller
 
     $vai_tro = Auth::user()->vai_tro;
 
+    if (in_array($vai_tro, ['ADMIN', 'NHAN_VIEN'])) {
+        session()->flash('vua_dang_nhap', true);
+    }
+
     return match($vai_tro) {
         'ADMIN', 'NHAN_VIEN' => redirect()->route('admin.dashboard'),
         'SHIPPER'            => redirect()->route('shipper.dashboard'),

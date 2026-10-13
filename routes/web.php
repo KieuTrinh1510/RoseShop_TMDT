@@ -20,6 +20,7 @@ use App\Http\Controllers\Shipper\ShipperProfileController;
 
 use App\Http\Controllers\Shipper\ShipperThongBaoController;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\SanPhamHetHanController;
 use App\Http\Controllers\Customer\ThongBaoController as CustomerThongBaoController;
 use App\Http\Controllers\Customer\CustomerController;
 use App\Http\Controllers\Customer\CustomerProfileController;
@@ -274,6 +275,9 @@ Route::middleware(['auth', 'role:ADMIN,NHAN_VIEN'])->group(function () {
     Route::get('/admin/lo-hang', [LoHangController::class, 'index'])->name('admin.lo-hang');
     Route::get('/admin/lo-hang/{id}', [LoHangController::class, 'show'])->name('admin.lo-hang.show')->whereNumber('id');
     Route::post('/admin/lo-hang/{id}/danh-gia', [LoHangController::class, 'danhGia'])->name('admin.lo-hang.danh-gia')->whereNumber('id');
+
+    // Cảnh báo & Xử lý sản phẩm hết hạn (Lô hoa + Bó hoa)
+    Route::get('/admin/san-pham-het-han', [SanPhamHetHanController::class, 'index'])->name('admin.san-pham-het-han');
 });
 Route::get('/bao-cao',               [BaoCaoController::class, 'index'])->name('bao-cao.index');
 Route::get('/bao-cao/doanh-thu',     [BaoCaoController::class, 'doanhThu'])->name('bao-cao.doanh-thu');
