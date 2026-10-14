@@ -53,25 +53,40 @@ class ChiTietSanPhamController extends Controller
             'so_luong'    => $c->so_luong,
         ])->all();
 
-        try {
-            $quote = Bo::tinhGiaDuLieu([
-                'size'        => $boHoaMau->size,
-                'kieu_bo_hoa' => $boHoaMau->kieu_bo_hoa,
-                'thanh_phan'  => $formula,
-                'so_luong'    => 1,
-            ]);
-        } catch (\Throwable $e) {
-            $phi = Bo::layPhuPhi($boHoaMau->size, $boHoaMau->kieu_bo_hoa);
-            $nl  = $boHoaMau->chiTietMauBoHoa->sum(
-                fn ($c) => ((float) ($c->sanPham?->gia_ban_hien_tai ?? 0)) * $c->so_luong
-            );
-            $giaMoiBo = round($nl + $phi['tong'], 2);
+        $readyBo = \App\Models\BoHoa::where('ma_mau_bo_hoa', $id)
+            ->where('loai_bo_hoa', 'HE_THONG')
+            ->where('trang_thai', 'ACTIVE')
+            ->whereNull('ma_hoa_don')
+            ->where('so_luong', '>', 0)
+            ->orderBy('ma_bo_hoa')
+            ->first();
+
+        if ($readyBo) {
+            $giaMoiBo = (float) $readyBo->gia_ban;
             $quote = [
-                'tien_nguyen_lieu' => $nl,
-                'phu_phi'          => $phi,
+                'tien_nguyen_lieu' => (float) ($readyBo->gia_von ?? round($giaMoiBo / 1.5, 2)),
+                'phu_phi'          => ['size' => 0, 'kieu_dang' => 0, 'tong' => 0],
                 'gia_moi_bo'       => $giaMoiBo,
                 'tong_tien'        => $giaMoiBo,
             ];
+        } else {
+            try {
+                $rows = Bo::phanBo($formula, false);
+                $gia = Bo::tinhGiaVonVaGiaBan($rows, 1);
+                $quote = [
+                    'tien_nguyen_lieu' => $gia['gia_von'],
+                    'phu_phi'          => ['size' => 0, 'kieu_dang' => 0, 'tong' => 0],
+                    'gia_moi_bo'       => $gia['gia_ban'],
+                    'tong_tien'        => $gia['gia_ban'],
+                ];
+            } catch (\Throwable $e) {
+                $quote = [
+                    'tien_nguyen_lieu' => 0,
+                    'phu_phi'          => ['size' => 0, 'kieu_dang' => 0, 'tong' => 0],
+                    'gia_moi_bo'       => 0,
+                    'tong_tien'        => 0,
+                ];
+            }
         }
 
         return view('customer.ChiTietSanPham', [

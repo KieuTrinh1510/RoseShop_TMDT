@@ -31,16 +31,20 @@ class BoHoaController extends Controller
             $query->whereIn('size', (array) $request->size);
         }
 
-        $phuPhiMap = PhuPhiBoHoa::all()->keyBy(fn ($p) => $p->loai . '|' . $p->gia_tri);
+        $activeReadyBouquets = BoHoa::where('loai_bo_hoa', 'HE_THONG')
+            ->where('trang_thai', 'ACTIVE')
+            ->whereNull('ma_hoa_don')
+            ->where('so_luong', '>', 0)
+            ->get()
+            ->groupBy('ma_mau_bo_hoa');
 
-        $allMaus = $query->orderByDesc('ma_mau_bo_hoa')->get()->map(function ($m) use ($phuPhiMap) {
-            $nl = $m->chiTietMauBoHoa->sum(
-                fn ($c) => ((float) ($c->sanPham?->gia_ban_hien_tai ?? 0)) * (int) $c->so_luong
-            );
-            $s = (float) ($phuPhiMap->get('SIZE|' . $m->size)?->phu_phi ?? 0);
-            $k = (float) ($phuPhiMap->get('KIEU_DANG|' . $m->kieu_bo_hoa)?->phu_phi ?? 0);
-
-            $m->gia_hien_thi = round($nl + $s + $k, 2);
+        $allMaus = $query->orderByDesc('ma_mau_bo_hoa')->get()->map(function ($m) use ($activeReadyBouquets) {
+            $readyBo = $activeReadyBouquets->get($m->ma_mau_bo_hoa)?->first();
+            if ($readyBo) {
+                $m->gia_hien_thi = (float) $readyBo->gia_ban;
+            } else {
+                $m->gia_hien_thi = self::tinhGiaUocTinhMau($m);
+            }
             return $m;
         });
 
@@ -489,6 +493,23 @@ class BoHoaController extends Controller
         return $data;
     }
 
+    public static function tinhGiaUocTinhMau($m): float
+    {
+        $formula = collect($m->chiTietMauBoHoa ?? [])->map(fn ($c) => [
+            'ma_san_pham' => $c->ma_san_pham,
+            'vai_tro'     => $c->vai_tro,
+            'so_luong'    => $c->so_luong,
+        ])->all();
+
+        try {
+            $rows = Bo::phanBo($formula, false);
+            $gia = Bo::tinhGiaVonVaGiaBan($rows);
+            return (float) $gia['gia_ban'];
+        } catch (\Throwable $e) {
+            return 0;
+        }
+    }
+
     /**
      * Chuẩn bị dữ liệu 1 bó để checkout.
      */
@@ -572,12 +593,56 @@ class BoHoaController extends Controller
             ];
         }
 
-        $quote = Bo::tinhGiaDuLieu([
-            'size'        => $source->size,
-            'kieu_bo_hoa' => $source->kieu_bo_hoa,
-            'thanh_phan'  => $formula,
-            'so_luong'    => (int) $checkout['so_luong'],
-        ]);
+        if (($checkout['loai'] ?? '') === 'MAU') {
+            $soLuong = max(1, (int) ($checkout['so_luong'] ?? 1));
+            $readyBo = !$thiep ? BoHoa::where('loai_bo_hoa', 'HE_THONG')
+                ->whereNull('ma_hoa_don')
+                ->where('ma_mau_bo_hoa', $source->getKey())
+                ->where('so_luong', '>', 0)
+                ->where('trang_thai', 'ACTIVE')
+                ->orderBy('ma_bo_hoa')
+                ->first() : null;
+
+            if ($readyBo) {
+                $giaMoiBo = (float) $readyBo->gia_ban;
+                $tienThiep = $thiep ? ((float) ($thiep->gia_ban_hien_tai ?? 0)) * $soLuong : 0;
+                $quote = [
+                    'gia_moi_bo'       => $giaMoiBo + ($thiep ? (float) ($thiep->gia_ban_hien_tai ?? 0) : 0),
+                    'tong_tien'        => round($giaMoiBo * $soLuong + $tienThiep, 2),
+                    'tien_nguyen_lieu' => (float) ($readyBo->gia_von ?? round($giaMoiBo / 1.5, 2)) * $soLuong,
+                    'phu_phi'          => ['size' => 0, 'kieu_dang' => 0, 'tong' => 0],
+                    'gia_von_moi_bo'   => (float) ($readyBo->gia_von ?? round($giaMoiBo / 1.5, 2)),
+                ];
+            } else {
+                try {
+                    $rows = Bo::phanBo($formula, false);
+                    $gia = Bo::tinhGiaVonVaGiaBan($rows, $soLuong);
+                    $quote = [
+                        'gia_moi_bo'       => $gia['gia_ban'],
+                        'tong_tien'        => $gia['tong_gia_ban'],
+                        'tien_nguyen_lieu' => $gia['tong_gia_von'],
+                        'phu_phi'          => ['size' => 0, 'kieu_dang' => 0, 'tong' => 0],
+                        'gia_von_moi_bo'   => $gia['gia_von'],
+                    ];
+                } catch (\Throwable $e) {
+                    $quote = [
+                        'gia_moi_bo'       => 0,
+                        'tong_tien'        => 0,
+                        'tien_nguyen_lieu' => 0,
+                        'phu_phi'          => ['size' => 0, 'kieu_dang' => 0, 'tong' => 0],
+                        'gia_von_moi_bo'   => 0,
+                    ];
+                }
+            }
+        } else {
+            // TUY_CHON (Custom Mix): giữ nguyên business hiện tại
+            $quote = Bo::tinhGiaDuLieu([
+                'size'        => $source->size,
+                'kieu_bo_hoa' => $source->kieu_bo_hoa,
+                'thanh_phan'  => $formula,
+                'so_luong'    => (int) $checkout['so_luong'],
+            ]);
+        }
 
         return compact('source', 'ten', 'thanhPhan', 'thiep', 'quote')
             + ['so_luong' => (int) $checkout['so_luong']];
@@ -691,17 +756,13 @@ class BoHoaController extends Controller
             foreach ($ready as $bo) {
                 if ($need < 1) break;
 
-                $phi = Bo::layPhuPhi($info['source']->size, $info['source']->kieu_bo_hoa);
-                $tienNL = $bo->chiTietBoHoa->sum(
-                    fn ($ct) => ((float) ($ct->sanPham?->gia_ban_hien_tai ?? 0)) * (int) $ct->so_luong
-                );
-                $giaMoiBo = round($tienNL + $phi['tong'], 2);
+                // Giá bán của bó hoa làm sẵn đã được cố định (snapshot) tại thời điểm sản xuất
+                $giaMoiBo = (float) $bo->gia_ban;
 
                 $bo->update([
                     'ma_hoa_don'    => $hoaDon->getKey(),
                     'ma_khach_hang' => $khach->getKey(),
                     'loi_nhan'      => $checkout['loi_nhan'] ?? null,
-                    'gia_ban'       => $giaMoiBo,
                 ]);
 
                 // 1. BÓ HOA THÀNH PHẨM CẮM SẴN: reserve bó hoa, KHÔNG reserve BOM nguyên liệu
@@ -743,12 +804,15 @@ class BoHoaController extends Controller
                 ]);
 
                 $phanBo = \App\Services\InventoryReservationService::reserveBouquetIngredients($hoaDon, $bo, $formula);
-                $gia = Bo::giaPhanBo($phanBo, $info['source']->size, $info['source']->kieu_bo_hoa, $need);
-                $bo->update(['gia_ban' => $gia['gia_moi_bo']]);
+                $gia = Bo::tinhGiaVonVaGiaBan($phanBo, $need);
+                $bo->update([
+                    'gia_von' => $gia['gia_von'],
+                    'gia_ban' => $gia['gia_ban'],
+                ]);
 
                 Bo::luuChiTiet($bo, $phanBo);
                 Bo::saoChepAnhTuMau($info['source']->getKey(), $bo->getKey());
-                $tong += $gia['tong_tien'];
+                $tong += $gia['tong_gia_ban'];
             }
         } else {
             // 3. CUSTOM MIX (TUY_CHON): reserve đúng nguyên liệu khách chọn theo chi_tiet_bo_hoa

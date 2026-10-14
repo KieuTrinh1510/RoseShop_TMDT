@@ -81,6 +81,11 @@ class ChiTietBoHoa extends Model
         );
     }
 
+    public function getGiaNhapAttribute(): float
+    {
+        return (float) ($this->chiTietNhap?->gia_nhap ?? 0);
+    }
+
     // Chưa phân bổ lô (còn ở trạng thái DRAFT)
     public function scopeChuaCoLo($query)
     {

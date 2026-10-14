@@ -721,16 +721,16 @@
 
                             <td style="text-align:right;">
                                 @php
-                                    // Nhóm các lô theo giá bán để không bị tràn dòng khi nhập nhiều lô cùng giá hoặc khác giá
+                                    // Nhóm các lô theo giá nhập để hiển thị đúng giá nhập của từng lô hàng
                                     $nhomGia = $loCoHang->groupBy(function($item) {
-                                        return (string) round((float) $item->gia_ban);
+                                        return (string) round((float) $item->gia_nhap);
                                     })->map(function($items, $gia) {
                                         return [
-                                            'gia_ban'       => (float) $gia,
+                                            'gia_nhap'      => (float) $gia,
                                             'tong_so_luong' => $items->sum('so_luong_con_lai'),
                                             'so_lo'         => $items->count(),
                                         ];
-                                    })->sortBy('gia_ban')->values();
+                                    })->sortBy('gia_nhap')->values();
                                     $tongMocGia = $nhomGia->count();
                                 @endphp
 
@@ -741,7 +741,7 @@
                                         @foreach($nhomGia->take($soLuongHienThi) as $g)
                                             <div class="d-flex align-items-center justify-content-end gap-1" style="font-size:12px;" title="{{ $g['so_lo'] }} lô hàng (Tổng {{ number_format($g['tong_so_luong']) }} sp)">
                                                 <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold" style="font-size:11.5px; padding:3px 6px;">
-                                                    {{ number_format($g['gia_ban'], 0, ',', '.') }} đ
+                                                    {{ number_format($g['gia_nhap'], 0, ',', '.') }} đ
                                                 </span>
                                                 <span class="badge bg-dark text-white" style="font-size:11px; padding:3px 6px; border-radius:6px;">
                                                     <i class="bi bi-box-seam me-1"></i>{{ number_format($g['tong_so_luong']) }}
@@ -762,7 +762,7 @@
                                                 @foreach($nhomGia->slice($soLuongHienThi) as $g)
                                                     <div class="d-flex align-items-center justify-content-end gap-1" style="font-size:12px;" title="{{ $g['so_lo'] }} lô hàng (Tổng {{ number_format($g['tong_so_luong']) }} sp)">
                                                         <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold" style="font-size:11.5px; padding:3px 6px;">
-                                                            {{ number_format($g['gia_ban'], 0, ',', '.') }} đ
+                                                            {{ number_format($g['gia_nhap'], 0, ',', '.') }} đ
                                                         </span>
                                                         <span class="badge bg-dark text-white" style="font-size:11px; padding:3px 6px; border-radius:6px;">
                                                             <i class="bi bi-box-seam me-1"></i>{{ number_format($g['tong_so_luong']) }}
