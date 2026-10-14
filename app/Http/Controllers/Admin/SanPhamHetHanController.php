@@ -29,6 +29,7 @@ class SanPhamHetHanController extends Controller
 
         $hasNgayHetHanCTN = Schema::hasColumn('chi_tiet_nhap', 'ngay_het_han');
         $hasNgayHetHanBH  = Schema::hasColumn('bo_hoa', 'ngay_het_han');
+        $hasHinhAnhBH     = Schema::hasColumn('bo_hoa', 'hinh_anh');
 
         // ─────────────────────────────────────────────────────────────────
         // 1. QUERY CÁC LOẠI HOA SẮP / ĐÃ HẾT HẠN (LÔ HÀNG)
@@ -120,7 +121,7 @@ class SanPhamHetHanController extends Controller
                 'mbh.ten_mau',
                 'bh.so_luong',
                 'bh.gia_ban',
-                'bh.hinh_anh',
+                DB::raw($hasHinhAnhBH ? 'bh.hinh_anh' : 'NULL as hinh_anh'),
                 'bh.created_at as ngay_tao',
                 DB::raw($hasNgayHetHanBH
                     ? 'COALESCE(bh.ngay_het_han, DATE(DATE_ADD(bh.created_at, INTERVAL 5 DAY))) as hsd'
@@ -159,6 +160,17 @@ class SanPhamHetHanController extends Controller
                 $item->ngayTaoFmt = $item->ngay_tao ? Carbon::parse($item->ngay_tao)->format('d/m/Y') : '—';
                 $item->hsdFmt = $hsdDate->format('d/m/Y');
                 $item->giaTriTon = (float) $item->gia_ban * (int) $item->so_luong;
+
+                // Fallback ảnh từ mẫu bó hoa nếu bó hoa chưa có ảnh riêng hoặc database chưa có cột ảnh
+                if (empty($item->hinh_anh) && !empty($item->ma_mau_bo_hoa)) {
+                    foreach (['jpg', 'jpeg', 'png', 'webp'] as $ext) {
+                        if (file_exists(public_path('img/mau-bo-hoa/' . $item->ma_mau_bo_hoa . '.' . $ext))) {
+                            $item->hinh_anh = 'img/mau-bo-hoa/' . $item->ma_mau_bo_hoa . '.' . $ext;
+                            break;
+                        }
+                    }
+                }
+
                 return $item;
             });
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\ChiTietNhap;
+use App\Services\CartService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,11 +14,19 @@ class GioHangController extends Controller
 
     public function index()
     {
-        $user       = auth()->check() ? Auth::user()->load('khachHang') : null;
+        $user = auth()->check() ? Auth::user()->load('khachHang') : null;
+        if ($user) {
+            CartService::restoreFromDatabase($user);
+        }
+
         $gioHang    = session('gio_hang', []);
+        $gioBoHoa   = session('gio_bo_hoa', []);
         $diemSuDung = session('diem_su_dung', 0);
 
-        return view('customer.GioHang', compact('user', 'gioHang', 'diemSuDung'));
+        $khachId = $user?->khachHang?->getKey();
+        $dsBoHoa = CartService::getBouquetCartDetails($gioBoHoa, $khachId);
+
+        return view('customer.GioHang', compact('user', 'gioHang', 'gioBoHoa', 'dsBoHoa', 'diemSuDung'));
     }
 
     public function add(Request $request)
@@ -51,7 +60,7 @@ class GioHangController extends Controller
                 'ma_san_pham'      => $chiTiet->ma_san_pham,
                 'ten_san_pham'     => $chiTiet->sanPham->ten_san_pham,
                 'hinh_anh'         => $chiTiet->sanPham->hinh_anh,
-                'gia_ban'          => (float) $chiTiet->gia_ban,
+                'gia_ban'          => (float) ($chiTiet->sanPham->gia_ban_hien_tai ?? $chiTiet->gia_ban),
                 'gia_nhap'         => (float) $chiTiet->gia_nhap,
                 'so_luong'         => $soLuongMoi,
                 'so_luong_con_lai' => $chiTiet->so_luong_con_lai,
@@ -60,11 +69,14 @@ class GioHangController extends Controller
 
         session(['gio_hang' => $gioHang]);
         session()->forget('diem_su_dung');
+        CartService::syncToDatabase();
+
+        $tongSoLuong = count($gioHang) + count(session('gio_bo_hoa', []));
 
         return response()->json([
             'success'     => true,
             'message'     => 'Đã thêm vào giỏ hàng!',
-            'so_san_pham' => count($gioHang),
+            'so_san_pham' => $tongSoLuong,
         ]);
     }
 
@@ -136,12 +148,14 @@ class GioHangController extends Controller
 
         session(['gio_hang' => $gioHang]);
         session()->forget('diem_su_dung');
+        CartService::syncToDatabase();
 
         $tongTien = collect($gioHang)->sum(fn($i) => $i['gia_ban'] * $i['so_luong']);
+        $tongSoLuong = count($gioHang) + count(session('gio_bo_hoa', []));
 
         return response()->json([
             'success'     => true,
-            'so_san_pham' => count($gioHang),
+            'so_san_pham' => $tongSoLuong,
             'tong_tien'   => $tongTien,
         ]);
     }
@@ -154,12 +168,14 @@ class GioHangController extends Controller
 
         session(['gio_hang' => $gioHang]);
         session()->forget('diem_su_dung');
+        CartService::syncToDatabase();
 
         $tongTien = collect($gioHang)->sum(fn($i) => $i['gia_ban'] * $i['so_luong']);
+        $tongSoLuong = count($gioHang) + count(session('gio_bo_hoa', []));
 
         return response()->json([
             'success'     => true,
-            'so_san_pham' => count($gioHang),
+            'so_san_pham' => $tongSoLuong,
             'tong_tien'   => $tongTien,
         ]);
     }

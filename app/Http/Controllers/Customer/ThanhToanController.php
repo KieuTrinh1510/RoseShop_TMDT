@@ -33,9 +33,10 @@ class ThanhToanController extends Controller
 
         $danhSachDiaChi = $this->layDanhSachDiaChi($khachHang);
         $diaChiHienTai  = $danhSachDiaChi->firstWhere('la_mac_dinh', true) ?? $danhSachDiaChi->first();
+        $type           = request('type');
 
         // ─── Nhánh 1: Giỏ bó hoa mẫu (nhiều bó) ────────────────────────
-        if (session()->has('gio_bo_hoa')) {
+        if (($type === 'bo_hoa' || (!$type && session()->has('gio_bo_hoa') && !session()->has('checkout_items') && !session()->has('mua_ngay'))) && session()->has('gio_bo_hoa') && !empty(session('gio_bo_hoa'))) {
             $dsCheckout = [];
             foreach (session('gio_bo_hoa', []) as $key => $item) {
                 try {
@@ -49,13 +50,14 @@ class ThanhToanController extends Controller
                     $info['key'] = $key;
                     $dsCheckout[] = $info;
                 } catch (\Throwable $e) {
-                    return redirect()->route('customer.bo-hoa.gio.index')
+                    return redirect()->route('customer.gio-hang')
                         ->with('error', $e->getMessage());
                 }
             }
             if (empty($dsCheckout)) {
                 session()->forget('gio_bo_hoa');
-                return redirect()->route('customer.bo-hoa.he-thong')
+                \App\Services\CartService::syncToDatabase();
+                return redirect()->route('customer.gio-hang')
                     ->with('error', 'Giỏ bó hoa trống.');
             }
             $diemSuDung = session('diem_su_dung', 0);
@@ -70,7 +72,7 @@ class ThanhToanController extends Controller
         }
 
         // ─── Nhánh 2: Mua ngay 1 bó (giữ nguyên hành vi cũ) ────────────
-        if (session()->has('bo_hoa_checkout')) {
+        if (($type === 'mua_ngay_bo_hoa' || (!$type && session()->has('bo_hoa_checkout') && !session()->has('checkout_items') && !session()->has('mua_ngay'))) && session()->has('bo_hoa_checkout')) {
             try {
                 $info = \App\Http\Controllers\Customer\BoHoaController::duLieuCheckout(
                     session('bo_hoa_checkout'), $khachId
@@ -93,7 +95,7 @@ class ThanhToanController extends Controller
         }
 
         // ─── Nhánh 3: Giỏ sản phẩm đơn lẻ (giữ nguyên) ─────────────────
-               if (session()->has('mua_ngay')) {
+        if (session()->has('mua_ngay')) {
             $gioHang = session('mua_ngay', []);
         } elseif (session()->has('checkout_items')) {
             $gioHang = session('checkout_items', []);
@@ -149,9 +151,10 @@ class ThanhToanController extends Controller
             'so_dien_thoai'          => $request->so_dien_thoai,
         ];
         $laVnpay = $request->phuong_thuc_thanh_toan === 'NGAN_HANG';
+        $loaiCheckout = $request->input('loai_checkout');
 
         // ─── Nhánh 1: Giỏ bó hoa mẫu ──────────────────────────────────
-        if (session()->has('gio_bo_hoa')) {
+        if (($loaiCheckout === 'bo_hoa' || (!$loaiCheckout && session()->has('gio_bo_hoa') && !session()->has('checkout_items') && !session()->has('mua_ngay'))) && session()->has('gio_bo_hoa') && !empty(session('gio_bo_hoa'))) {
             $dsCheckout = [];
             foreach (session('gio_bo_hoa', []) as $key => $item) {
                 $dsCheckout[] = [
@@ -172,6 +175,7 @@ class ThanhToanController extends Controller
             }
 
             session()->forget(['gio_bo_hoa', 'diem_su_dung']);
+            \App\Services\CartService::syncToDatabase();
 
             if ($laVnpay) return redirect()->route('vnpay.payment', $hoaDon);
             return redirect()->route('customer.thong-bao', ['tab' => 'don-hien-tai'])
@@ -179,7 +183,7 @@ class ThanhToanController extends Controller
         }
 
         // ─── Nhánh 2: Mua ngay 1 bó ────────────────────────────────────
-        if (session()->has('bo_hoa_checkout')) {
+        if (($loaiCheckout === 'mua_ngay_bo_hoa' || (!$loaiCheckout && session()->has('bo_hoa_checkout'))) && session()->has('bo_hoa_checkout')) {
             try {
                 $hoaDon = DB::transaction(fn () => \App\Http\Controllers\Customer\BoHoaController::taoDonTuCheckout(
                     session('bo_hoa_checkout'), $khachHang, $donData, $diemSuDung
@@ -188,6 +192,7 @@ class ThanhToanController extends Controller
                 return redirect()->route('customer.thanh-toan')->with('error', $e->getMessage());
             }
             session()->forget(['bo_hoa_checkout', 'diem_su_dung']);
+            \App\Services\CartService::syncToDatabase();
             if ($laVnpay) return redirect()->route('vnpay.payment', $hoaDon);
             return redirect()->route('customer.thong-bao', ['tab' => 'don-hien-tai'])
                 ->with('success', 'Đơn bó hoa đã được tạo và đang chờ nhân viên xác nhận.');
@@ -269,6 +274,7 @@ class ThanhToanController extends Controller
 
         if ($isMuaNgay) {
             session()->forget(['mua_ngay', 'diem_su_dung']);
+            \App\Services\CartService::syncToDatabase();
         } elseif ($isCheckout) {
             $mainCart = session('gio_hang', []);
             $paidKeys = array_keys(session('checkout_items', []));
@@ -277,6 +283,7 @@ class ThanhToanController extends Controller
             }
             session(['gio_hang' => $mainCart]);
             session()->forget(['checkout_items', 'diem_su_dung']);
+            \App\Services\CartService::syncToDatabase();
         }
 
         if ($laVnpay) {

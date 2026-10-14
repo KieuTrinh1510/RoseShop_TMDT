@@ -165,8 +165,8 @@
             <span style="color:#725e67;font-size:14px;">
                 💐 Bạn có <strong>{{ $soBoTrongGio }}</strong> bó hoa mẫu trong giỏ
             </span>
-            <a href="{{ route('customer.bo-hoa.gio.index') }}" class="bh-cart-notice-btn">
-                Xem giỏ bó hoa →
+            <a href="{{ route('customer.gio-hang') }}" class="bh-cart-notice-btn">
+                Xem giỏ hàng →
             </a>
         </div>
         @endif
