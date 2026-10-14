@@ -34,6 +34,7 @@
 
     <form method="POST" action="{{ route('customer.thanh-toan.store') }}" id="checkoutForm">
         @csrf
+        <input type="hidden" name="loai_checkout" value="bo_hoa">
         <div class="checkout-layout">
 
             {{-- LEFT: Thông tin & Địa chỉ Shopee --}}
@@ -239,6 +240,7 @@
 
     <form method="POST" action="{{ route('customer.thanh-toan.store') }}" id="checkoutForm">
         @csrf
+        <input type="hidden" name="loai_checkout" value="san_pham">
         <div class="checkout-layout">
 
             {{-- LEFT: Thông tin & Địa chỉ Shopee --}}

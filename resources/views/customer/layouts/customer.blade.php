@@ -231,7 +231,10 @@
     </div>
 
         @php
-        // ✅ Đếm số lượng item trong cả 2 giỏ
+        // ✅ Khôi phục giỏ hàng từ DB nếu người dùng đã đăng nhập và session đang trống
+        if (auth()->check() && empty(session('gio_hang')) && empty(session('gio_bo_hoa'))) {
+            \App\Services\CartService::restoreFromDatabase(auth()->user());
+        }
         $soItemGioHang  = count(session('gio_hang', []));
         $soItemGioBoHoa = count(session('gio_bo_hoa', []));
         $tongItemGio    = $soItemGioHang + $soItemGioBoHoa;

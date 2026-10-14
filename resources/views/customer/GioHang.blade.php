@@ -28,18 +28,99 @@
         <div class="alert-cart success">✅ {{ session('success') }}</div>
     @endif
 
-    @if(empty($gioHang))
+    @if(empty($gioHang) && empty($dsBoHoa))
     {{-- EMPTY STATE --}}
     <div class="cart-table-wrap">
         <div class="cart-empty">
             <div class="cart-empty-icon">🛒</div>
             <h3>Giỏ hàng của bạn đang trống</h3>
-            <p>Hãy chọn những bó hoa yêu thích và thêm vào giỏ nhé!</p>
-            <a href="{{ route('customer.dashboard') }}" class="btn-shop">🌸 Tiếp tục mua sắm</a>
+            <p>Hãy chọn những bó hoa hoặc hoa tươi yêu thích và thêm vào giỏ nhé!</p>
+            <div style="display:flex; justify-content:center; gap:12px; margin-top:16px;">
+                <a href="{{ route('customer.bo-hoa.he-thong') }}" class="btn-shop" style="background:#be185d;">💐 Khám phá bó hoa</a>
+                <a href="{{ route('customer.dashboard') }}" class="btn-shop" style="background:#4b5563;">🌸 Mua hoa tươi</a>
+            </div>
         </div>
     </div>
     @else
-    {{-- CART LAYOUT --}}
+
+    {{-- SECTION: BÓ HOA TRONG GIỎ HÀNG --}}
+    @if(!empty($dsBoHoa))
+    <div class="cart-bouquet-section" style="margin-bottom: 32px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <h3 style="font-size:1.2rem; font-weight:700; color:#831843; margin:0; display:flex; align-items:center; gap:8px;">
+                💐 Bó Hoa Đã Chọn ({{ count($dsBoHoa) }})
+            </h3>
+            <a href="{{ route('customer.bo-hoa.he-thong') }}" style="color:#be185d; font-size:.88rem; font-weight:600; text-decoration:none;">
+                + Thêm bó hoa khác
+            </a>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:14px;">
+            @foreach($dsBoHoa as $bKey => $bItem)
+            <div id="bouquet-card-{{ $bKey }}" style="background:#fff; border:1px solid #fbcfe8; border-radius:14px; padding:16px 20px; display:flex; gap:18px; align-items:center; box-shadow:0 2px 8px rgba(190,24,93,.05);">
+                <img src="{{ \App\Http\Controllers\Admin\BoHoaController::anhMau($bItem['mau']) }}"
+                     alt="{{ $bItem['mau']->ten_mau }}"
+                     style="width:90px; height:90px; border-radius:10px; object-fit:cover; background:#fdf2f8; flex-shrink:0;">
+                <div style="flex:1; min-width:0;">
+                    <div style="font-weight:700; font-size:1.05rem; color:#1f2937; margin-bottom:4px;">
+                        {{ $bItem['mau']->ten_mau }}
+                    </div>
+                    <div style="font-size:.85rem; color:#6b7280; margin-bottom:4px;">
+                        Size: <span class="fw-semibold">{{ $bItem['mau']->size }}</span> ·
+                        Kiểu dáng: <span class="fw-semibold">{{ \App\Http\Controllers\Admin\BoHoaController::KIEU_DANG[$bItem['mau']->kieu_bo_hoa] ?? $bItem['mau']->kieu_bo_hoa }}</span> ·
+                        Số lượng: <strong style="color:#be185d;">{{ $bItem['so_luong'] }} bó</strong>
+                    </div>
+                    @if($bItem['thiep'])
+                        <div style="font-size:.83rem; color:#be185d;">
+                            💌 Kèm thiệp: <strong>{{ $bItem['thiep']->ten_san_pham }}</strong> (+{{ number_format($bItem['thiep']->gia_ban_hien_tai, 0, ',', '.') }}₫)
+                        </div>
+                    @endif
+                    @if($bItem['loi_nhan'])
+                        <div style="font-size:.82rem; color:#4b5563; font-style:italic; margin-top:2px;">
+                            📝 Lời nhắn: "{{ $bItem['loi_nhan'] }}"
+                        </div>
+                    @endif
+                </div>
+                <div style="text-align:right; flex-shrink:0; padding-left:12px;">
+                    <div style="font-size:1.15rem; font-weight:700; color:#be185d;">
+                        {{ number_format($bItem['tong'], 0, ',', '.') }}₫
+                    </div>
+                    @if($bItem['so_luong'] > 1)
+                        <div style="font-size:.8rem; color:#9ca3af;">
+                            {{ number_format($bItem['gia_mot_bo'], 0, ',', '.') }}₫ / bó
+                        </div>
+                    @endif
+                </div>
+                <div style="padding-left:10px;">
+                    <button type="button" onclick="removeBouquet('{{ $bKey }}')" title="Xóa bó hoa này"
+                            style="background:none; border:none; color:#ef4444; font-size:1.3rem; cursor:pointer; padding:6px 10px; border-radius:6px;">
+                        ✕
+                    </button>
+                </div>
+            </div>
+            @endforeach
+        </div>
+
+        <div style="margin-top:14px; background:#fff1f2; border:1px solid #fecdd3; border-radius:12px; padding:14px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div>
+                <span style="font-size:.9rem; color:#4c0519;">Tổng tiền bó hoa: </span>
+                <strong style="font-size:1.25rem; color:#be185d;">{{ number_format(collect($dsBoHoa)->sum('tong'), 0, ',', '.') }}₫</strong>
+                <span style="font-size:.85rem; color:#9f1239; margin-left:8px;">({{ collect($dsBoHoa)->sum('so_luong') }} bó)</span>
+            </div>
+            <a href="{{ route('customer.thanh-toan', ['type' => 'bo_hoa']) }}" class="btn-checkout" style="padding:10px 24px; font-size:.95rem; text-decoration:none; display:inline-block; border-radius:8px; background:linear-gradient(135deg, #be185d, #9d174d); color:#fff; font-weight:600;">
+                💳 Thanh Toán Bó Hoa Này →
+            </a>
+        </div>
+    </div>
+    @endif
+
+    {{-- SECTION: SẢN PHẨM ĐƠN LẺ TRONG GIỎ HÀNG --}}
+    @if(!empty($gioHang))
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h3 style="font-size:1.15rem; font-weight:700; color:#1f2937; margin:0;">
+            🌸 Hoa & Sản Phẩm Đơn Lẻ ({{ count($gioHang) }})
+        </h3>
+    </div>
     <div class="cart-layout">
 
         {{-- LEFT: Bảng sản phẩm --}}
@@ -65,9 +146,9 @@
                         </td>
                         <td>
                             <div class="cart-product-cell">
-                                @if($item['hinh_anh'])
+                                @if(!empty($item['hinh_anh']))
                                     <img src="{{ asset($item['hinh_anh']) }}"
-                                         alt="{{ $item['ten_san_pham'] }}"
+                                         alt="{{ $item['ten_san_pham'] ?? '' }}"
                                          class="cart-product-img"
                                          onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
                                     <div class="cart-product-placeholder" style="display:none;">🌸</div>
@@ -204,6 +285,7 @@
         </div>
 
     </div>
+    @endif
     @endif
 
 </div>
@@ -354,7 +436,7 @@
 
             const data = await res.json();
             if (data.success) {
-                window.location.href = CHECKOUT_PAGE_URL;
+                window.location.href = CHECKOUT_PAGE_URL + '?type=san_pham';
             } else {
                 showToast('❌ ' + (data.message || 'Không thể chuyển đến trang thanh toán.'));
                 if (btn) {
@@ -370,6 +452,38 @@
                 btn.textContent = '💳 Tiến Hành Thanh Toán';
                 updateCheckoutButtonState();
             }
+        }
+    }
+
+    async function removeBouquet(key) {
+        if (!confirm('Bạn có chắc muốn xóa bó hoa này khỏi giỏ hàng?')) return;
+        const card = document.getElementById('bouquet-card-' + key);
+        if (card) card.style.opacity = '.4';
+
+        try {
+            const res = await fetch('{{ route("customer.bo-hoa.gio.remove") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': CSRF,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ key })
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (typeof updateCartBadge === 'function') {
+                    updateCartBadge(data.so_san_pham);
+                }
+                location.reload();
+            } else {
+                alert(data.message || 'Không thể xóa bó hoa.');
+                if (card) card.style.opacity = '1';
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Có lỗi xảy ra khi xóa bó hoa.');
+            if (card) card.style.opacity = '1';
         }
     }
 

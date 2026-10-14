@@ -23,11 +23,13 @@ class KhachHang extends Model
         'dia_chi',
         'diem_tich_luy',
         'quyen_cod',
+        'du_lieu_gio_hang',
     ];
 
     protected $casts = [
-        'diem_tich_luy' => 'integer',
-        'quyen_cod'     => 'string',
+        'diem_tich_luy'    => 'integer',
+        'quyen_cod'        => 'string',
+        'du_lieu_gio_hang' => 'array',
     ];
 
     public function nguoiDung()

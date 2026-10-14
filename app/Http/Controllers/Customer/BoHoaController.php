@@ -440,9 +440,10 @@ class BoHoaController extends Controller
             'loi_nhan'      => $data['loi_nhan'] ?? null,
         ];
         session(['gio_bo_hoa' => $gio]);
+        \App\Services\CartService::syncToDatabase();
 
-        return redirect()->route('customer.bo-hoa.gio.index')
-            ->with('success', 'Đã thêm bó hoa vào giỏ!');
+        return redirect()->route('customer.gio-hang')
+            ->with('success', 'Đã thêm bó hoa vào giỏ hàng!');
     }
 
     public function xoaKhoiGio(Request $request)
@@ -453,11 +454,15 @@ class BoHoaController extends Controller
         if (isset($gio[$key])) {
             unset($gio[$key]);
             session(['gio_bo_hoa' => $gio]);
+            \App\Services\CartService::syncToDatabase();
         }
 
+        $tongSoLuong = count(session('gio_hang', [])) + count($gio);
+
         return response()->json([
-            'success'   => true,
-            'so_bo_hoa' => count($gio),
+            'success'     => true,
+            'so_bo_hoa'   => count($gio),
+            'so_san_pham' => $tongSoLuong,
         ]);
     }
 

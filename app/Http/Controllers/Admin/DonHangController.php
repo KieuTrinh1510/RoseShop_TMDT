@@ -153,13 +153,14 @@ class DonHangController extends Controller
                 if (!$hd->dia_chi_giao || !$hd->so_dien_thoai || !$hd->phuong_thuc_thanh_toan) BoHoaController::loi('Khách chưa hoàn tất thông tin giao hàng và phương thức thanh toán.');
                 // Lock reserved bouquets. Both types already left available stock at checkout.
                 \App\Models\BoHoa::where('ma_hoa_don', $id)->orderBy('ma_bo_hoa')->lockForUpdate()->get();
+                \App\Services\InventoryReservationService::confirmOrder($hd);
             } else {
                 $laBo = BoHoaController::huyBoTrongDon($hd);
+                $hasReservations = \App\Models\InventoryReservation::where('ma_hoa_don', $hd->ma_hoa_don)->exists();
                 $items = $hd->chiTietHoaDon()->get();
-                // Bouquet allocations are returned by huyBoTrongDon() using their
-                // own lot records.  Returning ChiTietHoaDon as well would add the
-                // same stock back a second time.
-                if (!$laBo) BoHoaController::hoanKho($items->toArray());
+                if (!$laBo && !$hasReservations) {
+                    BoHoaController::hoanKho($items->toArray());
+                }
                 if (!$laBo && $items->isNotEmpty()) {
                     $khach = KhachHang::whereKey($hd->ma_khach_hang)->lockForUpdate()->first();
                     if ($khach) {
