@@ -308,6 +308,9 @@ class PhieuNhapController extends Controller
             foreach ($phieuNhap->chiTietNhaps as $chiTiet) {
                 $sanPham = SanPham::findOrFail($chiTiet->ma_san_pham);
                 $sanPham->so_luong += $chiTiet->so_luong;
+                if ($chiTiet->gia_ban > 0) {
+                    $sanPham->gia_ban_hien_tai = (float) $chiTiet->gia_ban;
+                }
                 $sanPham->save();
             }
 

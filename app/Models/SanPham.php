@@ -63,6 +63,10 @@ class SanPham extends Model
         'trang_thai'       => 'string',
     ];
 
+    protected $appends = [
+        'gia_nhap',
+    ];
+
     public function chiTietHoaDons()
     {
         return $this->hasMany(
@@ -164,5 +168,30 @@ class SanPham extends Model
     public function getTonKhaDungAttribute(): int
     {
         return max(0, $this->ton_thuc_te - $this->ton_dang_giu);
+    }
+
+    public function getGiaNhapAttribute(): float
+    {
+        if (array_key_exists('gia_nhap', $this->attributes)) {
+            return (float) $this->attributes['gia_nhap'];
+        }
+
+        if ($this->relationLoaded('chiTietNhaps')) {
+            $lot = $this->chiTietNhaps->where('so_luong_con_lai', '>', 0)->sortBy('ma_chi_tiet_nhap')->first()
+                ?? $this->chiTietNhaps->sortByDesc('ma_chi_tiet_nhap')->first();
+            return (float) ($lot?->gia_nhap ?? 0);
+        }
+
+        $lot = $this->chiTietNhaps()
+            ->where('so_luong_con_lai', '>', 0)
+            ->whereHas('phieuNhap', fn($q) => $q->where('trang_thai', 'CONFIRMED'))
+            ->orderBy('ma_chi_tiet_nhap', 'asc')
+            ->first()
+            ?? $this->chiTietNhaps()
+            ->whereHas('phieuNhap', fn($q) => $q->where('trang_thai', 'CONFIRMED'))
+            ->orderByDesc('ma_chi_tiet_nhap')
+            ->first();
+
+        return (float) ($lot?->gia_nhap ?? 0);
     }
 }

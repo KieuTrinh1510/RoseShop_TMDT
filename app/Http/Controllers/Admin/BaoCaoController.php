@@ -768,7 +768,7 @@ foreach ($sanPhams as $sp) {
                 CASE WHEN bo.loai_bo_hoa = 'TUY_CHON' THEN 'Custom Mix' ELSE 'Bó hoa' END as ten_nhom,
                 1 as so_luong,
                 bo.gia_ban as doanh_thu,
-                COALESCE((
+                COALESCE(bo.gia_von, (
                     SELECT SUM(ctbh.so_luong * ctn.gia_nhap)
                     FROM chi_tiet_bo_hoa ctbh
                     JOIN chi_tiet_nhap ctn ON ctbh.ma_chi_tiet_nhap = ctn.ma_chi_tiet_nhap

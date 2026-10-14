@@ -118,15 +118,21 @@ class UC4_MauBoHoaStockAndNameTest extends TestCase
      */
     public function test_2_hoa_available_equal_0_rejected_by_backend(): void
     {
-        // 334 là Cành Lan Hồ Điệp Trắng hiện có tồn = 0
-        $sp0 = SanPham::find(334);
-        $this->assertNotNull($sp0);
+        // Tạo một hoa test với so_luong = 0
+        $sp0 = SanPham::create([
+            'ten_san_pham'     => 'Hoa hết hàng test ' . uniqid(),
+            'so_luong'         => 0,
+            'don_vi_tinh'      => 'CANH',
+            'loai_san_pham'    => SanPham::LOAI_HOA_TUOI,
+            'trang_thai'       => 'DANG_BAN',
+            'gia_ban_hien_tai' => 20000,
+        ]);
         $this->assertEquals(0, $sp0->so_luong);
 
         $name = 'Test Mẫu Hoa Hết Hàng ' . uniqid();
         $payload = $this->getValidBomPayload($name, [
             'thanh_phan' => [
-                ['ma_san_pham' => 334, 'vai_tro' => 'HOA_CHINH', 'so_luong' => 7],
+                ['ma_san_pham' => $sp0->ma_san_pham, 'vai_tro' => 'HOA_CHINH', 'so_luong' => 7],
                 ['ma_san_pham' => 301, 'vai_tro' => 'GIAY_GOI',  'so_luong' => 4],
                 ['ma_san_pham' => 302, 'vai_tro' => 'RUY_BANG',  'so_luong' => 1],
                 ['ma_san_pham' => 305, 'vai_tro' => 'XOP',       'so_luong' => 1],

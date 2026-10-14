@@ -73,7 +73,7 @@ class SanPhamController extends Controller
             ->with(['chiTietNhaps' => function ($q) {
                 $q->where('so_luong_con_lai', '>', 0)
                   ->whereHas('phieuNhap', fn($q2) => $q2->where('trang_thai', 'CONFIRMED'))
-                  ->orderBy('gia_ban', 'asc');
+                  ->orderBy('gia_nhap', 'asc');
             }])
             ->orderBy('ma_san_pham', 'desc')
             ->paginate($perPage)->withQueryString();
