@@ -1336,15 +1336,20 @@
             color: #475467;
         }
         .rs-per-page-select {
-            height: 36px;
-            padding: 0 10px;
-            border: 1px solid #D0D5DD;
-            border-radius: 8px;
-            font-size: 13.5px;
-            color: #101828;
-            background: #ffffff;
-            outline: none;
-            cursor: pointer;
+            width: 68px !important;
+            height: 34px !important;
+            padding: 0 24px 0 10px !important;
+            border: 1px solid #D0D5DD !important;
+            border-radius: 8px !important;
+            font-size: 13.5px !important;
+            font-weight: 500 !important;
+            color: #101828 !important;
+            background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475467' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            outline: none !important;
+            cursor: pointer !important;
         }
         .rs-records-count {
             font-size: 13.5px;

@@ -5,7 +5,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         .rs-management-page {
-            padding: 24px 32px 32px 32px;
+            padding: 24px 32px 24px 32px;
             background-color: #f8f9fa;
             min-height: 100vh;
         }
@@ -371,15 +371,20 @@
             color: #475467;
         }
         .rs-per-page-select {
-            height: 36px;
-            padding: 0 10px;
-            border: 1px solid #D0D5DD;
-            border-radius: 8px;
-            font-size: 13.5px;
-            color: #101828;
-            background: #ffffff;
-            outline: none;
-            cursor: pointer;
+            width: 68px !important;
+            height: 34px !important;
+            padding: 0 24px 0 10px !important;
+            border: 1px solid #D0D5DD !important;
+            border-radius: 8px !important;
+            font-size: 13.5px !important;
+            font-weight: 500 !important;
+            color: #101828 !important;
+            background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475467' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            outline: none !important;
+            cursor: pointer !important;
         }
         .rs-records-count {
             font-size: 13.5px;
@@ -684,8 +689,8 @@
                             $tongConLai = $loCoHang->sum('so_luong_con_lai');
                         @endphp
                         <tr>
-                            <td style="text-align: center; font-weight: 700; color: #EC3D8F; font-family: monospace; font-size: 11px; white-space: nowrap;">
-                                SP-{{ str_pad($sp->ma_san_pham, 4, '0', STR_PAD_LEFT) }}
+                            <td style="text-align: center; white-space: nowrap;">
+                                <span class="fw-bold" style="color:#EC3D8F; font-family: monospace; font-size: 11px;">SP-{{ str_pad($sp->ma_san_pham, 4, '0', STR_PAD_LEFT) }}</span>
                             </td>
 
                             <td style="text-align: center; vertical-align: middle;">
