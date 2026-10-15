@@ -2,6 +2,61 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/Admin/KhachHang.css') }}">
+    <style>
+        .rs-table thead th {
+            background-color: #F8F9FA !important;
+            color: #475467 !important;
+            font-weight: 600 !important;
+            font-size: 13.5px !important;
+            border-bottom: 1px solid #EAECF0 !important;
+            white-space: nowrap !important;
+        }
+        .rs-table tbody tr:hover {
+            background-color: #F9FAFB !important;
+        }
+        .rs-table td {
+            white-space: nowrap !important;
+            padding: 12px 14px !important;
+        }
+        .rs-code-customer {
+            font-family: monospace;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #EC3D8F !important;
+            white-space: nowrap !important;
+        }
+        .rs-card-title-bar {
+            padding: 16px 20px 14px 20px;
+            background: #ffffff;
+            border-bottom: 1px solid #EAECF0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .rs-card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #101828;
+        }
+        .rs-count-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background-color: #F2F4F7;
+            color: #344054;
+            font-size: 12.5px;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+        .rs-table th:last-child, .rs-table td:last-child {
+            padding-right: 20px !important;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -10,14 +65,6 @@
 
     {{-- 1. HEADER TRANG --}}
     <div class="rs-header-block">
-        <div class="rs-header-icon-box">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-        </div>
         <div>
             <h1 class="rs-header-title">Quản lý khách hàng</h1>
             <p class="rs-header-subtitle">Theo dõi hồ sơ, quyền COD, lịch sử vi phạm và điểm tích lũy</p>
@@ -164,6 +211,22 @@
             @endif
         </form>
 
+        {{-- TIÊU ĐỀ BẢNG DANH SÁCH CHUẨN --}}
+        <div class="rs-card-title-bar">
+            <div class="rs-card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="8" y1="6" x2="21" y2="6"/>
+                    <line x1="8" y1="12" x2="21" y2="12"/>
+                    <line x1="8" y1="18" x2="21" y2="18"/>
+                    <line x1="3" y1="6" x2="3.01" y2="6"/>
+                    <line x1="3" y1="12" x2="3.01" y2="12"/>
+                    <line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+                <span>Danh sách khách hàng</span>
+                <span class="rs-count-badge">{{ $khachHangs->total() }}</span>
+            </div>
+        </div>
+
         {{-- BẢNG KHÁCH HÀNG 7 CỘT TINH GỌN (THÔNG TIN CẦN NHÌN NHANH, KHÔNG TRÀN MÀN HÌNH) --}}
         <div class="rs-table-container">
             <table class="rs-table">
@@ -200,12 +263,12 @@
                         @endphp
                         <tr>
                             {{-- 1. Mã khách hàng --}}
-                            <td style="text-align: center; font-weight: 700; color: #f43f5e; font-family: monospace; font-size: 13px;">
-                                KH-{{ str_pad($kh->ma_khach_hang, 4, '0', STR_PAD_LEFT) }}
+                            <td style="text-align: center; white-space: nowrap;">
+                                <span class="rs-code-customer">KH-{{ str_pad($kh->ma_khach_hang, 4, '0', STR_PAD_LEFT) }}</span>
                             </td>
 
                             {{-- 3. Khách hàng (Tên) --}}
-                            <td>
+                            <td style="white-space: nowrap;">
                                 <div class="rs-customer-cell">
                                     <div class="rs-customer-avatar">{{ $initial }}</div>
                                     <div class="rs-customer-name">{{ $kh->ten_khach_hang }}</div>
@@ -213,7 +276,7 @@
                             </td>
 
                             {{-- 4. Liên hệ (Số điện thoại) --}}
-                            <td style="font-weight: 500; font-family: monospace; font-size: 13px;">
+                            <td style="font-weight: 500; font-family: monospace; font-size: 13px; white-space: nowrap;">
                                 {{ $kh->so_dien_thoai }}
                             </td>
 
