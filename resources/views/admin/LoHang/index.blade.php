@@ -5,6 +5,31 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/Admin/NhaCungCap.css') }}">
     <style>
+        .ncc-table {
+            min-width: 1200px;
+            width: 100%;
+        }
+        .ncc-table thead tr {
+            background-color: #F8F9FA !important;
+        }
+        .ncc-table th {
+            background-color: #F8F9FA !important;
+            color: #475467 !important;
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            border-bottom: 1px solid #EAECF0 !important;
+            white-space: nowrap !important;
+            padding: 10px 8px !important;
+        }
+        .ncc-table td {
+            padding: 10px 8px !important;
+            font-size: 13px !important;
+            vertical-align: middle !important;
+            border-bottom: 1px solid #EAECF0 !important;
+        }
+        .ncc-table tbody tr:hover {
+            background-color: #F9FAFB !important;
+        }
         .ncc-filter-grid {
             grid-template-columns: 1.5fr 1.3fr 1.2fr 1fr auto;
         }
@@ -16,6 +41,103 @@
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
+        }
+        .rs-action-btn {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #D0D5DD;
+            background: #ffffff;
+            color: #475467;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            padding: 0;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .rs-action-btn:hover {
+            background-color: #F9FAFB !important;
+            color: #EC3D8F !important;
+            border-color: #EC3D8F !important;
+        }
+        .rs-table-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: #ffffff;
+            border-top: 1px solid #EAECF0;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .rs-footer-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .rs-per-page-inline {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #475467;
+        }
+        .rs-per-page-select {
+            width: 68px !important;
+            height: 34px !important;
+            padding: 0 24px 0 10px !important;
+            border: 1px solid #D0D5DD !important;
+            border-radius: 8px !important;
+            font-size: 13.5px !important;
+            font-weight: 500 !important;
+            color: #101828 !important;
+            background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475467' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            outline: none !important;
+            cursor: pointer !important;
+        }
+        .rs-records-count {
+            font-size: 13px;
+            color: #667085;
+            white-space: nowrap;
+        }
+        .rs-pagination, .rs-pagination .pagination {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin: 0;
+            padding: 0;
+        }
+        .rs-pagination .page-item .page-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 34px;
+            height: 34px;
+            padding: 0 8px;
+            border-radius: 8px !important;
+            border: 1px solid #D0D5DD;
+            background: #ffffff;
+            color: #344054;
+            font-size: 13px;
+            font-weight: 500;
+            text-decoration: none;
+        }
+        .rs-pagination .page-item.active .page-link,
+        .page-item.active .page-link,
+        .active > .page-link {
+            background-color: #EC3D8F !important;
+            background: #EC3D8F !important;
+            border-color: #EC3D8F !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            box-shadow: 0 1px 3px rgba(236, 61, 143, 0.25) !important;
         }
     </style>
 @endpush
@@ -87,11 +209,11 @@
                     </select>
                 </div>
                 <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-dark" style="height:38px; font-weight:600; font-size:13px; padding: 0 16px;">
+                    <button type="submit" class="btn" style="height:38px; font-weight:600; font-size:13px; padding: 0 16px; background-color: #EC3D8F; border-color: #EC3D8F; color: #ffffff; border-radius: 8px;">
                         <i class="bi bi-funnel me-1"></i> Lọc
                     </button>
                     @if(request()->anyFilled(['keyword', 'ma_nha_cung_cap', 'ket_qua', 'ton_kho']))
-                        <a href="{{ route('admin.lo-hang') }}" class="btn btn-outline-secondary" style="height:38px; display:inline-flex; align-items:center;" title="Xóa bộ lọc">
+                        <a href="{{ route('admin.lo-hang') }}" class="btn btn-outline-secondary" style="height:38px; display:inline-flex; align-items:center; border-radius: 8px;" title="Xóa bộ lọc">
                             <i class="bi bi-arrow-counterclockwise"></i>
                         </a>
                     @endif
@@ -114,17 +236,17 @@
             <table class="ncc-table">
                 <thead>
                     <tr>
-                        <th style="width: 80px;">Mã lô</th>
-                        <th>Mặt hàng</th>
-                        <th>Phiếu nhập</th>
-                        <th>Nhà cung cấp</th>
-                        <th class="text-center">Số lượng</th>
-                        <th class="text-center">Còn lại</th>
-                        <th class="text-end">Giá nhập</th>
-                        <th class="text-center">Trạng thái</th>
+                        <th style="width: 100px; white-space: nowrap;">Mã lô</th>
+                        <th style="min-width: 155px;">Mặt hàng</th>
+                        <th style="min-width: 145px; white-space: nowrap;">Phiếu nhập</th>
+                        <th style="min-width: 130px; white-space: nowrap;">Nhà cung cấp</th>
+                        <th class="text-center" style="white-space: nowrap;">Số lượng</th>
+                        <th class="text-center" style="white-space: nowrap;">Còn lại</th>
+                        <th class="text-end" style="min-width: 105px; white-space: nowrap;">Giá nhập</th>
+                        <th class="text-center" style="white-space: nowrap;">Trạng thái</th>
                         <th class="text-center" style="min-width: 125px; white-space: nowrap;">Chất lượng</th>
-                        <th class="text-center" style="min-width: 140px;">Hao hụt & Lỗi QC</th>
-                        <th class="text-end" style="width: 140px;">Thao tác</th>
+                        <th class="text-center" style="min-width: 135px; white-space: nowrap;">Hao hụt & Lỗi QC</th>
+                        <th class="text-end" style="min-width: 125px; white-space: nowrap;">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -134,15 +256,15 @@
                             $tongHongLo = $lo->baoCaoHangHongs->sum('so_luong_hong');
                         @endphp
                         <tr>
-                            <td>
-                                <span class="fw-bold">#CTN-{{ $lo->ma_chi_tiet_nhap }}</span>
+                            <td style="white-space: nowrap;">
+                                <span class="fw-bold" style="font-family: monospace; font-size: 11.5px; color: #EC3D8F; white-space: nowrap;">#CTN-{{ $lo->ma_chi_tiet_nhap }}</span>
                             </td>
                             <td>
-                                <div class="fw-semibold text-dark">{{ $lo->sanPham->ten_san_pham ?? 'Sản phẩm #' . $lo->ma_san_pham }}</div>
-                                <small class="text-muted">Mã SP: #{{ $lo->ma_san_pham }}</small>
+                                <div class="fw-semibold text-dark" style="font-size: 13px; line-height: 1.35;">{{ $lo->sanPham->ten_san_pham ?? 'Sản phẩm #' . $lo->ma_san_pham }}</div>
+                                <small style="white-space: nowrap; font-size: 11px;">Mã SP: <span class="fw-bold" style="color:#EC3D8F; font-family: monospace;">#{{ $lo->ma_san_pham }}</span></small>
                             </td>
                             <td>
-                                <span class="fw-semibold">#PN-{{ $lo->ma_phieu_nhap }}</span>
+                                <span class="fw-semibold text-dark" style="font-size: 12.5px; white-space: nowrap;">#PN-{{ $lo->ma_phieu_nhap }}</span>
                                 <div class="mt-1 d-flex flex-column gap-1" style="font-size:11.5px; line-height:1.35;">
                                     <div class="text-nowrap" title="Ngày nhập lô hàng">
                                         <span class="text-muted"><i class="bi bi-calendar-event me-1"></i>Nhập:</span>
@@ -180,19 +302,19 @@
                                     @endif
                                 </div>
                             </td>
-                            <td>
+                            <td style="white-space: nowrap;">
                                 @if($lo->phieuNhap?->nhaCungCap)
-                                    <a href="{{ route('admin.nha-cung-cap.show', $lo->phieuNhap->nhaCungCap->ma_nha_cung_cap) }}" class="text-decoration-none fw-semibold" style="color:#EC3D8F;">
+                                    <a href="{{ route('admin.nha-cung-cap.show', $lo->phieuNhap->nhaCungCap->ma_nha_cung_cap) }}" class="text-decoration-none fw-semibold" style="color:#EC3D8F; font-size: 12.5px;">
                                         {{ $lo->phieuNhap->nhaCungCap->ten_nha_cung_cap }}
                                     </a>
                                 @else
-                                    <span class="text-muted">{{ $lo->phieuNhap->ten_nha_cung_cap ?? '—' }}</span>
+                                    <span class="text-muted" style="font-size: 12.5px;">{{ $lo->phieuNhap->ten_nha_cung_cap ?? '—' }}</span>
                                 @endif
                             </td>
-                            <td class="text-center fw-semibold">
+                            <td class="text-center fw-semibold" style="white-space: nowrap;">
                                 {{ $lo->so_luong }}
                             </td>
-                            <td class="text-center">
+                            <td class="text-center" style="white-space: nowrap;">
                                 @if($lo->so_luong_con_lai > 0)
                                     <span class="badge bg-success-subtle text-success border border-success-subtle">
                                         {{ $lo->so_luong_con_lai }}
@@ -203,14 +325,14 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="text-end fw-semibold">
+                            <td class="text-end fw-semibold text-dark" style="white-space: nowrap; font-size: 13px;">
                                 {{ number_format($lo->gia_nhap, 0, ',', '.') }} đ
                             </td>
-                            <td class="text-center">
+                            <td class="text-center" style="white-space: nowrap;">
                                 @if($lo->so_luong_con_lai > 0)
-                                    <span class="badge bg-success" style="font-size:11px; font-weight:600;">CÒN HÀNG</span>
+                                    <span class="badge" style="font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 12px; background: #ECFDF3; color: #027A48; border: 1px solid #ABEFC6; white-space: nowrap;">Còn hàng</span>
                                 @else
-                                    <span class="badge bg-secondary" style="font-size:11px; font-weight:600;">HẾT HÀNG</span>
+                                    <span class="badge" style="font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 12px; background: #F2F4F7; color: #344054; border: 1px solid #D0D5DD; white-space: nowrap;">Hết hàng</span>
                                 @endif
                             </td>
                             <td class="text-center" style="white-space: nowrap;">
@@ -244,19 +366,19 @@
                                     @endif
                                 </div>
                             </td>
-                            <td class="text-end">
-                                <div class="d-inline-flex gap-1">
+                            <td class="text-end" style="white-space: nowrap;">
+                                <div class="d-inline-flex align-items-center justify-content-end gap-1">
                                     <a href="{{ route('admin.lo-hang.show', $lo->ma_chi_tiet_nhap) }}"
-                                       class="ncc-action-btn view"
+                                       class="rs-action-btn"
                                        title="Xem chi tiết lô">
                                         <i class="bi bi-eye"></i>
                                     </a>
                                     @if($lo->so_luong_con_lai > 0)
                                         <button type="button"
-                                                class="btn btn-sm {{ $dg ? 'btn-outline-primary' : 'btn-primary' }}"
-                                                style="font-size:12px; font-weight:600; padding: 4px 10px; border-radius:6px;"
+                                                class="rs-action-btn"
+                                                title="{{ $dg ? 'Chỉnh sửa đánh giá lô hàng' : 'Đánh giá chất lượng lô hàng' }}"
                                                 onclick="openModalDanhGia({{ $lo->ma_chi_tiet_nhap }}, '{{ addslashes($lo->sanPham->ten_san_pham ?? '') }}', {{ $lo->so_luong }}, '{{ $dg?->ket_qua ?? '' }}', {{ $dg?->so_luong_loi ?? 0 }}, '{{ addslashes($dg?->ly_do ?? '') }}', '{{ addslashes($dg?->ghi_chu ?? '') }}')">
-                                            {{ $dg ? 'Sửa ĐG' : 'Đánh giá' }}
+                                            <i class="bi {{ $dg ? 'bi-pencil-square' : 'bi-clipboard-check' }}"></i>
                                         </button>
                                     @endif
                                 </div>
@@ -276,9 +398,77 @@
             </table>
         </div>
 
-        @if($loHangs->hasPages())
-            <div class="p-3 border-top d-flex justify-content-end">
-                {{ $loHangs->links('pagination::bootstrap-5') }}
+        {{-- FOOTER PHÂN TRANG ĐỒNG BỘ CHUẨN ROSESHOP --}}
+        @if($loHangs->total() > 0)
+            <div class="rs-table-footer">
+                <div class="rs-footer-left">
+                    <div class="rs-per-page-inline">
+                        <span class="rs-per-page-label">Số hàng mỗi trang</span>
+                        <select class="rs-per-page-select" onchange="location = this.value;">
+                            @foreach([10, 15, 20, 50] as $perPage)
+                                <option value="{{ request()->fullUrlWithQuery(['per_page' => $perPage, 'page' => 1]) }}" {{ (request('per_page', $loHangs->perPage()) == $perPage) ? 'selected' : '' }}>
+                                    {{ $perPage }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <span class="rs-records-count">
+                        {{ $loHangs->firstItem() ?? 0 }}-{{ $loHangs->lastItem() ?? 0 }} / {{ $loHangs->total() }} bản ghi
+                    </span>
+                </div>
+                <div class="rs-footer-pagination">
+                    <ul class="rs-pagination">
+                        @if ($loHangs->onFirstPage())
+                            <li class="page-item disabled"><span class="page-link">&lsaquo;</span></li>
+                        @else
+                            <li class="page-item"><a class="page-link" href="{{ $loHangs->previousPageUrl() }}" rel="prev">&lsaquo;</a></li>
+                        @endif
+
+                        @php
+                            $currentPage = $loHangs->currentPage();
+                            $lastPage = $loHangs->lastPage();
+                            $pages = [];
+
+                            if ($lastPage <= 3) {
+                                for ($i = 1; $i <= $lastPage; $i++) {
+                                    $pages[] = $i;
+                                }
+                            } else {
+                                if ($currentPage == 1) {
+                                    $pages = [1, '...', $lastPage];
+                                } elseif ($currentPage == $lastPage) {
+                                    $pages = [1, '...', $lastPage];
+                                } else {
+                                    $pages[] = 1;
+                                    if ($currentPage > 2) {
+                                        $pages[] = '...';
+                                    }
+                                    $pages[] = $currentPage;
+                                    if ($currentPage < $lastPage - 1) {
+                                        $pages[] = '...';
+                                    }
+                                    $pages[] = $lastPage;
+                                }
+                            }
+                        @endphp
+
+                        @foreach ($pages as $p)
+                            @if ($p === '...')
+                                <li class="page-item disabled"><span class="page-link ellipsis">&hellip;</span></li>
+                            @elseif ($p == $currentPage)
+                                <li class="page-item active"><span class="page-link">{{ $p }}</span></li>
+                            @else
+                                <li class="page-item"><a class="page-link" href="{{ $loHangs->url($p) }}">{{ $p }}</a></li>
+                            @endif
+                        @endforeach
+
+                        @if ($loHangs->hasMorePages())
+                            <li class="page-item"><a class="page-link" href="{{ $loHangs->nextPageUrl() }}" rel="next">&rsaquo;</a></li>
+                        @else
+                            <li class="page-item disabled"><span class="page-link">&rsaquo;</span></li>
+                        @endif
+                    </ul>
+                </div>
             </div>
         @endif
     </div>

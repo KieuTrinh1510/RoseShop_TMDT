@@ -293,8 +293,8 @@
                                     </div>
                                 @endif
                             </td>
-                            <td class="text-center">
-                                <span class="badge bg-light text-muted border">#{{ $ct->ma_san_pham }}</span>
+                            <td class="text-center" style="white-space: nowrap;">
+                                <span class="fw-bold" style="color:#EC3D8F; font-family: monospace; font-size: 11px;">#{{ $ct->ma_san_pham }}</span>
                             </td>
                             <td class="text-center">
                                 <span class="text-muted">{{ $ct->sanPham->don_vi_tinh ?? '—' }}</span>

@@ -4,6 +4,122 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/Admin/NhaCungCap.css') }}">
+    <style>
+        .ncc-kpi-grid {
+            display: grid !important;
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 12px !important;
+            margin-bottom: 16px !important;
+        }
+        .ncc-kpi-card {
+            padding: 12px 14px !important;
+            border-radius: 10px !important;
+            min-width: 0 !important;
+        }
+        .ncc-kpi-card.kpi-rate {
+            grid-column: span 2 !important;
+        }
+        .ncc-kpi-card .kpi-label {
+            font-size: 11px !important;
+            font-weight: 600 !important;
+            white-space: nowrap !important;
+            letter-spacing: 0.3px !important;
+            color: #667085 !important;
+            text-transform: uppercase !important;
+            margin-bottom: 4px !important;
+        }
+        .ncc-kpi-card .kpi-val {
+            font-size: 18px !important;
+            font-weight: 700 !important;
+            line-height: 1.2 !important;
+            white-space: nowrap !important;
+        }
+        @media (max-width: 768px) {
+            .ncc-kpi-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+            .ncc-kpi-card.kpi-rate {
+                grid-column: span 2 !important;
+            }
+        }
+        .ncc-table {
+            min-width: 960px !important;
+        }
+        .ncc-table thead th {
+            background-color: #F8F9FA !important;
+            color: #475467 !important;
+            font-weight: 600 !important;
+            font-size: 12.5px !important;
+            white-space: nowrap !important;
+        }
+        .ncc-code-badge {
+            display: inline-block;
+            font-family: monospace;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #EC3D8F !important;
+            white-space: nowrap !important;
+        }
+        .ncc-action-btn {
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 8px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border: 1px solid #D0D5DD !important;
+            background: #ffffff !important;
+            color: #475467 !important;
+            transition: all 0.15s ease !important;
+            text-decoration: none !important;
+            font-size: 13.5px !important;
+            cursor: pointer !important;
+        }
+        .ncc-action-btn:hover {
+            background: #F9FAFB !important;
+            color: #1D2939 !important;
+            border-color: #98A2B3 !important;
+        }
+        .ncc-action-btn.view:hover {
+            color: #EC3D8F !important;
+            border-color: #EC3D8F !important;
+            background-color: #FDEAF3 !important;
+        }
+        .ncc-action-btn.rate {
+            background-color: #FDEAF3 !important;
+            color: #EC3D8F !important;
+            border-color: #FCCEE2 !important;
+        }
+        .ncc-action-btn.rate:hover {
+            background-color: #EC3D8F !important;
+            color: #ffffff !important;
+            border-color: #EC3D8F !important;
+            box-shadow: 0 2px 6px rgba(236, 61, 143, 0.25) !important;
+        }
+        .ncc-header-actions {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            flex-wrap: wrap !important;
+        }
+        .ncc-header-actions a,
+        .ncc-header-actions button {
+            height: 38px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            white-space: nowrap !important;
+            font-size: 13.5px !important;
+            font-weight: 600 !important;
+            border-radius: 8px !important;
+            padding: 0 14px !important;
+        }
+        .page-item.active .page-link {
+            background-color: #EC3D8F !important;
+            border-color: #EC3D8F !important;
+            color: #ffffff !important;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -203,11 +319,11 @@
                         </div>
                         <div class="ncc-kpi-card kpi-rate">
                             <span class="kpi-label">Tỷ lệ không đạt</span>
-                            <span class="kpi-val" style="font-size: {{ $thongKe['ty_le_khong_dat'] !== null ? '20px' : '13px' }};">
+                            <span class="kpi-val" style="font-size: {{ $thongKe['ty_le_khong_dat'] !== null ? '18px' : '13px' }};">
                                 @if($thongKe['ty_le_khong_dat'] !== null)
                                     {{ $thongKe['ty_le_khong_dat'] }}%
                                 @else
-                                    <span class="text-muted fw-normal">Chưa đủ dữ liệu đánh giá</span>
+                                    <span class="text-muted fw-normal" style="font-size: 12.5px;">Chưa đủ dữ liệu đánh giá</span>
                                 @endif
                             </span>
                         </div>
@@ -236,16 +352,16 @@
                     <table class="ncc-table">
                         <thead>
                             <tr>
-                                <th style="width: 80px;">Mã lô</th>
-                                <th>Mặt hàng</th>
-                                <th>Phiếu nhập</th>
-                                <th class="text-center">Số lượng ban đầu</th>
-                                <th class="text-center">Còn lại</th>
-                                <th class="text-center">Trạng thái</th>
-                                <th class="text-end">Giá nhập</th>
-                                <th class="text-center" style="min-width: 130px; white-space: nowrap;">Đánh giá chất lượng</th>
-                                <th class="text-center">Hàng hỏng</th>
-                                <th class="text-end" style="width: 140px;">Thao tác</th>
+                                <th style="width: 85px; white-space: nowrap !important;">Mã lô</th>
+                                <th style="min-width: 130px; white-space: nowrap !important;">Mặt hàng</th>
+                                <th style="width: 105px; white-space: nowrap !important;">Phiếu nhập</th>
+                                <th class="text-center" style="white-space: nowrap !important;">Số lượng ban đầu</th>
+                                <th class="text-center" style="white-space: nowrap !important;">Còn lại</th>
+                                <th class="text-center" style="white-space: nowrap !important;">Trạng thái</th>
+                                <th class="text-end" style="white-space: nowrap !important;">Giá nhập</th>
+                                <th class="text-center" style="min-width: 130px; white-space: nowrap !important;">Đánh giá chất lượng</th>
+                                <th class="text-center" style="white-space: nowrap !important;">Hàng hỏng</th>
+                                <th class="text-end" style="width: 90px; white-space: nowrap !important;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -255,25 +371,25 @@
                                     $tongHongLo = $lo->baoCaoHangHongs->sum('so_luong_hong');
                                 @endphp
                                 <tr>
-                                    <td>
-                                        <span class="fw-bold">#CTN-{{ $lo->ma_chi_tiet_nhap }}</span>
+                                    <td style="white-space: nowrap;">
+                                        <span class="ncc-code-badge">#CTN-{{ $lo->ma_chi_tiet_nhap }}</span>
                                     </td>
                                     <td>
-                                        <div class="fw-semibold text-dark">{{ $lo->sanPham->ten_san_pham ?? 'Sản phẩm #' . $lo->ma_san_pham }}</div>
-                                        <small class="text-muted">Mã SP: #{{ $lo->ma_san_pham }}</small>
+                                        <div class="fw-semibold text-dark" style="white-space: nowrap;">{{ $lo->sanPham->ten_san_pham ?? 'Sản phẩm #' . $lo->ma_san_pham }}</div>
+                                        <small style="white-space: nowrap;">Mã SP: <span class="fw-bold" style="color:#EC3D8F; font-family: monospace; font-size: 11px;">#{{ $lo->ma_san_pham }}</span></small>
                                     </td>
-                                    <td>
-                                        <a href="{{ route('phieu-nhap.index') }}" class="text-decoration-none fw-semibold" style="color:#EC3D8F;">
+                                    <td style="white-space: nowrap;">
+                                        <a href="{{ route('phieu-nhap.index') }}" class="text-decoration-none ncc-code-badge">
                                             #PN-{{ $lo->ma_phieu_nhap }}
                                         </a>
-                                        <div style="font-size:11px; color:#667085;">
+                                        <div style="font-size:11px; color:#667085; white-space: nowrap;">
                                             {{ $lo->created_at ? $lo->created_at->format('d/m/Y') : '—' }}
                                         </div>
                                     </td>
-                                    <td class="text-center fw-semibold">
+                                    <td class="text-center fw-semibold" style="white-space: nowrap;">
                                         {{ $lo->so_luong }}
                                     </td>
-                                    <td class="text-center">
+                                    <td class="text-center" style="white-space: nowrap;">
                                         @if($lo->so_luong_con_lai > 0)
                                             <span class="badge bg-success-subtle text-success border border-success-subtle">
                                                 {{ $lo->so_luong_con_lai }}
@@ -284,18 +400,18 @@
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="text-center">
+                                    <td class="text-center" style="white-space: nowrap;">
                                         @if($lo->so_luong_con_lai > 0)
-                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 fw-bold">
-                                                CÒN HÀNG
+                                            <span class="badge" style="background:#ECFDF3; color:#027A48; border:1px solid #ABEFC6; border-radius:12px; padding:4px 10px; font-size:11.5px; font-weight:600; white-space:nowrap; display:inline-flex; align-items:center; gap:4px;">
+                                                <i class="bi bi-check-circle"></i> Còn hàng
                                             </span>
                                         @else
-                                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1 fw-bold">
-                                                HẾT HÀNG
+                                            <span class="badge" style="background:#FEF3F2; color:#B42318; border:1px solid #FECDCA; border-radius:12px; padding:4px 10px; font-size:11.5px; font-weight:600; white-space:nowrap; display:inline-flex; align-items:center; gap:4px;">
+                                                <i class="bi bi-x-circle"></i> Hết hàng
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="text-end fw-semibold">
+                                    <td class="text-end fw-semibold" style="white-space: nowrap;">
                                         {{ number_format($lo->gia_nhap, 0, ',', '.') }} đ
                                     </td>
                                     <td class="text-center" style="white-space: nowrap;">
@@ -320,19 +436,19 @@
                                             <span class="text-muted">0</span>
                                         @endif
                                     </td>
-                                    <td class="text-end">
-                                        <div class="d-inline-flex gap-1">
+                                    <td class="text-end" style="white-space: nowrap;">
+                                        <div class="d-inline-flex gap-1 align-items-center justify-content-end" style="white-space: nowrap;">
                                             <a href="{{ route('admin.lo-hang.show', $lo->ma_chi_tiet_nhap) }}"
                                                class="ncc-action-btn view"
-                                               title="Xem chi tiết lô">
+                                               title="Xem chi tiết lô #CTN-{{ $lo->ma_chi_tiet_nhap }}">
                                                 <i class="bi bi-eye"></i>
                                             </a>
                                             @if($lo->so_luong_con_lai > 0)
                                             <button type="button"
-                                                    class="btn btn-sm {{ $dg ? 'btn-outline-primary' : 'btn-primary' }}"
-                                                    style="font-size:12px; font-weight:600; padding: 4px 10px; border-radius:6px;"
+                                                    class="ncc-action-btn rate"
+                                                    title="{{ $dg ? 'Sửa đánh giá chất lượng (#CTN-' . $lo->ma_chi_tiet_nhap . ')' : 'Đánh giá chất lượng lô #CTN-' . $lo->ma_chi_tiet_nhap }}"
                                                     onclick="openModalDanhGia({{ $lo->ma_chi_tiet_nhap }}, '{{ addslashes($lo->sanPham->ten_san_pham ?? '') }}', {{ $lo->so_luong }}, '{{ $dg?->ket_qua ?? '' }}', {{ $dg?->so_luong_loi ?? 0 }}, '{{ addslashes($dg?->ly_do ?? '') }}', '{{ addslashes($dg?->ghi_chu ?? '') }}')">
-                                                {{ $dg ? 'Sửa ĐG' : 'Đánh giá' }}
+                                                <i class="bi {{ $dg ? 'bi-pencil-square' : 'bi-clipboard-check' }}"></i>
                                             </button>
                                             @endif
                                         </div>
@@ -378,13 +494,13 @@
                     <table class="ncc-table">
                         <thead>
                             <tr>
-                                <th style="width: 80px;">Mã phiếu</th>
-                                <th>Ngày nhập</th>
-                                <th>Nhân viên phụ trách</th>
-                                <th class="text-center">Số mặt hàng</th>
-                                <th class="text-end">Tổng giá trị</th>
-                                <th style="width: 130px;">Trạng thái</th>
-                                <th class="text-end" style="width: 100px;">Chi tiết</th>
+                                <th style="width: 85px; white-space: nowrap !important;">Mã phiếu</th>
+                                <th style="white-space: nowrap !important;">Ngày nhập</th>
+                                <th style="white-space: nowrap !important;">Nhân viên phụ trách</th>
+                                <th class="text-center" style="white-space: nowrap !important;">Số mặt hàng</th>
+                                <th class="text-end" style="white-space: nowrap !important;">Tổng giá trị</th>
+                                <th style="width: 130px; white-space: nowrap !important;">Trạng thái</th>
+                                <th class="text-end" style="width: 100px; white-space: nowrap !important;">Chi tiết</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -394,26 +510,26 @@
                                     $soMatHang = $pn->chiTietNhaps->count();
                                 @endphp
                                 <tr>
-                                    <td>
-                                        <a href="{{ route('phieu-nhap.show', $pn->ma_phieu_nhap) }}" class="fw-bold text-decoration-none" style="color:#EC3D8F;" title="Xem chi tiết phiếu nhập">
-                                            #{{ $pn->ma_phieu_nhap }}
+                                    <td style="white-space: nowrap;">
+                                        <a href="{{ route('phieu-nhap.show', $pn->ma_phieu_nhap) }}" class="ncc-code-badge text-decoration-none" title="Xem chi tiết phiếu nhập">
+                                            #PN-{{ $pn->ma_phieu_nhap }}
                                         </a>
                                     </td>
-                                    <td>
+                                    <td style="white-space: nowrap;">
                                         {{ $pn->ngay_nhap ? \Carbon\Carbon::parse($pn->ngay_nhap)->format('d/m/Y H:i') : '—' }}
                                     </td>
-                                    <td>
+                                    <td style="white-space: nowrap;">
                                         {{ $pn->nhanVien->ten_nhan_vien ?? '—' }}
                                     </td>
-                                    <td class="text-center">
+                                    <td class="text-center" style="white-space: nowrap;">
                                         <span class="badge bg-light text-dark border">
                                             {{ $soMatHang }} mặt hàng
                                         </span>
                                     </td>
-                                    <td class="text-end fw-bold" style="color:#1D2939;">
+                                    <td class="text-end fw-bold" style="color:#1D2939; white-space: nowrap;">
                                         {{ number_format($tongTienPhieu, 0, ',', '.') }} đ
                                     </td>
-                                    <td>
+                                    <td style="white-space: nowrap;">
                                         @if($pn->trang_thai === 'CONFIRMED')
                                             <span class="badge bg-dark" style="font-size:12px; font-weight:500;">
                                                 <i class="bi bi-check-lg me-1"></i>Đã xác nhận
@@ -424,7 +540,7 @@
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="text-end">
+                                    <td class="text-end" style="white-space: nowrap;">
                                         <a href="{{ route('phieu-nhap.show', $pn->ma_phieu_nhap) }}"
                                            class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1"
                                            style="font-size:12px; font-weight:600; padding: 4px 10px; border-radius:6px;"

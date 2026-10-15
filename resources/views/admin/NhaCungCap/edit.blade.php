@@ -4,6 +4,34 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/Admin/NhaCungCap.css') }}">
+    <style>
+        .rs-input-with-icon {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        .rs-input-with-icon i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #667085;
+            pointer-events: none;
+            z-index: 2;
+            font-size: 15px;
+        }
+        .rs-input-with-icon input {
+            padding-left: 40px !important;
+            border-radius: 8px !important;
+            border: 1px solid #D0D5DD !important;
+            height: 42px;
+        }
+        .rs-input-with-icon input:focus {
+            border-color: #EC3D8F !important;
+            box-shadow: 0 0 0 3px rgba(236, 61, 143, 0.15) !important;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -91,8 +119,8 @@
                                 <label class="form-label fw-semibold" for="so_dien_thoai">
                                     Số điện thoại liên hệ
                                 </label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white text-muted"><i class="bi bi-telephone"></i></span>
+                                <div class="rs-input-with-icon">
+                                    <i class="bi bi-telephone"></i>
                                     <input type="text"
                                            name="so_dien_thoai"
                                            id="so_dien_thoai"
@@ -100,18 +128,18 @@
                                            placeholder="10 chữ số (VD: 0987527192)"
                                            value="{{ old('so_dien_thoai', $ncc->so_dien_thoai) }}"
                                            maxlength="10">
-                                    @error('so_dien_thoai')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
                                 </div>
+                                @error('so_dien_thoai')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold" for="email">
                                     Địa chỉ Email
                                 </label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white text-muted"><i class="bi bi-envelope"></i></span>
+                                <div class="rs-input-with-icon">
+                                    <i class="bi bi-envelope"></i>
                                     <input type="email"
                                            name="email"
                                            id="email"
@@ -119,10 +147,10 @@
                                            placeholder="ncc@example.com"
                                            value="{{ old('email', $ncc->email) }}"
                                            maxlength="100">
-                                    @error('email')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
                                 </div>
+                                @error('email')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
 
