@@ -21,7 +21,8 @@ class AuthenticatedSessionController extends Controller
     ]);
 
     // Lưu lại giỏ hàng trước khi đăng nhập
-    $gioHang = session('gio_hang', []);
+    $gioHang   = session('gio_hang', []);
+    $gioBoHoa  = session('gio_bo_hoa', []);
 
     // Hỗ trợ trường hợp tài khoản có mật khẩu dạng plain-text chưa mã hóa từ database cũ
     $user = \App\Models\NguoiDung::where('ten_dang_nhap', $request->ten_dang_nhap)->first();
@@ -78,9 +79,14 @@ class AuthenticatedSessionController extends Controller
     $request->session()->regenerate();
 
     // Khôi phục lại giỏ hàng sau khi regenerate session
-    session(['gio_hang' => $gioHang]);
+    session(['gio_hang' => $gioHang, 'gio_bo_hoa' => $gioBoHoa]);
+    \App\Services\CartService::restoreFromDatabase($authenticatedUser);
 
     $vai_tro = Auth::user()->vai_tro;
+
+    if (in_array($vai_tro, ['ADMIN', 'NHAN_VIEN'])) {
+        session()->flash('vua_dang_nhap', true);
+    }
 
     return match($vai_tro) {
         'ADMIN', 'NHAN_VIEN' => redirect()->route('admin.dashboard'),
@@ -91,6 +97,10 @@ class AuthenticatedSessionController extends Controller
 
     public function destroy(Request $request)
     {
+        if (Auth::check()) {
+            \App\Services\CartService::syncToDatabase(Auth::user());
+        }
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

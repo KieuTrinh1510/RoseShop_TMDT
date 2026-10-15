@@ -73,13 +73,14 @@ class BoHoaController extends Controller
             return round($nl + $s + $k, 2);
         };
 
-        $merged = $grouped->map(function ($group) use ($tinhGiaMotBo) {
+        $merged = $grouped->map(function ($group) {
             $first    = $group->first();
             $totalQty = (int) $group->sum('so_luong');
 
-            // Giá mỗi bó luôn được tính lại từ giá hiện tại của NVL + phụ phí.
-            // Nhờ vậy admin list, modal chi tiết giá và trang khách luôn khớp nhau.
-            $giaMotBo = $tinhGiaMotBo($first);
+            $giaVon = (float) ($first->gia_von ?? $first->chiTietBoHoa->sum(
+                fn ($ct) => ((float) ($ct->chiTietNhap?->gia_nhap ?? 0)) * (int) $ct->so_luong
+            ));
+            $giaBan = (float) ($first->gia_ban ?? round($giaVon * 1.5, 2));
 
             return (object) [
                 'ma_bo_hoa'     => $first->ma_bo_hoa,
@@ -91,7 +92,8 @@ class BoHoaController extends Controller
                 'loai_bo_hoa'   => $first->loai_bo_hoa,
                 'trang_thai'    => $first->trang_thai,
                 'so_luong'      => $totalQty,
-                'gia_ban'       => $giaMotBo,   // ← luôn khớp modal & trang khách
+                'gia_von'       => $giaVon,
+                'gia_ban'       => $giaBan,
                 'bo_dau_tien'   => $first,
                 'created_at'    => $first->created_at,
                 'ngay_het_han'  => $first->ngay_het_han ?? ($first->created_at ? $first->created_at->copy()->addDays($first->mauBoHoa?->han_su_dung_ngay ?? 5) : null),
@@ -143,13 +145,24 @@ class BoHoaController extends Controller
             ->selectRaw('ma_san_pham, SUM(so_luong_con_lai) as tong_lot')
             ->pluck('tong_lot', 'ma_san_pham');
 
+        $activeLots = ChiTietNhap::whereHas('phieuNhap', fn ($q) => $q->where('trang_thai', 'CONFIRMED'))
+            ->where('so_luong_con_lai', '>', 0)
+            ->orderBy('ma_chi_tiet_nhap', 'asc')
+            ->get()
+            ->groupBy('ma_san_pham');
+
+        $fallbackLots = ChiTietNhap::whereHas('phieuNhap', fn ($q) => $q->where('trang_thai', 'CONFIRMED'))
+            ->orderByDesc('ma_chi_tiet_nhap')
+            ->get()
+            ->groupBy('ma_san_pham');
+
         $nguyenLieuBoHoa = SanPham::where('trang_thai', 'DANG_BAN')
             ->orderBy('ten_san_pham')
             ->get();
 
         $tonKhoKhaDungMap = [];
 
-        $nguyenLieuBoHoa->each(function (SanPham $sp) use ($reservedMap, $lotStockMap, &$tonKhoKhaDungMap) {
+        $nguyenLieuBoHoa->each(function (SanPham $sp) use ($reservedMap, $lotStockMap, $activeLots, $fallbackLots, &$tonKhoKhaDungMap) {
             $onHand = (int) $sp->so_luong;
             $reserved = (int) ($reservedMap[$sp->ma_san_pham] ?? 0);
             $hasLots = isset($lotStockMap[$sp->ma_san_pham]);
@@ -157,10 +170,15 @@ class BoHoaController extends Controller
             $available = max(0, min($onHand, $lotAvail) - $reserved);
             $dvt = $sp->don_vi_tinh_text ?: ($sp->don_vi_tinh ?: 'cái');
 
+            $spLot = $activeLots->get($sp->ma_san_pham)?->first()
+                  ?? $fallbackLots->get($sp->ma_san_pham)?->first();
+            $giaNhap = (float) ($spLot?->gia_nhap ?? 0);
+
             $sp->setAttribute('ton_thuc_te', $onHand);
             $sp->setAttribute('ton_dang_giu', $reserved);
             $sp->setAttribute('ton_kha_dung', $available);
             $sp->setAttribute('don_vi_tinh_label', $dvt);
+            $sp->setAttribute('gia_nhap', $giaNhap);
 
             $tonKhoKhaDungMap[$sp->ma_san_pham] = $available;
         });
@@ -459,6 +477,30 @@ class BoHoaController extends Controller
         ];
     }
 
+    /**
+     * Tính giá vốn và giá bán cho BÓ HOA LÀM SẴN / THÀNH PHẨM (HE_THONG).
+     *
+     * Business Rules:
+     * 1. Giá vốn = Σ(số lượng thành phần lấy từ từng lô × giá nhập của đúng lô đó).
+     * 2. Giá bán = Giá vốn × 1.5.
+     */
+    public static function tinhGiaVonVaGiaBan(array $rows, int $soBo = 1): array
+    {
+        $tongGiaVon = (float) collect($rows)->sum(
+            fn ($r) => ((float) ($r['gia_nhap_snapshot'] ?? $r['gia_nhap'] ?? 0)) * (int) ($r['so_luong'] ?? 1)
+        );
+        $soBo = max(1, $soBo);
+        $giaVonMoiBo = round($tongGiaVon / $soBo, 2);
+        $giaBanMoiBo = round($giaVonMoiBo * 1.5, 2);
+
+        return [
+            'gia_von'      => $giaVonMoiBo,
+            'gia_ban'      => $giaBanMoiBo,
+            'tong_gia_von' => round($giaVonMoiBo * $soBo, 2),
+            'tong_gia_ban' => round($giaBanMoiBo * $soBo, 2),
+        ];
+    }
+
     public static function tinhGiaDuLieu(array $d): array
     {
         return DB::transaction(function () use ($d) {
@@ -725,7 +767,7 @@ class BoHoaController extends Controller
                 $ids = [];
                 for ($i = 0; $i < $d['so_luong']; $i++) {
                     $rows = self::phanBo($formula['thanh_phan']);
-                    $gia  = self::giaPhanBo($rows, $mau->size, $mau->kieu_bo_hoa);
+                    $gia  = self::tinhGiaVonVaGiaBan($rows);
 
                     $bo = new BoHoa();
                     $bo->ma_mau_bo_hoa = $mau->getKey();
@@ -735,7 +777,8 @@ class BoHoaController extends Controller
                     $bo->concept       = $mau->concept;
                     $bo->loai_bo_hoa   = 'HE_THONG';
                     $bo->so_luong      = 1;
-                    $bo->gia_ban       = $gia['gia_moi_bo'];
+                    $bo->gia_von       = $gia['gia_von'];
+                    $bo->gia_ban       = $gia['gia_ban'];
                     $bo->trang_thai    = 'ACTIVE';
                     $bo->ngay_het_han  = $ngayHetHan;
                     $bo->save();
@@ -821,27 +864,23 @@ class BoHoaController extends Controller
         return $this->json(function () use ($id) {
             $bo = BoHoa::with(['chiTietBoHoa.sanPham', 'chiTietBoHoa.chiTietNhap'])->findOrFail($id);
 
-            // Đơn giá dòng = gia_ban_hien_tai của sản phẩm. KHÔNG fallback về lô nhập
-            // nữa — để khớp đúng con số admin list và trang khách đang hiển thị.
+            // Bó hoa thành phẩm làm sẵn (HE_THONG): dùng giá nhập thực tế của từng lô đã xuất
             $chiTiet = $bo->chiTietBoHoa->map(function ($ct) {
-                $giaBan = (float) ($ct->sanPham?->gia_ban_hien_tai ?? 0);
+                $giaNhap = (float) ($ct->chiTietNhap?->gia_nhap ?? 0);
                 return [
-                    'ten_san_pham' => $ct->sanPham?->ten_san_pham ?? 'N/A',
-                    'vai_tro'      => $ct->vai_tro,
-                    'vai_tro_text' => self::VAI_TRO[$ct->vai_tro] ?? $ct->vai_tro,
-                    'so_luong'     => (int) $ct->so_luong,
-                    'don_vi_tinh'  => $ct->sanPham?->don_vi_tinh_text ?? $ct->sanPham?->don_vi_tinh ?? '',
-                    'gia_ban'      => $giaBan,
-                    'thanh_tien'   => $giaBan * (int) $ct->so_luong,
+                    'ten_san_pham'     => $ct->sanPham?->ten_san_pham ?? 'N/A',
+                    'vai_tro'          => $ct->vai_tro,
+                    'vai_tro_text'     => self::VAI_TRO[$ct->vai_tro] ?? $ct->vai_tro,
+                    'so_luong'         => (int) $ct->so_luong,
+                    'don_vi_tinh'      => $ct->sanPham?->don_vi_tinh_text ?? $ct->sanPham?->don_vi_tinh ?? '',
+                    'ma_chi_tiet_nhap' => $ct->ma_chi_tiet_nhap,
+                    'gia_nhap'         => $giaNhap,
+                    'thanh_tien'       => $giaNhap * (int) $ct->so_luong,
                 ];
             });
 
-            $tienNguyenLieu = (float) $chiTiet->sum('thanh_tien');
-            $phuPhi         = self::layPhuPhi($bo->size, $bo->kieu_bo_hoa);
-
-            // Giá bán = NL + phụ phí (đúng công thức đang dùng ở getDuLieuBoHoa()).
-            // Nhờ vậy, con số dưới đáy modal LUÔN bằng cột "Giá bán" ngoài list.
-            $giaBanTinhLai = round($tienNguyenLieu + $phuPhi['tong'], 2);
+            $tongGiaVon = (float) ($bo->gia_von ?? $chiTiet->sum('thanh_tien'));
+            $giaBan     = (float) ($bo->gia_ban ?? round($tongGiaVon * 1.5, 2));
 
             return [
                 'ma_bo_hoa'        => $bo->ma_bo_hoa,
@@ -851,13 +890,9 @@ class BoHoaController extends Controller
                 'kieu_bo_hoa_text' => self::KIEU_DANG[$bo->kieu_bo_hoa] ?? $bo->kieu_bo_hoa,
                 'concept'          => $bo->concept,
                 'chi_tiet'         => $chiTiet,
-                'tien_nguyen_lieu' => $tienNguyenLieu,
-                'phu_phi'          => $phuPhi,
-                'gia_ban'          => $giaBanTinhLai,
-                // Giá vốn vẫn có thể dùng snapshot lô nhập để báo cáo lợi nhuận.
-                'gia_von'          => (float) $bo->chiTietBoHoa->sum(
-                    fn ($ct) => ((float) ($ct->chiTietNhap?->gia_nhap ?? 0)) * (int) $ct->so_luong
-                ),
+                'tien_nguyen_lieu' => $tongGiaVon,
+                'gia_von'          => $tongGiaVon,
+                'gia_ban'          => $giaBan,
             ];
         });
     }

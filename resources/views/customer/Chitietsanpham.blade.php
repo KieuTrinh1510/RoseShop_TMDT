@@ -105,11 +105,11 @@
                 </button>
             </div>
 
-            {{-- ✅ FIX: link vào giỏ bó hoa --}}
+            {{-- Link vào giỏ hàng thống nhất --}}
             <div style="margin-top:12px;text-align:center;">
-                <a href="{{ route('customer.bo-hoa.gio.index') }}"
+                <a href="{{ route('customer.gio-hang') }}"
                    style="color:#8e3555;font-size:14px;font-weight:600;text-decoration:underline;">
-                    🛒 Xem giỏ bó hoa của bạn ({{ count(session('gio_bo_hoa', [])) }})
+                    🛒 Xem giỏ hàng của bạn ({{ count(session('gio_hang', [])) + count(session('gio_bo_hoa', [])) }})
                 </a>
             </div>
         </form>

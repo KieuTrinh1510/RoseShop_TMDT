@@ -758,17 +758,22 @@ foreach ($sanPhams as $sp) {
                 $boQuery->where('hd.phuong_thuc_thanh_toan', '!=', 'COD');
             }
 
+            $hasHinhAnhBo = \Illuminate\Support\Facades\Schema::hasColumn('bo_hoa', 'hinh_anh');
+            $hasGiaVonBo  = \Illuminate\Support\Facades\Schema::hasColumn('bo_hoa', 'gia_von');
+            $colHinhAnh   = $hasHinhAnhBo ? 'bo.hinh_anh' : 'NULL';
+            $colGiaVon    = $hasGiaVonBo  ? 'bo.gia_von'  : 'NULL';
+
             $boRows = $boQuery->selectRaw("
                 hd.ma_hoa_don,
                 hd.ngay_dat,
                 bo.ma_bo_hoa as item_id,
                 bo.ten_bo_hoa as item_name,
-                bo.hinh_anh as item_image,
+                {$colHinhAnh} as item_image,
                 CASE WHEN bo.loai_bo_hoa = 'TUY_CHON' THEN 'custom_mix' ELSE 'bo_hoa_co_san' END as nhom_hang,
                 CASE WHEN bo.loai_bo_hoa = 'TUY_CHON' THEN 'Custom Mix' ELSE 'Bó hoa' END as ten_nhom,
                 1 as so_luong,
                 bo.gia_ban as doanh_thu,
-                COALESCE((
+                COALESCE({$colGiaVon}, (
                     SELECT SUM(ctbh.so_luong * ctn.gia_nhap)
                     FROM chi_tiet_bo_hoa ctbh
                     JOIN chi_tiet_nhap ctn ON ctbh.ma_chi_tiet_nhap = ctn.ma_chi_tiet_nhap

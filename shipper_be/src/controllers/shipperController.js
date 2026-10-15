@@ -4,9 +4,9 @@
 const statusService = require('../services/shipperStatusService');
 const orderService = require('../services/shipperOrderService');
 const deliveryService = require('../services/shipperDeliveryService');
+const thongBaoService = require('../services/thongBaoService');
 
 // Mã shipper lấy từ user đã đăng nhập (giống Auth::user()->ma_nguoi_dung bên PHP)
-// Middleware đăng nhập của bạn phải gắn req.user, nếu tên khác thì sửa ở đây.
 function layMaNhanVien(req) {
     return Number(req.user.ma_nguoi_dung);
 }
@@ -26,7 +26,7 @@ async function chay(res, congViec) {
     }
 }
 
-// ── Trạng thái (UC7.2) ──
+// ── Trạng thái ──
 exports.getStatus = (req, res) =>
     chay(res, () => statusService.getStatus(layMaNhanVien(req)));
 
@@ -59,8 +59,37 @@ exports.getOrderHistory = (req, res) =>
 exports.confirmPickup = (req, res) =>
     chay(res, () => deliveryService.confirmPickup(layMaNhanVien(req), req.params.id));
 
+exports.baoDenNoi = (req, res) =>
+    chay(res, () => deliveryService.baoDenNoi(layMaNhanVien(req), req.params.id));
+
 exports.markDelivered = (req, res) =>
     chay(res, () => deliveryService.markDelivered(layMaNhanVien(req), req.params.id));
 
 exports.getTimeoutRemaining = (req, res) =>
     chay(res, () => deliveryService.getTimeoutRemaining(layMaNhanVien(req), req.params.id));
+
+exports.xuLyQuaHan = (req, res) =>
+    chay(res, () => deliveryService.xuLyQuaHan(layMaNhanVien(req), req.params.id));
+exports.getNotifications = (req, res) =>
+    chay(res, () => thongBaoService.danhSach(layMaNhanVien(req), {
+        loai: req.query.loai,
+        limit: req.query.limit,
+    }));
+
+exports.getUnreadCount = (req, res) =>
+    chay(res, async () => ({
+        count: await thongBaoService.demChuaDoc(layMaNhanVien(req)),
+    }));
+
+exports.markNotificationRead = (req, res) =>
+    chay(res, async () => ({
+        ok: await thongBaoService.danhDauDaDoc(
+            Number(req.params.id),
+            layMaNhanVien(req)
+        ),
+    }));
+
+exports.deleteNotification = (req, res) =>
+    chay(res, async () => ({
+        ok: await thongBaoService.xoa(Number(req.params.id), layMaNhanVien(req)),
+    }));

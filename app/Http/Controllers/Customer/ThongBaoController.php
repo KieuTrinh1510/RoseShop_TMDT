@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Models\HoaDon;
 use App\Models\BoHoa;
+use App\Models\ThongBao;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -25,8 +26,28 @@ class ThongBaoController extends Controller
             ? $request->get('tab')
             : 'thong-bao';
 
-        $thongBaos  = Cache::get($this->cacheKey($maKhachHang), []);
-        $soThongBao = count($thongBaos);
+        // Map về đúng dạng mảng cũ ('id','noi_dung','loai','thoi_gian','ma_hd') để view Blade không phải sửa
+$thongBaos = ThongBao::where('ma_nguoi_dung', $maKhachHang)
+    ->orderByDesc('thoi_gian')
+    ->orderByDesc('ma_thong_bao')
+    ->limit(20)
+    ->get()
+    ->map(fn ($tb) => [
+        'id'        => $tb->ma_thong_bao,
+        'ma_hd'     => $tb->ma_hoa_don,
+        'loai'      => $tb->loai,
+        'noi_dung'  => $tb->noi_dung,
+        'thoi_gian' => $tb->thoi_gian->format('H:i, d/m/Y'),
+        'da_doc'    => $tb->da_doc,
+    ])
+    ->all();
+
+$soThongBao = ThongBao::where('ma_nguoi_dung', $maKhachHang)->where('da_doc', false)->count();
+
+// Khách mở tab thông báo thì coi như đã đọc (số $soThongBao ở trên vẫn là số trước khi đọc)
+if ($activeTab === 'thong-bao' && $soThongBao > 0) {
+    ThongBao::where('ma_nguoi_dung', $maKhachHang)->where('da_doc', false)->update(['da_doc' => true]);
+}
 
         $donHienTai = HoaDon::with(['chiTietHoaDon.sanPham', 'shipper'])
             ->where('ma_khach_hang', $maKhachHang)
@@ -72,29 +93,21 @@ class ThongBaoController extends Controller
     }
 
     public function soChuaDoc()
-    {
-        $maKhachHang = (int) Auth::user()->ma_nguoi_dung;
-        $count       = count(Cache::get($this->cacheKey($maKhachHang), []));
+{
+    $maKhachHang = (int) Auth::user()->ma_nguoi_dung;
+    $count = ThongBao::where('ma_nguoi_dung', $maKhachHang)->where('da_doc', false)->count();
 
-        return response()->json(['count' => $count]);
-    }
+    return response()->json(['count' => $count]);
+}
 
     public function xoa(Request $request, string $id)
-    {
-        $maKhachHang = (int) Auth::user()->ma_nguoi_dung;
-        $key         = $this->cacheKey($maKhachHang);
-        $danhSach    = Cache::get($key, []);
+{
+    $maKhachHang = (int) Auth::user()->ma_nguoi_dung;
 
-        $danhSach = array_values(
-            array_filter($danhSach, fn($tb) => $tb['id'] !== $id)
-        );
+    ThongBao::where('ma_nguoi_dung', $maKhachHang)
+        ->where('ma_thong_bao', (int) $id)
+        ->delete();
 
-        if (empty($danhSach)) {
-            Cache::forget($key);
-        } else {
-            Cache::put($key, $danhSach, now()->addDays(7));
-        }
-
-        return response()->json(['success' => true]);
-    }
+    return response()->json(['success' => true]);
+}
 }

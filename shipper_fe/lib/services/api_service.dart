@@ -1,7 +1,4 @@
 // lib/services/api_service.dart
-// Gói gọn việc gọi API: tự thêm header mã nhân viên, tự parse { success, data }
-// hoặc { success:false, code, message } giống format của shipperController.js.
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config.dart';
@@ -19,7 +16,6 @@ class ApiException implements Exception {
 class ApiService {
   static Map<String, String> get _headers => {
     'Content-Type': 'application/json',
-    // Header giả lập đăng nhập - đọc ở middleware fakeAuth phía backend
     'x-ma-nhan-vien': AppConfig.maNhanVien.toString(),
   };
 
@@ -71,6 +67,30 @@ class ApiService {
 
   static Future<dynamic> put(String path, {Map<String, dynamic>? body}) async {
     final res = await http.put(
+      _uri(path),
+      headers: _headers,
+      body: body == null ? null : jsonEncode(body),
+    );
+    return _parse(res);
+  }
+
+  static Future<dynamic> patch(
+    String path, {
+    Map<String, dynamic>? body,
+  }) async {
+    final res = await http.patch(
+      _uri(path),
+      headers: _headers,
+      body: body == null ? null : jsonEncode(body),
+    );
+    return _parse(res);
+  }
+
+  static Future<dynamic> delete(
+    String path, {
+    Map<String, dynamic>? body,
+  }) async {
+    final res = await http.delete(
       _uri(path),
       headers: _headers,
       body: body == null ? null : jsonEncode(body),

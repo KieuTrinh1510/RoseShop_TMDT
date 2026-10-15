@@ -531,6 +531,124 @@
                         Đang lọc — <strong>{{ $donHangs->total() }}</strong> kết quả
                     </span>
                 @endif
+            <div class="table-meta">
+        <span>Tổng: <strong>{{ $donHangs->total() }}</strong> đơn đang chờ duyệt</span>
+        <span>Trang {{ $donHangs->currentPage() }} / {{ $donHangs->lastPage() }}</span>
+    </div>
+    {{-- ⚠️ Cảnh báo không có shipper khả dụng --}}
+    @if($shippers->isEmpty())
+        <div style="padding:12px;background:#fff3cd;border-radius:6px;margin:0 0 12px 0;color:#856404">
+            ⚠️ Không có shipper nào đang ONLINE hoặc tất cả đã đủ 10/10 đơn.
+            Vui lòng chờ shipper bật trạng thái hoặc giao bớt đơn.
+        </div>
+    @endif
+
+            <div class="tbl-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Mã ĐH</th>
+                            <th>Khách Hàng</th>
+                            <th>Ngày Đặt</th>
+                            <th>Tổng Tiền</th>
+                            <th>Thanh Toán</th>
+                            <th>Địa Chỉ Giao</th>
+                            <th>SĐT</th>
+                            <th>Chọn Shipper</th>
+                            <th>Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($donHangs as $index => $dh)
+                        <tr id="row-{{ $dh->ma_hoa_don }}">
+                            {{-- STT --}}
+                            <td class="td-mono" style="color:var(--ink-muted)">
+                                {{ $donHangs->firstItem() + $index }}
+                            </td>
+
+                            {{-- Mã đơn hàng --}}
+                            <td class="td-mono">
+                                HD-{{ str_pad($dh->ma_hoa_don, 4, '0', STR_PAD_LEFT) }}
+                                @foreach($boTheoDon->get($dh->ma_hoa_don, collect()) as $bo)
+                                    <small style="display:block;white-space:normal">{{ $bo->ten_bo_hoa }} × {{ $bo->so_luong }} · {{ $bo->size }} · {{ $bo->concept }}</small>
+                                    @if($bo->loi_nhan)<small style="display:block;white-space:normal">Lời nhắn: {{ $bo->loi_nhan }}</small>@endif
+                                @endforeach
+                            </td>
+
+                            {{-- Tên khách hàng --}}
+                            <td>{{ $dh->khachHang?->ten_khach_hang ?? '—' }}</td>
+
+                            {{-- Ngày đặt --}}
+                            <td class="td-mono">
+                                {{ $dh->ngay_dat?->format('d/m/Y H:i') ?? '—' }}
+                            </td>
+
+                            {{-- Tổng tiền --}}
+                            <td class="td-mono" style="font-weight:700">
+                                {{ number_format($dh->tong_tien, 0, ',', '.') }}₫
+                            </td>
+
+                            {{-- Trạng thái thanh toán --}}
+                            <td>
+                                <span class="badge {{ $dh->trang_thai_thanh_toan === 'DA_THANH_TOAN' ? 'badge-paid' : 'badge-unpaid' }}">
+                                    {{ $dh->trang_thai_thanh_toan === 'DA_THANH_TOAN' ? 'Đã TT' : 'Chưa TT' }}
+                                </span>
+                            </td>
+
+                            {{-- Địa chỉ giao (rút gọn, hover xem đầy đủ) --}}
+                            <td title="{{ $dh->dia_chi_giao }}" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                                {{ $dh->dia_chi_giao ?? '—' }}
+                            </td>
+
+                            {{-- Số điện thoại --}}
+                            <td class="td-mono">{{ $dh->so_dien_thoai ?? '—' }}</td>
+
+                            {{-- Dropdown chọn shipper ──────────────────────────────
+                                 Bắt buộc phải chọn trước khi ấn "Xác nhận".
+                                 ngay_giao sẽ null cho đến khi shipper hoàn tất giao.
+                            --}}
+                            <td>
+                                <select class="shipper-select"
+                            id="shipper-{{ $dh->ma_hoa_don }}"
+                    data-id="{{ $dh->ma_hoa_don }}">
+                     <option value="">— Chọn shipper —</option>
+                         @foreach($shippers as $sp)
+                      <option value="{{ $sp->ma_nhan_vien }}" data-ten="{{ $sp->ten_nhan_vien }}">
+                      {{ $sp->ten_nhan_vien }} ({{ $sp->so_don_live }}/10)
+                       </option>
+                             @endforeach
+                            </select>
+                            </td>
+
+                            {{-- Hành động --}}
+                            <td>
+                                <div class="td-actions">
+                                    <button class="btn btn-success"
+                                            onclick="confirmOrder({{ $dh->ma_hoa_don }})"
+                                            title="Phải chọn shipper trước. Xác nhận → trạng thái chuyển CONFIRMED.">
+                                        ✔ Xác nhận
+                                    </button>
+                                    <button class="btn btn-danger"
+                                            onclick="openCancelDialog({{ $dh->ma_hoa_don }}, 'HD-{{ str_pad($dh->ma_hoa_don, 4, '0', STR_PAD_LEFT) }}')"
+                                            title="Từ chối → trạng thái chuyển CANCELLED.">
+                                        ✕ Từ chối
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="10">
+                                <div class="empty-state">
+                                    <div class="empty-icon">◻</div>
+                                    <p>Không có đơn hàng nào đang chờ xử lý.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
 
         </form>
@@ -774,6 +892,21 @@
     }
 
     
+    // Cập nhật số đơn của shipper ở TẤT CẢ dropdown trong trang (không cần reload).
+    // Đủ 10/10 thì gỡ shipper khỏi danh sách.
+    function updateShipperCount(maNv, soDon) {
+        document.querySelectorAll('.shipper-select').forEach(sel => {
+            const opt = sel.querySelector(`option[value="${maNv}"]`);
+            if (!opt) return;
+            if (soDon >= 10) {
+                if (sel.value == maNv) sel.value = '';
+                opt.remove();
+            } else {
+                opt.textContent = `${opt.dataset.ten} (${soDon}/10)`;
+            }
+        });
+    }
+
     function confirmOrder(id) {
         const sel = document.getElementById('shipper-' + id);
 
@@ -801,6 +934,7 @@
         .then(r => r.json())
         .then(res => {
             if (res.success) {
+                if (res.shipper) updateShipperCount(res.shipper.ma_nhan_vien, res.shipper.so_don);
                 removeRow(id);
                 showToast(res.message, 'success');
             } else {

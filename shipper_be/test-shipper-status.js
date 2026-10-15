@@ -1,339 +1,270 @@
+#!/usr/bin/env node
 // test-shipper-status.js
-// Chạy: node test-shipper-status.js
-// Yêu cầu: đã cấu hình DB (src/config/database.js) và có ít nhất 1 shipper trong bảng NhanVien.
+// Test nhanh các endpoint Node của shipper — chạy trước khi mở app Flutter.
+//
+// Yêu cầu: Node 18+ (để có global fetch). Không cần cài thêm package.
+//
+// Cách chạy:
+//   node test-shipper-status.js
+//   node test-shipper-status.js 9
+//   node test-shipper-status.js 9 http://localhost:3000/api/shipper
+//   TEST_DELETE=1 node test-shipper-status.js         (test luôn DELETE)
+//
+// Biến môi trường:
+//   SHIPPER_ID   — mã nhân viên shipper muốn test (default 9)
+//   API_BASE     — base URL của shipper router     (default http://localhost:3000/api/shipper)
+//   TEST_DELETE  — đặt =1 để test endpoint DELETE
 
-require('dotenv').config();
-const sequelize = require('./src/config/database');
-const NhanVien = require('./src/models/NhanVien');
-const svc = require('./src/services/shipperStatusService');
+const BASE_URL = process.argv[3] || process.env.API_BASE || 'http://localhost:3000/api/shipper';
+const MA_NV = Number(process.argv[2] || process.env.SHIPPER_ID || 9);
 
-// ─────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────
-let passCount = 0;
-let failCount = 0;
+const C = {
+    reset: '\x1b[0m',
+    dim: '\x1b[2m',
+    green: '\x1b[32m',
+    red: '\x1b[31m',
+    cyan: '\x1b[36m',
+    yellow: '\x1b[33m',
+};
 
-function ok(label) {
-    passCount++;
-    console.log(`  ✅ PASS  ${label}`);
+let passed = 0, failed = 0;
+
+function header(title) {
+    console.log(`\n${C.cyan}▶ ${title}${C.reset}`);
+}
+function log(ok, name, detail = '') {
+    const icon = ok ? `${C.green}✅` : `${C.red}❌`;
+    console.log(`  ${icon}${C.reset} ${name}${detail ? `  ${C.dim}— ${detail}${C.reset}` : ''}`);
+    ok ? passed++ : failed++;
+}
+function skip(name, reason) {
+    console.log(`  ${C.yellow}⊘${C.reset} ${name}  ${C.dim}— ${reason}${C.reset}`);
 }
 
-function fail(label, detail) {
-    failCount++;
-    console.log(`  ❌ FAIL  ${label}`);
-    if (detail !== undefined) console.log(`           → ${JSON.stringify(detail)}`);
-}
+async function req(method, path, body) {
+    const url = BASE_URL + path;
+    const opts = {
+        method,
+        headers: {
+            'Content-Type': 'application/json',
+            // Trùng header mà api_service.dart gửi lên
+            'x-ma-nhan-vien': String(MA_NV),
+        },
+    };
+    if (body !== undefined) opts.body = JSON.stringify(body);
 
-// So sánh nông (shallow) cho object đơn giản
-function deepEqualShallow(a, b) {
-    const ka = Object.keys(a).sort();
-    const kb = Object.keys(b).sort();
-    if (ka.length !== kb.length) return false;
-    return ka.every(k => JSON.stringify(a[k]) === JSON.stringify(b[k]));
-}
-
-// Chạy 1 case bất đồng bộ, tự bắt lỗi
-async function test(label, fn) {
+    let res;
     try {
-        await fn();
-        ok(label);
+        res = await fetch(url, opts);
     } catch (e) {
-        fail(label, { message: e.message, code: e.code, status: e.status });
+        throw new Error(`Không kết nối được ${url} — ${e.message}. Server Node đã chạy chưa?`);
     }
+    const text = await res.text();
+    let json = null;
+    try { json = JSON.parse(text); } catch { }
+    return { status: res.status, json, text };
 }
 
-// Kỳ vọng hàm ném lỗi với status/code cụ thể
-async function expectThrow(label, fn, { status, code }) {
-    try {
-        await fn();
-        fail(label, { message: 'Không ném lỗi như mong đợi' });
-    } catch (e) {
-        if (e.status === status && e.code === code) {
-            ok(label);
+// ────────────────────────────────────────────────────────────
+async function main() {
+    console.log(`${C.cyan}=== Test shipper API ===${C.reset}`);
+    console.log(`Base URL : ${BASE_URL}`);
+    console.log(`Shipper  : #${MA_NV}`);
+
+    // ── 1) /status ───────────────────────────────────────────
+    header('1. GET /status');
+    {
+        const r = await req('GET', '/status');
+        if (r.json?.success) {
+            const d = r.json.data;
+            log(true, 'Response OK',
+                `online=${d.trang_thai_hoat_dong} • đơn=${d.so_don_hien_tai}/${d.gioi_han_don} • nhận được=${d.co_the_nhan_don}`);
         } else {
-            fail(label, { got: { status: e.status, code: e.code }, want: { status, code } });
+            log(false, 'Response lỗi', `HTTP ${r.status} — ${r.text.slice(0, 200)}`);
         }
     }
-}
 
-function assert(cond, msg) {
-    if (!cond) throw new Error(msg);
-}
-
-// ─────────────────────────────────────────────
-// Chuẩn bị dữ liệu test
-// ─────────────────────────────────────────────
-let MA_SHIPPER = null;
-
-async function setup() {
-    console.log('\n🔧 Setup…');
-    await sequelize.authenticate();
-
-    // Lấy 1 nhân viên bất kỳ để làm shipper test
-    const nv = await NhanVien.findOne({ order: [['ma_nhan_vien', 'ASC']] });
-    if (!nv) {
-        throw new Error('Bảng NhanVien rỗng. Hãy seed ít nhất 1 nhân viên trước khi test.');
-    }
-    MA_SHIPPER = nv.ma_nhan_vien;
-    console.log(`   → Dùng shipper ma_nhan_vien = ${MA_SHIPPER} (${nv.ten_nhan_vien})`);
-
-    await resetState();
-}
-
-// Đưa shipper về trạng thái mặc định trước mỗi nhóm test
-async function resetState({ online = 'ONLINE', soDon = 0 } = {}) {
-    await NhanVien.update(
-        { trang_thai_hoat_dong: online, so_don_hien_tai: soDon },
-        { where: { ma_nhan_vien: MA_SHIPPER } }
-    );
-}
-
-// ─────────────────────────────────────────────
-// 1. getStatus
-// ─────────────────────────────────────────────
-async function testGetStatus() {
-    console.log('\n📦 [1] getStatus');
-
-    await test('ONLINE + 3 đơn → co_the_nhan_don=true, is_full=false', async () => {
-        await resetState({ online: 'ONLINE', soDon: 3 });
-        const r = await svc.getStatus(MA_SHIPPER);
-        assert(r.trang_thai_hoat_dong === 'ONLINE', 'sai trang_thai');
-        assert(r.so_don_hien_tai === 3, 'sai so_don');
-        assert(r.gioi_han_don === 10, 'sai gioi_han_don');
-        assert(r.is_full === false, 'is_full phải false');
-        assert(r.co_the_nhan_don === true, 'co_the_nhan_don phải true');
-    });
-
-    await test('ONLINE + 10 đơn → is_full=true, co_the_nhan_don=false', async () => {
-        await resetState({ online: 'ONLINE', soDon: 10 });
-        const r = await svc.getStatus(MA_SHIPPER);
-        assert(r.is_full === true, 'is_full phải true');
-        assert(r.co_the_nhan_don === false, 'co_the_nhan_don phải false');
-    });
-
-    await test('OFFLINE + 0 đơn → co_the_nhan_don=false', async () => {
-        await resetState({ online: 'OFFLINE', soDon: 0 });
-        const r = await svc.getStatus(MA_SHIPPER);
-        assert(r.co_the_nhan_don === false, 'co_the_nhan_don phải false');
-    });
-
-    await expectThrow(
-        'Shipper không tồn tại → 404 SHIPPER_NOT_FOUND',
-        () => svc.getStatus(99999999),
-        { status: 404, code: 'SHIPPER_NOT_FOUND' }
-    );
-}
-
-// ─────────────────────────────────────────────
-// 2. setOnlineStatus
-// ─────────────────────────────────────────────
-async function testSetOnlineStatus() {
-    console.log('\n📦 [2] setOnlineStatus');
-
-    await test('ONLINE → OFFLINE', async () => {
-        await resetState({ online: 'ONLINE' });
-        const r = await svc.setOnlineStatus(MA_SHIPPER, 'OFFLINE');
-        assert(r.trang_thai_hoat_dong === 'OFFLINE', 'phải là OFFLINE');
-
-        // Xác nhận đã ghi DB
-        const db = await NhanVien.findByPk(MA_SHIPPER);
-        assert(db.trang_thai_hoat_dong === 'OFFLINE', 'DB chưa cập nhật');
-    });
-
-    await test('OFFLINE → ONLINE', async () => {
-        await resetState({ online: 'OFFLINE' });
-        const r = await svc.setOnlineStatus(MA_SHIPPER, 'ONLINE');
-        assert(r.trang_thai_hoat_dong === 'ONLINE', 'phải là ONLINE');
-    });
-
-    await test('Đổi trạng thái KHÔNG làm thay đổi số đơn', async () => {
-        await resetState({ online: 'ONLINE', soDon: 5 });
-        await svc.setOnlineStatus(MA_SHIPPER, 'OFFLINE');
-        const r = await svc.getStatus(MA_SHIPPER);
-        assert(r.so_don_hien_tai === 5, 'so_don phải giữ nguyên 5');
-    });
-
-    await expectThrow(
-        'Trạng thái sai (BUSY) → 400 INVALID_STATUS',
-        () => svc.setOnlineStatus(MA_SHIPPER, 'BUSY'),
-        { status: 400, code: 'INVALID_STATUS' }
-    );
-
-    await expectThrow(
-        'Trạng thái null → 400 INVALID_STATUS',
-        () => svc.setOnlineStatus(MA_SHIPPER, null),
-        { status: 400, code: 'INVALID_STATUS' }
-    );
-
-    await expectThrow(
-        'Shipper không tồn tại → 404',
-        () => svc.setOnlineStatus(99999999, 'ONLINE'),
-        { status: 404, code: 'SHIPPER_NOT_FOUND' }
-    );
-}
-
-// ─────────────────────────────────────────────
-// 3. canReceiveNewOrder
-// ─────────────────────────────────────────────
-async function testCanReceiveNewOrder() {
-    console.log('\n📦 [3] canReceiveNewOrder');
-
-    const cases = [
-        { online: 'ONLINE', soDon: 0, want: true, label: 'ONLINE, 0 đơn → true' },
-        { online: 'ONLINE', soDon: 9, want: true, label: 'ONLINE, 9 đơn → true' },
-        { online: 'ONLINE', soDon: 10, want: false, label: 'ONLINE, 10 đơn → false' },
-        { online: 'OFFLINE', soDon: 0, want: false, label: 'OFFLINE, 0 đơn → false' },
-        { online: 'OFFLINE', soDon: 5, want: false, label: 'OFFLINE, 5 đơn → false' },
-    ];
-
-    for (const c of cases) {
-        await test(c.label, async () => {
-            await resetState({ online: c.online, soDon: c.soDon });
-            const r = await svc.canReceiveNewOrder(MA_SHIPPER);
-            assert(r === c.want, `phải là ${c.want}, nhận ${r}`);
-        });
+    // ── 2) /home ─────────────────────────────────────────────
+    header('2. GET /home (dashboard)');
+    {
+        const r = await req('GET', '/home');
+        if (r.json?.success) {
+            const d = r.json.data;
+            log(true, 'Response OK',
+                `tên="${d.shipper?.ten_nhan_vien}" • COD=${d.cod?.tien_can_nop} • phạt=${d.cod?.tien_phat} • TB chưa đọc=${d.thong_bao?.chua_doc}`);
+        } else {
+            log(false, 'Response lỗi', `HTTP ${r.status} — ${r.text.slice(0, 200)}`);
+        }
     }
 
-    await expectThrow(
-        'Shipper không tồn tại → 404',
-        () => svc.canReceiveNewOrder(99999999),
-        { status: 404, code: 'SHIPPER_NOT_FOUND' }
-    );
-}
+    // ── 3) /notifications — list ────────────────────────────
+    header('3. GET /notifications (danh sách thông báo)');
+    let dsTb = [];
+    {
+        const r = await req('GET', '/notifications?limit=50');
+        if (r.json?.success && Array.isArray(r.json.data)) {
+            dsTb = r.json.data;
+            log(true, 'Response OK', `nhận ${dsTb.length} thông báo`);
 
-// ─────────────────────────────────────────────
-// 4. incrementOrderCount
-// ─────────────────────────────────────────────
-async function testIncrementOrderCount() {
-    console.log('\n📦 [4] incrementOrderCount');
+            const dem = {};
+            for (const tb of dsTb) dem[tb.loai] = (dem[tb.loai] || 0) + 1;
+            const phanLoai = Object.entries(dem).map(([k, v]) => `${k}:${v}`).join(', ');
+            console.log(`     ${C.dim}Loại: ${phanLoai || '(trống)'}${C.reset}`);
 
-    await test('ONLINE, 5 đơn → 6 đơn', async () => {
-        await resetState({ online: 'ONLINE', soDon: 5 });
-        const r = await svc.incrementOrderCount(MA_SHIPPER);
-        assert(r.so_don_hien_tai === 6, `phải là 6, nhận ${r.so_don_hien_tai}`);
-        const db = await NhanVien.findByPk(MA_SHIPPER);
-        assert(db.so_don_hien_tai === 6, 'DB chưa cập nhật');
-    });
+            for (const tb of dsTb.slice(0, 3)) {
+                const bullet = tb.da_doc ? '·' : '•';
+                const hasDuLieu = tb.du_lieu ? ` ${C.dim}[có du_lieu]${C.reset}` : '';
+                console.log(`     ${bullet} [#${tb.ma_thong_bao}] (${tb.loai}) ${String(tb.noi_dung).slice(0, 80)}${hasDuLieu}`);
+            }
+            if (dsTb.length > 3) console.log(`     ${C.dim}... và ${dsTb.length - 3} item nữa${C.reset}`);
 
-    await test('ONLINE, 9 đơn → 10 đơn, sau đó is_full=true', async () => {
-        await resetState({ online: 'ONLINE', soDon: 9 });
-        const r = await svc.incrementOrderCount(MA_SHIPPER);
-        assert(r.so_don_hien_tai === 10, 'phải là 10');
-        assert(r.is_full === true, 'is_full phải true');
-        assert(r.co_the_nhan_don === false, 'co_the_nhan_don phải false');
-    });
-
-    await expectThrow(
-        'ONLINE, đã 10 đơn → 409 SHIPPER_FULL',
-        async () => {
-            await resetState({ online: 'ONLINE', soDon: 10 });
-            return svc.incrementOrderCount(MA_SHIPPER);
-        },
-        { status: 409, code: 'SHIPPER_FULL' }
-    );
-
-    await expectThrow(
-        'OFFLINE → 409 SHIPPER_OFFLINE',
-        async () => {
-            await resetState({ online: 'OFFLINE', soDon: 0 });
-            return svc.incrementOrderCount(MA_SHIPPER);
-        },
-        { status: 409, code: 'SHIPPER_OFFLINE' }
-    );
-
-    await expectThrow(
-        'Shipper không tồn tại → 404',
-        () => svc.incrementOrderCount(99999999),
-        { status: 404, code: 'SHIPPER_NOT_FOUND' }
-    );
-
-    await test('Race condition: chỉ 1 trong 2 request song song thành công khi còn 1 slot', async () => {
-        await resetState({ online: 'ONLINE', soDon: 9 });
-        const results = await Promise.allSettled([
-            svc.incrementOrderCount(MA_SHIPPER),
-            svc.incrementOrderCount(MA_SHIPPER),
-        ]);
-        const fulfilled = results.filter(r => r.status === 'fulfilled').length;
-        const rejected = results.filter(r => r.status === 'rejected').length;
-        assert(fulfilled === 1 && rejected === 1,
-            `phải 1 thành công 1 thất bại, nhận ${fulfilled}/${rejected}`);
-
-        const db = await NhanVien.findByPk(MA_SHIPPER);
-        assert(db.so_don_hien_tai === 10,
-            `DB phải là 10 (không vượt), nhận ${db.so_don_hien_tai}`);
-    });
-}
-
-// ─────────────────────────────────────────────
-// 5. decrementOrderCount
-// ─────────────────────────────────────────────
-async function testDecrementOrderCount() {
-    console.log('\n📦 [5] decrementOrderCount');
-
-    await test('ONLINE, 5 đơn → 4 đơn', async () => {
-        await resetState({ online: 'ONLINE', soDon: 5 });
-        const r = await svc.decrementOrderCount(MA_SHIPPER);
-        assert(r.so_don_hien_tai === 4, `phải là 4, nhận ${r.so_don_hien_tai}`);
-    });
-
-    await test('Không cho số đơn âm: 0 đơn → vẫn 0', async () => {
-        await resetState({ online: 'ONLINE', soDon: 0 });
-        const r = await svc.decrementOrderCount(MA_SHIPPER);
-        assert(r.so_don_hien_tai === 0, `phải là 0, nhận ${r.so_don_hien_tai}`);
-        const db = await NhanVien.findByPk(MA_SHIPPER);
-        assert(db.so_don_hien_tai === 0, 'DB không được âm');
-    });
-
-    await test('Giảm từ 10 → 9 thì co_the_nhan_don=true trở lại', async () => {
-        await resetState({ online: 'ONLINE', soDon: 10 });
-        const before = await svc.getStatus(MA_SHIPPER);
-        assert(before.co_the_nhan_don === false, 'trước: phải false');
-
-        const after = await svc.decrementOrderCount(MA_SHIPPER);
-        assert(after.co_the_nhan_don === true, 'sau: phải true');
-    });
-
-    await test('Decrement KHÔNG đổi trạng thái ONLINE/OFFLINE', async () => {
-        await resetState({ online: 'OFFLINE', soDon: 3 });
-        const r = await svc.decrementOrderCount(MA_SHIPPER);
-        assert(r.trang_thai_hoat_dong === 'OFFLINE',
-            'phải giữ OFFLINE');
-    });
-
-    await expectThrow(
-        'Shipper không tồn tại → 404',
-        () => svc.decrementOrderCount(99999999),
-        { status: 404, code: 'SHIPPER_NOT_FOUND' }
-    );
-}
-
-// ─────────────────────────────────────────────
-// MAIN
-// ─────────────────────────────────────────────
-(async () => {
-    console.log('═══════════════════════════════════════════');
-    console.log('  TEST shipperStatusService.js');
-    console.log('═══════════════════════════════════════════');
-
-    try {
-        await setup();
-
-        await testGetStatus();
-        await testSetOnlineStatus();
-        await testCanReceiveNewOrder();
-        await testIncrementOrderCount();
-        await testDecrementOrderCount();
-
-        console.log('\n═══════════════════════════════════════════');
-        console.log(`  TỔNG KẾT:  ✅ ${passCount} PASS   ❌ ${failCount} FAIL`);
-        console.log('═══════════════════════════════════════════\n');
-
-        process.exitCode = failCount === 0 ? 0 : 1;
-    } catch (err) {
-        console.error('\n💥 LỖI SETUP / KHÔNG MONG ĐỢI:');
-        console.error(err);
-        process.exitCode = 2;
-    } finally {
-        await sequelize.close();
+            // Kiểm tra shape từng item
+            const requiredKeys = ['ma_thong_bao', 'loai', 'noi_dung', 'ma_hoa_don', 'da_doc', 'thoi_gian'];
+            const thieu = new Set();
+            for (const tb of dsTb) {
+                for (const k of requiredKeys) if (!(k in tb)) thieu.add(k);
+            }
+            if (thieu.size === 0) {
+                log(true, 'Shape item đầy đủ', requiredKeys.join(', '));
+            } else {
+                log(false, 'Thiếu field', [...thieu].join(', '));
+            }
+        } else {
+            log(false, 'Response lỗi', `HTTP ${r.status} — ${r.text.slice(0, 200)}`);
+        }
     }
-})();
+
+    // ── 4) filter theo loại ─────────────────────────────────
+    header('4. GET /notifications?loai=order_new (filter)');
+    {
+        const r = await req('GET', '/notifications?loai=order_new');
+        if (r.json?.success && Array.isArray(r.json.data)) {
+            const allDung = r.json.data.every(t => t.loai === 'order_new');
+            if (allDung) {
+                log(true, 'Response OK + filter đúng', `${r.json.data.length} item loại order_new`);
+            } else {
+                log(false, 'Filter sai', `có item không phải order_new trong kết quả`);
+            }
+        } else {
+            log(false, 'Response lỗi', `HTTP ${r.status} — ${r.text.slice(0, 200)}`);
+        }
+    }
+
+    // ── 5) unread-count ─────────────────────────────────────
+    header('5. GET /notifications/unread-count');
+    let unread = 0;
+    {
+        const r = await req('GET', '/notifications/unread-count');
+        if (r.json?.success && typeof r.json.data?.count === 'number') {
+            unread = r.json.data.count;
+            log(true, 'Response OK', `count = ${unread}`);
+        } else {
+            log(false, 'Response lỗi', `HTTP ${r.status} — ${r.text.slice(0, 200)}`);
+        }
+    }
+
+    // ── 6) mark-read ────────────────────────────────────────
+    header('6. PATCH /notifications/:id/read (đánh dấu đã đọc)');
+    {
+        const tbChuaDoc = dsTb.find(t => !t.da_doc);
+        if (!tbChuaDoc) {
+            skip('Đánh dấu đã đọc', 'không có thông báo chưa đọc để test');
+        } else {
+            const id = tbChuaDoc.ma_thong_bao;
+            const r = await req('PATCH', `/notifications/${id}/read`);
+            if (r.json?.success && r.json.data?.ok === true) {
+                log(true, `PATCH /notifications/${id}/read`, 'ok=true');
+
+                const r2 = await req('GET', '/notifications/unread-count');
+                const unreadSau = r2.json?.data?.count ?? unread;
+                if (unreadSau === unread - 1) {
+                    log(true, 'Số chưa đọc giảm đúng', `${unread} → ${unreadSau}`);
+                } else {
+                    log(false, 'Số chưa đọc sai kì vọng', `trước=${unread}, sau=${unreadSau} (kì vọng ${unread - 1})`);
+                }
+            } else {
+                log(false, 'Response lỗi', `HTTP ${r.status} — ${r.text.slice(0, 200)}`);
+            }
+        }
+    }
+
+    // ── 7) idempotent ───────────────────────────────────────
+    header('7. PATCH /notifications/:id/read (gọi lại — không lỗi)');
+    {
+        const tbDaDoc = dsTb.find(t => t.da_doc) || dsTb[0];
+        if (!tbDaDoc) {
+            skip('Idempotent test', 'không có thông báo nào');
+        } else {
+            const id = tbDaDoc.ma_thong_bao;
+            const r = await req('PATCH', `/notifications/${id}/read`);
+            if (r.status === 200) {
+                log(true, `Gọi lại PATCH id=${id}`, `HTTP 200 (ok=${r.json?.data?.ok})`);
+            } else {
+                log(false, 'Không idempotent', `HTTP ${r.status} — ${r.text.slice(0, 200)}`);
+            }
+        }
+    }
+
+    // ── 8) id không tồn tại ─────────────────────────────────
+    header('8. PATCH /notifications/99999999/read (id không tồn tại)');
+    {
+        const r = await req('PATCH', '/notifications/99999999/read');
+        if (r.status === 200 && r.json?.success) {
+            log(true, 'HTTP 200 (không throw)', `ok=${r.json.data?.ok}`);
+        } else {
+            log(false, 'Không mong đợi', `HTTP ${r.status} — ${r.text.slice(0, 200)}`);
+        }
+    }
+
+    // ── 9) DELETE ───────────────────────────────────────────
+    header('9. DELETE /notifications/:id');
+    if (process.env.TEST_DELETE === '1') {
+        const tbXoa = dsTb[dsTb.length - 1]; // item cuối cùng
+        if (!tbXoa) {
+            skip('Delete', 'không có thông báo nào để xoá');
+        } else {
+            const id = tbXoa.ma_thong_bao;
+            const r = await req('DELETE', `/notifications/${id}`);
+            if (r.json?.success && r.json.data?.ok === true) {
+                log(true, `DELETE /notifications/${id}`, 'ok=true');
+            } else {
+                log(false, 'Response lỗi', `HTTP ${r.status} — ${r.text.slice(0, 200)}`);
+            }
+        }
+    } else {
+        skip('Delete', 'đặt TEST_DELETE=1 để chạy (tránh xoá ngoài ý muốn)');
+    }
+
+    // ── 10) du_lieu của payment (nếu có) ───────────────────
+    header('10. Kiểm tra du_lieu của thông báo loại payment');
+    {
+        const tbPayment = dsTb.find(t => t.loai === 'payment' && t.du_lieu);
+        if (!tbPayment) {
+            skip('Breakdown payment', 'chưa có thông báo payment nào có du_lieu (cần chạy payback bên PHP trước)');
+        } else {
+            const d = tbPayment.du_lieu;
+            const coDayDu = ['tong_cod', 'tien_phat', 'tong_nop', 'so_don', 'ds_don'].every(k => k in d);
+            if (coDayDu) {
+                log(true, 'du_lieu đầy đủ', `tổng=${d.tong_nop} • ${d.so_don} đơn • phạt=${d.tien_phat}`);
+                if (Array.isArray(d.ds_don) && d.ds_don[0]) {
+                    const first = d.ds_don[0];
+                    const okShape = 'ma_hien_thi' in first && 'tien' in first;
+                    log(okShape, 'Shape ds_don[0]', JSON.stringify(first));
+                }
+            } else {
+                log(false, 'du_lieu thiếu field', JSON.stringify(d).slice(0, 200));
+            }
+        }
+    }
+
+    // ── Tổng kết ────────────────────────────────────────────
+    console.log(`\n${C.cyan}=== Tổng kết ===${C.reset}`);
+    console.log(`  ${C.green}Passed: ${passed}${C.reset}`);
+    console.log(`  ${failed ? C.red : C.dim}Failed: ${failed}${C.reset}`);
+    process.exit(failed > 0 ? 1 : 0);
+}
+
+main().catch((e) => {
+    console.error(`\n${C.red}💥 ${e.message}${C.reset}`);
+    process.exit(2);
+});

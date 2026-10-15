@@ -1699,15 +1699,22 @@
                                     <th style="width: 130px; min-width: 130px; text-align: right;">Giá dự kiến</th>
                                     <th style="width: 95px; min-width: 95px; text-align: center;">Trạng thái</th>
                                     <th style="width: 90px; min-width: 90px; text-align: center;">Thao tác</th>
+                                    <th style="width: 60px;">Ảnh</th>
+                                    <th>Tên mẫu</th>
+                                    <th>Size</th>
+                                    <th>Kiểu dáng</th>
+                                    <th>Concept</th>
+                                    <th style="min-width: 120px;">Thời hạn</th>
+                                    <th class="text-end">Giá vốn / Giá bán dự kiến</th>
+                                    <th class="text-center">Trạng thái</th>
+                                    <th class="text-end" style="width: 140px;">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody id="tbody-mau-list">
                                 @forelse($mauBoHoas as $m)
                                     @php
-                                        $costNL = $m->chiTietMauBoHoa->sum(fn($ct) => ($ct->sanPham?->gia_ban_hien_tai ?? 0) * $ct->so_luong);
-                                        $pSize = (float)($phuPhiMap->get("SIZE|{$m->size}")?->phu_phi ?? 0);
-                                        $pKieu = (float)($phuPhiMap->get("KIEU_DANG|{$m->kieu_bo_hoa}")?->phu_phi ?? 0);
-                                        $giaEst = $costNL + $pSize + $pKieu;
+                                        $giaVonEst = $m->chiTietMauBoHoa->sum(fn($ct) => ($ct->sanPham?->gia_nhap ?? 0) * $ct->so_luong);
+                                        $giaBanEst = round($giaVonEst * 1.5, 2);
                                     @endphp
                                     <tr class="mau-row" data-name="{{ strtolower($m->ten_mau) }} #{{ $m->ma_mau_bo_hoa }}" data-status="{{ $m->trang_thai }}">
                                         <td style="text-align: center; vertical-align: middle;">
@@ -1749,6 +1756,9 @@
                                         </td>
                                         <td style="text-align: right;" class="fw-bold text-success">
                                             {{ number_format($giaEst, 0, ',', '.') }} đ
+                                        <td class="text-end">
+                                            <div class="small text-muted text-nowrap">Vốn: <span class="fw-semibold text-secondary">{{ number_format($giaVonEst, 0, ',', '.') }} đ</span></div>
+                                            <div class="fw-bold text-nowrap" style="color:var(--rose-primary);">Bán: {{ number_format($giaBanEst, 0, ',', '.') }} đ</div>
                                         </td>
                                         <td style="text-align: center;">
                                             @if($m->trang_thai === 'ACTIVE')
@@ -1990,6 +2000,13 @@
                                     <span class="val-label">Khả dụng kho</span>
                                     <span class="val-ratio" id="sum-val-stock">0 món</span>
                                     <span class="summary-badge status-gray" id="sum-badge-stock">Chưa chọn</span>
+                                </div>
+
+                                {{-- 7. Giá dự kiến (Vốn từ giá nhập, Bán = Vốn × 1.5) --}}
+                                <div class="validation-row pt-2 border-top mt-1" id="val-row-price">
+                                    <span class="val-label fw-bold text-dark">Giá dự kiến</span>
+                                    <span class="val-ratio fw-bold" id="sum-val-price" style="color:#475467;">Vốn: 0 đ</span>
+                                    <span class="summary-badge status-ok" id="sum-badge-price" title="Giá bán niêm yết = Giá vốn × 1.5">Bán: 0 đ</span>
                                 </div>
                             </div>
                         </div>
@@ -2322,6 +2339,17 @@
                                         <th style="width: 125px; min-width: 125px; text-align: right;">Giá bán</th>
                                         <th style="width: 95px; min-width: 95px; text-align: center;">Trạng thái</th>
                                         <th style="width: 90px; min-width: 90px; text-align: center;">Thao tác</th>
+                                        <th style="width: 52px;">Ảnh</th>
+                                        <th>Tên bó hoa</th>
+                                        <th>Mẫu nguồn</th>
+                                        <th>Size / Kiểu</th>
+                                        <th style="min-width: 140px;">Thời hạn</th>
+                                        <th class="text-center">Tồn thực tế</th>
+                                        <th class="text-center">Đang giữ</th>
+                                        <th class="text-center">Khả dụng</th>
+                                        <th class="text-end">Giá vốn / Giá bán</th>
+                                        <th class="text-center">Trạng thái</th>
+                                        <th class="text-end" style="width: 140px;">Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -2405,6 +2433,9 @@
                                             </td>
                                             <td style="text-align: right;" class="fw-bold text-success">
                                                 {{ number_format($bo->gia_ban, 0, ',', '.') }} đ
+                                            <td class="text-end">
+                                                <div class="small text-muted text-nowrap">Vốn: <span class="fw-semibold text-secondary">{{ number_format($bo->gia_von ?? 0, 0, ',', '.') }} đ</span></div>
+                                                <div class="fw-bold text-nowrap" style="color:var(--rose-primary);">Bán: {{ number_format($bo->gia_ban, 0, ',', '.') }} đ</div>
                                             </td>
                                             <td style="text-align: center;">
                                                 @if($bo->trang_thai === 'ACTIVE')
@@ -2561,37 +2592,22 @@
                                 <th>Nguyên liệu</th>
                                 <th>Vai trò</th>
                                 <th class="text-end">SL</th>
-                                <th class="text-end">Đơn giá</th>
-                                <th class="text-end">Thành tiền</th>
+                                <th class="text-end">Giá nhập lô</th>
+                                <th class="text-end">Thành tiền (Vốn)</th>
                             </tr>
                         </thead>
                         <tbody id="ctg_nguyen_lieu"></tbody>
                         <tfoot>
                             <tr class="table-light fw-bold">
-                                <td colspan="4" class="text-end">Tổng giá gốc nguyên liệu:</td>
+                                <td colspan="4" class="text-end">Tổng giá vốn (Σ SL × Giá nhập lô):</td>
                                 <td class="text-end text-primary" id="ctg_tong_nl">0 đ</td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
 
-                <div class="border rounded p-2 bg-light mb-2 small">
-                    <div class="d-flex justify-content-between mb-1">
-                        <span>Phụ phí size (<span id="ctg_size_label">—</span>):</span>
-                        <span id="ctg_pp_size">0 đ</span>
-                    </div>
-                    <div class="d-flex justify-content-between mb-1">
-                        <span>Phụ phí kiểu dáng (<span id="ctg_kieu_label">—</span>):</span>
-                        <span id="ctg_pp_kieu">0 đ</span>
-                    </div>
-                    <div class="d-flex justify-content-between pt-1 border-top fw-bold text-primary">
-                        <span>Tổng phụ phí:</span>
-                        <span id="ctg_pp_tong">0 đ</span>
-                    </div>
-                </div>
-
                 <div class="p-2 rounded bg-success-subtle text-success fw-bold d-flex justify-content-between align-items-center">
-                    <span>Giá bán mỗi bó:</span>
+                    <span>Giá bán (Giá vốn × 1.5):</span>
                     <span class="fs-6" id="ctg_gia_ban">0 đ</span>
                 </div>
             </div>
@@ -3332,7 +3348,7 @@
                         <span class="picker-item-name text-muted">${p.ten_san_pham} ${isAlreadySelected ? '✓' : ''}</span>
                         <span class="stock-badge badge-out-of-stock">Hết hàng</span>
                     </div>
-                    <small class="text-muted">${money(p.gia_ban_hien_tai)}</small>
+                    <small class="text-muted">${money(p.gia_nhap !== undefined ? p.gia_nhap : (p.gia_ban_hien_tai || 0))}</small>
                 `;
             } else if (isDuplicateFlower) {
                 const otherGroup = role === 'HOA_TRANG_TRI' ? 'hoa chính' : 'hoa trang trí';
@@ -3343,7 +3359,7 @@
                         <span class="picker-item-name text-muted">${p.ten_san_pham}</span>
                         <span class="stock-badge" style="background:#F3F4F6;color:#6B7280;border:1px solid #D1D5DB;">Đã chọn ở ${otherGroup}</span>
                     </div>
-                    <small class="text-muted">${money(p.gia_ban_hien_tai)}</small>
+                    <small class="text-muted">${money(p.gia_nhap !== undefined ? p.gia_nhap : (p.gia_ban_hien_tai || 0))}</small>
                 `;
             } else {
                 itemEl.className = 'picker-item' + (isAlreadySelected ? ' selected-disabled' : '');
@@ -3352,7 +3368,7 @@
                         <span class="picker-item-name">${p.ten_san_pham} ${isAlreadySelected ? '✓' : ''}</span>
                         <span class="stock-badge badge-available">Còn ${available} ${unit}</span>
                     </div>
-                    <small class="text-muted">${money(p.gia_ban_hien_tai)}</small>
+                    <small class="text-muted">${money(p.gia_nhap !== undefined ? p.gia_nhap : (p.gia_ban_hien_tai || 0))}</small>
                 `;
 
                 if (!isAlreadySelected) {
@@ -3374,7 +3390,8 @@
                             name: p.ten_san_pham,
                             qty: initialQty,
                             available: available,
-                            unit: unit
+                            unit: unit,
+                            gia_nhap: p.gia_nhap !== undefined ? p.gia_nhap : (p.gia_ban_hien_tai || 0)
                         });
 
                         renderGroupSelected(role);
@@ -3641,6 +3658,20 @@
             }
         }
 
+        // 7. CẬP NHẬT ƯỚC TÍNH GIÁ (Giá vốn = Σ(SL × Giá nhập), Giá bán = Giá vốn × 1.5)
+        const valPrice = document.getElementById('sum-val-price');
+        const bdgPrice = document.getElementById('sum-badge-price');
+        if (valPrice && bdgPrice) {
+            let totalCost = 0;
+            allSelectedItems.forEach(item => {
+                const costItem = (Number(item.gia_nhap) || 0) * (Number(item.qty) || 0);
+                totalCost += costItem;
+            });
+            const estSellingPrice = Math.round(totalCost * 1.5);
+            valPrice.textContent = `Vốn: ${money(totalCost)}`;
+            bdgPrice.textContent = `Bán: ${money(estSellingPrice)}`;
+        }
+
         // ── CẬP NHẬT TRẠNG THÁI & HƯỚNG DẪN NÚT LƯU MẪU ──
         const isNameDuplicate = inputTplName ? existingTemplateNames.some(name => normalizeName(name) === normalizeName(inputTplName.value)) : false;
         const isNameEmpty = !inputTplName || !inputTplName.value.trim();
@@ -3892,17 +3923,16 @@
                         <td>${ct.ten_san_pham}</td>
                         <td><span class="badge bg-secondary">${ct.vai_tro_text}</span></td>
                         <td class="text-end">${ct.so_luong} ${ct.don_vi_tinh || ''}</td>
-                        <td class="text-end">${money(ct.gia_ban)}</td>
+                        <td class="text-end">${money(ct.gia_nhap)}</td>
                         <td class="text-end fw-semibold">${money(ct.thanh_tien)}</td>
                     `;
                     tbody.appendChild(tr);
                 });
 
-                document.getElementById('ctg_tong_nl').textContent  = money(r.data.tien_nguyen_lieu);
-                document.getElementById('ctg_pp_size').textContent  = money(r.data.phu_phi.size);
-                document.getElementById('ctg_pp_kieu').textContent  = money(r.data.phu_phi.kieu_dang);
-                document.getElementById('ctg_pp_tong').textContent  = money(r.data.phu_phi.tong);
-                document.getElementById('ctg_gia_ban').textContent  = money(r.data.gia_ban);
+                document.getElementById('ctg_tong_nl').textContent = money(r.data.gia_von ?? r.data.tien_nguyen_lieu);
+                if (document.getElementById('ctg_gia_ban')) {
+                    document.getElementById('ctg_gia_ban').textContent = money(r.data.gia_ban);
+                }
 
                 new bootstrap.Modal(document.getElementById('modalChiTietGiaBo')).show();
             } catch (e) {

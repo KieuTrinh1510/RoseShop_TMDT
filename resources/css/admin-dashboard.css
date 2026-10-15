@@ -639,18 +639,24 @@ small {
 /* Dashboard Stats Grid */
 .home-stats {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 18px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
     margin-bottom: 24px;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
+    .home-stats {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 992px) {
     .home-stats {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 576px) {
     .home-stats {
         grid-template-columns: 1fr;
     }
@@ -665,6 +671,16 @@ small {
     align-items: center;
     gap: 16px;
     box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+a.home-card:hover {
+    text-decoration: none;
+    color: inherit;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16, 24, 40, 0.08);
 }
 
 .home-icon {
@@ -694,6 +710,11 @@ small {
 .home-icon.purple {
     background: #F4EBFF;
     color: #6941C6;
+}
+
+.home-icon.orange {
+    background: #FEF0C7;
+    color: #DC6803;
 }
 
 .home-card p {
