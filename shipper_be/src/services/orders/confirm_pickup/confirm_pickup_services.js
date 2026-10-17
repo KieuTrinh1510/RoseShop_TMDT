@@ -5,7 +5,11 @@
 const HoaDon = require('../../../models/HoaDon');
 const ChiTietHoaDon = require('../../../models/ChiTietHoaDon');
 const { taoLoi, parseMaHoaDon } = require('../../../utils/loi');
-const { timDonHoacNemLoi, moTaSanPham } = require('../order_helper');
+const {
+    timDonHoacNemLoi,
+    moTaSanPham,
+    locChiTietHienThi,
+} = require('../order_helper');
 const customerNotif = require('../customer_notification/customer_notification_services');
 const { THOI_GIAN_TOI_DA_GIAY, donLaHoaTuoi } = require('../delivery_timer/delivery_timer_services');
 
@@ -17,12 +21,11 @@ async function confirmPickup(maNhanVien, id) {
         throw taoLoi(422, 'INVALID_STATE', 'Đơn hàng không ở trạng thái CONFIRMED.');
     }
 
-    // Đọc chi tiết TRƯỚC khi đổi trạng thái: lỗi đọc thì chưa đổi gì
-    const dsChiTiet = await ChiTietHoaDon.findByHoaDonWithSanPham(maHoaDon);
-    const laHoaTuoi = donLaHoaTuoi(dsChiTiet);
+    // Đọc chi tiết TRƯỚC khi đổi trạng thái
+    const dsChiTietRaw = await ChiTietHoaDon.findByHoaDonWithSanPham(maHoaDon);
+    const laHoaTuoi = donLaHoaTuoi(dsChiTietRaw);
 
-    // Điều kiện trạng thái nằm trong UPDATE: bấm 2 lần chỉ 1 request thắng,
-    // nên mốc ngay_bat_giao không bị ghi đè.
+    // Cập nhật trạng thái (điều kiện chống bấm 2 lần)
     const batDau = new Date();
     const [soDong] = await HoaDon.update(
         { trang_thai: 'SHIPPING', ngay_bat_giao: batDau },
@@ -38,13 +41,15 @@ async function confirmPickup(maNhanVien, id) {
         throw taoLoi(422, 'INVALID_STATE', 'Đơn hàng không ở trạng thái CONFIRMED.');
     }
 
-    // Lỗi gửi thông báo không làm hỏng việc nhận hàng (đơn đã SHIPPING rồi).
+    // Lọc chỉ dòng bó (nếu có bó) trước khi mô tả
+    const dsChiTietMoTa = locChiTietHienThi(dsChiTietRaw);
+
     try {
         await customerNotif.taoDangGiao(
             hoaDon.ma_khach_hang,
             maHoaDon,
             hoaDon.maHienThi,
-            moTaSanPham(dsChiTiet),
+            moTaSanPham(dsChiTietMoTa),
             laHoaTuoi
         );
     } catch (err) {

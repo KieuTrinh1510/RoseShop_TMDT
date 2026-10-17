@@ -38,12 +38,40 @@ class BoHoaController extends Controller
             ->get()
             ->groupBy('ma_mau_bo_hoa');
 
-        $allMaus = $query->orderByDesc('ma_mau_bo_hoa')->get()->map(function ($m) use ($activeReadyBouquets) {
-            $readyBo = $activeReadyBouquets->get($m->ma_mau_bo_hoa)?->first();
-            if ($readyBo) {
-                $m->gia_hien_thi = (float) $readyBo->gia_ban;
-            } else {
-                $m->gia_hien_thi = self::tinhGiaUocTinhMau($m);
+        $mauList = $query->orderByDesc('ma_mau_bo_hoa')->get();
+
+        // Tồn khả dụng của toàn bộ nguyên liệu trong trang — 1 lần truy vấn, tránh N+1.
+        $spIds = $mauList
+            ->flatMap(fn ($m) => $m->chiTietMauBoHoa->pluck('ma_san_pham'))
+            ->filter()->unique()->values()->all();
+        $availMap = \App\Services\InventoryReservationService::getBatchAvailableForIngredients($spIds);
+
+        $allMaus = $mauList->map(function ($m) use ($activeReadyBouquets, $availMap) {
+            $kd = self::kiemTraKhaDungMau($m, 1, null, $availMap);
+
+            $m->het_hang           = !$kd['kha_dung'];
+            $m->ly_do_khong_ban    = $kd['ly_do'];          // null | OUT_OF_STOCK | FORMULA_EMPTY
+            $m->thieu_nguyen_lieu  = $kd['thieu'];
+            $m->gia_hien_thi       = null;                  // null = KHÔNG có giá hợp lệ, view không được in 0đ
+
+            if (!$kd['kha_dung']) {
+                return $m;
+            }
+
+            // Còn bó thành phẩm → giá của bó thành phẩm (bỏ qua nếu dữ liệu cũ gia_ban = 0)
+            if ($kd['trang_thai'] === self::TT_CON_BO_THANH_PHAM) {
+                $readyBo = $activeReadyBouquets->get($m->ma_mau_bo_hoa)?->first();
+                if ($readyBo && (float) $readyBo->gia_ban > 0) {
+                    $m->gia_hien_thi = (float) $readyBo->gia_ban;
+                    return $m;
+                }
+            }
+
+            // Hết bó thành phẩm nhưng đủ nguyên liệu → giá ước tính
+            $m->gia_hien_thi = self::tinhGiaUocTinhMau($m);
+            if ($m->gia_hien_thi === null) {
+                $m->het_hang        = true;
+                $m->ly_do_khong_ban = 'PRICE_UNAVAILABLE';
             }
             return $m;
         });
@@ -53,6 +81,7 @@ class BoHoaController extends Controller
             $prices = (array) $request->price;
             $allMaus = $allMaus->filter(function ($m) use ($prices) {
                 $price = $m->gia_hien_thi;
+                if ($price === null) return false;
                 foreach ($prices as $p) {
                     if ($p === 'duoi_350000' && $price < 350000) return true;
                     if ($p === '350000_450000' && $price >= 350000 && $price <= 450000) return true;
@@ -387,9 +416,13 @@ class BoHoaController extends Controller
                 ], $khachId);
                 $giaMotBo = (float) $info['quote']['gia_moi_bo'];
                 $tongItem = (float) $info['quote']['tong_tien'];
+                $khongKhaDung = false;
+                $lyDoLoi      = null;
             } catch (\Throwable $e) {
-                $giaMotBo = 0;
-                $tongItem = 0;
+                $giaMotBo     = 0;
+                $tongItem     = 0;
+                $khongKhaDung = true;                       // view GioBoHoa nên hiện "Hết hàng" + chặn thanh toán
+                $lyDoLoi      = $e->getMessage();
             }
 
             $dsItem[$key] = [
@@ -399,6 +432,8 @@ class BoHoaController extends Controller
                 'loi_nhan'  => $item['loi_nhan'] ?? null,
                 'gia_mot_bo'=> $giaMotBo,
                 'tong'      => $tongItem,
+                'khong_kha_dung' => $khongKhaDung,
+                'ly_do_loi'      => $lyDoLoi,
             ];
         }
 
@@ -498,7 +533,11 @@ class BoHoaController extends Controller
         return $data;
     }
 
-    public static function tinhGiaUocTinhMau($m): float
+    /**
+     * Giá ước tính 1 bó theo công thức mẫu (khi hết bó thành phẩm).
+     * Trả về NULL (không phải 0) nếu không tính được giá — caller phải coi là "không bán được".
+     */
+    public static function tinhGiaUocTinhMau($m): ?float
     {
         $formula = collect($m->chiTietMauBoHoa ?? [])->map(fn ($c) => [
             'ma_san_pham' => $c->ma_san_pham,
@@ -508,11 +547,94 @@ class BoHoaController extends Controller
 
         try {
             $rows = Bo::phanBo($formula, false);
-            $gia = Bo::tinhGiaVonVaGiaBan($rows);
-            return (float) $gia['gia_ban'];
+            $gia  = (float) Bo::tinhGiaVonVaGiaBan($rows)['gia_ban'];
+            return $gia > 0 ? $gia : null;
+        } catch (ValidationException $e) {
+            // Thiếu tồn / ngừng bán… là tình huống nghiệp vụ bình thường → không có giá.
+            return null;
         } catch (\Throwable $e) {
-            return 0;
+            // Lỗi bất ngờ (DB, dữ liệu hỏng…) → KHÔNG được che giấu, ghi log để còn biết.
+            report($e);
+            return null;
         }
+    }
+
+    public const TT_CON_BO_THANH_PHAM = 'CON_BO_THANH_PHAM';
+    public const TT_DU_NGUYEN_LIEU    = 'DU_NGUYEN_LIEU';
+    public const TT_HET_HANG          = 'HET_HANG';
+
+    /**
+     * Quyết định "mẫu này có bán được không" — nguồn sự thật DUY NHẤT cho cả
+     * trang danh sách lẫn checkout (duLieuCheckout).
+     *
+     * - CON_BO_THANH_PHAM : còn bó thành phẩm khả dụng đủ số lượng (không kèm thiệp).
+     * - DU_NGUYEN_LIEU    : hết/thiếu bó thành phẩm nhưng nguyên liệu đủ để làm theo đơn.
+     * - HET_HANG          : có ít nhất 1 nguyên liệu không đủ tồn khả dụng
+     *                       (đã trừ hàng giữ chỗ, bỏ lô quá hạn, bỏ SP ngừng bán).
+     *
+     * @param array<int,int>|null $availMap [ma_san_pham => tồn khả dụng]; truyền sẵn khi chạy hàng loạt.
+     * @return array{kha_dung:bool,trang_thai:string,ly_do:?string,thieu:array<int,array{ma_san_pham:int,ten:string,can:int,con:int}>}
+     */
+    public static function kiemTraKhaDungMau(MauBoHoa $mau, int $soLuong = 1, ?SanPham $thiep = null, ?array $availMap = null): array
+    {
+        $soLuong   = max(1, $soLuong);
+        $thanhPhan = $mau->relationLoaded('chiTietMauBoHoa')
+            ? $mau->chiTietMauBoHoa
+            : $mau->chiTietMauBoHoa()->with('sanPham')->get();
+
+        // 1. Bó thành phẩm còn khả dụng (bó sẵn không có thiệp → có thiệp thì phải làm theo đơn)
+        $sanCo = $thiep
+            ? 0
+            : (int) \App\Services\InventoryReservationService::getStockForTemplate((int) $mau->getKey())['available'];
+        $canLam = max(0, $soLuong - $sanCo);
+
+        if ($canLam === 0) {
+            return ['kha_dung' => true, 'trang_thai' => self::TT_CON_BO_THANH_PHAM, 'ly_do' => null, 'thieu' => []];
+        }
+
+        if ($thanhPhan->isEmpty()) {
+            return ['kha_dung' => false, 'trang_thai' => self::TT_HET_HANG, 'ly_do' => 'FORMULA_EMPTY', 'thieu' => []];
+        }
+
+        // 2. Cộng dồn nhu cầu theo sản phẩm (cùng 1 SP có thể xuất hiện nhiều dòng công thức)
+        $can = [];
+        $ten = [];
+        foreach ($thanhPhan as $c) {
+            $id = (int) $c->ma_san_pham;
+            $can[$id] = ($can[$id] ?? 0) + (int) $c->so_luong * $canLam;
+            $ten[$id] = $c->sanPham?->ten_san_pham ?? "Nguyên liệu #{$id}";
+        }
+        if ($thiep) {
+            $id = (int) $thiep->ma_san_pham;
+            $can[$id] = ($can[$id] ?? 0) + $canLam;
+            $ten[$id] = $thiep->ten_san_pham;
+        }
+
+        $availMap ??= \App\Services\InventoryReservationService::getBatchAvailableForIngredients(array_keys($can));
+
+        $thieu = [];
+        foreach ($can as $id => $canId) {
+            $con = (int) ($availMap[$id] ?? 0);   // SP không tồn tại → 0
+            if ($con < $canId) {
+                $thieu[] = ['ma_san_pham' => $id, 'ten' => $ten[$id], 'can' => $canId, 'con' => $con];
+            }
+        }
+
+        if ($thieu) {
+            return ['kha_dung' => false, 'trang_thai' => self::TT_HET_HANG, 'ly_do' => 'OUT_OF_STOCK', 'thieu' => $thieu];
+        }
+
+        return ['kha_dung' => true, 'trang_thai' => self::TT_DU_NGUYEN_LIEU, 'ly_do' => null, 'thieu' => []];
+    }
+
+    private static function thongBaoHetHang(string $tenMau, array $kd): string
+    {
+        if (empty($kd['thieu'])) {
+            return "Mẫu \"{$tenMau}\" hiện chưa thể bán (chưa có công thức nguyên liệu).";
+        }
+        $t   = $kd['thieu'][0];
+        $them = count($kd['thieu']) > 1 ? ' và ' . (count($kd['thieu']) - 1) . ' nguyên liệu khác' : '';
+        return "Mẫu \"{$tenMau}\" tạm hết hàng: nguyên liệu \"{$t['ten']}\" cần {$t['can']}, hiện còn {$t['con']}{$them}.";
     }
 
     /**
@@ -582,6 +704,15 @@ class BoHoaController extends Controller
             }
         }
 
+        // Mẫu bó hoa: PHẢI đủ bó thành phẩm hoặc đủ nguyên liệu (đã trừ hàng giữ chỗ).
+        // Trước đây nhánh MAU không kiểm tra → khách vẫn "mua" được mẫu hết nguyên liệu với giá 0đ.
+        if (($checkout['loai'] ?? '') === 'MAU') {
+            $kd = self::kiemTraKhaDungMau($source, (int) ($checkout['so_luong'] ?? 1), $thiep);
+            if (!$kd['kha_dung']) {
+                throw new \RuntimeException(self::thongBaoHetHang($ten, $kd));
+            }
+        }
+
         // Formula cho 1 bó
         $formula = collect($thanhPhan)->map(fn ($c) => [
             'ma_san_pham' => $c->ma_san_pham,
@@ -608,7 +739,7 @@ class BoHoaController extends Controller
                 ->orderBy('ma_bo_hoa')
                 ->first() : null;
 
-            if ($readyBo) {
+            if ($readyBo && (float) $readyBo->gia_ban > 0) {
                 $giaMoiBo = (float) $readyBo->gia_ban;
                 $tienThiep = $thiep ? ((float) ($thiep->gia_ban_hien_tai ?? 0)) * $soLuong : 0;
                 $quote = [
@@ -619,25 +750,34 @@ class BoHoaController extends Controller
                     'gia_von_moi_bo'   => (float) ($readyBo->gia_von ?? round($giaMoiBo / 1.5, 2)),
                 ];
             } else {
+                // Không còn nuốt lỗi thành quote = 0: không tính được giá thì KHÔNG cho checkout.
+                // $formula chỉ là nguyên liệu của 1 bó; tinhGiaVonVaGiaBan() yêu cầu $rows là nguyên liệu
+                // của TOÀN BỘ $soLuong bó (nó tự chia lại cho 1 bó) → phải nhân số lượng trước khi phân bổ.
+                $formulaNhieuBo = array_map(
+                    fn ($r) => [...$r, 'so_luong' => $r['so_luong'] * $soLuong],
+                    $formula
+                );
+
                 try {
-                    $rows = Bo::phanBo($formula, false);
-                    $gia = Bo::tinhGiaVonVaGiaBan($rows, $soLuong);
-                    $quote = [
-                        'gia_moi_bo'       => $gia['gia_ban'],
-                        'tong_tien'        => $gia['tong_gia_ban'],
-                        'tien_nguyen_lieu' => $gia['tong_gia_von'],
-                        'phu_phi'          => ['size' => 0, 'kieu_dang' => 0, 'tong' => 0],
-                        'gia_von_moi_bo'   => $gia['gia_von'],
-                    ];
-                } catch (\Throwable $e) {
-                    $quote = [
-                        'gia_moi_bo'       => 0,
-                        'tong_tien'        => 0,
-                        'tien_nguyen_lieu' => 0,
-                        'phu_phi'          => ['size' => 0, 'kieu_dang' => 0, 'tong' => 0],
-                        'gia_von_moi_bo'   => 0,
-                    ];
+                    $rows = Bo::phanBo($formulaNhieuBo, false);
+                } catch (ValidationException $e) {
+                    throw new \RuntimeException(
+                        collect($e->errors())->flatten()->first() ?? self::thongBaoHetHang($ten, ['thieu' => []])
+                    );
                 }
+
+                $gia = Bo::tinhGiaVonVaGiaBan($rows, $soLuong);
+                if ((float) $gia['gia_ban'] <= 0) {
+                    throw new \RuntimeException("Không xác định được giá của mẫu \"{$ten}\", vui lòng thử lại sau.");
+                }
+
+                $quote = [
+                    'gia_moi_bo'       => $gia['gia_ban'],
+                    'tong_tien'        => $gia['tong_gia_ban'],
+                    'tien_nguyen_lieu' => $gia['tong_gia_von'],
+                    'phu_phi'          => ['size' => 0, 'kieu_dang' => 0, 'tong' => 0],
+                    'gia_von_moi_bo'   => $gia['gia_von'],
+                ];
             }
         } else {
             // TUY_CHON (Custom Mix): giữ nguyên business hiện tại
@@ -726,6 +866,10 @@ class BoHoaController extends Controller
 
     /* ═══════════════════════════════════════════════════════════════════
        HOÀN TẤT BÓ HOA (1 checkout)
+       - Mọi bó hoa (MAU sẵn / MAU làm theo đơn / TUY_CHON) đều tạo 1 dòng
+         ChiTietHoaDon ĐẠI DIỆN với ma_bo_hoa + so_luong + giá bó.
+       - Dòng con nguyên liệu vẫn được tạo cho TUY_CHON để phục vụ
+         return legacy — KHÔNG bị xóa.
     ═══════════════════════════════════════════════════════════════════ */
     public static function hoanTatBoHoa(
         HoaDon $hoaDon,
@@ -742,8 +886,7 @@ class BoHoaController extends Controller
         if (($checkout['loai'] ?? '') === 'MAU') {
             $coThiep = !empty($info['thiep']);
 
-            // Nếu có thiệp → KHÔNG dùng bó sẵn (vì bó sẵn không có thiệp).
-            // Ngược lại → dùng bó sẵn như cũ.
+            // Nếu có thiệp → KHÔNG dùng bó sẵn (bó sẵn không có thiệp).
             $ready = collect();
             if (!$coThiep) {
                 $ready = BoHoa::where('loai_bo_hoa', 'HE_THONG')
@@ -761,7 +904,6 @@ class BoHoaController extends Controller
             foreach ($ready as $bo) {
                 if ($need < 1) break;
 
-                // Giá bán của bó hoa làm sẵn đã được cố định (snapshot) tại thời điểm sản xuất
                 $giaMoiBo = (float) $bo->gia_ban;
 
                 $bo->update([
@@ -770,15 +912,26 @@ class BoHoaController extends Controller
                     'loi_nhan'      => $checkout['loi_nhan'] ?? null,
                 ]);
 
-                // 1. BÓ HOA THÀNH PHẨM CẮM SẴN: reserve bó hoa, KHÔNG reserve BOM nguyên liệu
+                // 1. BÓ HOA THÀNH PHẨM CẮM SẴN: reserve bó hoa, KHÔNG reserve BOM
                 \App\Services\InventoryReservationService::reserveReadyBouquet($hoaDon, $bo);
+
+                // ── [MỚI] Dòng đại diện bó trong chi_tiet_hoa_don ──
+                ChiTietHoaDon::create([
+                    'ma_hoa_don'        => $hoaDon->getKey(),
+                    'ma_bo_hoa'         => $bo->ma_bo_hoa,
+                    'ma_san_pham'       => null,
+                    'ma_chi_tiet_nhap'  => null,
+                    'so_luong'          => 1,
+                    'gia_nhap_snapshot' => (float) ($bo->gia_von ?? 0),
+                    'gia_ban_snapshot'  => (float) $bo->gia_ban,
+                ]);
 
                 $tong += $giaMoiBo;
                 --$need;
             }
 
             if ($need > 0) {
-                // 2. BÓ THEO MẪU LÀM THEO ĐƠN: reserve BOM nguyên liệu từ các lô khả dụng theo FIFO
+                // 2. BÓ THEO MẪU LÀM THEO ĐƠN: reserve BOM nguyên liệu theo FIFO
                 $formula = $info['thanhPhan']->map(fn ($c) => [
                     'ma_san_pham' => $c->ma_san_pham,
                     'vai_tro'     => $c->vai_tro,
@@ -817,10 +970,22 @@ class BoHoaController extends Controller
 
                 Bo::luuChiTiet($bo, $phanBo);
                 Bo::saoChepAnhTuMau($info['source']->getKey(), $bo->getKey());
+
+                // ── [MỚI] Dòng đại diện bó trong chi_tiet_hoa_don ──
+                ChiTietHoaDon::create([
+                    'ma_hoa_don'        => $hoaDon->getKey(),
+                    'ma_bo_hoa'         => $bo->ma_bo_hoa,
+                    'ma_san_pham'       => null,
+                    'ma_chi_tiet_nhap'  => null,
+                    'so_luong'          => $need,
+                    'gia_nhap_snapshot' => (float) $bo->gia_von,
+                    'gia_ban_snapshot'  => (float) $bo->gia_ban,
+                ]);
+
                 $tong += $gia['tong_gia_ban'];
             }
         } else {
-            // 3. CUSTOM MIX (TUY_CHON): reserve đúng nguyên liệu khách chọn theo chi_tiet_bo_hoa
+            // 3. CUSTOM MIX (TUY_CHON): reserve đúng nguyên liệu khách chọn
             $draft = $info['source'];
             $formula = $info['thanhPhan']->map(fn ($c) => [
                 'ma_san_pham' => $c->ma_san_pham,
@@ -851,7 +1016,21 @@ class BoHoaController extends Controller
 
             $bo->chiTietBoHoa()->delete();
             Bo::luuChiTiet($bo, $phanBo);
+
+            // ── [MỚI] Dòng đại diện bó (hiển thị chính) ──
+            ChiTietHoaDon::create([
+                'ma_hoa_don'        => $hoaDon->getKey(),
+                'ma_bo_hoa'         => $bo->ma_bo_hoa,
+                'ma_san_pham'       => null,
+                'ma_chi_tiet_nhap'  => null,
+                'so_luong'          => $qty,
+                'gia_nhap_snapshot' => (float) $bo->gia_von,
+                'gia_ban_snapshot'  => (float) $bo->gia_ban,
+            ]);
+
+            // ── Dòng con (nguyên liệu) — GIỮ NGUYÊN cho return legacy ──
             self::taoChiTietHoaDon($hoaDon, $phanBo);
+
             $tong = $gia['tong_tien'];
         }
 

@@ -79,6 +79,7 @@ BoHoa.init({
         type: DataTypes.DECIMAL(12, 2),
         defaultValue: 0,
     },
+    gia_von: DataTypes.DECIMAL(12, 2),
     loai_bo_hoa: {
         type: DataTypes.STRING,
         defaultValue: BoHoa.LOAI_TUY_CHON,

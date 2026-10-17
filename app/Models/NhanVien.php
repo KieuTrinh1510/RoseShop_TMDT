@@ -46,4 +46,14 @@ class NhanVien extends Model
     {
         return $this->hasMany(HoaDon::class, 'ma_nhan_vien_giao', 'ma_nhan_vien');
     }
+
+    public function giaoHangThatBai()
+    {
+        return $this->hasMany(GiaoHangThatBai::class, 'ma_nhan_vien_giao', 'ma_nhan_vien');
+    }
+
+    public function phatShipper()
+    {
+        return $this->hasMany(PhatShipper::class, 'ma_nhan_vien', 'ma_nhan_vien');
+    }
 }

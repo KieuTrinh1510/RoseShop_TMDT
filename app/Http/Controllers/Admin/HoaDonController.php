@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Admin;
+
 use App\Http\Controllers\Controller;
 use App\Models\HoaDon;
 use App\Models\KhachHang;
@@ -9,12 +10,27 @@ use Carbon\Carbon;
 
 class HoaDonController extends Controller
 {
+    // Nhãn hiển thị nguồn hủy / trạng thái hàng hoàn (chỉ dùng để trả dữ liệu cho View)
+    private const NGUON_HUY_TEXT = [
+        'CUSTOMER' => 'Do khách hàng',
+        'SHIPPER'  => 'Do shipper',
+    ];
+
+    private const TRANG_THAI_HANG_HOAN_TEXT = [
+        'CHO_MANG_VE_KHO' => 'Chờ mang về kho',
+        'DA_NHAN_TAI_KHO' => 'Đã nhận tại kho',
+        'DANG_KIEM_TRA'   => 'Đang kiểm tra',
+        'DA_KIEM_TRA'     => 'Đã kiểm tra',
+    ];
+
     public function index(Request $request)
     {
         $query = HoaDon::with([
             'khachHang',
             'shipper',
             'chiTietHoaDon.sanPham',
+            'chiTietHoaDon.boHoa.mauBoHoa',   // ← [MỚI] để list có thể hiển thị tên bó nếu cần
+            'hangHoan',
         ]);
 
         if ($request->filled('ma_khach_hang')) {
@@ -41,6 +57,8 @@ class HoaDonController extends Controller
         }
 
         $hoaDons    = $query->orderByDesc('ngay_dat')->paginate(15)->withQueryString();
+
+        $hoaDons->getCollection()->each(fn (HoaDon $hd) => $this->ganThongTinHuyHangHoan($hd));
         $khachHangs = KhachHang::orderBy('ten_khach_hang')->get();
 
         return view('admin.HoaDon', compact('hoaDons', 'khachHangs'));
@@ -52,48 +70,55 @@ class HoaDonController extends Controller
             'khachHang',
             'shipper',
             'chiTietHoaDon.sanPham',
+            'chiTietHoaDon.boHoa.mauBoHoa',   // ← [MỚI]
+            'hangHoan.chiTiet.sanPham',
+            'hangHoan.chiTiet.boHoa',
         ])->findOrFail($id);
 
         if (request()->ajax()) {
-            // Nếu đơn có bó hoa ĐỀ XUẤT (loai_bo_hoa = HE_THONG) → KHÔNG hiển thị
-            // các dòng ChiTietHoaDon (vật phẩm nhỏ), chỉ hiển thị dòng bó hoa.
-            // Nếu là bó TỰ CHỌN → hiển thị các vật phẩm nhỏ qua ChiTietHoaDon.
-            $hasHeThong = \App\Models\BoHoa::where('ma_hoa_don', $id)
-                ->where('loai_bo_hoa', 'HE_THONG')
-                ->exists();
+            // ── Chi tiết hóa đơn: ưu tiên dòng đại diện bó ──
+            $chiTiet = $hoaDon->chiTietHoaDon->map(function ($ct) {
+                return [
+                    'ma_chi_tiet'       => $ct->ma_chi_tiet,
+                    'ma_bo_hoa'         => $ct->ma_bo_hoa,
+                    'ma_san_pham'       => $ct->ma_san_pham,
+                    'ten_hien_thi'      => $ct->ten_hien_thi,
+                    'size'              => $ct->boHoa?->size,
+                    'loai'              => $ct->ma_bo_hoa ? 'bo_hoa' : 'san_pham',
+                    'so_luong'          => $ct->so_luong,
+                    'gia_ban_snapshot'  => $ct->gia_ban_snapshot,
+                    'gia_nhap_snapshot' => $ct->gia_nhap_snapshot,
+                    'thanh_tien'        => $ct->so_luong * $ct->gia_ban_snapshot,
+                    'san_pham'          => $ct->sanPham
+                        ? ['ten_san_pham' => $ct->sanPham->ten_san_pham]
+                        : ['ten_san_pham' => null],
+                ];
+            });
 
-            $chiTiet = $hasHeThong
-                ? collect()
-                : $hoaDon->chiTietHoaDon->map(function ($ct) {
-                    return [
-                        'ma_chi_tiet'       => $ct->ma_chi_tiet,
-                        'ma_san_pham'       => $ct->ma_san_pham,
-                        'so_luong'          => $ct->so_luong,
-                        'gia_ban_snapshot'  => $ct->gia_ban_snapshot,
-                        'gia_nhap_snapshot' => $ct->gia_nhap_snapshot,
-                        'thanh_tien'        => $ct->so_luong * $ct->gia_ban_snapshot,
-                        'san_pham'          => $ct->sanPham
-                            ? ['ten_san_pham' => $ct->sanPham->ten_san_pham]
-                            : ['ten_san_pham' => '(Đã xóa)'],
-                    ];
-                });
-
-            // Chỉ hiển thị dòng bó hoa cho ĐỀ XUẤT (HE_THONG).
-            // Bó TỰ CHỌN đã hiện qua ChiTietHoaDon ở trên nên không lặp lại.
-            $boLines = \App\Models\BoHoa::where('ma_hoa_don', $id)
-                ->where('loai_bo_hoa', 'HE_THONG')
-                ->get()
-                ->map(fn ($bo) => [
-                    'ma_bo_hoa'        => $bo->ma_bo_hoa,
-                    'ma_san_pham'      => null,
-                    'so_luong'         => $bo->so_luong,
-                    'gia_ban_snapshot' => $bo->gia_ban,
-                    'thanh_tien'       => $bo->gia_ban * $bo->so_luong,
-                    'san_pham'         => ['ten_san_pham' => $bo->ten_bo_hoa.' · '.$bo->size],
-                    'loi_nhan'         => $bo->loi_nhan,
-                ]);
-
-            $chiTiet = $chiTiet->concat($boLines);
+            // Nếu hóa đơn có bó hoa → chỉ trả dòng bó.
+            // Dòng con nguyên liệu vẫn nằm trong DB, chỉ ẩn khi hiển thị.
+            if ($chiTiet->whereNotNull('ma_bo_hoa')->isNotEmpty()) {
+                $chiTiet = $chiTiet->whereNotNull('ma_bo_hoa')->values();
+            } else {
+                // Fallback dữ liệu cũ: chi_tiet_hoa_don chưa có ma_bo_hoa,
+                // nhưng bo_hoa có bản ghi gắn hóa đơn này.
+                $boFallback = \App\Models\BoHoa::where('ma_hoa_don', $id)->get();
+                if ($boFallback->isNotEmpty()) {
+                    $chiTiet = $boFallback->map(fn ($bo) => [
+                        'ma_chi_tiet'       => null,
+                        'ma_bo_hoa'         => $bo->ma_bo_hoa,
+                        'ma_san_pham'       => null,
+                        'ten_hien_thi'      => $bo->ten_bo_hoa,
+                        'size'              => $bo->size,
+                        'loai'              => 'bo_hoa',
+                        'so_luong'          => $bo->so_luong,
+                        'gia_ban_snapshot'  => $bo->gia_ban,
+                        'gia_nhap_snapshot' => $bo->gia_von,
+                        'thanh_tien'        => $bo->so_luong * $bo->gia_ban,
+                        'san_pham'          => ['ten_san_pham' => null],
+                    ]);
+                }
+            }
 
             // Bổ sung thông tin bó hoa Custom Mix và ảnh mẫu nếu có
             $customBouquet = \App\Models\BoHoa::where('ma_hoa_don', $id)
@@ -110,6 +135,20 @@ class HoaDonController extends Controller
                 ])->all();
             }
 
+            $thongTinHuy = $this->thongTinHuyHangHoan($hoaDon);
+            $kiemTraLog = $hoaDon->hangHoan?->chiTiet->map(function ($ct) {
+                $laBo = !empty($ct->ma_bo_hoa);
+                return [
+                    'ten' => $laBo ? ($ct->boHoa?->ten_bo_hoa ?? 'Bó hoa') : ($ct->sanPham?->ten_san_pham ?? 'Sản phẩm'),
+                    'loai' => $laBo ? 'Bó hoa' : 'Sản phẩm',
+                    'theo_don' => (int) $ct->so_luong_theo_don,
+                    'hong' => (int) $ct->so_luong_hong,
+                    'con_ban' => (int) $ct->so_luong_con_ban_duoc,
+                    'ket_qua' => $ct->ket_qua,
+                    'ghi_chu' => $ct->ghi_chu,
+                ];
+            })->values() ?? collect();
+
             return response()->json([
                 'success' => true,
                 'data'    => [
@@ -117,6 +156,20 @@ class HoaDonController extends Controller
                     'ngay_dat'                => optional($hoaDon->ngay_dat)->format('d/m/Y H:i'),
                     'ngay_giao'               => optional($hoaDon->ngay_giao)->format('d/m/Y H:i'),
                     'trang_thai'              => $hoaDon->trang_thai,
+                    'nguon_huy'               => $hoaDon->nguon_huy,
+                    'nguon_huy_text'          => $thongTinHuy['nguon_huy_text'],
+                    'ly_do_huy'               => $hoaDon->ly_do_huy,
+                    'thoi_diem_huy'           => optional($hoaDon->thoi_diem_huy)->format('d/m/Y H:i'),
+                    'co_hang_hoan'            => (bool) $hoaDon->co_hang_hoan,
+                    'trang_thai_hang_hoan'    => $thongTinHuy['trang_thai_hang_hoan'],
+                    'trang_thai_hang_hoan_text' => $thongTinHuy['trang_thai_hang_hoan_text'],
+                    'co_the_kiem_tra_hang'    => $thongTinHuy['co_the_kiem_tra_hang'],
+                    'da_kiem_tra_hang'        => $thongTinHuy['da_kiem_tra_hang'],
+                    'kiem_tra_hang_url'       => $thongTinHuy['co_the_kiem_tra_hang']
+                        ? route('admin.hoa-don.kiem-tra-hang', $hoaDon->ma_hoa_don)
+                        : null,
+                    'kiem_tra_log'            => $kiemTraLog,
+                    'thoi_diem_kiem_tra'      => optional($hoaDon->hangHoan?->thoi_diem_kiem_tra)->format('d/m/Y H:i'),
                     'trang_thai_thanh_toan'   => $hoaDon->trang_thai_thanh_toan,
                     'phuong_thuc_thanh_toan'  => $hoaDon->phuong_thuc_thanh_toan,
                     'dia_chi_giao'            => $hoaDon->dia_chi_giao,
@@ -180,5 +233,37 @@ class HoaDonController extends Controller
             'message'    => 'Đã xóa hóa đơn #HD-' . str_pad($id, 4, '0', STR_PAD_LEFT) . ' thành công.',
             'deleted_id' => $id,
         ]);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Thông tin hủy đơn + hàng hoàn cho danh sách / chi tiết hóa đơn
+    // ─────────────────────────────────────────────────────────────
+
+    private function thongTinHuyHangHoan(HoaDon $hd): array
+    {
+        $laHuy      = $hd->trang_thai === 'CANCELLED';
+        $hangHoan   = $laHuy ? $hd->hangHoan : null;
+        $ttHangHoan = $hangHoan?->trang_thai;
+
+        return [
+            'nguon_huy_text'            => $laHuy
+                ? (self::NGUON_HUY_TEXT[strtoupper((string) $hd->nguon_huy)] ?? null)
+                : null,
+            'trang_thai_hang_hoan'      => $ttHangHoan,
+            'trang_thai_hang_hoan_text' => $ttHangHoan
+                ? (self::TRANG_THAI_HANG_HOAN_TEXT[$ttHangHoan] ?? $ttHangHoan)
+                : null,
+            'co_the_kiem_tra_hang'      => $laHuy
+                && (bool) $hd->co_hang_hoan
+                && $hangHoan !== null,
+            'da_kiem_tra_hang'          => $ttHangHoan === 'DA_KIEM_TRA',
+        ];
+    }
+
+    private function ganThongTinHuyHangHoan(HoaDon $hd): void
+    {
+        foreach ($this->thongTinHuyHangHoan($hd) as $key => $value) {
+            $hd->setAttribute($key, $value);
+        }
     }
 }

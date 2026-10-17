@@ -20,10 +20,11 @@ class HoaDon extends Model {
         });
     }
 
-    // Danh sách đơn cần giao của shipper (kèm chi tiết + sản phẩm để biết đơn có hoa tươi)
+    // Danh sách đơn cần giao của shipper (kèm chi tiết + sản phẩm/bó để biết đơn có hoa tươi)
     static async findDonCanGiao(ma_nhan_vien_giao) {
         // require trễ để tránh vòng: ChiTietHoaDon.js cũng require HoaDon.js
         const ChiTietHoaDon = require('./ChiTietHoaDon');
+        const BoHoa = require('./BoHoa');
 
         return HoaDon.findAll({
             where: {
@@ -39,11 +40,18 @@ class HoaDon extends Model {
                 {
                     model: ChiTietHoaDon,
                     as: 'chiTietHoaDon',
-                    include: [{
-                        model: SanPham,
-                        as: 'sanPham',
-                        attributes: ['ma_san_pham', 'ten_san_pham', 'loai_san_pham', 'hinh_anh'],
-                    }],
+                    include: [
+                        {
+                            model: SanPham,
+                            as: 'sanPham',
+                            attributes: ['ma_san_pham', 'ten_san_pham', 'loai_san_pham', 'hinh_anh'],
+                        },
+                        {
+                            model: BoHoa,
+                            as: 'boHoa',
+                            attributes: ['ma_bo_hoa', 'ten_bo_hoa', 'size', 'hinh_anh', 'ma_mau_bo_hoa'],
+                        },
+                    ],
                 },
             ],
             order: [['ngay_dat', 'DESC']],
@@ -73,8 +81,6 @@ class HoaDon extends Model {
     }
 
     // Tiền shipper phải nộp = tổng các đơn shipper ĐÃ THU TIỀN MẶT + CHƯA NỘP shop.
-    // Gồm: COD (khách trả khi giao) + NGAN_HANG khách chưa CK mà shipper thu mặt.
-    // Không gồm: NGAN_HANG khách đã CK trước (tiền vào shop, shipper không giữ).
     static async tinhTienCanNop(ma_nhan_vien_giao) {
         const result = await HoaDon.findOne({
             attributes: [
@@ -84,8 +90,8 @@ class HoaDon extends Model {
             where: {
                 ma_nhan_vien_giao,
                 trang_thai: 'DELIVERED',
-                trang_thai_thanh_toan: 'DA_THANH_TOAN',  // chưa chuyển sang DA_NOP
-                da_thu_tien_mat: true,                    // shipper đang giữ tiền mặt
+                trang_thai_thanh_toan: 'DA_THANH_TOAN',
+                da_thu_tien_mat: true,
             },
             raw: true,
         });
@@ -107,7 +113,7 @@ class HoaDon extends Model {
         return Number(result?.tong) || 0;
     }
 
-    // Cập nhật trạng thái (cách viết OOP hơn)
+    // Cập nhật trạng thái
     async updateTrangThai(trang_thai, extraData = {}) {
         const data = { trang_thai };
         if (extraData.ngay_giao) data.ngay_giao = extraData.ngay_giao;
@@ -123,14 +129,19 @@ class HoaDon extends Model {
     }
 
     // Shipper cần thu tiền mặt khi giao không?
-    // Áp dụng cho MỌI phương thức miễn là khách chưa thanh toán.
     get canThuTienMat() {
         return this.trang_thai_thanh_toan === 'CHUA_THANH_TOAN';
     }
 
-    // Chỉ đúng khi đã nạp chiTietHoaDon -> sanPham (include khi truy vấn)
+    /**
+     * Đơn có hoa tươi không?
+     *   - Có bất kỳ dòng chi_tiet_hoa_don nào gắn ma_bo_hoa (bó hoa luôn là hoa tươi)
+     *   - HOẶC sản phẩm con có laHoaTuoi
+     */
     get laHoaTuoi() {
-        return (this.chiTietHoaDon || []).some((ct) => ct.sanPham?.laHoaTuoi);
+        return (this.chiTietHoaDon || []).some((ct) =>
+            ct.ma_bo_hoa || ct.sanPham?.laHoaTuoi
+        );
     }
 }
 
@@ -146,6 +157,13 @@ HoaDon.init({
     ngay_giao: DataTypes.DATE,
     tong_tien: DataTypes.DECIMAL(12, 2),
     trang_thai: DataTypes.STRING,
+    nguon_huy: DataTypes.STRING,
+    ly_do_huy: DataTypes.TEXT,
+    thoi_diem_huy: DataTypes.DATE,
+    co_hang_hoan: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
     trang_thai_thanh_toan: DataTypes.STRING,
 
     da_thu_tien_mat: {
@@ -157,8 +175,8 @@ HoaDon.init({
     dia_chi_giao: DataTypes.TEXT,
     so_dien_thoai: DataTypes.STRING(20),
 
-    ngay_bat_giao: DataTypes.DATE,   // shipper bấm "Nhận hàng"
-    ngay_den_noi: DataTypes.DATE,    // shipper bấm "Đã đến điểm giao"
+    ngay_bat_giao: DataTypes.DATE,
+    ngay_den_noi: DataTypes.DATE,
     da_phat_tre: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,

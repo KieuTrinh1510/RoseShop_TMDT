@@ -15,6 +15,11 @@ module.exports = {
     SanPham: require('./SanPham'),
     HoaDon: require('./HoaDon'),
     ChiTietHoaDon: require('./ChiTietHoaDon'),
+    GiaoHangThatBai: require('./GiaoHangThatBai'),
+    HangHoan: require('./HangHoan'),
+    ChiTietHangHoan: require('./ChiTietHangHoan'),
+    PhatShipper: require('./PhatShipper'),
+    ViPhamKhachHang: require('./ViPhamKhachHang'),
 
     // Bó hoa
     BoHoa: require('./BoHoa'),

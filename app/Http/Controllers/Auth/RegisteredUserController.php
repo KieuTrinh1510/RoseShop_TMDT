@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\VerifyEmailMailable;
 use App\Models\KhachHang;
 use App\Models\NguoiDung;
+use App\Models\ViPhamKhachHang;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -63,6 +64,47 @@ class RegisteredUserController extends Controller
             }
         }
 
+        // ─────────────────────────────────────────────────────────────
+        // [MỚI] Kiểm tra email / số điện thoại đã từng thuộc tài khoản có vi phạm.
+        //  - Khối này nằm SAU kiểm tra email xác thực & trạng thái tài khoản ở trên (giữ nguyên).
+        //  - Không xóa / khóa / sửa bất kỳ tài khoản cũ nào.
+        // ─────────────────────────────────────────────────────────────
+        // Chỉ xét vi phạm CHƯA GỠ (da_go = false) và đã tới mức hạn chế COD (2 dấu) trở lên.
+        // Khách đã thanh toán / được admin gỡ vi phạm thì được đăng ký lại bình thường.
+        $hanCheKeThua = null; // giữ biến để phần tạo tài khoản bên dưới không phải sửa
+        $ghiChuCod    = '';
+
+        $trungEmail = KhachHang::where('email', $request->email)->pluck('ma_khach_hang')->all();
+        $trungSdt   = KhachHang::where('so_dien_thoai', $request->so_dien_thoai)->pluck('ma_khach_hang')->all();
+
+        $coViPhamNang = fn (array $ids) => !empty($ids)
+            && ViPhamKhachHang::whereIn('ma_khach_hang', $ids)
+                ->where('da_go', false)
+                ->whereIn('han_che_ap_dung', ['CAM_COD', 'TAM_KHOA_MUA_HANG'])
+                ->exists();
+
+        $emailViPham = $coViPhamNang($trungEmail);
+        $sdtViPham   = $coViPhamNang($trungSdt);
+
+        if ($emailViPham || $sdtViPham) {
+            Log::warning('Đăng ký bị từ chối: email/SĐT thuộc tài khoản có vi phạm COD chưa gỡ', [
+                'ma_khach_hang_trung_email' => $trungEmail,
+                'ma_khach_hang_trung_sdt'   => $trungSdt,
+            ]);
+
+            if ($emailViPham && $sdtViPham) {
+                $doiTuong = 'Số điện thoại và email của bạn';
+            } elseif ($sdtViPham) {
+                $doiTuong = 'Số điện thoại của bạn';
+            } else {
+                $doiTuong = 'Email của bạn';
+            }
+
+            return back()
+                ->withErrors(['general' => $doiTuong . ' có dấu hiệu vi phạm gian lận COD, không thể tạo tài khoản mới. Vui lòng thanh toán khoản vi phạm ở tài khoản cũ hoặc liên hệ cửa hàng để được hỗ trợ.'])
+                ->withInput();
+        }
+
         $diaChiDayDu = $request->dia_chi_chi_tiet
             . ', ' . $request->xa_phuong
             . ', ' . $request->quan_huyen
@@ -78,7 +120,7 @@ class RegisteredUserController extends Controller
                 'email_verified_at' => null,
             ]);
 
-            KhachHang::create([
+            $khachHangMoi = KhachHang::create([
                 'ma_khach_hang'  => $user->ma_nguoi_dung,
                 'ten_khach_hang' => $request->ten_khach_hang,
                 'so_dien_thoai'  => $request->so_dien_thoai,
@@ -86,6 +128,20 @@ class RegisteredUserController extends Controller
                 'dia_chi'        => $diaChiDayDu,
                 'diem_tich_luy'  => 0,
             ]);
+
+            // [MỚI] Kế thừa hạn chế CAM_COD: ghi vi_pham_khach_hang cho tài khoản mới
+            // (sao chép ma_hoa_don / ma_giao_hang_that_bai từ bản ghi gốc để truy vết).
+            if ($hanCheKeThua) {
+                ViPhamKhachHang::create([
+                    'ma_khach_hang'         => $khachHangMoi->getKey(),
+                    'ma_hoa_don'            => $hanCheKeThua->ma_hoa_don,
+                    'ma_giao_hang_that_bai' => $hanCheKeThua->ma_giao_hang_that_bai,
+                    'ly_do'                 => 'Kế thừa hạn chế CAM_COD từ tài khoản #' . $hanCheKeThua->ma_khach_hang
+                                               . ' (trùng email/số điện thoại khi đăng ký).',
+                    'lan_vi_pham'           => (int) $hanCheKeThua->lan_vi_pham,
+                    'han_che_ap_dung'       => 'CAM_COD',
+                ]);
+            }
 
             DB::commit();
 
@@ -117,7 +173,7 @@ class RegisteredUserController extends Controller
 
                 return redirect()->route('verification.notice')
                     ->with('email', $request->email)
-                    ->with('status', 'Tài khoản đã được tạo. Vui lòng kiểm tra email để xác thực tài khoản.');
+                    ->with('status', 'Tài khoản đã được tạo. Vui lòng kiểm tra email để xác thực tài khoản.' . $ghiChuCod);
             } catch (\Throwable $mailError) {
                 Log::error('Lỗi gửi email xác thực tài khoản: ' . $mailError->getMessage());
 
@@ -127,7 +183,7 @@ class RegisteredUserController extends Controller
 
                 return redirect()->route('verification.notice')
                     ->with('email', $request->email)
-                    ->with('warning', 'Tài khoản đã được tạo (Chờ xác thực) nhưng hệ thống chưa thể gửi email lúc này. Quý khách có thể yêu cầu gửi lại sau.');
+                    ->with('warning', 'Tài khoản đã được tạo (Chờ xác thực) nhưng hệ thống chưa thể gửi email lúc này. Quý khách có thể yêu cầu gửi lại sau.' . $ghiChuCod);
             }
 
         } catch (\Exception $e) {

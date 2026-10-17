@@ -1,5 +1,6 @@
 // lib/controllers/history/history_controller.dart
-// Danh sách đơn ĐÃ giao (DELIVERED) — phân trang 10/trang + filter ngày/khoảng/tháng/mã.
+// Lịch sử: đơn DELIVERED + đơn CANCELLED do SHIPPER/CUSTOMER — phân trang 10/trang chung
+// + filter ngày/khoảng/tháng/mã. total / total_pages lấy đúng từ backend.
 
 import 'package:flutter/foundation.dart';
 import '../../services/api_service.dart';
@@ -80,13 +81,13 @@ class HistoryController extends ChangeNotifier {
       if (reqId != _reqId) return; // đã có request mới hơn
 
       if (res is Map) {
-        items = _asListMap(res['items']);
+        items = _asListMap(res['items']).where(_hienTrongLichSu).toList();
         total = _asInt(res['total']);
         page = _asInt(res['page'], fallback: page);
         limit = _asInt(res['limit'], fallback: limit);
         totalPages = _asInt(res['total_pages'], fallback: 1);
       } else if (res is List) {
-        items = _asListMap(res);
+        items = _asListMap(res).where(_hienTrongLichSu).toList();
         total = items.length;
         totalPages = 1;
       }
@@ -143,6 +144,18 @@ class HistoryController extends ChangeNotifier {
   }
 
   void clearFilter() => setFilter();
+
+  /// Phòng thủ phía client (backend đã lọc sẵn): chỉ DELIVERED hoặc
+  /// CANCELLED có nguon_huy = SHIPPER / CUSTOMER. Backend cũ không trả trang_thai → coi như DELIVERED.
+  static bool _hienTrongLichSu(Map<String, dynamic> it) {
+    final tt = it['trang_thai']?.toString() ?? '';
+    if (tt.isEmpty || tt == 'DELIVERED') return true;
+    if (tt == 'CANCELLED') {
+      final n = it['nguon_huy']?.toString();
+      return n == 'SHIPPER' || n == 'CUSTOMER';
+    }
+    return false;
+  }
 
   static List<Map<String, dynamic>> _asListMap(dynamic v) {
     if (v is List) {

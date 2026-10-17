@@ -28,13 +28,20 @@ use App\Http\Controllers\Customer\ChiTietSanPhamController;
 use App\Http\Controllers\Customer\GioHangController;
 use App\Http\Controllers\Customer\ThanhToanController;
 use App\Http\Controllers\Customer\DiaChiController;
+use App\Http\Controllers\Customer\FlashSaleController as CustomerFlashSaleController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Admin\HoanHang\KiemTraHangController as AdminKiemTraHangController;
+use App\Http\Controllers\Admin\HoanHang\FlashSaleController as AdminHoanHangFlashSaleController;
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\BoHoaController as AdminBoHoaController;
 use App\Http\Controllers\Customer\BoHoaController as CustomerBoHoaController;
 
+use App\Http\Controllers\Admin\HoanHang\GiaoHangThatBaiController;
+
 use App\Http\Controllers\VnPayController;
+use App\Http\Controllers\Customer\ThanhToanViPhamController;
+use App\Http\Controllers\VnPayViPhamController;
 
 Route::middleware(['auth', 'role:ADMIN,NHAN_VIEN'])->prefix('admin/bo-hoa')->name('admin.bo-hoa.')->group(function () {
     // Mẫu
@@ -111,6 +118,16 @@ Route::get('/vnpay/return', [VnPayController::class, 'return'])
  
 Route::get('/vnpay/ipn', [VnPayController::class, 'ipn'])
     ->name('vnpay.ipn');
+
+// ─── VNPay thanh toán khoản vi phạm ──────────────────────────────────────────
+// Chỉ giữ payment. Return + IPN của vi phạm đã được forward trong VnPayController
+// (dùng chung /vnpay/return và /vnpay/ipn ở trên).
+Route::middleware(['auth'])->group(function () {
+    Route::get('/vnpay/vi-pham/payment/{maThanhToan}',
+        [VnPayViPhamController::class, 'payment'])
+        ->whereNumber('maThanhToan')
+        ->name('vnpay.vi-pham.payment');
+});
 // ─── Trang chủ ────────────────────────────────────────────────────────────────
 Route::get('/', function () {
     if (auth()->check()) {
@@ -176,6 +193,13 @@ Route::middleware(['auth', 'role:ADMIN'])->group(function () {
     Route::get('/admin/giao-hang/phan-cong',    fn() => view('admin.placeholder', ['title' => 'Phân công giao hàng']))->name('admin.giao-hang.phan-cong');
     Route::get('/admin/giao-hang/theo-doi',     fn() => view('admin.placeholder', ['title' => 'Theo dõi giao hàng']))->name('admin.giao-hang.theo-doi');
     Route::get('/admin/giao-hang/hang-hoan',    fn() => view('admin.placeholder', ['title' => 'Hàng hoàn']))->name('admin.giao-hang.hang-hoan');
+        // ─── Đơn giao thất bại (hoàn hàng) ───
+    Route::prefix('admin/giao-hang/that-bai')->name('admin.giao-hang.that-bai')->group(function () {
+        Route::get('/',      [GiaoHangThatBaiController::class, 'index'])->name(''); // → admin.giao-hang.that-bai
+        Route::get('/{id}',  [GiaoHangThatBaiController::class, 'show'])
+            ->whereNumber('id')
+            ->name('.chi-tiet'); // → admin.giao-hang.that-bai.chi-tiet
+    });
     Route::get('/admin/giao-hang/doi-soat-cod', fn() => view('admin.placeholder', ['title' => 'Đối soát COD']))->name('admin.giao-hang.doi-soat-cod');
     Route::get('/admin/bao-cao/kho',            fn() => view('admin.placeholder', ['title' => 'Báo cáo kho']))->name('admin.bao-cao.kho');
     Route::get('/admin/bao-cao/giao-hang',      fn() => view('admin.placeholder', ['title' => 'Báo cáo hoạt động giao hàng']))->name('admin.bao-cao.giao-hang');
@@ -195,6 +219,10 @@ Route::middleware(['auth', 'role:ADMIN,NHAN_VIEN'])->group(function () {
         Route::patch('/{id}/restore-cod',   [KhachHangController::class, 'restoreCod'])->name('restore-cod');
         Route::delete('/{id}',              [KhachHangController::class, 'destroy'])->name('destroy');
     });
+
+    // Admin xóa (gỡ) vi phạm
+    Route::patch('/khach-hang/vi-pham/{id}/xoa',
+        [KhachHangController::class, 'xoaViPham'])->name('khach-hang.vi-pham.xoa');
 
     // Mẫu bó hoa & Nguyên vật liệu
     Route::get('/admin/mau-bo-hoa',      [SanPhamBoHoaController::class,  'index'])->name('admin.mau-bo-hoa');
@@ -324,9 +352,33 @@ Route::get('/customer/hoa-tuoi', [CustomerController::class, 'hoaTuoi'])
     ->name('customer.hoa-tuoi');
 Route::get('/customer/san-pham/{id}', [ChiTietSanPhamController::class, 'show'])
     ->name('customer.san-pham.chi-tiet');
+Route::get('/customer/flash-sale', [CustomerFlashSaleController::class, 'index'])
+    ->name('customer.flash-sale');
+    Route::get('/customer/flash-sale/{id}', [CustomerFlashSaleController::class, 'show'])
+    ->whereNumber('id')
+    ->name('customer.flash-sale.show');
+
+Route::middleware(['auth', 'role:ADMIN,NHAN_VIEN'])->group(function () {
+    Route::get('/admin/hoa-don/{maHoaDon}/kiem-tra-hang', [AdminKiemTraHangController::class, 'index'])
+        ->name('admin.hoa-don.kiem-tra-hang');
+    Route::post('/admin/hoa-don/{maHoaDon}/kiem-tra-hang', [AdminKiemTraHangController::class, 'store'])
+        ->name('admin.hoa-don.kiem-tra-hang.store');
+    Route::get('/admin/hoan-hang/flash-sale', [AdminHoanHangFlashSaleController::class, 'index'])
+        ->name('admin.hoan-hang.flash-sale.index');
+    Route::post('/admin/hoan-hang/flash-sale/{maChiTietHangHoan}', [AdminHoanHangFlashSaleController::class, 'store'])
+        ->name('admin.hoan-hang.flash-sale.store');
+    Route::patch('/admin/hoan-hang/flash-sale/{id}', [AdminHoanHangFlashSaleController::class, 'update'])
+        ->name('admin.hoan-hang.flash-sale.update');
+    Route::post('/admin/hoan-hang/flash-sale/{id}/ket-thuc', [AdminHoanHangFlashSaleController::class, 'close'])
+        ->name('admin.hoan-hang.flash-sale.close');
+    Route::post('/admin/hoan-hang/flash-sale/{id}/bao-hong', [AdminHoanHangFlashSaleController::class, 'reportDamage'])
+        ->name('admin.hoan-hang.flash-sale.report-damage');
+});
 
 // Các chức năng cần đăng nhập mới dùng được
 Route::middleware(['auth', 'role:KHACH_HANG'])->group(function () {
+    Route::post('/customer/flash-sale/add', [CustomerFlashSaleController::class, 'add'])
+        ->name('customer.flash-sale.add');
     Route::get('/customer/profile',            [CustomerProfileController::class, 'edit'])
         ->name('customer.profile.edit');
     Route::patch('/customer/profile',          [CustomerProfileController::class, 'update'])
@@ -364,6 +416,18 @@ Route::middleware(['auth', 'role:KHACH_HANG'])->group(function () {
     Route::get('/customer/thong-bao/so-chua-doc',[CustomerThongBaoController::class, 'soChuaDoc'])->name('customer.thong-bao.so-chua-doc');
 
     Route::patch('/customer/thong-bao/{id}/xoa',[CustomerThongBaoController::class, 'xoa'])->name('customer.thong-bao.xoa');
+
+    // Trang danh sách vi phạm + thanh toán vi phạm
+    Route::get('/customer/vi-pham', [ThanhToanViPhamController::class, 'index'])
+        ->name('customer.vi-pham.index');
+    Route::get('/customer/vi-pham/{maViPham}/thanh-toan',
+        [ThanhToanViPhamController::class, 'show'])
+        ->whereNumber('maViPham')
+        ->name('customer.vi-pham.thanh-toan');
+    Route::post('/customer/vi-pham/{maViPham}/vnpay',
+        [ThanhToanViPhamController::class, 'taoVnPay'])
+        ->whereNumber('maViPham')
+        ->name('customer.vi-pham.vnpay');
 });
 //
 Route::post('/customer/mua-ngay', [GioHangController::class, 'buyNow'])

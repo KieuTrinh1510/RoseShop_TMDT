@@ -1,12 +1,16 @@
-// lib/screens/order/order_detail_screen.dart
+// lib/screens/orders/order_detail_screen.dart
 // Chi tiết đơn + luồng giao hàng.
-//   GET  /orders/:id            -> dữ liệu màn hình (tiến trình, nút nào bấm được, đồng hồ...)
-//   POST /orders/:id/pickup     -> Nhận hàng & bắt đầu giao   (CONFIRMED -> SHIPPING)
-//   POST /orders/:id/arrived    -> Đã đến điểm giao, báo khách
-//   POST /orders/:id/delivered  -> Hoàn thành đơn hàng        (SHIPPING -> DELIVERED)
-//   POST /orders/:id/overdue    -> Xử lý quá 3h hoa tươi (UC4.2.10), backend đảm bảo chỉ phạt 1 lần
+//   GET  /orders/:id                           -> dữ liệu màn hình (tiến trình, nút nào bấm được, đồng hồ...)
+//   POST /orders/:id/pickup                    -> Nhận hàng & bắt đầu giao   (CONFIRMED -> SHIPPING)
+//   POST /orders/:id/arrived                   -> Đã đến điểm giao, báo khách
+//   POST /orders/:id/delivered                 -> Hoàn thành đơn hàng        (SHIPPING -> DELIVERED)
+//   POST /orders/:id/overdue                   -> Xử lý quá 3h hoa tươi (UC4.2.10)
+//   GET  /orders/:id/failure-check             -> quyền báo lỗi + timer lần 1 / lần 2
+//   POST /orders/:id/report-failure            -> SHIPPER: hủy ngay | CUSTOMER: chỉ ghi nhận chờ khách
+//   POST /orders/:id/finalize-customer-failure -> hết 10 phút chờ lần hai (do OrderDetailController gọi)
 //
-// Màn hình KHÔNG tự suy luận trạng thái: nút nào hiện = backend (hanh_dong) cho phép.
+// Màn hình KHÔNG tự suy luận trạng thái: nút nào hiện = backend cho phép.
+// Mở lại / resume app → tải lại từ backend để timer đồng bộ theo server.
 
 import 'dart:async';
 import 'dart:math' as math;
@@ -14,14 +18,17 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../services/api_service.dart';
+import '../../controllers/orders/order_detail_controller.dart';
 import '../../theme/pink_theme.dart';
 import '../../utils/app_strings.dart';
 import '../../utils/format.dart';
 import '../../widgets/common/glass_container.dart';
 import '../../widgets/common/staggered_fade_slide.dart';
 import '../../widgets/orders/order_action_area.dart';
+import '../../widgets/orders/failure_reason_dialog.dart';
 import '../../widgets/orders/order_detail_skeleton.dart';
 import '../../widgets/orders/order_detail_cards.dart';
+import '../../widgets/orders/order_cancel_card.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   final String maHoaDon;
@@ -31,11 +38,15 @@ class OrderDetailScreen extends StatefulWidget {
   State<OrderDetailScreen> createState() => _OrderDetailScreenState();
 }
 
-class _OrderDetailScreenState extends State<OrderDetailScreen> {
+class _OrderDetailScreenState extends State<OrderDetailScreen>
+    with WidgetsBindingObserver {
   Map<String, dynamic>? _d;
   bool _loading = true; // chỉ true ở lần tải đầu -> skeleton
   bool _busy = false; // đang gọi API của 1 nút
   String? _error;
+
+  /// Mỗi lần _load tăng 1: response của lần load cũ (đến muộn) bị bỏ qua.
+  int _loadSeq = 0;
 
   // ── Đồng hồ 3h (chỉ chạy khi backend báo co_dong_ho) ──
   Timer? _ticker;
@@ -45,26 +56,80 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   bool _overdueBusy = false;
   int _overdueAttempts = 0; // chặn vòng lặp nếu API lỗi liên tục
 
+  /// Quản lý luồng báo thất bại (failure-check, report, finalize, timer lần 1/2).
+  final OrderDetailController _failureController = OrderDetailController();
+
   Map<String, dynamic> get _dongHo => jMap(_d?['dong_ho']);
   Map<String, dynamic> get _hanhDong => jMap(_d?['hanh_dong']);
 
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addObserver(this);
+
+    _failureController
+      ..bindOrder(_orderId)
+      ..onFinalized = _onFinalized
+      ..onFailureMessage = (m) => _snack(m, long: true);
+
+    _failureController.addListener(_onFailureControllerChanged);
+
     _load();
   }
 
   @override
+  void didUpdateWidget(covariant OrderDetailScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Đổi sang đơn khác: bỏ sạch trạng thái + timer của đơn cũ.
+    if (oldWidget.maHoaDon != widget.maHoaDon) {
+      _ticker?.cancel();
+      _ticker = null;
+      _sw
+        ..stop()
+        ..reset();
+      _overdueAttempts = 0;
+      _overdueBusy = false;
+      _d = null;
+      _error = null;
+      _loading = true;
+      _failureController.bindOrder(_orderId); // reset timer/trạng thái failure
+      _load();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Quay lại foreground: đồng bộ lại timer theo server, không tin timer local.
+    if (state == AppLifecycleState.resumed && mounted && !_loading) {
+      _load(silent: true);
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _ticker?.cancel();
     _remaining.dispose();
+    _failureController
+      ..onFinalized = null
+      ..onFailureMessage = null
+      ..removeListener(_onFailureControllerChanged)
+      ..dispose();
     super.dispose();
   }
+
+  void _onFailureControllerChanged() {
+    if (mounted) setState(() {});
+  }
+
+  int get _orderId => int.tryParse(widget.maHoaDon.replaceAll('#', '')) ?? 0;
 
   // ───────────────────────── Tải dữ liệu ─────────────────────────
   /// silent = true: giữ nguyên màn hình, chỉ cập nhật dữ liệu (không skeleton).
   Future<void> _load({bool silent = false}) async {
     if (!mounted) return;
+    final seq = ++_loadSeq;
     if (!silent) {
       setState(() {
         _loading = true;
@@ -73,28 +138,41 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
     try {
       final res = await ApiService.get('/orders/${widget.maHoaDon}');
-      if (!mounted) return;
+      if (!mounted || seq != _loadSeq) return;
       setState(() {
         _d = jMap(res);
         _error = null;
         _loading = false;
       });
       _setupClock();
+      await _loadFailureStatus();
     } on ApiException catch (e) {
-      if (!mounted) return;
+      if (!mounted || seq != _loadSeq) return;
       setState(() {
         _loading = false;
         if (_d == null) _error = e.message;
       });
       if (_d != null) _snack(e.message);
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || seq != _loadSeq) return;
       setState(() {
         _loading = false;
         if (_d == null) _error = tr('conn_err', {'e': '$e'});
       });
       if (_d != null) _snack(tr('conn_err', {'e': '$e'}));
     }
+  }
+
+  Future<void> _loadFailureStatus() async {
+    // Chỉ đơn SHIPPING mới có luồng báo lỗi / chờ khách.
+    if (jStr(_d?['trang_thai']) != 'SHIPPING') {
+      _failureController.resetFailure();
+      return;
+    }
+    await _failureController.loadFailureStatus(
+      _orderId,
+      silent: _failureController.failureStatus != null,
+    );
   }
 
   // ───────────────────────── Đồng hồ ─────────────────────────
@@ -218,6 +296,72 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     if (reload) await _load(silent: true);
   }
 
+  // ───────────────────────── Báo giao thất bại ─────────────────────────
+  Future<void> _openFailureDialog() async {
+    final fc = _failureController;
+    if (fc.failureActing || fc.failureFinalizing) return;
+
+    // Đã có báo cáo CUSTOMER đang chờ → không mở dialog báo lỗi nữa.
+    if (fc.dangChoKhach) {
+      _snack(tr('fl_already_waiting'));
+      await _load(silent: true);
+      return;
+    }
+
+    final allowShipper = fc.coTheBaoLoiShipper;
+    final allowCustomer = fc.coTheBaoLoiKhachHang;
+    if (!allowShipper && !allowCustomer) {
+      await _load(silent: true); // quyền đã đổi ở server → đồng bộ lại
+      return;
+    }
+
+    // Dialog tự gọi API (qua onSubmit) và khóa nút xác nhận trong lúc chờ.
+    final result = await showDialog<FailureReasonResult>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => FailureReasonDialog(
+        allowShipper: allowShipper,
+        allowCustomer: allowCustomer,
+        onSubmit: (r) => fc.reportFailure(
+          loaiLoi: r.loaiLoi,
+          lyDo: r.lyDo,
+          ghiChu: r.ghiChu,
+        ),
+      ),
+    );
+    if (result == null || !mounted) return;
+
+    if (result.error != null) {
+      // 409 / 422 / ...: hiện message nghiệp vụ của backend rồi tải lại trạng thái.
+      _snack(result.error!, long: true);
+      await _load(silent: true);
+      return;
+    }
+
+    _snack(
+      result.loaiLoi == 'CUSTOMER' ? tr('fl_ok_customer') : tr('fl_ok_shipper'),
+      long: true,
+    );
+    await _load(silent: true);
+  }
+
+  /// Nút "Thử lại xử lý hủy đơn" (chỉ hiện khi finalize tự động bị lỗi mạng).
+  Future<void> _finalizeManually() async {
+    final err = await _failureController.finalizeCustomerFailure();
+    if (err != null) _snack(err, long: true);
+  }
+
+  /// Controller báo finalize xong: DELIVERED / CANCELLED / SYNC.
+  void _onFinalized(String trangThai) {
+    if (!mounted) return;
+    if (trangThai == 'DELIVERED') {
+      _snack(tr('fl_fin_delivered'), long: true);
+    } else if (trangThai == 'CANCELLED') {
+      _snack(tr('fl_fin_cancelled'), long: true);
+    }
+    unawaited(_load(silent: true));
+  }
+
   void _snack(String msg, {bool long = false}) {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
@@ -297,9 +441,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final dh = _dongHo;
     final coDongHo = jBool(dh['co_dong_ho']);
     final quaGio = coDongHo && jBool(dh['is_timeout']);
+    final daHuy = jStr(d['trang_thai']) == 'CANCELLED';
+    final fc = _failureController;
 
     return <MapEntry<String, Widget>>[
       MapEntry('summary', OrderSummaryCard(d: d)),
+      // Đơn đã hủy: nguồn hủy + lý do + hàng hoàn (không có nút giao hàng).
+      if (daHuy) MapEntry('cancel', OrderCancelCard(d: d)),
       if (quaGio)
         const MapEntry('overdue', OrderOverdueCard())
       else if (coDongHo)
@@ -314,6 +462,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             hanhDong: _hanhDong,
             busy: _busy,
             onRunAction: _runAction,
+            failureStatus: fc.failureStatus,
+            failureRemaining: fc.failureRemaining,
+            failureBusy: fc.failureActing,
+            failureFinalizing: fc.failureFinalizing,
+            onReportFailure: _openFailureDialog,
+            onFinalize: _finalizeManually,
           ),
         ),
       ),
