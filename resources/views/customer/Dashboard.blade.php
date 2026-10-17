@@ -41,7 +41,7 @@
 
                         <div class="home-product-card">
                             <div class="home-product-img">
-                                <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}">
+                                <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}" loading="lazy" onerror="this.style.display='none'">
                             </div>
 
                             <div class="home-product-info">
@@ -57,7 +57,7 @@
                                 </div>
 
                                 <div class="home-card-bottom">
-                                    <span>Sản phẩm: {{ $tonKho }}</span>
+                                    <span class="{{ $tonKho <= 0 ? 'is-out' : ($tonKho <= 5 ? 'is-low' : '') }}">Sản phẩm: {{ $tonKho }}</span>
 
                                     <a href="{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}" class="detail-btn">
                                         Chi tiết
@@ -150,7 +150,7 @@
 
                     <div class="home-product-card">
                         <div class="home-product-img">
-                            <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}">
+                            <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}" loading="lazy" onerror="this.style.display='none'">
                         </div>
 
                         <div class="home-product-info">
@@ -167,7 +167,7 @@
                             </div>
 
                             <div class="home-card-bottom">
-                                <span>Sản phẩm: {{ $tonKho }}</span>
+                                <span class="{{ $tonKho <= 0 ? 'is-out' : ($tonKho <= 5 ? 'is-low' : '') }}">Sản phẩm: {{ $tonKho }}</span>
 
                                 <a href="{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}" class="detail-btn">
                                     Chi tiết
@@ -199,7 +199,7 @@
 
                         <div class="home-product-card">
                             <div class="home-product-img">
-                                <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}">
+                                <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}" loading="lazy" onerror="this.style.display='none'">
                             </div>
 
                             <div class="home-product-info">
@@ -216,7 +216,7 @@
                                 </div>
 
                                 <div class="home-card-bottom">
-                                    <span>Sản phẩm: {{ $tonKho }}</span>
+                                    <span class="{{ $tonKho <= 0 ? 'is-out' : ($tonKho <= 5 ? 'is-low' : '') }}">Sản phẩm: {{ $tonKho }}</span>
 
                                     <a href="{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}" class="detail-btn">
                                         Chi tiết
@@ -249,7 +249,7 @@
 
                         <div class="home-product-card">
                             <div class="home-product-img">
-                                <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}">
+                                <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}" loading="lazy" onerror="this.style.display='none'">
                             </div>
 
                             <div class="home-product-info">
@@ -266,7 +266,7 @@
                                 </div>
 
                                 <div class="home-card-bottom">
-                                    <span>Sản phẩm: {{ $tonKho }}</span>
+                                    <span class="{{ $tonKho <= 0 ? 'is-out' : ($tonKho <= 5 ? 'is-low' : '') }}">Sản phẩm: {{ $tonKho }}</span>
 
                                     <a href="{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}" class="detail-btn">
                                         Chi tiết

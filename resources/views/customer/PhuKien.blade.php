@@ -53,7 +53,9 @@
                 @endphp
 
                 <div class="flower-card">
-                    <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}">
+                    <div class="flower-card-img">
+                        <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}" loading="lazy" onerror="this.style.display='none'">
+                    </div>
 
                     <div class="flower-card-body">
                         <h3>{{ $sp->ten_san_pham }}</h3>
@@ -69,7 +71,7 @@
                         </p>
 
                         <div class="home-card-bottom">
-                            <span>Sản Phẩm: {{ $tonKho }}</span>
+                            <span class="{{ $tonKho <= 0 ? 'is-out' : ($tonKho <= 5 ? 'is-low' : '') }}">Sản phẩm: {{ $tonKho }}</span>
 
                             <a href="{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}" class="detail-btn">
                                 Chi tiết

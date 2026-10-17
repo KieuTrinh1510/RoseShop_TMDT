@@ -4,288 +4,313 @@
 @section('page-id', 'gio-hang')
 
 @section('head-styles')
-<link rel="stylesheet" href="{{ asset('css/Customer/GioHang.css') }}">
-<style>
-    /* ✅ Nút thanh toán bị disable khi chưa chọn sản phẩm */
-    .btn-checkout[disabled] {
-        opacity: .5;
-        cursor: not-allowed;
-        pointer-events: none;
-        filter: grayscale(.4);
-    }
-</style>
+<link rel="stylesheet" href="{{ asset('css/Customer/GioHang.css') }}?v={{ filemtime(public_path('css/Customer/GioHang.css')) }}">
 @endsection
 
 @section('content')
+@php
+    $tongTienBoHoa = !empty($dsBoHoa) ? collect($dsBoHoa)->sum('tong') : 0;
+    $tongSoBoHoa   = !empty($dsBoHoa) ? collect($dsBoHoa)->sum('so_luong') : 0;
+@endphp
 <div class="cart-page">
 
-    <div class="cart-heading">🛒 Giỏ Hàng Của Bạn</div>
+    {{-- TIÊU ĐỀ TRANG --}}
+    <header class="cart-header">
+        <span class="cart-header-icon"><i class="fa-solid fa-cart-shopping"></i></span>
+        <div class="cart-header-text">
+            <h1 class="cart-heading">Giỏ Hàng Của Bạn</h1>
+            <p>Kiểm tra lại các sản phẩm đã chọn và hoàn tất đơn hàng</p>
+        </div>
+        <nav class="cart-breadcrumb" aria-label="Breadcrumb">
+            <a href="{{ route('customer.dashboard') }}"><i class="fa-solid fa-house"></i> Trang chủ</a>
+            <span>›</span>
+            <strong>Giỏ hàng</strong>
+        </nav>
+    </header>
 
     @if(session('error'))
-        <div class="alert-cart error">❌ {{ session('error') }}</div>
+        <div class="alert-cart error"><i class="fa-solid fa-circle-exclamation"></i> {{ session('error') }}</div>
     @endif
     @if(session('success'))
-        <div class="alert-cart success">✅ {{ session('success') }}</div>
+        <div class="alert-cart success"><i class="fa-solid fa-circle-check"></i> {{ session('success') }}</div>
     @endif
 
     @if(empty($gioHang) && empty($dsBoHoa))
     {{-- EMPTY STATE --}}
-    <div class="cart-table-wrap">
+    <div class="cart-card">
         <div class="cart-empty">
-            <div class="cart-empty-icon">🛒</div>
+            <div class="cart-empty-icon"><i class="fa-solid fa-cart-shopping"></i></div>
             <h3>Giỏ hàng của bạn đang trống</h3>
             <p>Hãy chọn những bó hoa hoặc hoa tươi yêu thích và thêm vào giỏ nhé!</p>
-            <div style="display:flex; justify-content:center; gap:12px; margin-top:16px;">
-                <a href="{{ route('customer.bo-hoa.he-thong') }}" class="btn-shop" style="background:#be185d;">💐 Khám phá bó hoa</a>
-                <a href="{{ route('customer.dashboard') }}" class="btn-shop" style="background:#4b5563;">🌸 Mua hoa tươi</a>
+            <div class="cart-empty-actions">
+                <a href="{{ route('customer.bo-hoa.he-thong') }}" class="btn-shop">💐 Khám phá bó hoa</a>
+                <a href="{{ route('customer.dashboard') }}" class="btn-shop btn-shop--ghost">🌸 Mua hoa tươi</a>
             </div>
         </div>
     </div>
     @else
 
-    {{-- SECTION: BÓ HOA TRONG GIỎ HÀNG --}}
-    @if(!empty($dsBoHoa))
-    <div class="cart-bouquet-section" style="margin-bottom: 32px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-            <h3 style="font-size:1.2rem; font-weight:700; color:#831843; margin:0; display:flex; align-items:center; gap:8px;">
-                💐 Bó Hoa Đã Chọn ({{ count($dsBoHoa) }})
-            </h3>
-            <a href="{{ route('customer.bo-hoa.he-thong') }}" style="color:#be185d; font-size:.88rem; font-weight:600; text-decoration:none;">
-                + Thêm bó hoa khác
-            </a>
-        </div>
-
-        <div style="display:flex; flex-direction:column; gap:14px;">
-            @foreach($dsBoHoa as $bKey => $bItem)
-            <div id="bouquet-card-{{ $bKey }}" style="background:#fff; border:1px solid #fbcfe8; border-radius:14px; padding:16px 20px; display:flex; gap:18px; align-items:center; box-shadow:0 2px 8px rgba(190,24,93,.05);">
-                <img src="{{ \App\Http\Controllers\Admin\BoHoaController::anhMau($bItem['mau']) }}"
-                     alt="{{ $bItem['mau']->ten_mau }}"
-                     style="width:90px; height:90px; border-radius:10px; object-fit:cover; background:#fdf2f8; flex-shrink:0;">
-                <div style="flex:1; min-width:0;">
-                    <div style="font-weight:700; font-size:1.05rem; color:#1f2937; margin-bottom:4px;">
-                        {{ $bItem['mau']->ten_mau }}
-                    </div>
-                    <div style="font-size:.85rem; color:#6b7280; margin-bottom:4px;">
-                        Size: <span class="fw-semibold">{{ $bItem['mau']->size }}</span> ·
-                        Kiểu dáng: <span class="fw-semibold">{{ \App\Http\Controllers\Admin\BoHoaController::KIEU_DANG[$bItem['mau']->kieu_bo_hoa] ?? $bItem['mau']->kieu_bo_hoa }}</span> ·
-                        Số lượng: <strong style="color:#be185d;">{{ $bItem['so_luong'] }} bó</strong>
-                    </div>
-                    @if($bItem['thiep'])
-                        <div style="font-size:.83rem; color:#be185d;">
-                            💌 Kèm thiệp: <strong>{{ $bItem['thiep']->ten_san_pham }}</strong> (+{{ number_format($bItem['thiep']->gia_ban_hien_tai, 0, ',', '.') }}₫)
-                        </div>
-                    @endif
-                    @if($bItem['loi_nhan'])
-                        <div style="font-size:.82rem; color:#4b5563; font-style:italic; margin-top:2px;">
-                            📝 Lời nhắn: "{{ $bItem['loi_nhan'] }}"
-                        </div>
-                    @endif
-                </div>
-                <div style="text-align:right; flex-shrink:0; padding-left:12px;">
-                    <div style="font-size:1.15rem; font-weight:700; color:#be185d;">
-                        {{ number_format($bItem['tong'], 0, ',', '.') }}₫
-                    </div>
-                    @if($bItem['so_luong'] > 1)
-                        <div style="font-size:.8rem; color:#9ca3af;">
-                            {{ number_format($bItem['gia_mot_bo'], 0, ',', '.') }}₫ / bó
-                        </div>
-                    @endif
-                </div>
-                <div style="padding-left:10px;">
-                    <button type="button" onclick="removeBouquet('{{ $bKey }}')" title="Xóa bó hoa này"
-                            style="background:none; border:none; color:#ef4444; font-size:1.3rem; cursor:pointer; padding:6px 10px; border-radius:6px;">
-                        ✕
-                    </button>
-                </div>
-            </div>
-            @endforeach
-        </div>
-
-        <div style="margin-top:14px; background:#fff1f2; border:1px solid #fecdd3; border-radius:12px; padding:14px 20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-            <div>
-                <span style="font-size:.9rem; color:#4c0519;">Tổng tiền bó hoa: </span>
-                <strong style="font-size:1.25rem; color:#be185d;">{{ number_format(collect($dsBoHoa)->sum('tong'), 0, ',', '.') }}₫</strong>
-                <span style="font-size:.85rem; color:#9f1239; margin-left:8px;">({{ collect($dsBoHoa)->sum('so_luong') }} bó)</span>
-            </div>
-            <a href="{{ route('customer.thanh-toan', ['type' => 'bo_hoa']) }}" class="btn-checkout" style="padding:10px 24px; font-size:.95rem; text-decoration:none; display:inline-block; border-radius:8px; background:linear-gradient(135deg, #be185d, #9d174d); color:#fff; font-weight:600;">
-                💳 Thanh Toán Bó Hoa Này →
-            </a>
-        </div>
-    </div>
-    @endif
-
-    {{-- SECTION: SẢN PHẨM ĐƠN LẺ TRONG GIỎ HÀNG --}}
-    @if(!empty($gioHang))
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-        <h3 style="font-size:1.15rem; font-weight:700; color:#1f2937; margin:0;">
-            🌸 Hoa & Sản Phẩm Đơn Lẻ ({{ count($gioHang) }})
-        </h3>
-    </div>
     <div class="cart-layout">
 
-        {{-- LEFT: Bảng sản phẩm --}}
-        <div class="cart-table-wrap" style="width:900px; margin-left: -60px;">
-            <table class="cart-table">
-                <thead>
-                    <tr>
-                        <th style="width:40px; text-align: center;">
-                            <input type="checkbox" id="selectAll" title="Chọn tất cả">
-                        </th>
-                        <th style="width: 34%; min-width: 320px;">Sản Phẩm</th>
-                        <th>Giá</th>
-                        <th>Số Lượng</th>
-                        <th>Tạm Tính</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody id="cartTableBody">
-                    @foreach($gioHang as $key => $item)
-                    <tr id="row-{{ $key }}">
-                        <td style="text-align:center;">
-                            <input type="checkbox" class="select-item" data-key="{{ $key }}" id="sel-{{ $key }}">
-                        </td>
-                        <td>
-                            <div class="cart-product-cell">
-                                @if(!empty($item['hinh_anh']))
-                                    <img src="{{ asset($item['hinh_anh']) }}"
-                                         alt="{{ $item['ten_san_pham'] ?? '' }}"
-                                         class="cart-product-img"
-                                         onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-                                    <div class="cart-product-placeholder" style="display:none;">🌸</div>
-                                @else
-                                    <div class="cart-product-placeholder">🌸</div>
-                                @endif
-                                <div>
-                                    <div class="cart-product-name">{{ $item['ten_san_pham'] }}</div>
-                                    <!-- <div class="cart-product-lot">Lô #{{ $item['ma_chi_tiet_nhap'] }}</div> -->
-                                     <div class="cart-product-lot">
-                                    Sản phẩm: {{ $item['so_luong_con_lai'] }} 
-                                    </div>
+        {{-- ===================== CỘT TRÁI ===================== --}}
+        <div class="cart-main">
+
+            {{-- BÓ HOA TRONG GIỎ --}}
+            @if(!empty($dsBoHoa))
+            <section class="cart-card" aria-labelledby="cartBouquetTitle">
+                <div class="cart-card-head">
+                    <h2 id="cartBouquetTitle"><span class="cart-title-icon">💐</span> Bó Hoa Đã Chọn ({{ count($dsBoHoa) }})</h2>
+                    <a href="{{ route('customer.bo-hoa.he-thong') }}" class="cart-link-add">
+                        <i class="fa-solid fa-circle-plus"></i> Thêm bó hoa khác
+                    </a>
+                </div>
+
+                <div class="cart-bouquet-list">
+                    @foreach($dsBoHoa as $bKey => $bItem)
+                    <article class="cart-bouquet-item" id="bouquet-card-{{ $bKey }}">
+                        <img class="cart-bouquet-img"
+                             src="{{ \App\Http\Controllers\Admin\BoHoaController::anhMau($bItem['mau']) }}"
+                             alt="{{ $bItem['mau']->ten_mau }}"
+                             onerror="this.style.visibility='hidden'">
+
+                        <div class="cart-bouquet-info">
+                            <div class="cart-product-name">{{ $bItem['mau']->ten_mau }}</div>
+                            <div class="cart-bouquet-meta">
+                                <span>Size: <b>{{ $bItem['mau']->size }}</b></span>
+                                <i></i>
+                                <span>Kiểu dáng: <b>{{ \App\Http\Controllers\Admin\BoHoaController::KIEU_DANG[$bItem['mau']->kieu_bo_hoa] ?? $bItem['mau']->kieu_bo_hoa }}</b></span>
+                                <i></i>
+                                <span>Số lượng: <b class="is-pink">{{ $bItem['so_luong'] }} bó</b></span>
+                            </div>
+                            @if($bItem['thiep'])
+                                <div class="cart-bouquet-note">
+                                    💌 Kèm thiệp: <strong>{{ $bItem['thiep']->ten_san_pham }}</strong>
+                                    (+{{ number_format($bItem['thiep']->gia_ban_hien_tai, 0, ',', '.') }}₫)
                                 </div>
-                            </div>
-                        </td>
-                        <td class="cart-price">{{ number_format($item['gia_ban'], 0, ',', '.') }}₫</td>
-                        <td>
-                            <div class="cart-qty-wrap">
-                                <button class="cart-qty-btn"
-                                    onclick="changeQty('{{ $key }}', {{ $item['so_luong'] - 1 }}, {{ $item['so_luong_con_lai'] }})">−</button>
-                                <input class="cart-qty-input"
-                                       type="number"
-                                       value="{{ $item['so_luong'] }}"
-                                       min="1"
-                                       max="{{ $item['so_luong_con_lai'] }}"
-                                       onchange="changeQty('{{ $key }}', parseInt(this.value), {{ $item['so_luong_con_lai'] }})"
-                                       id="qty-{{ $key }}">
-                                <button class="cart-qty-btn"
-                                    onclick="changeQty('{{ $key }}', {{ $item['so_luong'] + 1 }}, {{ $item['so_luong_con_lai'] }})">+</button>
-                            </div>
-                        </td>
-                        <td class="cart-subtotal" id="sub-{{ $key }}">
-                            {{ number_format($item['gia_ban'] * $item['so_luong'], 0, ',', '.') }}₫
-                        </td>
-                        <td>
-                            <button class="cart-remove-btn" onclick="removeItem('{{ $key }}')" title="Xóa">✕</button>
-                        </td>
-                    </tr>
+                            @endif
+                            @if($bItem['loi_nhan'])
+                                <div class="cart-bouquet-note is-quote">📝 Lời nhắn: "{{ $bItem['loi_nhan'] }}"</div>
+                            @endif
+                        </div>
+
+                        <div class="cart-bouquet-price">
+                            <strong>{{ number_format($bItem['tong'], 0, ',', '.') }}₫</strong>
+                            @if($bItem['so_luong'] > 1)
+                                <small>{{ number_format($bItem['gia_mot_bo'], 0, ',', '.') }}₫ / bó</small>
+                            @endif
+                        </div>
+
+                        <button type="button" class="cart-trash-btn" onclick="removeBouquet('{{ $bKey }}')" title="Xóa bó hoa này" aria-label="Xóa bó hoa này">
+                            <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                    </article>
                     @endforeach
-                </tbody>
-            </table>
-
-            <div style="padding: 16px 20px; border-top: 1px solid #fce7f3; display: flex; gap: 12px; flex-wrap: wrap;">
-                <a href="{{ route('customer.dashboard') }}"
-                   style="display:inline-flex; align-items:center; gap:6px; color:#be185d; font-size:.88rem; font-weight:600; text-decoration:none;">
-                    ← Tiếp tục xem sản phẩm
-                </a>
-            </div>
-        </div>
-
-        {{-- RIGHT: Tóm tắt đơn hàng --}}
-        <div class="cart-summary-panel">
-            <h3>💳 Tổng Cộng Giỏ Hàng</h3>
-
-            <div class="summary-row">
-                <span>Đã chọn</span>
-                <span class="val" id="selectedCount">0</span>
-            </div>
-
-            <div class="summary-row">
-                <span>Tạm tính</span>
-                <span class="val" id="summarySubtotal">
-                    {{ number_format(collect($gioHang)->sum(fn($i) => $i['gia_ban'] * $i['so_luong']), 0, ',', '.') }}₫
-                </span>
-            </div>
-            <div class="summary-row">
-                <span>Vận chuyển</span>
-                <span class="ship-free">Miễn phí</span>
-            </div>
-
-            {{-- Điểm giảm giá --}}
-            @auth
-            @if($user && $user->khachHang)
-            <div class="points-section">
-                <div class="points-header">
-                    <span class="points-label">🎁 Dùng điểm tích lũy</span>
-                    <span class="points-avail">Bạn có: <strong>{{ number_format($user->khachHang->diem_tich_luy) }}</strong> điểm</span>
                 </div>
-
-                <div id="pointsInputArea">
-                    <div class="points-input-row">
-                        <input class="points-input" type="number" id="pointsInput"
-                               placeholder="Nhập số điểm muốn dùng"
-                               min="0" max="{{ $user->khachHang->diem_tich_luy }}">
-                        <button class="points-apply-btn" onclick="applyPoints()">Áp dụng</button>
-                    </div>
-                    <div class="points-note">1 điểm = 1,000₫ &nbsp;|&nbsp; Tối đa {{ number_format($user->khachHang->diem_tich_luy) }} điểm</div>
-                </div>
-
-                <div id="pointsApplied" style="display:none;">
-                    <div class="points-applied">
-                        ✅ Đang dùng <strong id="diemDung">0</strong> điểm (−<span id="giamHienThi">0</span>₫)
-                        <button class="points-cancel-btn" onclick="cancelPoints()">✕</button>
-                    </div>
-                </div>
-            </div>
+            </section>
             @endif
-            @endauth
 
-            <div class="summary-row" id="discountRow" style="{{ $diemSuDung > 0 ? '' : 'display:none;' }}">
-                <span>Giảm giá (điểm)</span>
-                <span class="discount-val" id="summaryDiscount">
-                    −{{ number_format($diemSuDung * 1000, 0, ',', '.') }}₫
-                </span>
-            </div>
+            {{-- SẢN PHẨM ĐƠN LẺ TRONG GIỎ --}}
+            @if(!empty($gioHang))
+            <section class="cart-card" aria-labelledby="cartItemsTitle">
+                <div class="cart-card-head">
+                    <h2 id="cartItemsTitle"><span class="cart-title-icon">🌸</span> Hoa &amp; Sản Phẩm Đơn Lẻ ({{ count($gioHang) }})</h2>
+                    <a href="{{ route('customer.dashboard') }}" class="cart-link-add">
+                        <i class="fa-solid fa-circle-plus"></i> Thêm sản phẩm khác
+                    </a>
+                </div>
 
-            <div class="summary-row total">
-                <span><strong>Tổng</strong></span>
-                <span class="val" id="summaryTotal">
-                    @php
-                        $tongTienGoc = collect($gioHang)->sum(fn($i) => $i['gia_ban'] * $i['so_luong']);
-                        $giamGia     = $diemSuDung * 1000;
-                        $tongCuoi    = max(0, $tongTienGoc - $giamGia);
-                    @endphp
-                    {{ number_format($tongCuoi, 0, ',', '.') }}₫
-                </span>
-            </div>
+                {{-- Header bảng --}}
+                <div class="cart-items-head">
+                    <label class="cart-check">
+                        <input type="checkbox" id="selectAll" title="Chọn tất cả">
+                    </label>
+                    <span>Sản phẩm</span>
+                    <span>Giá</span>
+                    <span>Số lượng</span>
+                    <span class="is-right">Tạm tính</span>
+                    <span></span>
+                </div>
 
-            @auth
-                {{-- ✅ Ban đầu disabled vì chưa chọn sản phẩm nào --}}
-                <button class="btn-checkout" id="btnProceed" onclick="proceedToCheckout()" disabled
-                        title="Vui lòng chọn ít nhất 1 sản phẩm để thanh toán">
-                    💳 Tiến Hành Thanh Toán
-                </button>
-            @else
-                <a href="{{ route('login') }}" class="btn-checkout">
-                    🔑 Đăng nhập để thanh toán
-                </a>
-            @endauth
+                <div class="cart-items" id="cartTableBody">
+                    @foreach($gioHang as $key => $item)
+                    <div class="cart-item" id="row-{{ $key }}">
+                        <label class="cart-check">
+                            <input type="checkbox" class="select-item" data-key="{{ $key }}" id="sel-{{ $key }}">
+                        </label>
 
-            <a href="{{ route('customer.dashboard') }}" class="btn-continue">
-                ← Tiếp tục mua sắm
-            </a>
+                        <div class="cart-product-cell">
+                            @if(!empty($item['hinh_anh']))
+                                <img src="{{ asset($item['hinh_anh']) }}"
+                                     alt="{{ $item['ten_san_pham'] ?? '' }}"
+                                     class="cart-product-img"
+                                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                                <div class="cart-product-placeholder" style="display:none;">🌸</div>
+                            @else
+                                <div class="cart-product-placeholder">🌸</div>
+                            @endif
+                            <div class="cart-product-text">
+                                <div class="cart-product-name">{{ $item['ten_san_pham'] }}</div>
+                                <div class="cart-product-lot">Sản phẩm: {{ $item['so_luong_con_lai'] }}</div>
+                            </div>
+                        </div>
+
+                        <div class="cart-price" data-label="Giá">{{ number_format($item['gia_ban'], 0, ',', '.') }}₫</div>
+
+                        <div class="cart-qty-wrap">
+                            <button class="cart-qty-btn" aria-label="Giảm số lượng"
+                                onclick="changeQty('{{ $key }}', {{ $item['so_luong'] - 1 }}, {{ $item['so_luong_con_lai'] }})">−</button>
+                            <input class="cart-qty-input"
+                                   type="number"
+                                   value="{{ $item['so_luong'] }}"
+                                   min="1"
+                                   max="{{ $item['so_luong_con_lai'] }}"
+                                   onchange="changeQty('{{ $key }}', parseInt(this.value), {{ $item['so_luong_con_lai'] }})"
+                                   id="qty-{{ $key }}">
+                            <button class="cart-qty-btn" aria-label="Tăng số lượng"
+                                onclick="changeQty('{{ $key }}', {{ $item['so_luong'] + 1 }}, {{ $item['so_luong_con_lai'] }})">+</button>
+                        </div>
+
+                        <div class="cart-subtotal" id="sub-{{ $key }}">
+                            {{ number_format($item['gia_ban'] * $item['so_luong'], 0, ',', '.') }}₫
+                        </div>
+
+                        <button class="cart-trash-btn" onclick="removeItem('{{ $key }}')" title="Xóa" aria-label="Xóa sản phẩm">
+                            <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                    </div>
+                    @endforeach
+                </div>
+
+                <div class="cart-card-foot">
+                    <a href="{{ route('customer.dashboard') }}" class="cart-link-back">← Tiếp tục xem sản phẩm</a>
+                </div>
+            </section>
+            @endif
         </div>
+
+        {{-- ===================== CỘT PHẢI ===================== --}}
+        <aside class="cart-side">
+
+            {{-- Tóm tắt bó hoa --}}
+            @if(!empty($dsBoHoa))
+            <section class="cart-summary-panel" aria-labelledby="cartBouquetSummary">
+                <h2 id="cartBouquetSummary"><span class="cart-title-icon is-pink"><i class="fa-solid fa-file-invoice"></i></span> Tóm Tắt Bó Hoa</h2>
+
+                <div class="summary-box">
+                    <div class="summary-row">
+                        <span>Tạm tính ({{ $tongSoBoHoa }} bó hoa)</span>
+                        <span class="val">{{ number_format($tongTienBoHoa, 0, ',', '.') }}₫</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span><strong>Tổng tiền bó hoa</strong></span>
+                        <span class="val">{{ number_format($tongTienBoHoa, 0, ',', '.') }}₫</span>
+                    </div>
+                </div>
+
+                <a href="{{ route('customer.thanh-toan', ['type' => 'bo_hoa']) }}" class="btn-checkout">
+                    <i class="fa-regular fa-credit-card"></i> Thanh Toán Bó Hoa Này →
+                </a>
+            </section>
+            @endif
+
+            {{-- Tóm tắt sản phẩm đơn lẻ --}}
+            @if(!empty($gioHang))
+            <section class="cart-summary-panel" aria-labelledby="cartSummaryTitle">
+                <h2 id="cartSummaryTitle"><span class="cart-title-icon is-pink"><i class="fa-solid fa-file-invoice"></i></span> Tổng Cộng Giỏ Hàng</h2>
+
+                <div class="summary-box">
+                    <div class="summary-row">
+                        <span>Đã chọn</span>
+                        <span class="val" id="selectedCount">0</span>
+                    </div>
+
+                    <div class="summary-row">
+                        <span>Tạm tính</span>
+                        <span class="val" id="summarySubtotal">
+                            {{ number_format(collect($gioHang)->sum(fn($i) => $i['gia_ban'] * $i['so_luong']), 0, ',', '.') }}₫
+                        </span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Vận chuyển</span>
+                        <span class="ship-free">Miễn phí</span>
+                    </div>
+
+                    {{-- Điểm giảm giá --}}
+                    @auth
+                    @if($user && $user->khachHang)
+                    <div class="points-section">
+                        <div class="points-header">
+                            <span class="points-label">🎁 Dùng điểm tích lũy</span>
+                            <span class="points-avail">Bạn có: <strong>{{ number_format($user->khachHang->diem_tich_luy) }}</strong> điểm</span>
+                        </div>
+
+                        <div id="pointsInputArea">
+                            <div class="points-input-row">
+                                <input class="points-input" type="number" id="pointsInput"
+                                       placeholder="Nhập số điểm muốn dùng"
+                                       min="0" max="{{ $user->khachHang->diem_tich_luy }}">
+                                <button class="points-apply-btn" onclick="applyPoints()">Áp dụng</button>
+                            </div>
+                            <div class="points-note">1 điểm = 1,000₫ &nbsp;|&nbsp; Tối đa {{ number_format($user->khachHang->diem_tich_luy) }} điểm</div>
+                        </div>
+
+                        <div id="pointsApplied" style="display:none;">
+                            <div class="points-applied">
+                                ✅ Đang dùng <strong id="diemDung">0</strong> điểm (−<span id="giamHienThi">0</span>₫)
+                                <button class="points-cancel-btn" onclick="cancelPoints()">✕</button>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                    @endauth
+
+                    <div class="summary-row" id="discountRow" style="{{ $diemSuDung > 0 ? '' : 'display:none;' }}">
+                        <span>Giảm giá (điểm)</span>
+                        <span class="discount-val" id="summaryDiscount">
+                            −{{ number_format($diemSuDung * 1000, 0, ',', '.') }}₫
+                        </span>
+                    </div>
+
+                    <div class="summary-row total">
+                        <span><strong>Tổng</strong></span>
+                        <span class="val" id="summaryTotal">
+                            @php
+                                $tongTienGoc = collect($gioHang)->sum(fn($i) => $i['gia_ban'] * $i['so_luong']);
+                                $giamGia     = $diemSuDung * 1000;
+                                $tongCuoi    = max(0, $tongTienGoc - $giamGia);
+                            @endphp
+                            {{ number_format($tongCuoi, 0, ',', '.') }}₫
+                        </span>
+                    </div>
+                </div>
+
+                @auth
+                    {{-- Ban đầu disabled vì chưa chọn sản phẩm nào --}}
+                    <button class="btn-checkout" id="btnProceed" onclick="proceedToCheckout()" disabled
+                            title="Vui lòng chọn ít nhất 1 sản phẩm để thanh toán">
+                        <i class="fa-regular fa-credit-card"></i> Tiến Hành Thanh Toán
+                    </button>
+                @else
+                    <a href="{{ route('login') }}" class="btn-checkout">
+                        <i class="fa-solid fa-key"></i> Đăng nhập để thanh toán
+                    </a>
+                @endauth
+
+                <a href="{{ route('customer.dashboard') }}" class="btn-continue">
+                    ← Tiếp tục mua sắm
+                </a>
+            </section>
+            @endif
+
+            {{-- Cam kết --}}
+            <ul class="cart-trust">
+                <li><i class="fa-solid fa-truck-fast"></i><span>Giao hàng<br>nhanh chóng</span></li>
+                <li><i class="fa-solid fa-shield-heart"></i><span>Sản phẩm<br>tươi mới</span></li>
+                <li><i class="fa-solid fa-gift"></i><span>Hỗ trợ<br>tận tình</span></li>
+            </ul>
+        </aside>
 
     </div>
-    @endif
     @endif
 
 </div>
@@ -297,6 +322,9 @@
     const fmt  = v => new Intl.NumberFormat('vi-VN').format(v) + '₫';
     const CHECKOUT_POST_URL = '{{ route("customer.gio-hang.checkout") }}';
     const CHECKOUT_PAGE_URL = '{{ route("customer.thanh-toan") }}';
+
+    const BTN_CHECKOUT_HTML = '<i class="fa-regular fa-credit-card"></i> Tiến Hành Thanh Toán';
+    const BTN_LOADING_HTML  = '<i class="fa-solid fa-spinner fa-spin"></i> Đang chuyển...';
 
     let diemSuDung = {{ $diemSuDung }};
 
@@ -425,7 +453,7 @@
         }
 
         const btn = document.getElementById('btnProceed');
-        if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang chuyển...'; }
+        if (btn) { btn.disabled = true; btn.innerHTML = BTN_LOADING_HTML; }
 
         try {
             const res = await fetch(CHECKOUT_POST_URL, {
@@ -441,7 +469,7 @@
                 showToast('❌ ' + (data.message || 'Không thể chuyển đến trang thanh toán.'));
                 if (btn) {
                     btn.disabled = false;
-                    btn.textContent = '💳 Tiến Hành Thanh Toán';
+                    btn.innerHTML = BTN_CHECKOUT_HTML;
                     updateCheckoutButtonState();
                 }
             }
@@ -449,7 +477,7 @@
             showToast('❌ Không thể kết nối, vui lòng thử lại.');
             if (btn) {
                 btn.disabled = false;
-                btn.textContent = '💳 Tiến Hành Thanh Toán';
+                btn.innerHTML = BTN_CHECKOUT_HTML;
                 updateCheckoutButtonState();
             }
         }

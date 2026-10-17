@@ -185,7 +185,9 @@
                     @endphp
 
                     <div class="flower-card">
-                        <img src="{{ $anh }}" alt="{{ $mau->ten_mau }}" loading="lazy">
+                        <div class="flower-card-img">
+                            <img src="{{ $anh }}" alt="{{ $mau->ten_mau }}" loading="lazy" onerror="this.style.display='none'">
+                        </div>
 
                         <div class="flower-card-body">
                             <h3>{{ $mau->ten_mau }}</h3>

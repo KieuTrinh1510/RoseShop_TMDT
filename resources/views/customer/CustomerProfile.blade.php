@@ -1,369 +1,375 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+@extends('customer.layouts.customer')
+
+@section('title', '🌸 Hồ Sơ Cá Nhân - RoseShop')
+
+@section('head-styles')
     <link rel="stylesheet" href="{{ asset('css/Customer/Profile.css') }}?v={{ file_exists(public_path('css/Customer/Profile.css')) ? filemtime(public_path('css/Customer/Profile.css')) : time() }}">
-    <style>
-        :root {
-            --rs-font: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-        html, body, button, input, select, textarea {
-            font-family: var(--rs-font) !important;
-        }
-        h1, h2, h3, h4, h5, h6, p, label {
-            font-family: var(--rs-font);
-        }
-        .fa, .fas, .far, .fal, .fad, .fab,
-        .fa-solid, .fa-regular, .fa-brands,
-        [class*="fa-"], [class^="fa-"] {
-            font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands", "FontAwesome" !important;
-        }
-        .fa::before, .fas::before, .far::before, .fal::before, .fad::before, .fab::before,
-        .fa-solid::before, .fa-regular::before, .fa-brands::before,
-        [class*="fa-"]::before, [class^="fa-"]::before {
-            font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands", "FontAwesome" !important;
-        }
-    </style>
-</head>
-<body>
+@endsection
 
-{{-- TOPBAR --}}
-<div class="topbar">
-    <span class="topbar-brand">🌸 RoseShop</span>
-    <div class="topbar-right">
-        <span><i class="fas fa-user"></i> {{ $user->ten_dang_nhap }}</span>
-        <form class="logout-form" method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
-        </form>
-    </div>
-</div>
-
-<div class="profile-page">
-
-    <a href="{{ route('customer.dashboard') }}" class="back-link">
-        <i class="fas fa-arrow-left"></i> Quay lại cửa hàng
-    </a>
-
-    <div class="page-title">
-        <i class="fas fa-user-circle"></i> Hồ sơ cá nhân
+@section('content')
+<div class="profile-page-wrapper">
+    {{-- Breadcrumb --}}
+    <div class="profile-breadcrumb">
+        <a href="{{ route('customer.dashboard') }}">🏠 Trang chủ</a>
+        <span class="sep">›</span>
+        <span>Tài khoản</span>
+        <span class="sep">›</span>
+        <span class="current" id="profileBreadcrumbCurrent">
+            {{ ($errors->has('mat_khau_cu') || $errors->has('mat_khau_moi') || session('tab') === 'password') ? 'Đổi mật khẩu' : 'Hồ sơ cá nhân' }}
+        </span>
     </div>
 
-    {{-- Flash --}}
-    @if(session('success_info'))
-        <div class="alert alert-success">
-            <i class="fas fa-check-circle"></i>
-            {{ session('success_info') }}
-        </div>
-    @endif
-    @if(session('success_password'))
-        <div class="alert alert-success">
-            <i class="fas fa-check-circle"></i>
-            {{ session('success_password') }}
-        </div>
-    @endif
-
-    {{-- TABS --}}
-    <div class="tab-bar">
-        <button class="tab-btn {{ ($errors->has('mat_khau_cu') || $errors->has('mat_khau_moi') || session('tab') === 'password') ? '' : 'active' }}"
-                id="tab-info-btn" onclick="switchTab('info')">
-            <i class="fas fa-id-card"></i> Thông tin cá nhân
-        </button>
-        <button class="tab-btn {{ ($errors->has('mat_khau_cu') || $errors->has('mat_khau_moi') || session('tab') === 'password') ? 'active' : '' }}"
-                id="tab-password-btn" onclick="switchTab('password')">
-            <i class="fas fa-lock"></i> Đổi mật khẩu
-        </button>
-    </div>
-
-    {{-- ════════════════════════════════════
-         TAB 1: Thông tin cá nhân
-    ════════════════════════════════════ --}}
-    <div class="tab-pane {{ ($errors->has('mat_khau_cu') || $errors->has('mat_khau_moi') || session('tab') === 'password') ? '' : 'active' }}"
-         id="tab-info">
-        <div class="pcard">
-            <div class="pcard-header">
-                <i class="fas fa-id-card"></i> Thông tin cá nhân
+    {{-- Main Centered Container --}}
+    <div class="profile-container">
+        {{-- Flash messages --}}
+        @if(session('success_info'))
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                <span>{{ session('success_info') }}</span>
             </div>
-            <div class="pcard-body">
+        @endif
+        @if(session('success_password'))
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle"></i>
+                <span>{{ session('success_password') }}</span>
+            </div>
+        @endif
 
-                {{-- Lỗi validation thông tin --}}
-                @if($errors->has('ten_khach_hang') || $errors->has('so_dien_thoai') || $errors->has('email') || $errors->has('quan_huyen') || $errors->has('xa_phuong') || $errors->has('dia_chi_chi_tiet'))
-                    <div class="alert alert-error">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <ul style="margin:0;padding-left:1.2rem;">
-                            @foreach(['ten_khach_hang','so_dien_thoai','email','quan_huyen','xa_phuong','dia_chi_chi_tiet'] as $field)
-                                @if($errors->has($field))
-                                    <li>{{ $errors->first($field) }}</li>
-                                @endif
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
+        {{-- Top Card Header --}}
+        <div class="profile-card-header">
+            <div class="profile-header-icon" id="headerIcon">
+                <i class="{{ ($errors->has('mat_khau_cu') || $errors->has('mat_khau_moi') || session('tab') === 'password') ? 'fas fa-lock' : 'fas fa-envelope-open-text' }}"></i>
+            </div>
+            <div class="profile-header-text">
+                <h1 class="profile-header-title" id="headerTitle">
+                    {{ ($errors->has('mat_khau_cu') || $errors->has('mat_khau_moi') || session('tab') === 'password') ? 'Đổi mật khẩu' : 'Hồ sơ cá nhân' }}
+                </h1>
+                <p class="profile-header-sub" id="headerSub">
+                    {{ ($errors->has('mat_khau_cu') || $errors->has('mat_khau_moi') || session('tab') === 'password') ? 'Cập nhật mật khẩu để bảo vệ tài khoản của bạn tốt hơn' : 'Quản lý thông tin tài khoản của bạn' }}
+                </p>
+            </div>
+        </div>
 
-                <form method="POST" action="{{ route('customer.profile.update') }}">
-                    @csrf
-                    @method('PATCH')
+        {{-- Switchable Tabs --}}
+        <div class="profile-tabs">
+            <button type="button"
+                    class="profile-tab-btn {{ ($errors->has('mat_khau_cu') || $errors->has('mat_khau_moi') || session('tab') === 'password') ? '' : 'active' }}"
+                    id="tab-info-btn"
+                    onclick="switchProfileTab('info')">
+                Thông tin cá nhân
+            </button>
+            <button type="button"
+                    class="profile-tab-btn {{ ($errors->has('mat_khau_cu') || $errors->has('mat_khau_moi') || session('tab') === 'password') ? 'active' : '' }}"
+                    id="tab-password-btn"
+                    onclick="switchProfileTab('password')">
+                <i class="fas fa-key"></i> Đổi mật khẩu
+            </button>
+        </div>
 
-                    {{--
-                        Phân tách địa chỉ hiện tại từ DB để điền lại vào các ô select.
-                        Định dạng lưu: "Số nhà, Xã/Phường, Quận/Huyện, Hà Nội"
-                        → tách theo dấu phẩy từ cuối lên.
-                    --}}
-                    @php
-                        $diaChiHienTai   = $khachHang->dia_chi ?? '';
-                        $parts           = array_map('trim', explode(',', $diaChiHienTai));
-                        // Bỏ "Hà Nội" ở cuối nếu có
-                        if (count($parts) >= 1 && strtolower(end($parts)) === 'hà nội') array_pop($parts);
-                        $savedQuan       = old('quan_huyen',      count($parts) >= 2 ? $parts[count($parts)-1] : '');
-                        $savedPhuong     = old('xa_phuong',       count($parts) >= 3 ? $parts[count($parts)-2] : '');
-                        $savedChiTiet    = old('dia_chi_chi_tiet', count($parts) >= 1 ? implode(', ', array_slice($parts, 0, count($parts)-2)) : $diaChiHienTai);
-                    @endphp
+        {{-- ═════════════════════════════════════════════════════════════
+             TAB 1: THÔNG TIN CÁ NHÂN
+        ═════════════════════════════════════════════════════════════ --}}
+        <div class="profile-pane {{ ($errors->has('mat_khau_cu') || $errors->has('mat_khau_moi') || session('tab') === 'password') ? '' : 'active' }}" id="pane-info">
+            {{-- Validation Errors --}}
+            @if($errors->has('ten_khach_hang') || $errors->has('so_dien_thoai') || $errors->has('email') || $errors->has('quan_huyen') || $errors->has('xa_phuong') || $errors->has('dia_chi_chi_tiet'))
+                <div class="alert alert-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <ul style="margin:0;padding-left:1.2rem;">
+                        @foreach(['ten_khach_hang','so_dien_thoai','email','quan_huyen','xa_phuong','dia_chi_chi_tiet'] as $field)
+                            @if($errors->has($field))
+                                <li>{{ $errors->first($field) }}</li>
+                            @endif
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
-                    <div class="form-grid">
-                        {{-- Tên đăng nhập (readonly) --}}
-                        <div class="fgroup">
-                            <label><i class="fas fa-at" style="font-size:.7rem;"></i> Tên đăng nhập</label>
+            <form method="POST" action="{{ route('customer.profile.update') }}" id="formProfileInfo">
+                @csrf
+                @method('PATCH')
+
+                @php
+                    $diaChiHienTai = $khachHang->dia_chi ?? '';
+                    $parts         = array_map('trim', explode(',', $diaChiHienTai));
+                    if (count($parts) >= 1 && strtolower(end($parts)) === 'hà nội') array_pop($parts);
+                    $savedQuan     = old('quan_huyen',      count($parts) >= 2 ? $parts[count($parts)-1] : '');
+                    $savedPhuong   = old('xa_phuong',       count($parts) >= 3 ? $parts[count($parts)-2] : '');
+                    $savedChiTiet  = old('dia_chi_chi_tiet', count($parts) >= 1 ? implode(', ', array_slice($parts, 0, count($parts)-2)) : $diaChiHienTai);
+                @endphp
+
+                {{-- SECTION 1: THÔNG TIN CƠ BẢN --}}
+                <div class="profile-section-heading">
+                    <i class="fas fa-user"></i> <span>Thông tin cơ bản</span>
+                </div>
+
+                <div class="profile-form-grid">
+                    {{-- Tên đăng nhập --}}
+                    <div class="profile-field">
+                        <label>Tên đăng nhập</label>
+                        <div class="profile-input-wrap">
                             <input type="text" value="{{ $user->ten_dang_nhap }}" class="readonly-field" readonly>
                         </div>
+                    </div>
 
-                        {{-- Họ tên --}}
-                        <div class="fgroup">
-                            <label><i class="fas fa-user" style="font-size:.7rem;"></i> Họ tên *</label>
+                    {{-- Họ tên --}}
+                    <div class="profile-field">
+                        <label>Họ tên *</label>
+                        <div class="profile-input-wrap">
                             <input type="text" name="ten_khach_hang"
                                    value="{{ old('ten_khach_hang', $khachHang->ten_khach_hang) }}"
+                                   placeholder="Nguyễn Thị Thanh"
                                    class="{{ $errors->has('ten_khach_hang') ? 'is-invalid' : '' }}"
-                                   placeholder="Nhập họ và tên"
                                    required>
-                            @error('ten_khach_hang')
-                                <div class="invalid-msg">{{ $message }}</div>
-                            @enderror
                         </div>
+                        @error('ten_khach_hang')<div class="invalid-msg">{{ $message }}</div>@enderror
+                    </div>
 
-                        {{-- Số điện thoại --}}
-                        <div class="fgroup">
-                            <label><i class="fas fa-phone" style="font-size:.7rem;"></i> Số điện thoại *</label>
+                    {{-- Số điện thoại --}}
+                    <div class="profile-field">
+                        <label>Số điện thoại *</label>
+                        <div class="profile-input-wrap has-left-icon">
+                            <i class="fas fa-phone-alt input-left-icon"></i>
                             <input type="text" name="so_dien_thoai"
                                    value="{{ old('so_dien_thoai', $khachHang->so_dien_thoai) }}"
                                    maxlength="10"
                                    oninput="this.value=this.value.replace(/[^0-9]/g,'')"
-                                   placeholder="0xxxxxxxxx"
+                                   placeholder="0918277896"
                                    class="{{ $errors->has('so_dien_thoai') ? 'is-invalid' : '' }}"
                                    required>
-                            @error('so_dien_thoai')
-                                <div class="invalid-msg">{{ $message }}</div>
-                            @enderror
                         </div>
+                        @error('so_dien_thoai')<div class="invalid-msg">{{ $message }}</div>@enderror
+                    </div>
 
-                        {{-- Email --}}
-                        <div class="fgroup">
-                            <label><i class="fas fa-envelope" style="font-size:.7rem;"></i> Email *</label>
+                    {{-- Email --}}
+                    <div class="profile-field">
+                        <label>Email *</label>
+                        <div class="profile-input-wrap has-left-icon">
+                            <i class="fas fa-envelope input-left-icon"></i>
                             <input type="email" name="email"
                                    value="{{ old('email', $khachHang->email) }}"
-                                   placeholder="example@email.com"
+                                   placeholder="thanh@gmail.com"
                                    class="{{ $errors->has('email') ? 'is-invalid' : '' }}"
                                    required>
-                            @error('email')
-                                <div class="invalid-msg">{{ $message }}</div>
-                            @enderror
                         </div>
+                        @error('email')<div class="invalid-msg">{{ $message }}</div>@enderror
+                    </div>
+                </div>
 
-                        {{-- ── KHỐI ĐỊA CHỈ ── --}}
-                        <div class="address-box">
-                            <div class="address-box-title">
-                                <i class="fas fa-map-marker-alt"></i> Địa chỉ giao hàng
-                            </div>
+                {{-- SECTION 2: ĐỊA CHỈ GIAO HÀNG --}}
+                <div class="profile-section-heading" style="margin-top: 24px;">
+                    <i class="fas fa-map-marker-alt"></i> <span>Địa chỉ giao hàng</span>
+                </div>
 
-                            {{-- Tỉnh / Thành phố cố định --}}
-                            <div class="fgroup">
-                                <label>Tỉnh / Thành phố *</label>
-                                <input type="text" value="Hà Nội" class="readonly-field" readonly>
-                            </div>
-
-                            {{-- Quận / Huyện + Xã / Phường --}}
-                            <div class="address-row">
-                                <div class="fgroup">
-                                    <label>Quận / Huyện *</label>
-                                    <select id="sel_quan_huyen" name="quan_huyen"
-                                            class="{{ $errors->has('quan_huyen') ? 'is-invalid' : '' }}"
-                                            required>
-                                        <option value="">Chọn quận/huyện</option>
-                                    </select>
-                                    @error('quan_huyen')
-                                        <div class="invalid-msg">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div class="fgroup">
-                                    <label>Xã / Phường *</label>
-                                    <select id="sel_xa_phuong" name="xa_phuong"
-                                            class="{{ $errors->has('xa_phuong') ? 'is-invalid' : '' }}"
-                                            required>
-                                        <option value="">Chọn xã/phường</option>
-                                    </select>
-                                    @error('xa_phuong')
-                                        <div class="invalid-msg">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            {{-- Địa chỉ chi tiết --}}
-                            <div class="fgroup">
-                                <label>Địa chỉ chi tiết *</label>
-                                <input type="text" name="dia_chi_chi_tiet"
-                                       value="{{ $savedChiTiet }}"
-                                       placeholder="Ví dụ: Số 20, ngõ 90"
-                                       class="{{ $errors->has('dia_chi_chi_tiet') ? 'is-invalid' : '' }}"
-                                       required>
-                                @error('dia_chi_chi_tiet')
-                                    <div class="invalid-msg">{{ $message }}</div>
-                                @enderror
-                            </div>
+                <div class="profile-form-grid">
+                    {{-- Tỉnh / Thành phố --}}
+                    <div class="profile-field">
+                        <label>Tỉnh / Thành phố *</label>
+                        <div class="profile-input-wrap">
+                            <select disabled class="profile-select readonly-select">
+                                <option selected>Hà Nội</option>
+                            </select>
                         </div>
-                        {{-- ── KẾT THÚC KHỐI ĐỊA CHỈ ── --}}
+                    </div>
 
-                        {{-- Điểm tích lũy (readonly, badge) --}}
-                        <div class="fgroup">
-                            <label><i class="fas fa-star" style="font-size:.7rem;"></i> Điểm tích lũy</label>
-                            <div class="diem-badge">
+                    {{-- Quận / Huyện --}}
+                    <div class="profile-field">
+                        <label>Quận / Huyện *</label>
+                        <div class="profile-input-wrap">
+                            <select id="sel_quan_huyen" name="quan_huyen"
+                                    class="profile-select {{ $errors->has('quan_huyen') ? 'is-invalid' : '' }}"
+                                    required>
+                                <option value="">Chọn quận/huyện</option>
+                            </select>
+                        </div>
+                        @error('quan_huyen')<div class="invalid-msg">{{ $message }}</div>@enderror
+                    </div>
+
+                    {{-- Xã / Phường --}}
+                    <div class="profile-field">
+                        <label>Xã / Phường *</label>
+                        <div class="profile-input-wrap">
+                            <select id="sel_xa_phuong" name="xa_phuong"
+                                    class="profile-select {{ $errors->has('xa_phuong') ? 'is-invalid' : '' }}"
+                                    required>
+                                <option value="">Chọn xã/phường</option>
+                            </select>
+                        </div>
+                        @error('xa_phuong')<div class="invalid-msg">{{ $message }}</div>@enderror
+                    </div>
+
+                    {{-- Địa chỉ chi tiết --}}
+                    <div class="profile-field full-width">
+                        <label>Địa chỉ chi tiết *</label>
+                        <div class="profile-input-wrap has-left-icon">
+                            <i class="fas fa-home input-left-icon"></i>
+                            <input type="text" name="dia_chi_chi_tiet"
+                                   value="{{ $savedChiTiet }}"
+                                   placeholder="Số 18, ngõ 100"
+                                   class="{{ $errors->has('dia_chi_chi_tiet') ? 'is-invalid' : '' }}"
+                                   required>
+                        </div>
+                        @error('dia_chi_chi_tiet')<div class="invalid-msg">{{ $message }}</div>@enderror
+                    </div>
+                </div>
+
+                {{-- SECTION 3: HIGHLIGHT CARDS --}}
+                <div class="profile-summary-cards">
+                    {{-- Points Card --}}
+                    <div class="profile-summary-card points-card">
+                        <div class="summary-card-tag">* Điểm tích lũy</div>
+                        <div class="summary-card-body">
+                            <div class="summary-card-icon points-icon">
                                 <i class="fas fa-coins"></i>
-                                <span class="diem-val">{{ number_format($khachHang->diem_tich_luy) }}</span>
-                                <span style="font-weight:400;font-size:.78rem;">điểm</span>
+                            </div>
+                            <div class="summary-card-val">
+                                <span class="val-num">{{ number_format($khachHang->diem_tich_luy) }}</span>
+                                <span class="val-unit">điểm</span>
                             </div>
                         </div>
+                    </div>
 
-                        {{-- Vai trò (readonly) --}}
-                        <div class="fgroup">
-                            <label><i class="fas fa-shield-alt" style="font-size:.7rem;"></i> Loại tài khoản</label>
-                            <input type="text" value="Khách hàng" class="readonly-field" readonly>
+                    {{-- Account Type Card --}}
+                    <div class="profile-summary-card role-card">
+                        <div class="summary-card-tag">* Loại tài khoản</div>
+                        <div class="summary-card-body">
+                            <div class="summary-card-icon role-icon">
+                                <i class="fas fa-crown"></i>
+                            </div>
+                            <div class="summary-card-info">
+                                <div class="role-title">Khách hàng</div>
+                                <div class="role-sub">Thành viên RoseShop</div>
+                            </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="btn-actions">
-                        <button type="submit" class="btn-submit">
-                            <i class="fas fa-save"></i> Lưu thông tin
-                        </button>
-                        <button type="button" class="btn-cancel" id="btn-cancel-info"
-                                style="display:none;" onclick="resetInfoForm()">
-                            <i class="fas fa-undo"></i> Hủy thay đổi
-                        </button>
-                    </div>
-                </form>
-            </div>
+                {{-- Action Buttons --}}
+                <div class="profile-actions">
+                    <button type="submit" class="profile-btn-save">
+                        <i class="fas fa-save"></i> Lưu thông tin
+                    </button>
+                    <button type="button" class="profile-btn-cancel" onclick="resetInfoForm()">
+                        <i class="fas fa-undo"></i> Hủy bỏ
+                    </button>
+                </div>
+            </form>
         </div>
-    </div>
 
-    {{-- ════════════════════════════════════
-         TAB 2: Đổi mật khẩu
-    ════════════════════════════════════ --}}
-    <div class="tab-pane {{ ($errors->has('mat_khau_cu') || $errors->has('mat_khau_moi') || session('tab') === 'password') ? 'active' : '' }}"
-         id="tab-password">
-        <div class="pcard">
-            <div class="pcard-header">
-                <i class="fas fa-lock"></i> Đổi mật khẩu
+        {{-- ═════════════════════════════════════════════════════════════
+             TAB 2: ĐỔI MẬT KHẨU
+        ═════════════════════════════════════════════════════════════ --}}
+        <div class="profile-pane {{ ($errors->has('mat_khau_cu') || $errors->has('mat_khau_moi') || session('tab') === 'password') ? 'active' : '' }}" id="pane-password">
+            {{-- Validation Errors --}}
+            @if($errors->has('mat_khau_cu') || $errors->has('mat_khau_moi'))
+                <div class="alert alert-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <ul style="margin:0;padding-left:1.2rem;">
+                        @foreach(['mat_khau_cu','mat_khau_moi'] as $field)
+                            @if($errors->has($field))
+                                <li>{{ $errors->first($field) }}</li>
+                            @endif
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            {{-- Security Notice Banner --}}
+            <div class="security-notice-card">
+                <div class="security-notice-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="security-notice-text">
+                    <div class="security-notice-title">Lưu ý bảo mật</div>
+                    <div class="security-notice-desc">Vui lòng sử dụng mật khẩu mạnh để bảo vệ tài khoản của bạn.</div>
+                </div>
             </div>
-            <div class="pcard-body">
 
-                @if($errors->has('mat_khau_cu') || $errors->has('mat_khau_moi'))
-                    <div class="alert alert-error">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <ul style="margin:0;padding-left:1.2rem;">
-                            @foreach(['mat_khau_cu','mat_khau_moi'] as $field)
-                                @if($errors->has($field))
-                                    <li>{{ $errors->first($field) }}</li>
-                                @endif
-                            @endforeach
-                        </ul>
+            <form method="POST" action="{{ route('customer.profile.password') }}" id="formProfilePassword">
+                @csrf
+                @method('PATCH')
+
+                <div class="password-form-wrap">
+                    {{-- Mật khẩu hiện tại --}}
+                    <div class="profile-field">
+                        <label>Mật khẩu hiện tại *</label>
+                        <div class="profile-input-wrap has-left-icon has-right-btn">
+                            <i class="fas fa-lock input-left-icon"></i>
+                            <input type="password" name="mat_khau_cu" id="mat_khau_cu"
+                                   autocomplete="current-password"
+                                   placeholder="Nhập mật khẩu hiện tại"
+                                   class="{{ $errors->has('mat_khau_cu') ? 'is-invalid' : '' }}"
+                                   required>
+                            <button type="button" class="pwd-eye-btn" onclick="togglePwd('mat_khau_cu', this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        @error('mat_khau_cu')<div class="invalid-msg">{{ $message }}</div>@enderror
                     </div>
-                @endif
 
-                <form method="POST" action="{{ route('customer.profile.password') }}">
-                    @csrf
-                    @method('PATCH')
-
-                    <div class="form-grid" style="max-width:440px; grid-template-columns:1fr;">
-
-                        {{-- Mật khẩu hiện tại --}}
-                        <div class="fgroup">
-                            <label>Mật khẩu hiện tại *</label>
-                            <div class="pwd-wrap">
-                                <input type="password" name="mat_khau_cu" id="mat_khau_cu"
-                                       autocomplete="current-password"
-                                       placeholder="Nhập mật khẩu hiện tại"
-                                       class="{{ $errors->has('mat_khau_cu') ? 'is-invalid' : '' }}"
-                                       required>
-                                <button type="button" class="pwd-eye" onclick="togglePwd('mat_khau_cu',this)">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                            @error('mat_khau_cu')
-                                <div class="invalid-msg">{{ $message }}</div>
-                            @enderror
+                    {{-- Mật khẩu mới --}}
+                    <div class="profile-field">
+                        <label>Mật khẩu mới * <span>(ít nhất 6 ký tự)</span></label>
+                        <div class="profile-input-wrap has-left-icon has-right-btn">
+                            <i class="fas fa-lock input-left-icon"></i>
+                            <input type="password" name="mat_khau_moi" id="mat_khau_moi"
+                                   autocomplete="new-password"
+                                   placeholder="Tối thiểu 6 ký tự"
+                                   minlength="6"
+                                   oninput="checkPasswordCriteria(this.value)"
+                                   class="{{ $errors->has('mat_khau_moi') ? 'is-invalid' : '' }}"
+                                   required>
+                            <button type="button" class="pwd-eye-btn" onclick="togglePwd('mat_khau_moi', this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
                         </div>
+                        @error('mat_khau_moi')<div class="invalid-msg">{{ $message }}</div>@enderror
+                    </div>
 
-                        {{-- Mật khẩu mới --}}
-                        <div class="fgroup">
-                            <label>Mật khẩu mới * <span style="color:var(--gray);font-weight:400;">(ít nhất 6 ký tự)</span></label>
-                            <div class="pwd-wrap">
-                                <input type="password" name="mat_khau_moi" id="mat_khau_moi"
-                                       autocomplete="new-password"
-                                       placeholder="Tối thiểu 6 ký tự"
-                                       minlength="6"
-                                       oninput="checkStrength(this.value)"
-                                       class="{{ $errors->has('mat_khau_moi') ? 'is-invalid' : '' }}"
-                                       required>
-                                <button type="button" class="pwd-eye" onclick="togglePwd('mat_khau_moi',this)">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                            {{-- Strength meter --}}
-                            <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
-                            <div class="strength-label" id="strengthLabel"></div>
-                            @error('mat_khau_moi')
-                                <div class="invalid-msg">{{ $message }}</div>
-                            @enderror
+                    {{-- Checklist criteria --}}
+                    <div class="password-checklist-box">
+                        <div class="checklist-heading">* Mật khẩu nên bao gồm:</div>
+                        <div class="checklist-item" id="chkLen">
+                            <i class="fas fa-check-circle"></i> <span>Ít nhất 6 ký tự</span>
                         </div>
-
-                        {{-- Xác nhận mật khẩu mới --}}
-                        <div class="fgroup">
-                            <label>Xác nhận mật khẩu mới *</label>
-                            <div class="pwd-wrap">
-                                <input type="password" name="mat_khau_moi_confirmation" id="mat_khau_moi_confirmation"
-                                       autocomplete="new-password"
-                                       placeholder="Nhập lại mật khẩu mới"
-                                       minlength="6"
-                                       oninput="checkMatch()"
-                                       required>
-                                <button type="button" class="pwd-eye" onclick="togglePwd('mat_khau_moi_confirmation',this)">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                            </div>
-                            <div class="strength-label" id="matchLabel"></div>
+                        <div class="checklist-item" id="chkCase">
+                            <i class="fas fa-check-circle"></i> <span>Kết hợp chữ hoa, chữ thường</span>
+                        </div>
+                        <div class="checklist-item" id="chkSpecial">
+                            <i class="fas fa-check-circle"></i> <span>Số và ký tự đặc biệt (nếu có)</span>
                         </div>
                     </div>
 
-                    <div class="btn-actions">
-                        <button type="submit" class="btn-submit">
+                    {{-- Xác nhận mật khẩu mới --}}
+                    <div class="profile-field">
+                        <label>Xác nhận mật khẩu mới *</label>
+                        <div class="profile-input-wrap has-left-icon has-right-btn">
+                            <i class="fas fa-lock input-left-icon"></i>
+                            <input type="password" name="mat_khau_moi_confirmation" id="mat_khau_moi_confirmation"
+                                   autocomplete="new-password"
+                                   placeholder="Nhập lại mật khẩu mới"
+                                   minlength="6"
+                                   oninput="checkMatchPassword()"
+                                   required>
+                            <button type="button" class="pwd-eye-btn" onclick="togglePwd('mat_khau_moi_confirmation', this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div id="matchPasswordLabel" class="match-password-label"></div>
+                    </div>
+
+                    <div class="password-action-wrap">
+                        <button type="submit" class="profile-btn-pwd">
                             <i class="fas fa-key"></i> Đổi mật khẩu
                         </button>
-                        <button type="button" class="btn-cancel" id="btn-cancel-pwd"
-                                style="display:none;" onclick="resetPwdForm()">
-                            <i class="fas fa-undo"></i> Hủy thay đổi
-                        </button>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
     </div>
-
 </div>
 
 <script>
+// ── Dữ liệu Quận/Huyện Hà Nội ────────────────────────────────────────────────
 const hanoiData = {
     "Ba Đình": ["Phúc Xá","Trúc Bạch","Vĩnh Phúc","Cống Vị","Liễu Giai","Nguyễn Trung Trực","Quán Thánh","Ngọc Hà","Điện Biên","Đội Cấn","Ngọc Khánh","Kim Mã","Giảng Võ","Thành Công"],
     "Hoàn Kiếm": ["Phúc Tân","Đồng Xuân","Hàng Mã","Hàng Buồm","Hàng Đào","Hàng Bồ","Cửa Đông","Lý Thái Tổ","Hàng Bạc","Hàng Gai","Chương Dương","Hàng Trống","Cửa Nam","Hàng Bông","Tràng Tiền","Trần Hưng Đạo","Phan Chu Trinh","Hàng Bài"],
@@ -389,144 +395,145 @@ const hanoiData = {
 const selQuan   = document.getElementById('sel_quan_huyen');
 const selPhuong = document.getElementById('sel_xa_phuong');
 
-Object.keys(hanoiData).sort().forEach(q => {
-    const opt = document.createElement('option');
-    opt.value = q; opt.textContent = q;
-    selQuan.appendChild(opt);
-});
-
-function updatePhuong(selectedPhuong) {
-    selPhuong.innerHTML = '<option value="">Chọn xã/phường</option>';
-    const wards = hanoiData[selQuan.value] || [];
-    wards.forEach(p => {
+if (selQuan && selPhuong) {
+    Object.keys(hanoiData).sort().forEach(q => {
         const opt = document.createElement('option');
-        opt.value = p; opt.textContent = p;
-        if (p === selectedPhuong) opt.selected = true;
-        selPhuong.appendChild(opt);
+        opt.value = q;
+        opt.textContent = q;
+        selQuan.appendChild(opt);
     });
+
+    function updatePhuong(selectedPhuong) {
+        selPhuong.innerHTML = '<option value="">Chọn xã/phường</option>';
+        const wards = hanoiData[selQuan.value] || [];
+        wards.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p;
+            opt.textContent = p;
+            if (p === selectedPhuong) opt.selected = true;
+            selPhuong.appendChild(opt);
+        });
+    }
+
+    selQuan.addEventListener('change', () => updatePhuong(''));
+
+    const savedQuan   = "{{ $savedQuan }}";
+    const savedPhuong = "{{ $savedPhuong }}";
+    if (savedQuan) {
+        selQuan.value = savedQuan;
+        updatePhuong(savedPhuong);
+    }
 }
 
-selQuan.addEventListener('change', () => updatePhuong(''));
+// ── Tab Switching ────────────────────────────────────────────────────────────
+function switchProfileTab(tab) {
+    document.querySelectorAll('.profile-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.profile-tab-btn').forEach(b => b.classList.remove('active'));
 
-const savedQuan   = "{{ $savedQuan }}";
-const savedPhuong = "{{ $savedPhuong }}";
-if (savedQuan) {
-    selQuan.value = savedQuan;
-    updatePhuong(savedPhuong);
+    const pane = document.getElementById('pane-' + tab);
+    const btn = document.getElementById('tab-' + tab + '-btn');
+    if (pane) pane.classList.add('active');
+    if (btn) btn.classList.add('active');
+
+    const headerIcon = document.getElementById('headerIcon');
+    const headerTitle = document.getElementById('headerTitle');
+    const headerSub = document.getElementById('headerSub');
+    const breadcrumb = document.getElementById('profileBreadcrumbCurrent');
+
+    if (tab === 'password') {
+        if (headerIcon) headerIcon.innerHTML = '<i class="fas fa-lock"></i>';
+        if (headerTitle) headerTitle.textContent = 'Đổi mật khẩu';
+        if (headerSub) headerSub.textContent = 'Cập nhật mật khẩu để bảo vệ tài khoản của bạn tốt hơn';
+        if (breadcrumb) breadcrumb.textContent = 'Đổi mật khẩu';
+    } else {
+        if (headerIcon) headerIcon.innerHTML = '<i class="fas fa-envelope-open-text"></i>';
+        if (headerTitle) headerTitle.textContent = 'Hồ sơ cá nhân';
+        if (headerSub) headerSub.textContent = 'Quản lý thông tin tài khoản của bạn';
+        if (breadcrumb) breadcrumb.textContent = 'Hồ sơ cá nhân';
+    }
 }
 
+// ── Reset Info Form ──────────────────────────────────────────────────────────
 const originalInfo = {
     ten_khach_hang:   "{{ addslashes($khachHang->ten_khach_hang) }}",
     so_dien_thoai:    "{{ addslashes($khachHang->so_dien_thoai) }}",
     email:            "{{ addslashes($khachHang->email) }}",
-    quan_huyen:       savedQuan,
-    xa_phuong:        savedPhuong,
+    quan_huyen:       "{{ addslashes($savedQuan) }}",
+    xa_phuong:        "{{ addslashes($savedPhuong) }}",
     dia_chi_chi_tiet: "{{ addslashes($savedChiTiet) }}",
 };
 
-function checkInfoDirty() {
-    const form   = document.querySelector('#tab-info form');
-    const fields = ['ten_khach_hang','so_dien_thoai','email','dia_chi_chi_tiet'];
-    const dirty  = fields.some(f => form[f] && form[f].value !== originalInfo[f])
-                || selQuan.value   !== originalInfo.quan_huyen
-                || selPhuong.value !== originalInfo.xa_phuong;
-    document.getElementById('btn-cancel-info').style.display = dirty ? 'inline-flex' : 'none';
-}
-
 function resetInfoForm() {
-    const form = document.querySelector('#tab-info form');
-    form.ten_khach_hang.value   = originalInfo.ten_khach_hang;
-    form.so_dien_thoai.value    = originalInfo.so_dien_thoai;
-    form.email.value            = originalInfo.email;
-    form.dia_chi_chi_tiet.value = originalInfo.dia_chi_chi_tiet;
-    selQuan.value = originalInfo.quan_huyen;
-    updatePhuong(originalInfo.xa_phuong);
-    document.getElementById('btn-cancel-info').style.display = 'none';
+    const form = document.getElementById('formProfileInfo');
+    if (!form) return;
+    if (form.ten_khach_hang) form.ten_khach_hang.value = originalInfo.ten_khach_hang;
+    if (form.so_dien_thoai) form.so_dien_thoai.value = originalInfo.so_dien_thoai;
+    if (form.email) form.email.value = originalInfo.email;
+    if (form.dia_chi_chi_tiet) form.dia_chi_chi_tiet.value = originalInfo.dia_chi_chi_tiet;
+    if (selQuan) {
+        selQuan.value = originalInfo.quan_huyen;
+        updatePhuong(originalInfo.xa_phuong);
+    }
 }
 
-document.querySelectorAll('#tab-info input:not([readonly]), #tab-info select').forEach(el => {
-    el.addEventListener('input',  checkInfoDirty);
-    el.addEventListener('change', checkInfoDirty);
-});
-
-function checkPwdDirty() {
-    const hasCu   = document.getElementById('mat_khau_cu').value.length > 0;
-    const hasMoi  = document.getElementById('mat_khau_moi').value.length > 0;
-    const hasConf = document.getElementById('mat_khau_moi_confirmation').value.length > 0;
-    document.getElementById('btn-cancel-pwd').style.display =
-        (hasCu || hasMoi || hasConf) ? 'inline-flex' : 'none';
-}
-
-function resetPwdForm() {
-    document.getElementById('mat_khau_cu').value                    = '';
-    document.getElementById('mat_khau_moi').value                   = '';
-    document.getElementById('mat_khau_moi_confirmation').value      = '';
-    document.getElementById('strengthFill').style.width      = '0%';
-    document.getElementById('strengthFill').style.background = '';
-    document.getElementById('strengthLabel').textContent     = '';
-    document.getElementById('matchLabel').textContent        = '';
-    document.getElementById('btn-cancel-pwd').style.display  = 'none';
-}
-
-document.querySelectorAll('#tab-password input[type=password]').forEach(el => {
-    el.addEventListener('input', checkPwdDirty);
-});
-function switchTab(tab) {
-    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + tab).classList.add('active');
-    document.getElementById('tab-' + tab + '-btn').classList.add('active');
-}
-
-// ── Password helpers ──────────────────────────────────────────────────────────
+// ── Password helpers ─────────────────────────────────────────────────────────
 function togglePwd(fieldId, btn) {
     const input = document.getElementById(fieldId);
-    const icon  = btn.querySelector('i');
-    input.type  = input.type === 'password' ? 'text' : 'password';
-    icon.className = input.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+    if (!input) return;
+    const icon = btn.querySelector('i');
+    input.type = input.type === 'password' ? 'text' : 'password';
+    if (icon) {
+        icon.className = input.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+    }
 }
 
-function checkStrength(val) {
-    const fill  = document.getElementById('strengthFill');
-    const label = document.getElementById('strengthLabel');
-    let score = 0;
-    if (val.length >= 6)  score++;
-    if (val.length >= 10) score++;
-    if (/[A-Z]/.test(val)) score++;
-    if (/[0-9]/.test(val)) score++;
-    if (/[^A-Za-z0-9]/.test(val)) score++;
+function checkPasswordCriteria(val) {
+    const chkLen = document.getElementById('chkLen');
+    const chkCase = document.getElementById('chkCase');
+    const chkSpecial = document.getElementById('chkSpecial');
 
-    const levels = [
-        { w: '0%',   c: '',         t: '' },
-        { w: '25%',  c: '#ef4444',  t: 'Rất yếu' },
-        { w: '50%',  c: '#f97316',  t: 'Yếu' },
-        { w: '75%',  c: '#f59e0b',  t: 'Trung bình' },
-        { w: '90%',  c: '#22c55e',  t: 'Mạnh' },
-        { w: '100%', c: '#16a34a',  t: 'Rất mạnh 🔒' },
-    ];
+    // Length >= 6
+    if (val.length >= 6) {
+        chkLen.classList.add('valid');
+    } else {
+        chkLen.classList.remove('valid');
+    }
 
-    const lvl = val.length === 0 ? levels[0] : levels[Math.min(score, 5)];
-    fill.style.width      = lvl.w;
-    fill.style.background = lvl.c;
-    label.textContent     = lvl.t;
-    label.style.color     = lvl.c;
+    // Both upper and lowercase
+    if (/[a-z]/.test(val) && /[A-Z]/.test(val)) {
+        chkCase.classList.add('valid');
+    } else {
+        chkCase.classList.remove('valid');
+    }
 
-    checkMatch();
+    // Number or special character
+    if (/[0-9]/.test(val) || /[^A-Za-z0-9]/.test(val)) {
+        chkSpecial.classList.add('valid');
+    } else {
+        chkSpecial.classList.remove('valid');
+    }
+
+    checkMatchPassword();
 }
 
-function checkMatch() {
-    const moi   = document.getElementById('mat_khau_moi').value;
-    const conf  = document.getElementById('mat_khau_moi_confirmation').value;
-    const label = document.getElementById('matchLabel');
-    if (!conf) { label.textContent = ''; return; }
+function checkMatchPassword() {
+    const moi = document.getElementById('mat_khau_moi').value;
+    const conf = document.getElementById('mat_khau_moi_confirmation').value;
+    const label = document.getElementById('matchPasswordLabel');
+    if (!label) return;
+
+    if (!conf) {
+        label.textContent = '';
+        label.className = 'match-password-label';
+        return;
+    }
     if (moi === conf) {
         label.textContent = '✓ Mật khẩu khớp';
-        label.style.color = 'var(--green)';
+        label.className = 'match-password-label valid';
     } else {
         label.textContent = '✗ Mật khẩu chưa khớp';
-        label.style.color = 'var(--red)';
+        label.className = 'match-password-label invalid';
     }
 }
 </script>
-</body>
-</html>
+@endsection

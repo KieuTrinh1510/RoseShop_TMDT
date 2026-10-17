@@ -193,6 +193,7 @@
         /* Chấm đỏ thông báo chưa đọc được định nghĩa đồng bộ trong Dashboard.css */
     </style>
     @yield('head-styles')
+    <link rel="stylesheet" href="{{ asset('css/Customer/ProductCard.css') }}?v={{ filemtime(public_path('css/Customer/ProductCard.css')) }}">
 </head>
 
 <body data-page="@yield('page-id', 'other')">
