@@ -128,13 +128,24 @@ Route::middleware(['auth'])->group(function () {
         ->whereNumber('maThanhToan')
         ->name('vnpay.vi-pham.payment');
 });
+// ─── Shipper: web giao hàng đã ngừng, chuyển sang ứng dụng di động ───────────
+Route::get('/shipper/ung-dung-di-dong', function (\Illuminate\Http\Request $request) {
+    // Nếu shipper còn session cũ (remember me...) thì đăng xuất để không bị lặp redirect
+    if (auth()->check() && auth()->user()->vai_tro === 'SHIPPER') {
+        \Illuminate\Support\Facades\Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+    }
+    return view('Shipper.layouts.Shipper');
+})->name('shipper.mobile-only');
+
 // ─── Trang chủ ────────────────────────────────────────────────────────────────
 Route::get('/', function () {
     if (auth()->check()) {
         $vai_tro = auth()->user()->vai_tro;
         return match($vai_tro) {
             'ADMIN', 'NHAN_VIEN' => redirect()->route('admin.dashboard'),
-            'SHIPPER'            => redirect()->route('shipper.dashboard'),
+            'SHIPPER'            => redirect()->route('shipper.mobile-only'),
             default              => redirect()->route('customer.dashboard'),
         };
     }

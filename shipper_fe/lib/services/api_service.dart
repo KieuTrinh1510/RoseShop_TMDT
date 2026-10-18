@@ -1,7 +1,9 @@
 // lib/services/api_service.dart
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config.dart';
+import 'auth_service.dart';
 
 class ApiException implements Exception {
   final int status;
@@ -37,10 +39,8 @@ class ApiException implements Exception {
 }
 
 class ApiService {
-  static Map<String, String> get _headers => {
-    'Content-Type': 'application/json',
-    'x-ma-nhan-vien': AppConfig.maNhanVien.toString(),
-  };
+  // JWT: Authorization: Bearer <token> (xem AuthService). Không còn header x-ma-nhan-vien.
+  static Map<String, String> get _headers => AuthService.authHeaders();
 
   static Uri _uri(String path, [Map<String, dynamic>? query]) {
     final cleanQuery = <String, String>{};
@@ -71,9 +71,17 @@ class ApiService {
       return body['data'];
     }
     // Giữ nguyên status + code + message của backend (400/404/409/422/500...)
+    final code = (body['code'] ?? 'UNKNOWN').toString();
+
+    // Token thiếu/sai/hết hạn -> xóa phiên + đưa về LoginScreen.
+    // (401 WRONG_PASSWORD của đổi mật khẩu KHÔNG thuộc nhóm này.)
+    if (AuthService.isSessionError(res.statusCode, code)) {
+      unawaited(AuthService.handleUnauthorized());
+    }
+
     throw ApiException(
       res.statusCode,
-      (body['code'] ?? 'UNKNOWN').toString(),
+      code,
       (body['message'] ?? 'Lỗi không xác định').toString(),
     );
   }

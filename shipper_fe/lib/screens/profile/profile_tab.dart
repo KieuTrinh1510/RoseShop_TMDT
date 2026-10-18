@@ -13,7 +13,9 @@ import '../../widgets/common/skeleton.dart';
 import '../../widgets/common/staggered_fade_slide.dart';
 import '../../widgets/common/user_avatar.dart';
 import '../../widgets/profile/profile_menu_tile.dart';
-import '../dang_nhap_screen.dart';
+import '../login/login_screen.dart';
+import '../login/forgot_password_screen.dart';
+import '../home/home_screen.dart';
 import '../../widgets/profile/dialogs/edit_info_dialog.dart';
 import '../../widgets/profile/dialogs/change_username_dialog.dart';
 
@@ -88,6 +90,22 @@ class _ProfileTabState extends State<ProfileTab> {
     final res = await showAccountDialog(context, current: _c.tenDangNhap);
     if (res == null) return;
 
+    // Bấm "Quên mật khẩu?" -> mở màn đặt lại mật khẩu bằng mã gửi qua email.
+    if (res.containsKey('quen_mat_khau')) {
+      final ok = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ForgotPasswordScreen(initialEmail: _c.email),
+        ),
+      );
+      if (!mounted) return;
+      if (ok == true) {
+        _snack(tr('msg_account_updated'));
+        _goHome();
+      }
+      return;
+    }
+
     String? err;
     if (res.containsKey('ten_dang_nhap_moi')) {
       err = await _c.changeUsername(res['ten_dang_nhap_moi']!);
@@ -97,6 +115,12 @@ class _ProfileTabState extends State<ProfileTab> {
     }
     if (!mounted) return;
     _snack(err ?? tr('msg_account_updated'), error: err != null);
+    // Đổi mật khẩu thành công -> về trang chủ.
+    if (err == null && res.containsKey('mat_khau_moi')) _goHome();
+  }
+
+  void _goHome() {
+    context.findAncestorStateOfType<HomeScreenState>()?.goHome();
   }
 
   Future<void> _pickLanguage() async {
