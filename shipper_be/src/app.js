@@ -4,14 +4,16 @@ const cors = require("cors");
 const app = express();
 
 const shipperRoutes = require("./routes/shipperRoutes");
-// Middleware đăng nhập tạm: phải gắn req.user = { ma_nguoi_dung, ... }
-// Khi có đăng nhập thật thì thay bằng authMiddleware + kiểm tra vai_tro === 'SHIPPER'
-const fakeAuthMiddleware = require("./middleware/fakeAuthMiddleware");
+const shipperAuthRoutes = require("./routes/shipperAuthRoutes");
+// Auth thật: JWT Bearer, yêu cầu vai_tro === 'SHIPPER' (fakeAuthMiddleware không còn được mount)
+const authMiddleware = require("./middleware/authMiddleware");
 
 app.use(cors());
 app.use(express.json());
 
-app.use("/api/shipper", fakeAuthMiddleware, shipperRoutes);
+// Login: công khai, phải mount TRƯỚC route yêu cầu token
+app.use("/api/shipper/auth", shipperAuthRoutes);
+app.use("/api/shipper", authMiddleware, shipperRoutes);
 
 // Route không tồn tại
 app.use((req, res) => {
