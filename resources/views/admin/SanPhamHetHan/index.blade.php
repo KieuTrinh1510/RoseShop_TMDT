@@ -4,330 +4,62 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <style>
-        .exp-container {
-            padding: 24px;
-            max-width: 1440px;
-            margin: 0 auto;
-        }
+        .exp-container { padding: 24px; max-width: 1440px; margin: 0 auto; }
 
         /* Stats Cards */
-        .exp-stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 24px;
-        }
+        .exp-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        @media (max-width: 1200px) { .exp-stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 576px) { .exp-stats-grid { grid-template-columns: 1fr; } }
 
-        @media (max-width: 1200px) {
-            .exp-stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 576px) {
-            .exp-stats-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .exp-stat-card {
-            background: #ffffff;
-            border: 1px solid #EAECF0;
-            border-radius: 12px;
-            padding: 18px 20px;
-            box-shadow: 0 1px 3px rgba(16, 24, 40, 0.04);
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            transition: all 0.2s ease;
-        }
-
-        .exp-stat-card:hover {
-            box-shadow: 0 4px 12px rgba(16, 24, 40, 0.08);
-            transform: translateY(-1px);
-        }
-
-        .exp-stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            flex-shrink: 0;
-        }
-
-        .exp-stat-icon.red {
-            background: #FEE4E2;
-            color: #D92D20;
-        }
-
-        .exp-stat-icon.orange {
-            background: #FEF0C7;
-            color: #DC6803;
-        }
-
-        .exp-stat-icon.purple {
-            background: #F4EBFF;
-            color: #7F56D9;
-        }
-
-        .exp-stat-icon.green {
-            background: #ECFDF3;
-            color: #039855;
-        }
-
-        .exp-stat-info h3 {
-            margin: 0;
-            font-size: 22px;
-            font-weight: 700;
-            color: #101828;
-            line-height: 1.2;
-        }
-
-        .exp-stat-info p {
-            margin: 0;
-            font-size: 13px;
-            color: #667085;
-            font-weight: 500;
-        }
-
-        .exp-stat-info .sub-text {
-            font-size: 11.5px;
-            color: #98A2B3;
-            margin-top: 3px;
-        }
+        .exp-stat-card { background: #ffffff; border: 1px solid #EAECF0; border-radius: 12px; padding: 18px 20px; box-shadow: 0 1px 3px rgba(16, 24, 40, 0.04); display: flex; align-items: center; gap: 16px; transition: all 0.2s ease; }
+        .exp-stat-card:hover { box-shadow: 0 4px 12px rgba(16, 24, 40, 0.08); transform: translateY(-1px); }
+        .exp-stat-icon { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+        .exp-stat-icon.red { background: #FEE4E2; color: #D92D20; }
+        .exp-stat-icon.orange { background: #FEF0C7; color: #DC6803; }
+        .exp-stat-icon.purple { background: #F4EBFF; color: #7F56D9; }
+        .exp-stat-icon.green { background: #ECFDF3; color: #039855; }
+        .exp-stat-info h3 { margin: 0; font-size: 22px; font-weight: 700; color: #101828; line-height: 1.2; }
+        .exp-stat-info p { margin: 0; font-size: 13px; color: #667085; font-weight: 500; }
+        .exp-stat-info .sub-text { font-size: 11.5px; color: #98A2B3; margin-top: 3px; }
 
         /* Filter Box */
-        .exp-filter-card {
-            background: #ffffff;
-            border: 1px solid #EAECF0;
-            border-radius: 12px;
-            padding: 16px 20px;
-            margin-bottom: 24px;
-            box-shadow: 0 1px 3px rgba(16, 24, 40, 0.04);
-        }
-
-        .exp-filter-tabs {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .exp-filter-tab {
-            padding: 7px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            text-decoration: none;
-            color: #475467;
-            background: #F2F4F7;
-            transition: all 0.15s ease;
-            border: 1px solid transparent;
-        }
-
-        .exp-filter-tab:hover {
-            color: #101828;
-            background: #EAECF0;
-        }
-
-        .exp-filter-tab.active {
-            color: #ffffff;
-            background: #E11D48;
-            border-color: #E11D48;
-        }
+        .exp-filter-card { background: #ffffff; border: 1px solid #EAECF0; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(16, 24, 40, 0.04); }
+        .exp-filter-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+        .exp-filter-tab { padding: 7px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; text-decoration: none; color: #475467; background: #F2F4F7; transition: all 0.15s ease; border: 1px solid transparent; }
+        .exp-filter-tab:hover { color: #101828; background: #EAECF0; }
+        .exp-filter-tab.active { color: #ffffff; background: #E11D48; border-color: #E11D48; }
 
         /* Section Container */
-        .exp-section-card {
-            background: #ffffff;
-            border: 1px solid #EAECF0;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(16, 24, 40, 0.04);
-            margin-bottom: 30px;
-            overflow: hidden;
-        }
+        .exp-section-card { background: #ffffff; border: 1px solid #EAECF0; border-radius: 12px; box-shadow: 0 1px 3px rgba(16, 24, 40, 0.04); margin-bottom: 30px; overflow: hidden; }
+        .exp-section-header { padding: 18px 24px; border-bottom: 1px solid #EAECF0; display: flex; align-items: center; justify-content: space-between; background: #FAFAFA; flex-wrap: wrap; gap: 12px; }
+        .exp-section-title { display: flex; align-items: center; gap: 10px; }
+        .exp-section-title h2 { margin: 0; font-size: 17px; font-weight: 700; color: #101828; }
+        .exp-section-title .badge-count { background: #FEE4E2; color: #B42318; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 12px; }
 
-        .exp-section-header {
-            padding: 18px 24px;
-            border-bottom: 1px solid #EAECF0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #FAFAFA;
-        }
-
-        .exp-section-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .exp-section-title h2 {
-            margin: 0;
-            font-size: 17px;
-            font-weight: 700;
-            color: #101828;
-        }
-
-        .exp-section-title .badge-count {
-            background: #FEE4E2;
-            color: #B42318;
-            font-size: 12px;
-            font-weight: 700;
-            padding: 3px 9px;
-            border-radius: 12px;
-        }
-
-        .btn-view-inventory {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 7px 14px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #027A48;
-            background: #ECFDF3;
-            border: 1px solid #A6F4C5;
-            border-radius: 8px;
-            text-decoration: none;
-            transition: all 0.15s ease;
-        }
-
-        .btn-view-inventory:hover {
-            background: #D1FADF;
-            color: #027A48;
-            border-color: #6CE9A6;
-            text-decoration: none;
-            transform: translateY(-1px);
-        }
+        .btn-view-inventory { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; font-size: 13px; font-weight: 600; color: #027A48; background: #ECFDF3; border: 1px solid #A6F4C5; border-radius: 8px; text-decoration: none; transition: all 0.15s ease; }
+        .btn-view-inventory:hover { background: #D1FADF; color: #027A48; border-color: #6CE9A6; text-decoration: none; transform: translateY(-1px); }
 
         /* Tables */
-        .exp-table {
-            width: 100%;
-            margin-bottom: 0;
-            border-collapse: collapse;
-        }
+        .exp-table { width: 100%; margin-bottom: 0; border-collapse: collapse; }
+        .exp-table th { background: #F9FAFB; color: #475467; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; padding: 12px 18px; border-bottom: 1px solid #EAECF0; white-space: nowrap; }
+        .exp-table td { padding: 14px 18px; vertical-align: middle; border-bottom: 1px solid #F2F4F7; font-size: 13.5px; color: #344054; }
+        .exp-table tbody tr:hover { background-color: #FDFBFB; }
 
-        .exp-table th {
-            background: #F9FAFB;
-            color: #475467;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            padding: 12px 18px;
-            border-bottom: 1px solid #EAECF0;
-            white-space: nowrap;
-        }
-
-        .exp-table td {
-            padding: 14px 18px;
-            vertical-align: middle;
-            border-bottom: 1px solid #F2F4F7;
-            font-size: 13.5px;
-            color: #344054;
-        }
-
-        .exp-table tbody tr:hover {
-            background-color: #FDFBFB;
-        }
-
-        .exp-item-thumb {
-            width: 44px;
-            height: 44px;
-            border-radius: 8px;
-            object-fit: cover;
-            border: 1px solid #EAECF0;
-            background: #F2F4F7;
-            flex-shrink: 0;
-        }
-
-        .exp-item-placeholder {
-            width: 44px;
-            height: 44px;
-            border-radius: 8px;
-            background: #FDE8ED;
-            color: #E11D48;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            flex-shrink: 0;
-        }
+        .exp-item-thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid #EAECF0; background: #F2F4F7; flex-shrink: 0; }
+        .exp-item-placeholder { width: 44px; height: 44px; border-radius: 8px; background: #FDE8ED; color: #E11D48; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
 
         /* Buttons */
-        .btn-thanh-ly-ncc {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            font-size: 12.5px;
-            font-weight: 600;
-            color: #B42318;
-            background: #FEF3F2;
-            border: 1px solid #FECDCA;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            white-space: nowrap;
-        }
+        .btn-thanh-ly-ncc { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 12.5px; font-weight: 600; color: #B42318; background: #FEF3F2; border: 1px solid #FECDCA; border-radius: 6px; cursor: pointer; transition: all 0.15s ease; white-space: nowrap; }
+        .btn-thanh-ly-ncc:hover { background: #FEE4E2; border-color: #FDA29B; color: #912018; transform: translateY(-1px); }
 
-        .btn-thanh-ly-ncc:hover {
-            background: #FEE4E2;
-            border-color: #FDA29B;
-            color: #912018;
-            transform: translateY(-1px);
-        }
-
-        .btn-xu-ly-bo {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            font-size: 12.5px;
-            font-weight: 600;
-            color: #B54708;
-            background: #FFFAEB;
-            border: 1px solid #FEDF89;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            white-space: nowrap;
-        }
-
-        .btn-xu-ly-bo:hover {
-            background: #FEF0C7;
-            border-color: #FEC84B;
-            color: #7A2E0E;
-            transform: translateY(-1px);
-        }
+        .btn-xu-ly-bo { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 12.5px; font-weight: 600; color: #B54708; background: #FFFAEB; border: 1px solid #FEDF89; border-radius: 6px; cursor: pointer; transition: all 0.15s ease; white-space: nowrap; }
+        .btn-xu-ly-bo:hover { background: #FEF0C7; border-color: #FEC84B; color: #7A2E0E; transform: translateY(-1px); }
 
         /* Modal Styles */
-        .modal-info-box {
-            background: #F9FAFB;
-            border: 1px solid #EAECF0;
-            border-radius: 8px;
-            padding: 14px 16px;
-            margin-bottom: 16px;
-        }
-
-        .modal-info-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px 16px;
-            font-size: 13px;
-        }
-
-        .modal-info-grid .label {
-            color: #667085;
-            font-weight: 500;
-        }
-
-        .modal-info-grid .val {
-            color: #101828;
-            font-weight: 600;
-        }
+        .modal-info-box { background: #F9FAFB; border: 1px solid #EAECF0; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px; }
+        .modal-info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 16px; font-size: 13px; }
+        .modal-info-grid .label { color: #667085; font-weight: 500; }
+        .modal-info-grid .val { color: #101828; font-weight: 600; }
     </style>
 @endpush
 
@@ -353,9 +85,7 @@
     {{-- Stats Cards --}}
     <div class="exp-stats-grid">
         <div class="exp-stat-card">
-            <div class="exp-stat-icon red">
-                <i class="bi bi-exclamation-triangle"></i>
-            </div>
+            <div class="exp-stat-icon red"><i class="bi bi-exclamation-triangle"></i></div>
             <div class="exp-stat-info">
                 <h3>{{ number_format($thongKe['tongCanXuLy']) }}</h3>
                 <p>Tổng sản phẩm cần xử lý</p>
@@ -364,38 +94,32 @@
         </div>
 
         <div class="exp-stat-card">
-            <div class="exp-stat-icon orange">
-                <i class="bi bi-flower1"></i>
-            </div>
+            <div class="exp-stat-icon orange"><i class="bi bi-flower1"></i></div>
             <div class="exp-stat-info">
                 <h3>{{ number_format($thongKe['tongLo']) }}</h3>
                 <p>Lô hoa tươi hết / sắp hết hạn</p>
                 <div class="sub-text">
-                    <span class="text-danger fw-semibold">{{ $thongKe['loQuaHan'] }} quá hạn</span> • 
-                    <span class="text-danger fw-semibold">{{ $thongKe['loHomNay'] }} hôm nay</span> • 
+                    <span class="text-danger fw-semibold">{{ $thongKe['loQuaHan'] }} quá hạn</span> •
+                    <span class="text-danger fw-semibold">{{ $thongKe['loHomNay'] }} hôm nay</span> •
                     <span class="text-warning fw-semibold">{{ $thongKe['loSapHet'] }} sắp hết</span>
                 </div>
             </div>
         </div>
 
         <div class="exp-stat-card">
-            <div class="exp-stat-icon purple">
-                <i class="bi bi-box2-heart"></i>
-            </div>
+            <div class="exp-stat-icon purple"><i class="bi bi-box2-heart"></i></div>
             <div class="exp-stat-info">
                 <h3>{{ number_format($thongKe['tongBo']) }}</h3>
                 <p>Bó hoa mẫu hết / sắp hết hạn</p>
                 <div class="sub-text">
-                    <span class="text-danger fw-semibold">{{ $thongKe['boQuaHan'] }} quá hạn</span> • 
+                    <span class="text-danger fw-semibold">{{ $thongKe['boQuaHan'] }} quá hạn</span> •
                     <span class="text-danger fw-semibold">{{ $thongKe['boHomNay'] }} hôm nay</span>
                 </div>
             </div>
         </div>
 
         <div class="exp-stat-card">
-            <div class="exp-stat-icon green">
-                <i class="bi bi-cash-stack"></i>
-            </div>
+            <div class="exp-stat-icon green"><i class="bi bi-cash-stack"></i></div>
             <div class="exp-stat-info">
                 <h3>{{ number_format($thongKe['tongGiaTri']) }}đ</h3>
                 <p>Ước tính giá trị tồn</p>
@@ -433,9 +157,7 @@
                     <span class="input-group-text bg-white border-end-0">
                         <i class="bi bi-search text-muted"></i>
                     </span>
-                    <input type="text"
-                           name="keyword"
-                           class="form-control border-start-0"
+                    <input type="text" name="keyword" class="form-control border-start-0"
                            placeholder="Tìm tên hoa, mã lô, tên NCC, tên bó..."
                            value="{{ $keyword }}">
                     <input type="hidden" name="filter" value="{{ $filter }}">
@@ -462,8 +184,7 @@
             </div>
             <div>
                 <a href="{{ $isAdmin ? route('admin.ton-kho', ['loai_ton_kho' => 'san_pham']) : route('admin.lo-hang') }}"
-                   class="btn-view-inventory"
-                   title="Xem tồn kho chi tiết các loại hoa">
+                   class="btn-view-inventory" title="Xem tồn kho chi tiết các loại hoa">
                     <i class="bi bi-box-arrow-up-right"></i>
                     <span>Bấm xem tồn kho</span>
                 </a>
@@ -491,14 +212,12 @@
                             <td>
                                 <div class="d-flex align-items-center gap-2">
                                     @if($lo->hinh_anh)
-                                        <img src="{{ asset('storage/' . $lo->hinh_anh) }}" 
-                                             alt="{{ $lo->ten_san_pham }}" 
+                                        <img src="{{ asset('storage/' . $lo->hinh_anh) }}"
+                                             alt="{{ $lo->ten_san_pham }}"
                                              class="exp-item-thumb"
                                              onerror="this.onerror=null; this.src='{{ asset($lo->hinh_anh) }}';">
                                     @else
-                                        <div class="exp-item-placeholder">
-                                            <i class="bi bi-flower1"></i>
-                                        </div>
+                                        <div class="exp-item-placeholder"><i class="bi bi-flower1"></i></div>
                                     @endif
                                     <div>
                                         <div class="fw-bold text-dark">{{ $lo->ten_san_pham }}</div>
@@ -509,7 +228,7 @@
                                 </div>
                             </td>
                             <td class="text-center">
-                                <a href="{{ route('admin.lo-hang.show', $lo->ma_chi_tiet_nhap) }}" 
+                                <a href="{{ route('admin.lo-hang.show', $lo->ma_chi_tiet_nhap) }}"
                                    class="text-decoration-none fw-semibold text-primary"
                                    title="Xem chi tiết lô">
                                     Lô #{{ $lo->ma_chi_tiet_nhap }}
@@ -520,9 +239,7 @@
                                 <span class="fw-bold text-dark fs-6">{{ number_format($lo->so_luong_con_lai) }}</span>
                                 <span class="text-muted" style="font-size: 12px;">/ {{ number_format($lo->so_luong) }}</span>
                             </td>
-                            <td class="text-center text-nowrap">
-                                {{ $lo->ngayNhapFmt }}
-                            </td>
+                            <td class="text-center text-nowrap">{{ $lo->ngayNhapFmt }}</td>
                             <td class="text-center text-nowrap">
                                 <div class="fw-semibold text-dark">{{ $lo->hsdFmt }}</div>
                                 @if($lo->diffDays < 0)
@@ -548,24 +265,23 @@
                                 @endif
                             </td>
                             <td class="text-center">
-                                <button type="button" 
+                                <button type="button"
                                         class="btn-thanh-ly-ncc"
-                                        onclick="openThanhLyModal({
-                                            maLo: '{{ $lo->ma_chi_tiet_nhap }}',
-                                            maPn: '{{ $lo->ma_phieu_nhap }}',
-                                            tenHoa: '{{ addslashes($lo->ten_san_pham) }}',
-                                            soLuongTon: {{ (int) $lo->so_luong_con_lai }},
-                                            donViTinh: '{{ $lo->don_vi_tinh ?? 'Cành' }}',
-                                            giaNhap: {{ (float) $lo->gia_nhap }},
-                                            giaTriTon: {{ (float) $lo->giaTriTon }},
-                                            ngayNhap: '{{ $lo->ngayNhapFmt }}',
-                                            hsd: '{{ $lo->hsdFmt }}',
-                                            diffDays: {{ (int) $lo->diffDays }},
-                                            tenNcc: '{{ addslashes($lo->ten_nha_cung_cap ?? 'Chưa rõ') }}',
-                                            sdtNcc: '{{ $lo->sdt_ncc ?? '' }}',
-                                            emailNcc: '{{ $lo->email_ncc ?? '' }}',
-                                            diaChiNcc: '{{ addslashes($lo->dia_chi_ncc ?? '') }}'
-                                        })"
+                                        data-action="thanh-ly-ncc"
+                                        data-malo="{{ $lo->ma_chi_tiet_nhap }}"
+                                        data-mapn="{{ $lo->ma_phieu_nhap }}"
+                                        data-tenhoa="{{ $lo->ten_san_pham }}"
+                                        data-soluongton="{{ (int) $lo->so_luong_con_lai }}"
+                                        data-donvitinh="{{ $lo->don_vi_tinh ?? 'Cành' }}"
+                                        data-gianhap="{{ (float) $lo->gia_nhap }}"
+                                        data-giatrion="{{ (float) $lo->giaTriTon }}"
+                                        data-ngaynhap="{{ $lo->ngayNhapFmt }}"
+                                        data-hsd="{{ $lo->hsdFmt }}"
+                                        data-diffdays="{{ (int) $lo->diffDays }}"
+                                        data-tenncc="{{ $lo->ten_nha_cung_cap ?? 'Chưa rõ' }}"
+                                        data-sdtncc="{{ $lo->sdt_ncc ?? '' }}"
+                                        data-emailncc="{{ $lo->email_ncc ?? '' }}"
+                                        data-diachincc="{{ $lo->dia_chi_ncc ?? '' }}"
                                         title="Bấm vào để báo cáo liên hệ hoàn trả hoặc chiết khấu">
                                     <i class="bi bi-arrow-return-left"></i>
                                     <span>Thanh lý lại cho NCC</span>
@@ -600,8 +316,7 @@
             </div>
             <div>
                 <a href="{{ $isAdmin ? route('admin.ton-kho', ['loai_ton_kho' => 'bo_hoa']) : route('admin.mau-bo-hoa') }}"
-                   class="btn-view-inventory"
-                   title="Xem tồn kho bó hoa">
+                   class="btn-view-inventory" title="Xem tồn kho bó hoa">
                     <i class="bi bi-box-arrow-up-right"></i>
                     <span>Bấm xem tồn kho</span>
                 </a>
@@ -628,8 +343,8 @@
                             <td>
                                 <div class="d-flex align-items-center gap-2">
                                     @if($bh->hinh_anh)
-                                        <img src="{{ asset('storage/' . $bh->hinh_anh) }}" 
-                                             alt="{{ $bh->ten_bo_hoa }}" 
+                                        <img src="{{ asset('storage/' . $bh->hinh_anh) }}"
+                                             alt="{{ $bh->ten_bo_hoa }}"
                                              class="exp-item-thumb"
                                              onerror="this.onerror=null; this.src='{{ asset($bh->hinh_anh) }}';">
                                     @else
@@ -649,9 +364,7 @@
                                 <span class="fw-bold text-dark fs-6">{{ number_format($bh->so_luong) }}</span>
                                 <span class="text-muted" style="font-size: 12px;">bó</span>
                             </td>
-                            <td class="text-center text-nowrap">
-                                {{ $bh->ngayTaoFmt }}
-                            </td>
+                            <td class="text-center text-nowrap">{{ $bh->ngayTaoFmt }}</td>
                             <td class="text-center text-nowrap">
                                 <div class="fw-semibold text-dark">{{ $bh->hsdFmt }}</div>
                                 @if($bh->diffDays < 0)
@@ -668,22 +381,19 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="text-end fw-bold text-dark">
-                                {{ number_format($bh->gia_ban) }}đ
-                            </td>
+                            <td class="text-end fw-bold text-dark">{{ number_format($bh->gia_ban) }}đ</td>
                             <td class="text-center">
-                                <button type="button" 
+                                <button type="button"
                                         class="btn-xu-ly-bo"
-                                        onclick="openXuLyBoHoaModal({
-                                            maBoHoa: '{{ $bh->ma_bo_hoa }}',
-                                            tenBoHoa: '{{ addslashes($bh->ten_bo_hoa) }}',
-                                            tenMau: '{{ addslashes($bh->ten_mau ?? '') }}',
-                                            soLuong: {{ (int) $bh->so_luong }},
-                                            giaBan: {{ (float) $bh->gia_ban }},
-                                            ngayTao: '{{ $bh->ngayTaoFmt }}',
-                                            hsd: '{{ $bh->hsdFmt }}',
-                                            diffDays: {{ (int) $bh->diffDays }}
-                                        })"
+                                        data-action="xu-ly-bo"
+                                        data-mabohoa="{{ $bh->ma_bo_hoa }}"
+                                        data-tenbohoa="{{ $bh->ten_bo_hoa }}"
+                                        data-tenmau="{{ $bh->ten_mau ?? '' }}"
+                                        data-soluong="{{ (int) $bh->so_luong }}"
+                                        data-giaban="{{ (float) $bh->gia_ban }}"
+                                        data-ngaytao="{{ $bh->ngayTaoFmt }}"
+                                        data-hsd="{{ $bh->hsdFmt }}"
+                                        data-diffdays="{{ (int) $bh->diffDays }}"
                                         title="Bấm vào để xử lý thanh lý hoặc xả bó">
                                     <i class="bi bi-tag"></i>
                                     <span>Thanh lý / Xả bó</span>
@@ -728,7 +438,6 @@
             </div>
 
             <div class="modal-body p-4">
-                {{-- Chi tiết lô hoa --}}
                 <div class="modal-info-box">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <div class="fw-bold text-dark fs-6" id="mLoTenHoa">—</div>
@@ -741,14 +450,13 @@
                         <div><span class="label">Đơn giá nhập:</span> <span class="val" id="mLoGiaNhap">—</span></div>
                         <div><span class="label">Ngày nhập kho:</span> <span class="val" id="mLoNgayNhap">—</span></div>
                         <div><span class="label">Hạn sử dụng:</span> <span class="val" id="mLoHsd">—</span></div>
-                        <div class="col-span-2" style="grid-column: span 2;">
-                            <span class="label">Tổng giá trị tồn ước tính:</span> 
+                        <div style="grid-column: span 2;">
+                            <span class="label">Tổng giá trị tồn ước tính:</span>
                             <span class="val text-danger fs-6" id="mLoGiaTriTon">—</span>
                         </div>
                     </div>
                 </div>
 
-                {{-- Thông tin Nhà Cung Cấp --}}
                 <div class="border rounded-3 p-3 mb-3 bg-white">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <div class="fw-bold text-dark">
@@ -784,11 +492,10 @@
                     </div>
                 </div>
 
-                {{-- Nội dung mẫu báo cáo / liên hệ --}}
                 <div class="mb-3">
                     <label class="form-label fw-bold text-dark d-flex justify-content-between align-items-center mb-1" style="font-size: 13px;">
                         <span><i class="bi bi-file-text me-1"></i> Mẫu báo cáo đề xuất hoàn trả / thanh lý chiết khấu:</span>
-                        <button type="button" class="btn btn-link btn-sm text-decoration-none p-0 fw-semibold text-primary" onclick="copyReportText()">
+                        <button type="button" class="btn btn-link btn-sm text-decoration-none p-0 fw-semibold text-primary" id="btnCopyReport">
                             <i class="bi bi-clipboard me-1"></i> Sao chép nội dung
                         </button>
                     </label>
@@ -834,7 +541,6 @@
             </div>
 
             <div class="modal-body p-4">
-                {{-- Chi tiết bó hoa --}}
                 <div class="modal-info-box">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <div class="fw-bold text-dark fs-6" id="mBoTen">—</div>
@@ -850,7 +556,6 @@
                     </div>
                 </div>
 
-                {{-- 2 Phương án xử lý --}}
                 <div class="row g-3">
                     <div class="col-md-6">
                         <div class="border rounded-3 p-3 h-100 bg-white" style="border-color: #FEDF89 !important;">
@@ -902,44 +607,59 @@
         </div>
     </div>
 </div>
+@endsection
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    function formatCurrency(val) {
-        return new Intl.NumberFormat('vi-VN').format(val) + 'đ';
+(function () {
+    'use strict';
+
+    const fmt = v => new Intl.NumberFormat('vi-VN').format(Number(v) || 0) + 'đ';
+
+    // ── Helper: khởi tạo Bootstrap Modal an toàn ──
+    function showModal(id) {
+        const el = document.getElementById(id);
+        if (!el) { console.error('Không tìm thấy modal #' + id); return; }
+        if (typeof bootstrap === 'undefined' || !bootstrap.Modal) {
+            console.error('Bootstrap chưa load! Kiểm tra layout admin có nhúng bootstrap.bundle.min.js chưa.');
+            alert('Không thể mở hộp thoại: Bootstrap chưa được tải. Vui lòng tải lại trang.');
+            return;
+        }
+        bootstrap.Modal.getOrCreateInstance(el).show();
     }
 
-    // Modal 1: Thanh lý lại cho NCC
+    // ═════════════════════════════════════════════════════════════
+    // MODAL 1: THANH LÝ LẠI CHO NCC
+    // ═════════════════════════════════════════════════════════════
     function openThanhLyModal(data) {
-        document.getElementById('mLoTenHoa').innerText = data.tenHoa;
-        document.getElementById('mLoMaLo').innerText = '#' + data.maLo;
-        document.getElementById('mLoMaPn').innerText = '#PN-' + data.maPn;
-        document.getElementById('mLoSoLuongTon').innerText = data.soLuongTon + ' ' + data.donViTinh;
-        document.getElementById('mLoGiaNhap').innerText = formatCurrency(data.giaNhap);
-        document.getElementById('mLoGiaTriTon').innerText = formatCurrency(data.giaTriTon);
-        document.getElementById('mLoNgayNhap').innerText = data.ngayNhap;
-        document.getElementById('mLoHsd').innerText = data.hsd;
+        document.getElementById('mLoTenHoa').textContent = data.tenHoa || '—';
+        document.getElementById('mLoMaLo').textContent = '#' + (data.maLo || '—');
+        document.getElementById('mLoMaPn').textContent = '#PN-' + (data.maPn || '—');
+        document.getElementById('mLoSoLuongTon').textContent = (data.soLuongTon || 0) + ' ' + (data.donViTinh || '');
+        document.getElementById('mLoGiaNhap').textContent = fmt(data.giaNhap);
+        document.getElementById('mLoGiaTriTon').textContent = fmt(data.giaTriTon);
+        document.getElementById('mLoNgayNhap').textContent = data.ngayNhap || '—';
+        document.getElementById('mLoHsd').textContent = data.hsd || '—';
 
         const badgeHsd = document.getElementById('mLoBadgeHsd');
-        if (data.diffDays < 0) {
+        const dd = parseInt(data.diffDays) || 0;
+        if (dd < 0) {
             badgeHsd.className = 'badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold';
-            badgeHsd.innerText = 'Đã quá hạn ' + Math.abs(data.diffDays) + ' ngày';
-        } else if (data.diffDays === 0) {
+            badgeHsd.textContent = 'Đã quá hạn ' + Math.abs(dd) + ' ngày';
+        } else if (dd === 0) {
             badgeHsd.className = 'badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold';
-            badgeHsd.innerText = 'Hết hạn hôm nay';
+            badgeHsd.textContent = 'Hết hạn hôm nay';
         } else {
             badgeHsd.className = 'badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fw-semibold';
-            badgeHsd.innerText = 'Còn ' + data.diffDays + ' ngày';
+            badgeHsd.textContent = 'Còn ' + dd + ' ngày';
         }
 
-        // NCC Info
-        document.getElementById('mNccTen').innerText = data.tenNcc;
-        document.getElementById('mNccSdt').innerText = data.sdtNcc || 'Chưa cập nhật';
-        document.getElementById('mNccEmail').innerText = data.emailNcc || 'Chưa cập nhật';
-        document.getElementById('mNccDiaChi').innerText = data.diaChiNcc || 'Chưa cập nhật';
+        document.getElementById('mNccTen').textContent = data.tenNcc || '—';
+        document.getElementById('mNccSdt').textContent = data.sdtNcc || 'Chưa cập nhật';
+        document.getElementById('mNccEmail').textContent = data.emailNcc || 'Chưa cập nhật';
+        document.getElementById('mNccDiaChi').textContent = data.diaChiNcc || 'Chưa cập nhật';
 
-        // Call & Email Links
         const callBtn = document.getElementById('btnCallNcc');
         const sdtLink = document.getElementById('mNccSdtLink');
         if (data.sdtNcc) {
@@ -952,84 +672,133 @@
             sdtLink.href = '#';
         }
 
-        // Generate report email text
-        const reportSubject = encodeURIComponent('[RoseShop] Đề xuất thanh lý / hoàn trả lô hoa #' + data.maLo + ' - ' + data.tenHoa);
-        const reportBody = `Kính gửi đối tác ${data.tenNcc},
-
-Cửa hàng RoseShop xin gửi thông báo về lô hàng đã nhập từ quý đối tác như sau:
-- Sản phẩm: ${data.tenHoa}
-- Mã lô hàng: #${data.maLo} (Phiếu nhập: #PN-${data.maPn})
-- Ngày nhập kho: ${data.ngayNhap}
-- Ngày hết hạn sử dụng: ${data.hsd} (${data.diffDays <= 0 ? 'Hiện đã đến/quá hạn' : 'Sắp đến hạn'})
-- Số lượng tồn kho cần hoàn trả/thanh lý: ${data.soLuongTon} ${data.donViTinh}
-- Đơn giá nhập: ${formatCurrency(data.giaNhap)}
-- Tổng giá trị lô hàng tồn: ${formatCurrency(data.giaTriTon)}
-
-RoseShop kính đề xuất quý đối tác phương án hỗ trợ thu hồi thanh lý hoặc chiết khấu hoàn trả theo chính sách hợp tác nhà cung cấp.
-Rất mong nhận được phản hồi sớm từ quý đối tác!
-
-Trân trọng,
-Bộ phận Quản lý Kho - RoseShop
-Điện thoại: 0987.654.321`;
+        // Report body
+        const reportBody =
+            `Kính gửi đối tác ${data.tenNcc || 'Quý đối tác'},\n\n` +
+            `Cửa hàng RoseShop xin gửi thông báo về lô hàng đã nhập từ quý đối tác như sau:\n` +
+            `- Sản phẩm: ${data.tenHoa}\n` +
+            `- Mã lô hàng: #${data.maLo} (Phiếu nhập: #PN-${data.maPn})\n` +
+            `- Ngày nhập kho: ${data.ngayNhap}\n` +
+            `- Ngày hết hạn sử dụng: ${data.hsd} (${dd <= 0 ? 'Hiện đã đến/quá hạn' : 'Sắp đến hạn'})\n` +
+            `- Số lượng tồn kho cần hoàn trả/thanh lý: ${data.soLuongTon} ${data.donViTinh}\n` +
+            `- Đơn giá nhập: ${fmt(data.giaNhap)}\n` +
+            `- Tổng giá trị lô hàng tồn: ${fmt(data.giaTriTon)}\n\n` +
+            `RoseShop kính đề xuất quý đối tác phương án hỗ trợ thu hồi thanh lý hoặc chiết khấu hoàn trả theo chính sách hợp tác nhà cung cấp.\n` +
+            `Rất mong nhận được phản hồi sớm từ quý đối tác!\n\n` +
+            `Trân trọng,\nBộ phận Quản lý Kho - RoseShop\nĐiện thoại: 0987.654.321`;
 
         document.getElementById('mBaoCaoText').value = reportBody;
 
         const emailBtn = document.getElementById('btnEmailNcc');
         const emailLink = document.getElementById('mNccEmailLink');
         if (data.emailNcc) {
-            const mailtoUrl = 'mailto:' + data.emailNcc + '?subject=' + reportSubject + '&body=' + encodeURIComponent(reportBody);
-            emailBtn.href = mailtoUrl;
+            const subject = '[RoseShop] Đề xuất thanh lý / hoàn trả lô hoa #' + data.maLo + ' - ' + data.tenHoa;
+            const mailto = 'mailto:' + data.emailNcc
+                + '?subject=' + encodeURIComponent(subject)
+                + '&body=' + encodeURIComponent(reportBody);
+            emailBtn.href = mailto;
             emailBtn.classList.remove('disabled');
-            emailLink.href = mailtoUrl;
+            emailLink.href = mailto;
         } else {
             emailBtn.href = '#';
             emailBtn.classList.add('disabled');
             emailLink.href = '#';
         }
 
-        const modal = new bootstrap.Modal(document.getElementById('modalThanhLyNcc'));
-        modal.show();
+        showModal('modalThanhLyNcc');
     }
 
-    function copyReportText() {
-        const text = document.getElementById('mBaoCaoText');
-        text.select();
-        text.setSelectionRange(0, 99999);
-        navigator.clipboard.writeText(text.value).then(() => {
-            alert('Đã sao chép nội dung báo cáo! Bạn có thể dán để gửi qua Zalo/Email cho Nhà cung cấp.');
-        }).catch(() => {
-            alert('Sao chép thất bại, vui lòng bôi đen và nhấn Ctrl+C.');
-        });
-    }
-
-    // Modal 2: Xử lý bó hoa
+    // ═════════════════════════════════════════════════════════════
+    // MODAL 2: XỬ LÝ BÓ HOA HẾT HẠN
+    // ═════════════════════════════════════════════════════════════
     function openXuLyBoHoaModal(data) {
-        document.getElementById('mBoTen').innerText = data.tenBoHoa;
-        document.getElementById('mBoMa').innerText = '#' + data.maBoHoa;
-        document.getElementById('mBoMau').innerText = data.tenMau || '—';
-        document.getElementById('mBoSoLuong').innerText = data.soLuong + ' bó';
-        document.getElementById('mBoGiaGoc').innerText = formatCurrency(data.giaBan);
-        document.getElementById('mBoNgayTao').innerText = data.ngayTao;
-        document.getElementById('mBoHsd').innerText = data.hsd;
+        document.getElementById('mBoTen').textContent = data.tenBoHoa || '—';
+        document.getElementById('mBoMa').textContent = '#' + (data.maBoHoa || '—');
+        document.getElementById('mBoMau').textContent = data.tenMau || '—';
+        document.getElementById('mBoSoLuong').textContent = (data.soLuong || 0) + ' bó';
+        document.getElementById('mBoGiaGoc').textContent = fmt(data.giaBan);
+        document.getElementById('mBoNgayTao').textContent = data.ngayTao || '—';
+        document.getElementById('mBoHsd').textContent = data.hsd || '—';
 
-        const giaGiam = Math.round(data.giaBan * 0.6);
-        document.getElementById('mBoGiaGiamDeXuat').innerText = formatCurrency(giaGiam);
+        document.getElementById('mBoGiaGiamDeXuat').textContent = fmt((Number(data.giaBan) || 0) * 0.6);
 
         const badgeHsd = document.getElementById('mBoBadgeHsd');
-        if (data.diffDays < 0) {
+        const dd = parseInt(data.diffDays) || 0;
+        if (dd < 0) {
             badgeHsd.className = 'badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold';
-            badgeHsd.innerText = 'Đã quá hạn ' + Math.abs(data.diffDays) + ' ngày';
-        } else if (data.diffDays === 0) {
+            badgeHsd.textContent = 'Đã quá hạn ' + Math.abs(dd) + ' ngày';
+        } else if (dd === 0) {
             badgeHsd.className = 'badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold';
-            badgeHsd.innerText = 'Hết hạn hôm nay';
+            badgeHsd.textContent = 'Hết hạn hôm nay';
         } else {
             badgeHsd.className = 'badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fw-semibold';
-            badgeHsd.innerText = 'Còn ' + data.diffDays + ' ngày';
+            badgeHsd.textContent = 'Còn ' + dd + ' ngày';
         }
 
-        const modal = new bootstrap.Modal(document.getElementById('modalXuLyBoHoa'));
-        modal.show();
+        showModal('modalXuLyBoHoa');
     }
+
+    // ═════════════════════════════════════════════════════════════
+    // EVENT DELEGATION — chống lỗi khi tên có ký tự đặc biệt
+    // ═════════════════════════════════════════════════════════════
+    document.addEventListener('click', function (e) {
+        // Nút Thanh lý NCC
+        const btnNcc = e.target.closest('[data-action="thanh-ly-ncc"]');
+        if (btnNcc) {
+            e.preventDefault();
+            openThanhLyModal({
+                maLo:       btnNcc.dataset.malo,
+                maPn:       btnNcc.dataset.mapn,
+                tenHoa:     btnNcc.dataset.tenhoa,
+                soLuongTon: parseInt(btnNcc.dataset.soluongton) || 0,
+                donViTinh:  btnNcc.dataset.donvitinh,
+                giaNhap:    parseFloat(btnNcc.dataset.gianhap) || 0,
+                giaTriTon:  parseFloat(btnNcc.dataset.giatrion) || 0,
+                ngayNhap:   btnNcc.dataset.ngaynhap,
+                hsd:        btnNcc.dataset.hsd,
+                diffDays:   parseInt(btnNcc.dataset.diffdays) || 0,
+                tenNcc:     btnNcc.dataset.tenncc,
+                sdtNcc:     btnNcc.dataset.sdtncc,
+                emailNcc:   btnNcc.dataset.emailncc,
+                diaChiNcc:  btnNcc.dataset.diachincc,
+            });
+            return;
+        }
+
+        // Nút Xử lý bó hoa
+        const btnBo = e.target.closest('[data-action="xu-ly-bo"]');
+        if (btnBo) {
+            e.preventDefault();
+            openXuLyBoHoaModal({
+                maBoHoa:  btnBo.dataset.mabohoa,
+                tenBoHoa: btnBo.dataset.tenbohoa,
+                tenMau:   btnBo.dataset.tenmau,
+                soLuong:  parseInt(btnBo.dataset.soluong) || 0,
+                giaBan:   parseFloat(btnBo.dataset.giaban) || 0,
+                ngayTao:  btnBo.dataset.ngaytao,
+                hsd:      btnBo.dataset.hsd,
+                diffDays: parseInt(btnBo.dataset.diffdays) || 0,
+            });
+            return;
+        }
+
+        // Nút copy báo cáo
+        if (e.target.closest('#btnCopyReport')) {
+            e.preventDefault();
+            const ta = document.getElementById('mBaoCaoText');
+            if (!ta) return;
+            ta.select();
+            ta.setSelectionRange(0, 99999);
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(ta.value)
+                    .then(() => alert('Đã sao chép nội dung báo cáo! Bạn có thể dán để gửi qua Zalo/Email cho Nhà cung cấp.'))
+                    .catch(() => alert('Sao chép thất bại, vui lòng bôi đen và nhấn Ctrl+C.'));
+            } else {
+                document.execCommand('copy');
+                alert('Đã sao chép nội dung báo cáo!');
+            }
+        }
+    });
+})();
 </script>
 @endpush
-@endsection

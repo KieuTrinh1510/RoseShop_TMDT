@@ -3,6 +3,7 @@
 
 import 'package:flutter/foundation.dart';
 import '../../services/api_service.dart';
+import '../../services/auth_service.dart';
 
 class ProfileController extends ChangeNotifier {
   bool loading = true;
@@ -133,12 +134,11 @@ class ProfileController extends ChangeNotifier {
     saving = true;
     notifyListeners();
     try {
-      await ApiService.post('/profile/logout');
+      // Gọi POST /profile/logout (nếu thất bại vẫn đăng xuất local) rồi xóa token + shipper.
+      await AuthService.logout();
       return null;
-    } on ApiException catch (e) {
-      return e.message;
     } catch (e) {
-      return 'Lỗi kết nối: $e';
+      return 'Lỗi: $e';
     } finally {
       saving = false;
       notifyListeners();

@@ -77,10 +77,17 @@ class VnPayController extends Controller
      * CHỈ hiển thị trạng thái — KHÔNG trừ kho, KHÔNG cộng/trừ điểm, KHÔNG đổi trạng thái đơn.
      * Nguồn xử lý thật sự luôn luôn là ipn().
      */
-    public function return(Request $request)
+        public function return(Request $request)
 {
     $vnpData = $request->query();
     $txnRef  = $vnpData['vnp_TxnRef'] ?? null;
+
+    // ═══ [MỚI] Phân nhánh giao dịch VI PHẠM ═══
+    if ($txnRef && str_starts_with($txnRef, 'VP-')) {
+        Log::info('VNPay Return: chuyển sang VnPayViPhamController', ['txn_ref' => $txnRef]);
+        return app(\App\Http\Controllers\VnPayViPhamController::class)
+            ->return($request);
+    }
 
     Log::info('VNPay Return: nhận request', [
         'txn_ref'       => $txnRef,
@@ -224,9 +231,18 @@ class VnPayController extends Controller
             return response()->json(['RspCode' => '97', 'Message' => 'Invalid signature']);
         }
 
-        Log::info('VNPay IPN: verify signature thành công', ['ma_hoa_don' => $txnRefLog]);
+                Log::info('VNPay IPN: verify signature thành công', ['ma_hoa_don' => $txnRefLog]);
 
         $txnRef = $vnpData['vnp_TxnRef'] ?? null;
+
+        // ═══ [MỚI] Phân nhánh giao dịch VI PHẠM (TxnRef = 'VP-{ma_thanh_toan}') ═══
+        // VNPay merchant chỉ cho 1 URL IPN, nên phải check prefix ngay tại đây.
+        if ($txnRef && str_starts_with($txnRef, 'VP-')) {
+            Log::info('VNPay IPN: chuyển sang VnPayViPhamController', ['txn_ref' => $txnRef]);
+            return app(\App\Http\Controllers\VnPayViPhamController::class)
+                ->ipn($request);
+        }
+
         if (!$txnRef || !ctype_digit((string) $txnRef)) {
             return response()->json(['RspCode' => '01', 'Message' => 'Order not found']);
         }

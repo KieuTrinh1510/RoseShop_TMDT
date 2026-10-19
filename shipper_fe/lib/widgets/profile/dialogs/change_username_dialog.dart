@@ -1,12 +1,14 @@
 // lib/screens/profile/dialogs/change_username_dialog.dart
 // Dialog "Tài khoản" (gộp đổi tên đăng nhập + đổi mật khẩu).
 // Mở ra là chế độ XEM (tên đăng nhập + mật khẩu ••••••), bấm "Sửa" mới cho nhập.
-// Trả null nếu huỷ/đóng, ngược lại trả Map chỉ chứa phần thực sự đổi:
+// Trả null nếu huỷ/đóng, ngược lại trả Map chỉ chứa phần thực sự đổi
+// (hoặc {'quen_mat_khau': '1'} khi bấm "Quên mật khẩu?"):
 //   'ten_dang_nhap_moi'            (nếu đổi tên)
 //   'mat_khau_cu' + 'mat_khau_moi' (nếu đổi mật khẩu)
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../controllers/profile/app_settings_controller.dart';
 import '../../../theme/pink_theme.dart';
 import '../../../utils/app_strings.dart';
 import '../../../widgets/common/staggered_fade_slide.dart';
@@ -285,6 +287,23 @@ class _AccountDialogState extends State<_AccountDialog> {
                   validator: _vNew,
                   onToggle: () => setState(() => _hideNew = !_hideNew),
                   formatters: [LengthLimitingTextInputFormatter(100)],
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () =>
+                      Navigator.pop(context, {'quen_mat_khau': '1'}),
+                  child: Text(
+                    AppSettings.instance.language == 'vi'
+                        ? 'Quên mật khẩu?'
+                        : 'Forgot password?',
+                    style: const TextStyle(
+                      color: Pink.rose,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ),
               if (_formError != null) ...[

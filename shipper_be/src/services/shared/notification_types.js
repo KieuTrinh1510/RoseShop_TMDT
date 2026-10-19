@@ -7,6 +7,7 @@ const LOAI = {
     ARRIVED: 'arrived',
     DELIVERED: 'delivered',
     APOLOGY: 'apology',
+    FAILURE: 'failure',
     PENALTY: 'penalty',
     INFO: 'info',
     // 2 loại chủ yếu bên PHP ghi, Node chỉ đọc để hiển thị:

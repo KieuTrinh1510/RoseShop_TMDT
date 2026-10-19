@@ -21,6 +21,10 @@ class HoaDon extends Model
         'ngay_dat',
         'tong_tien',
         'trang_thai',
+        'nguon_huy',
+        'ly_do_huy',
+        'thoi_diem_huy',
+        'co_hang_hoan',
         'trang_thai_thanh_toan',
         'phuong_thuc_thanh_toan',
         'dia_chi_giao',
@@ -38,8 +42,34 @@ class HoaDon extends Model
         'tong_tien' => 'decimal:2',
         'ngay_dat' => 'datetime',
         'ngay_giao' => 'datetime',
+        'thoi_diem_huy' => 'datetime',
+        'co_hang_hoan' => 'boolean',
         'vnpay_cart_snapshot' => 'array',
     ];
+    /**
+ * Trả về danh sách chi tiết cần hiển thị:
+ *   - Nếu hóa đơn có bó hoa (dòng ma_bo_hoa) → chỉ trả các dòng bó.
+ *   - Ngược lại → trả tất cả dòng (sản phẩm lẻ).
+ *
+ * Dòng con của bó (nguyên liệu) KHÔNG bị xóa — chỉ bị ẩn khi hiển thị.
+ */
+public function getChiTietHienThiAttribute()
+{
+    $all = $this->chiTietHoaDon;
+
+    $coBo = $all->whereNotNull('ma_bo_hoa')->isNotEmpty();
+
+    return $coBo
+        ? $all->whereNotNull('ma_bo_hoa')->values()
+        : $all->values();
+}
+
+public function getCoBoHoaAttribute(): bool
+{
+    return $this->chiTietHoaDon
+        ->whereNotNull('ma_bo_hoa')
+        ->isNotEmpty();
+}
 
     public function chiTietHoaDon()
     {
@@ -59,5 +89,20 @@ class HoaDon extends Model
     public function reservations()
     {
         return $this->hasMany(InventoryReservation::class, 'ma_hoa_don', 'ma_hoa_don');
+    }
+
+    public function giaoHangThatBai()
+    {
+        return $this->hasMany(GiaoHangThatBai::class, 'ma_hoa_don', 'ma_hoa_don');
+    }
+
+    public function hangHoan()
+    {
+        return $this->hasOne(HangHoan::class, 'ma_hoa_don', 'ma_hoa_don');
+    }
+
+    public function phatShipper()
+    {
+        return $this->hasMany(PhatShipper::class, 'ma_hoa_don', 'ma_hoa_don');
     }
 }

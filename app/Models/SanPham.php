@@ -152,6 +152,16 @@ class SanPham extends Model
         );
     }
 
+    public function chiTietHangHoan()
+    {
+        return $this->hasMany(ChiTietHangHoan::class, 'ma_san_pham', 'ma_san_pham');
+    }
+
+    public function flashSales()
+    {
+        return $this->hasMany(FlashSale::class, 'ma_san_pham', 'ma_san_pham');
+    }
+
     public function getTonThucTeAttribute(): int
     {
         return (int) $this->so_luong;

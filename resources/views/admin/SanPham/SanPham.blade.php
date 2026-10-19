@@ -505,6 +505,19 @@
         .rs-price-lot-list::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
+        .badge-flash-sale {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 10px;
+    border-radius: 12px;
+    background-color: #FEF3F2;
+    color: #B42318;
+    border: 1px solid #FECDCA;
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 40px;
+}
     </style>
 @endpush
 
@@ -749,13 +762,37 @@
                                 {{ $sp->gia_ban_hien_tai ? number_format($sp->gia_ban_hien_tai, 0, ',', '.') . ' ₫' : '—' }}
                             </td>
 
-                            <td style="text-align:center;">
-                                @if($tongConLai > 0)
+                                                <td style="text-align:center;">
+                        @php
+                            $tonFS   = (int) ($sp->ton_flash_sale ?? 0);
+                            $tongAll = $tongConLai + $tonFS;
+                        @endphp
+
+                        @if($tongAll > 0)
+                            <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
+                                {{-- Tồn kho thường --}}
+                                <div style="display:flex; align-items:center; gap:4px;">
                                     <span class="badge-confirmed">{{ $tongConLai }}</span>
-                                @else
-                                    <span class="badge-cancelled">0 (Hết)</span>
+                                    <span style="font-size:11px; color:#667085;">tồn kho</span>
+                                </div>
+
+                                {{-- FlashSale (chỉ hiện khi có) --}}
+                                @if($tonFS > 0)
+                                    <div style="display:flex; align-items:center; gap:4px;">
+                                        <span class="badge-flash-sale">+{{ $tonFS }}</span>
+                                        <span style="font-size:11px; color:#B42318;">FlashSale</span>
+                                    </div>
                                 @endif
-                            </td>
+
+                                {{-- Tổng --}}
+                                <div style="font-size:11px; color:#344054; border-top:1px dashed #EAECF0; padding-top:3px; margin-top:1px; min-width:100%;">
+                                    = <strong style="color:#101828;">{{ $tongAll }}</strong> tổng
+                                </div>
+                            </div>
+                        @else
+                            <span class="badge-cancelled">0 (Hết)</span>
+                        @endif
+                    </td>
 
                             <td style="text-align:center;">
                                 @if($sp->trang_thai === 'DANG_BAN')

@@ -94,6 +94,7 @@
                         <th>Ngày Đặt</th>
                         <th>Tổng Tiền</th>
                         <th>Trạng Thái</th>
+                        <th>Hủy / Hàng hoàn</th>
                         <th>Thanh Toán</th>
                         <th>PT Thanh Toán</th>
                         <th>Địa Chỉ Giao</th>
@@ -121,6 +122,25 @@
                             </span>
                         </td>
                         <td>
+                            @if($hd->trang_thai === 'CANCELLED' && $hd->nguon_huy_text)
+                                <span class="badge {{ strtoupper($hd->nguon_huy) === 'SHIPPER' ? 'badge-shipping' : 'badge-cancelled' }}">
+                                    Đã hủy - {{ $hd->nguon_huy_text }}
+                                </span>
+                                @if($hd->ly_do_huy)
+                                    <div class="wrap" style="font-size:11px;color:#667085;margin-top:4px;max-width:170px;">
+                                        {{ $hd->ly_do_huy }}
+                                    </div>
+                                @endif
+                                @if($hd->trang_thai_hang_hoan_text)
+                                    <div style="font-size:11px;color:#475467;margin-top:4px;">
+                                        Hàng hoàn: {{ $hd->trang_thai_hang_hoan_text }}
+                                    </div>
+                                @endif
+                            @else
+                                —
+                            @endif
+                        </td>
+                        <td>
                             <span class="badge {{ in_array($hd->trang_thai_thanh_toan, ['DA_THANH_TOAN','DA_NOP']) ? 'badge-paid' : 'badge-unpaid' }}">
                                         {{ in_array($hd->trang_thai_thanh_toan, ['DA_THANH_TOAN','DA_NOP']) ? 'Đã TT' : 'Chưa TT' }}
                         </span>
@@ -139,24 +159,26 @@
                                     Chi Tiết
                                 </button>
 
-                                {{-- Nút Xóa: chỉ enabled khi chưa thanh toán hoặc đã hủy --}}
-                                @php
-                                    $canDelete = ($hd->trang_thai_thanh_toan === 'CHUA_THANH_TOAN'
-                                              || $hd->trang_thai === 'CANCELLED')
-                                              && $hd->trang_thai !== 'DELIVERED';
-                                @endphp
-                                <button class="btn btn-delete"
-                                        data-id="{{ $hd->ma_hoa_don }}"
-                                        {{ !$canDelete ? 'disabled' : '' }}
-                                        onclick="deleteInvoice({{ $hd->ma_hoa_don }}, this)">
-                                    Xóa
-                                </button>
+                                @if($hd->co_the_kiem_tra_hang && !$hd->da_kiem_tra_hang)
+                             <a class="btn btn-detail"
+                                               href="{{ route('admin.hoa-don.kiem-tra-hang', $hd->ma_hoa_don) }}"
+                                                  title="Kiểm tra hàng hoàn">
+                                               Kiểm tra hàng
+                                                        </a>
+                                    @elseif($hd->co_the_kiem_tra_hang && $hd->da_kiem_tra_hang)
+                                <button type="button"
+                                  class="btn btn-detail"
+                                  onclick="openKiemTraLog({{ $hd->ma_hoa_don }}, this)"
+                          title="Xem log kiểm tra hàng hoàn">
+                              Xem log kiểm tra
+                            </button>
+@endif
                             </div>
                         </td>
                     </tr>
                 @empty
                     <tr class="empty-row">
-                        <td colspan="13">Không tìm thấy hóa đơn nào.</td>
+                        <td colspan="14">Không tìm thấy hóa đơn nào.</td>
                     </tr>
                 @endforelse
                 </tbody>
@@ -269,10 +291,94 @@
         activeDetailId = null;
         activeBtn      = null;
     }
+    // ── Panel xem log kiểm tra hàng hoàn ─────────────────────────────
+function openKiemTraLog(id, btn) {
+    const panel = document.getElementById('detail-panel');
+    const body  = document.getElementById('panel-body');
+
+    // Reset panel chi tiết nếu đang mở
+    if (activeDetailId && activeDetailId !== id) closeDetail();
+    activeDetailId = null;
+    activeBtn = btn;
+
+    document.querySelectorAll('tr.highlighted').forEach(r => r.classList.remove('highlighted'));
+    const row = document.getElementById('row-' + id);
+    if (row) row.classList.add('highlighted');
+
+    document.getElementById('panel-title').textContent =
+        'Log kiểm tra hàng hoàn — #HD-' + String(id).padStart(4, '0');
+
+    body.innerHTML = '<div class="panel-loading">Đang tải...</div>';
+    panel.classList.add('open');
+    document.getElementById('page-body').classList.add('panel-open');
+
+    fetch(`/admin/hoa-don/${id}/kiem-tra-hang`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (!res.success) {
+            body.innerHTML = '<p style="padding:20px;color:#888">Không tải được dữ liệu.</p>';
+            return;
+        }
+        renderKiemTraLog(res.data);
+    })
+    .catch(() => {
+        body.innerHTML = '<p style="padding:20px;color:#888">Lỗi kết nối.</p>';
+    });
+}
+
+function renderKiemTraLog(d) {
+    const esc = v => String(v ?? '—').replace(/[&<>"']/g, c =>
+        ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+
+    const hangHoan = d.hangHoan || {};
+    const thoiDiem = hangHoan.thoi_diem_kiem_tra || null;
+
+    const rows = (d.dongKiemTra || []).map(x => `
+        <tr>
+            <td>${esc(x.la_bo_hoa ? 'Bó hoa' : 'Sản phẩm')}: ${esc(x.ten)}</td>
+            <td style="text-align:center">${Number(x.so_luong_theo_don) || 0}</td>
+            <td style="text-align:center;color:#c0392b">${Number(x.so_luong_hong) || 0}</td>
+            <td style="text-align:center;color:#2e7d52">${Number(x.so_luong_con_ban_duoc) || 0}</td>
+            <td>${esc(x.ket_qua)}</td>
+            <td>${esc(x.ghi_chu)}</td>
+        </tr>
+    `).join('') || '<tr><td colspan="6" style="text-align:center;color:#888">Chưa có dữ liệu</td></tr>';
+
+    document.getElementById('panel-body').innerHTML = `
+        <div class="panel-section">
+            <div class="panel-section-title">Kết quả kiểm tra hàng hoàn</div>
+            <table class="product-table">
+                <thead>
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th style="text-align:center">SL đơn</th>
+                        <th style="text-align:center">Hỏng</th>
+                        <th style="text-align:center">Còn bán</th>
+                        <th>Kết quả</th>
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+        <div class="panel-section" style="padding-top:0;">
+            <small style="color:#64748b;font-size:12px;">
+                ${thoiDiem
+                    ? 'Log đã lưu cố định vào ' + esc(thoiDiem) + ' — không thể chỉnh sửa.'
+                    : 'Log kiểm tra — chỉ đọc.'}
+            </small>
+        </div>
+    `;
+}
 
     function renderPanel(d) {
         const statusLabel = {PENDING:'Chờ xử lý',CONFIRMED:'Đã xác nhận',SHIPPING:'Đang giao',DELIVERED:'Đã giao',CANCELLED:'Đã hủy'};
         const fmt = v => v ? Number(v).toLocaleString('vi-VN') + '₫' : '—';
+        const escapeHtml = v => String(v ?? '—').replace(/[&<>"']/g, c => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
 
         let productsHtml = '';
         let grandTotal = 0;
@@ -290,38 +396,43 @@
             const order   = [];
 
             d.chi_tiet_hoa_don.forEach(ct => {
-                // Dùng ma_san_pham làm key group (đáng tin cậy hơn tên sản phẩm,
-                // tránh gộp nhầm nếu nhiều sản phẩm khác nhau bị xóa cùng hiện "(Đã xóa)").
-                // Nếu backend cũ chưa trả ma_san_pham, tự động fallback về tên sản phẩm.
-                const key = ct.ma_bo_hoa ? 'bo_' + ct.ma_bo_hoa : (ct.ma_san_pham !== undefined && ct.ma_san_pham !== null)
-                    ? 'sp_' + ct.ma_san_pham
-                    : 'ten_' + (ct.san_pham?.ten_san_pham ?? 'unknown');
+                        const key = ct.ma_bo_hoa
+                            ? 'bo_' + ct.ma_bo_hoa
+                            : (ct.ma_san_pham !== undefined && ct.ma_san_pham !== null)
+                                ? 'sp_' + ct.ma_san_pham
+                                : 'ten_' + (ct.ten_hien_thi ?? ct.san_pham?.ten_san_pham ?? 'unknown');
 
-                if (!grouped[key]) {
-                    grouped[key] = {
-                        ten_san_pham:     ct.san_pham?.ten_san_pham ?? '—',
-                        so_luong:         0,
-                        gia_ban_snapshot: ct.gia_ban_snapshot,
-                        thanh_tien:       0,
-                    };
-                    order.push(key);
-                }
+                        if (!grouped[key]) {
+                            // Ưu tiên ten_hien_thi từ backend (đã resolve sẵn boHoa/fallback)
+                            grouped[key] = {
+                                ten_san_pham:     ct.ten_hien_thi
+                                                ?? ct.san_pham?.ten_san_pham
+                                                ?? '—',
+                                size:             ct.size ?? null,
+                                so_luong:         0,
+                                gia_ban_snapshot: ct.gia_ban_snapshot,
+                                thanh_tien:       0,
+                            };
+                            order.push(key);
+                        }
 
-                grouped[key].so_luong   += Number(ct.so_luong);
-                grouped[key].thanh_tien += Number(ct.thanh_tien);
-            });
+                        grouped[key].so_luong   += Number(ct.so_luong);
+                        grouped[key].thanh_tien += Number(ct.thanh_tien);
+                    });
 
             order.forEach(key => {
-                const g = grouped[key];
-                grandTotal += g.thanh_tien;
-                productsHtml += `
-                <tr>
-                    <td>${String(g.ten_san_pham).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}</td>
-                    <td style="text-align:center">${g.so_luong}</td>
-                    <td style="text-align:right">${fmt(g.gia_ban_snapshot)}</td>
-                    <td style="text-align:right;font-weight:700">${fmt(g.thanh_tien)}</td>
-                </tr>`;
-            });
+                    const g = grouped[key];
+                    grandTotal += g.thanh_tien;
+                    const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                    const tenDayDu = g.size ? `${esc(g.ten_san_pham)} · ${esc(g.size)}` : esc(g.ten_san_pham);
+                    productsHtml += `
+                    <tr>
+                        <td>${tenDayDu}</td>
+                        <td style="text-align:center">${g.so_luong}</td>
+                        <td style="text-align:right">${fmt(g.gia_ban_snapshot)}</td>
+                        <td style="text-align:right;font-weight:700">${fmt(g.thanh_tien)}</td>
+                    </tr>`;
+                });
 
             productsHtml += `
                 <tr class="total-row">
@@ -355,6 +466,10 @@
             <div class="info-row"><span class="info-label">Ngày đặt</span><span class="info-value">${d.ngay_dat ?? '—'}</span></div>
             <div class="info-row"><span class="info-label">Ngày giao</span><span class="info-value">${d.ngay_giao ?? '—'}</span></div>
             <div class="info-row"><span class="info-label">Trạng thái</span><span class="info-value">${statusLabel[d.trang_thai] ?? d.trang_thai}</span></div>
+            ${d.trang_thai === 'CANCELLED' && d.nguon_huy_text ? `
+            <div class="info-row"><span class="info-label">Nguồn hủy</span><span class="info-value">Đã hủy - ${d.nguon_huy_text}</span></div>
+            <div class="info-row"><span class="info-label">Lý do hủy</span><span class="info-value" style="max-width:240px;text-align:right;white-space:normal">${d.ly_do_huy ?? '—'}</span></div>
+            <div class="info-row"><span class="info-label">Hàng hoàn</span><span class="info-value">${d.trang_thai_hang_hoan_text ?? 'Chưa tạo'}</span></div>` : ''}
             <div class="info-row"><span class="info-label">Thanh toán</span><span class="info-value">${['DA_THANH_TOAN','DA_NOP'].includes(d.trang_thai_thanh_toan) ? 'Đã thanh toán' : 'Chưa thanh toán'}</span></div>
             <div class="info-row"><span class="info-label">Phương thức</span><span class="info-value">${d.phuong_thuc_thanh_toan ?? '—'}</span></div>
             <div class="info-row"><span class="info-label">Tổng tiền</span><span class="info-value">${fmt(d.tong_tien)}</span></div>
@@ -375,6 +490,18 @@
         </div>
 
         ${sampleImagesHtml}
+
+        ${d.kiem_tra_hang_url ? `
+        <div class="panel-section">
+            <div class="panel-section-title">Kiểm Tra Hàng Hoàn</div>
+            <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+                <button type="button" class="btn btn-detail" onclick="document.getElementById('return-log-${d.ma_hoa_don}').classList.toggle('d-none')">${d.da_kiem_tra_hang ? 'Xem log kiểm tra' : 'Kiểm tra hàng'}</button>
+                ${d.da_kiem_tra_hang ? '<span style="font-size:12px;color:#16803c">Đã lưu, chỉ xem</span>' : ''}
+            </div>
+            <div id="return-log-${d.ma_hoa_don}" class="d-none" style="margin-top:10px;overflow:auto;">
+                ${d.da_kiem_tra_hang ? `<div style="font-size:12px;color:#667085;margin-bottom:6px">Lưu lúc: ${escapeHtml(d.thoi_diem_kiem_tra)}</div><table class="product-table"><thead><tr><th>Sản phẩm</th><th>Hỏng</th><th>Còn bán</th><th>Ghi chú</th></tr></thead><tbody>${(d.kiem_tra_log || []).map(x => `<tr><td>${escapeHtml(x.loai)}: ${escapeHtml(x.ten)}</td><td style="text-align:center">${Number(x.hong) || 0}</td><td style="text-align:center">${Number(x.con_ban) || 0}</td><td>${escapeHtml(x.ghi_chu)}</td></tr>`).join('') || '<tr><td colspan="4">Chưa có dữ liệu</td></tr>'}</tbody></table>` : `<a href="${d.kiem_tra_hang_url}" class="btn btn-detail" style="display:inline-flex">Mở màn hình kiểm tra</a>`}
+            </div>
+        </div>` : ''}
 
         <div class="panel-section">
             <div class="panel-section-title">Chi Tiết Sản Phẩm</div>

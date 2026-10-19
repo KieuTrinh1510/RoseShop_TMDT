@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\BoHoa;
 use App\Models\ChiTietNhap;
+use App\Models\FlashSale;
 use App\Models\HoaDon;
 use App\Models\InventoryReservation;
 use App\Models\SanPham;
@@ -207,7 +208,50 @@ class InventoryReservationService
 
         $allocatedRows = [];
 
-        foreach (collect($gioHang)->sortBy('ma_san_pham')->groupBy('ma_san_pham') as $spId => $items) {
+        // Hàng Flash Sale đã tách khỏi tồn lô thường từ lúc hàng hoàn được kiểm tra.
+        // Chỉ giữ/ghi nhận số lượng Flash Sale, tuyệt đối không trừ tồn lô thêm lần nữa.
+        // Hỗ trợ CẢ 2 loại: sản phẩm lẻ (có ma_san_pham) và bó hoa (có ma_bo_hoa).
+        foreach (collect($gioHang)->filter(fn ($row) => !empty($row['ma_flash_sale'])) as $row) {
+            $fs = FlashSale::whereKey($row['ma_flash_sale'])->lockForUpdate()->firstOrFail();
+
+            $qty    = (int) $row['so_luong'];
+            $conLai = (int) $fs->so_luong - (int) $fs->so_luong_da_ban;
+
+            if ($fs->trang_thai !== 'DANG_BAN' || $qty < 1 || $qty > $conLai) {
+                self::loi('Flash Sale không còn đủ số lượng để đặt hàng.');
+            }
+
+            $fs->increment('so_luong_da_ban', $qty);
+            if ((int) $fs->fresh()->so_luong_da_ban >= (int) $fs->so_luong) {
+                $fs->update(['trang_thai' => 'HET_HANG']);
+            }
+
+            // Phân biệt bó hoa / sản phẩm lẻ để ghi đúng cột
+            $laBoHoa = !empty($fs->ma_bo_hoa);
+            $maSP    = $laBoHoa ? null : (int) $fs->ma_san_pham;
+            $maBo    = $laBoHoa ? $fs->ma_bo_hoa : null;
+
+            InventoryReservation::create([
+                'ma_hoa_don'       => $hoaDon->ma_hoa_don,
+                'ma_san_pham'      => $maSP,
+                'ma_chi_tiet_nhap' => null,
+                'ma_bo_hoa'        => $maBo,
+                'ma_flash_sale'    => $fs->ma_flash_sale,
+                'so_luong'         => $qty,
+                'trang_thai'       => InventoryReservation::STATUS_RESERVED,
+            ]);
+
+            $allocatedRows[] = [
+                'ma_san_pham'       => $maSP,
+                'ma_bo_hoa'         => $maBo,           // ← THÊM vào output
+                'ma_chi_tiet_nhap'  => null,
+                'so_luong'          => $qty,
+                'gia_nhap_snapshot' => (float) ($row['gia_nhap'] ?? 0),
+                'gia_ban_snapshot'  => (float) $fs->gia_flash_sale,
+            ];
+        }
+
+        foreach (collect($gioHang)->reject(fn ($row) => !empty($row['ma_flash_sale']))->sortBy('ma_san_pham')->groupBy('ma_san_pham') as $spId => $items) {
             $sp = SanPham::whereKey($spId)->lockForUpdate()->firstOrFail();
 
             if ($sp->trang_thai !== 'DANG_BAN') {
@@ -550,6 +594,16 @@ class InventoryReservationService
         }
 
         foreach ($reservations as $res) {
+            // Trả lại lượng Flash Sale đã giữ khi đơn bị hủy trước khi giao.
+            if ($res->ma_flash_sale) {
+                $fs = FlashSale::whereKey($res->ma_flash_sale)->lockForUpdate()->first();
+                if ($fs) {
+                    $fs->decrement('so_luong_da_ban', $res->so_luong);
+                    if ($fs->trang_thai === 'HET_HANG' && (int) $fs->fresh()->so_luong_da_ban < (int) $fs->so_luong) {
+                        $fs->update(['trang_thai' => 'DANG_BAN']);
+                    }
+                }
+            }
             // Nếu là bó hoa có sẵn: trả bó hoa về trạng thái sẵn sàng trong kho
             if ($res->ma_bo_hoa && !$res->ma_san_pham) {
                 $bo = BoHoa::whereKey($res->ma_bo_hoa)->lockForUpdate()->first();

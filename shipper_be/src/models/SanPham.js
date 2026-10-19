@@ -15,8 +15,15 @@ class SanPham extends Model {
         });
     }
 
-    // Tiện ích: kiểm tra sản phẩm có phải hoa tươi không
+    /**
+     * Kiểm tra sản phẩm có phải hoa tươi không.
+     *   - Ưu tiên loai_san_pham (đáng tin).
+     *   - Fallback heuristic tên cho dữ liệu cũ thiếu loai_san_pham.
+     */
     get laHoaTuoi() {
+        if (this.loai_san_pham) {
+            return ['HOA_TUOI', 'HOA_SAP', 'HOA_GIAY_NHUN'].includes(this.loai_san_pham);
+        }
         const ten = (this.ten_san_pham || '').toLowerCase();
         return ten.includes('hoa') || ten.includes('flower') || ten.includes('bó');
     }

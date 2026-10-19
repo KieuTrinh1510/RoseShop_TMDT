@@ -4,1037 +4,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
+      
+    <link rel="stylesheet" href="{{ asset('css/Admin/MauBoHoa.css') }}">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --rose-primary: #EC3D8F;
-            --rose-primary-hover: #D8287C;
-            --rose-primary-light: #FDE8F1;
-            --rose-border: #F1DFE7;
-            --rose-border-light: #F8EDF2;
-            --rose-text: #1F2937;
-            --rose-muted: #6B7280;
-            --rose-card-bg: #FFFFFF;
-            --rose-radius: 10px;
-            --rose-shadow: 0 1px 4px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(236, 61, 143, 0.03);
-        }
-
-        .bouquet-page {
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-            color: var(--rose-text);
-            padding: 8px 0 32px;
-        }
-
-        /* ── Common Card Structure ────────────────────────── */
-        .fee-section,
-        .template-form-header,
-        .template-basic-card,
-        .template-validation-card,
-        .bom-group,
-        .template-list {
-            background: var(--rose-card-bg);
-            border: 1px solid var(--rose-border);
-            border-radius: var(--rose-radius);
-            box-shadow: var(--rose-shadow);
-        }
-
-        /* ── 2. CẤU HÌNH PHỤ PHÍ ────────────────────────────── */
-        .fee-section {
-            padding: 16px 20px;
-            margin-bottom: 22px;
-            transition: all 0.2s ease;
-        }
-        .section-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            cursor: pointer;
-            user-select: none;
-        }
-        .section-header h2 {
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: #831843;
-            margin: 0 0 3px;
-        }
-        .section-header p {
-            font-size: 0.84rem;
-            color: var(--rose-muted);
-            margin: 0;
-        }
-        .btn-toggle-fee {
-            background: #FFF9FB;
-            border: 1px solid var(--rose-border);
-            color: var(--rose-primary);
-            font-size: 0.8rem;
-            font-weight: 600;
-            padding: 5px 12px;
-            border-radius: 20px;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            flex-shrink: 0;
-        }
-        .btn-toggle-fee:hover {
-            background: var(--rose-primary-light);
-            border-color: var(--rose-primary);
-            color: var(--rose-primary-hover);
-        }
-        .btn-toggle-fee i {
-            font-size: 0.78rem;
-            transition: transform 0.25s ease;
-        }
-        .fee-section.collapsed .btn-toggle-fee i {
-            transform: rotate(180deg);
-        }
-        .fee-section.collapsed .fee-section-body {
-            display: none;
-        }
-        .fee-section-body {
-            margin-top: 16px;
-            transition: all 0.3s ease;
-        }
-
-        .fee-form {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr auto;
-            gap: 12px;
-            align-items: flex-end;
-            background: #FFF9FB;
-            border: 1px solid var(--rose-border-light);
-            border-radius: 8px;
-            padding: 14px 16px;
-            margin-bottom: 16px;
-        }
-        .fee-form .field label {
-            display: block;
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: #4B5563;
-            margin-bottom: 4px;
-        }
-        .fee-form .form-control,
-        .fee-form .form-select {
-            font-size: 0.88rem;
-            border-radius: 6px;
-            border: 1px solid #D1D5DB;
-            padding: 7px 11px;
-        }
-        .fee-form .btn-save-fee {
-            background: var(--rose-primary);
-            color: #FFFFFF;
-            border: none;
-            font-weight: 600;
-            font-size: 0.88rem;
-            padding: 7px 18px;
-            border-radius: 6px;
-            white-space: nowrap;
-            transition: all 0.15s ease;
-            height: 38px;
-        }
-        .fee-form .btn-save-fee:hover {
-            background: var(--rose-primary-hover);
-        }
-
-        .fee-tables {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-        .fee-table-card {
-            border: 1px solid var(--rose-border-light);
-            border-radius: 8px;
-            overflow: hidden;
-            background: #FFFFFF;
-        }
-        .fee-table-title {
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: #831843;
-            padding: 10px 14px;
-            background: #FFF0F6;
-            border-bottom: 1px solid var(--rose-border-light);
-            margin: 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .fee-table-scroll {
-            max-height: 260px;
-            overflow-y: auto;
-        }
-        .table-fee {
-            width: 100%;
-            margin: 0;
-            border-collapse: collapse;
-            font-size: 0.88rem;
-        }
-        .table-fee thead {
-            position: sticky;
-            top: 0;
-            z-index: 2;
-            background: #FAF5F8;
-        }
-        .table-fee th {
-            font-size: 0.78rem;
-            font-weight: 600;
-            color: #6B7280;
-            text-transform: uppercase;
-            padding: 9px 14px;
-            border-bottom: 1px solid var(--rose-border);
-        }
-        .table-fee td {
-            padding: 9px 14px;
-            border-bottom: 1px solid #F3F4F6;
-            vertical-align: middle;
-        }
-        .table-fee tr:last-child td {
-            border-bottom: none;
-        }
-        .table-fee tr:hover td {
-            background-color: #FFF9FC;
-        }
-
-        /* ── 4. TABS (TEXT + UNDERLINE) ──────────────────────── */
-        .bouquet-tabs {
-            display: flex;
-            gap: 28px;
-            border-bottom: 1px solid var(--rose-border);
-            margin-bottom: 22px;
-            padding-left: 4px;
-        }
-        .tab-btn {
-            background: none;
-            border: none;
-            padding: 10px 4px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--rose-muted);
-            cursor: pointer;
-            position: relative;
-            transition: color 0.15s ease;
-        }
-        .tab-btn:hover {
-            color: var(--rose-primary);
-        }
-        .tab-btn.active {
-            color: var(--rose-primary);
-        }
-        .tab-btn.active::after {
-            content: '';
-            position: absolute;
-            bottom: -1px;
-            left: 0;
-            right: 0;
-            height: 2.5px;
-            background: var(--rose-primary);
-            border-radius: 2px 2px 0 0;
-        }
-
-        /* ── 2. HEADER FORM TẠO MẪU (STICKY ACTIONS) ────────── */
-        .template-create {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        .template-form-header {
-            position: sticky;
-            top: 10px;
-            z-index: 100;
-            background: #FFFFFF;
-            padding: 12px 18px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            backdrop-filter: blur(8px);
-        }
-        .template-form-header h2 {
-            font-size: 1.12rem;
-            font-weight: 700;
-            color: #831843;
-            margin: 0 0 2px;
-        }
-        .template-form-header p {
-            font-size: 0.82rem;
-            color: var(--rose-muted);
-            margin: 0;
-        }
-        .template-form-actions {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-shrink: 0;
-        }
-
-        /* ── 3. MAIN TOP GRID (THÔNG TIN MẪU ~70% | ĐỊNH MỨC ~30%) */
-        .template-top-grid {
-            display: grid;
-            grid-template-columns: minmax(0, 2fr) minmax(290px, 1fr);
-            gap: 16px;
-            align-items: stretch;
-        }
-
-        /* ── 4 & 5. THÔNG TIN MẪU COMPACT ──────────────────── */
-        .template-basic-card {
-            padding: 16px 18px;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            gap: 14px;
-        }
-        .template-basic-card h3 {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: #831843;
-            margin: 0;
-        }
-        .basic-info-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .basic-row-1 {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
-            gap: 12px;
-            align-items: flex-start;
-        }
-        .basic-row-2 {
-            display: grid;
-            grid-template-columns: 2fr 2fr;
-            gap: 12px;
-            align-items: flex-start;
-        }
-        .form-group-custom label {
-            display: block;
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 5px;
-            line-height: 1.3;
-            min-height: 18px;
-        }
-        .form-group-custom .form-control,
-        .form-group-custom .form-select {
-            font-size: 0.86rem;
-            height: 38px;
-            border-radius: 6px;
-            border: 1px solid #D1D5DB;
-            padding: 6px 10px;
-        }
-        .form-group-custom .form-control:focus,
-        .form-group-custom .form-select:focus {
-            border-color: var(--rose-primary);
-            box-shadow: 0 0 0 3px rgba(236, 61, 143, 0.12);
-        }
-        .upload-compact {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-        }
-        .upload-preview-box {
-            width: 76px;
-            height: 76px;
-            min-width: 76px;
-            border-radius: 6px;
-            border: 1px dashed var(--rose-border);
-            background: #FFF9FB;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-        .upload-preview-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .upload-placeholder-text {
-            font-size: 0.7rem;
-            color: #9CA3AF;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            text-align: center;
-            line-height: 1.1;
-        }
-        .upload-placeholder-text i {
-            font-size: 1.15rem;
-        }
-
-        /* ── 7 & 8. KIỂM TRA ĐỊNH MỨC (CARD DỌC COMPACT) ──────── */
-        .template-validation-card {
-            padding: 16px 18px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .validation-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-        .validation-header h3 {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: #831843;
-            margin: 0;
-        }
-        .validation-subtitle {
-            font-size: 0.76rem;
-            font-weight: 600;
-            color: var(--rose-primary);
-        }
-        .validation-list {
-            display: flex;
-            flex-direction: column;
-        }
-        .validation-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 7px 0;
-            border-bottom: 1px solid #F3F4F6;
-            min-height: 40px;
-        }
-        .validation-row:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-        .val-label {
-            font-size: 0.84rem;
-            font-weight: 600;
-            color: #374151;
-            min-width: 68px;
-        }
-        .val-ratio {
-            font-size: 0.86rem;
-            font-weight: 700;
-            color: #1F2937;
-            margin: 0 auto 0 10px;
-            font-variant-numeric: tabular-nums;
-        }
-        .summary-badge {
-            font-size: 0.74rem;
-            font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 10px;
-            display: inline-block;
-            white-space: nowrap;
-        }
-        .summary-badge.status-ok {
-            background: #ECFDF5;
-            color: #065F46;
-            border: 1px solid #A7F3D0;
-        }
-        .summary-badge.status-warn {
-            background: #FFFBEB;
-            color: #92400E;
-            border: 1px solid #FDE68A;
-        }
-        .summary-badge.status-danger {
-            background: #FEF2F2;
-            color: #991B1B;
-            border: 1px solid #FECACA;
-        }
-        .summary-badge.status-gray {
-            background: #F3F4F6;
-            color: #4B5563;
-            border: 1px solid #E5E7EB;
-        }
-
-        /* ── 7 & 8. THÀNH PHẦN BOM (CỐ ĐỊNH 6 NHÓM, GRID 2 CỘT) ─ */
-        .bom-section {
-            width: 100%;
-        }
-        .bom-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
-        }
-        .bom-group {
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-        .bom-group-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        .bom-group-header h3 {
-            font-size: 0.94rem;
-            font-weight: 700;
-            color: #831843;
-            margin: 0;
-        }
-        .bom-group-header span {
-            font-size: 0.76rem;
-            color: var(--rose-muted);
-            display: block;
-        }
-
-        /* ── 9. SEARCHABLE MULTI-SELECT PICKER ────────────────── */
-        .bom-picker {
-            position: relative;
-            margin-bottom: 8px;
-        }
-        .picker-trigger {
-            background: #FFFFFF;
-            border: 1px solid #D1D5DB;
-            border-radius: 6px;
-            padding: 7px 12px;
-            font-size: 0.86rem;
-            color: #4B5563;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            user-select: none;
-        }
-        .picker-trigger:hover,
-        .picker-trigger:focus {
-            border-color: var(--rose-primary);
-            box-shadow: 0 0 0 2px rgba(236, 61, 143, 0.1);
-        }
-        .picker-placeholder {
-            color: #9CA3AF;
-        }
-        .picker-selected-text {
-            color: #111827;
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: calc(100% - 24px);
-        }
-        .bom-picker.open {
-            z-index: 1060;
-        }
-        .picker-arrow {
-            font-size: 0.75rem;
-            color: #9CA3AF;
-            transition: transform 0.15s ease;
-        }
-        .bom-picker.open .picker-arrow {
-            transform: rotate(180deg);
-        }
-
-        /* Dropdown search */
-        .picker-dropdown {
-            position: absolute;
-            top: calc(100% + 4px);
-            left: 0;
-            right: 0;
-            background: #FFFFFF;
-            border: 1px solid #E5E7EB;
-            border-radius: 8px;
-            box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            z-index: 1050;
-            padding: 8px;
-            display: none;
-        }
-        .bom-picker.open .picker-dropdown {
-            display: block;
-        }
-        .picker-search-wrap {
-            margin-bottom: 6px;
-        }
-        .picker-search-input {
-            width: 100%;
-            border: 1px solid #D1D5DB;
-            border-radius: 5px;
-            padding: 6px 9px;
-            font-size: 0.84rem;
-        }
-        .picker-search-input:focus {
-            outline: none;
-            border-color: var(--rose-primary);
-        }
-        .picker-list {
-            max-height: 220px;
-            overflow-y: auto;
-        }
-        .picker-item {
-            padding: 7px 10px;
-            font-size: 0.84rem;
-            border-radius: 5px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: background 0.1s ease;
-        }
-        .picker-item-left {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex: 1;
-            min-width: 0;
-        }
-        .picker-item-name {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .stock-badge {
-            font-size: 0.72rem;
-            padding: 2px 7px;
-            border-radius: 9999px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        .badge-available {
-            background: #ECFDF5;
-            color: #059669;
-            border: 1px solid #A7F3D0;
-        }
-        .badge-out-of-stock {
-            background: #FEF2F2;
-            color: #DC2626;
-            border: 1px solid #FECACA;
-        }
-        .picker-item:hover,
-        .picker-item.highlighted {
-            background: #FDF2F8;
-            color: var(--rose-primary);
-        }
-        .picker-item.selected-disabled {
-            opacity: 0.45;
-            cursor: not-allowed;
-            background: #F3F4F6;
-        }
-        .picker-item.out-of-stock,
-        .picker-item.disabled {
-            opacity: 0.55;
-            cursor: not-allowed;
-            background: #F9FAFB !important;
-            pointer-events: none;
-        }
-
-        /* ── Autocomplete gợi ý tên mẫu đã có ── */
-        .tpl-name-input-wrapper {
-            position: relative;
-        }
-        .tpl-name-dropdown {
-            position: absolute;
-            top: calc(100% + 4px);
-            left: 0;
-            right: 0;
-            z-index: 1060;
-            background: #FFFFFF;
-            border: 1px solid #E5E7EB;
-            border-radius: 8px;
-            box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-        }
-        .tpl-name-dropdown-header {
-            padding: 6px 10px;
-            background: #F9FAFB;
-            border-bottom: 1px solid #E5E7EB;
-            font-size: 0.75rem;
-            color: #6B7280;
-        }
-        .tpl-name-list {
-            max-height: 220px;
-            overflow-y: auto;
-        }
-        .tpl-name-item {
-            padding: 7px 10px;
-            font-size: 0.84rem;
-            color: #374151;
-            border-bottom: 1px solid #F3F4F6;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-        }
-        .tpl-name-item:hover {
-            background: #F9FAFB;
-        }
-        .tpl-name-item.match-highlight {
-            background: #FEF2F2;
-            color: #DC2626;
-            font-weight: 600;
-        }
-        .tpl-name-badge-exists {
-            font-size: 0.7rem;
-            padding: 1px 6px;
-            background: #FEE2E2;
-            color: #DC2626;
-            border-radius: 4px;
-            font-weight: 600;
-        }
-        .input-invalid-feedback {
-            font-size: 0.82rem;
-            color: #DC2626;
-            margin-top: 4px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-weight: 500;
-        }
-        .input-invalid-border {
-            border-color: #EF4444 !important;
-            box-shadow: 0 0 0 1px #EF4444 !important;
-        }
-
-        /* ── 13 & 14. COMPACT SELECTED ITEMS (CHỐNG PHÌNH TRANG) */
-        .bom-selected {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 6px 10px;
-            min-height: 40px;
-            max-height: 150px;
-            overflow-y: auto;
-            padding: 4px 2px;
-        }
-        .selected-chip {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #FFFDFE;
-            border: 1px solid #F1DFE7;
-            border-radius: 6px;
-            padding: 4px 8px;
-            font-size: 0.84rem;
-            min-width: 0;
-            transition: border-color 0.15s ease;
-        }
-        .selected-chip:hover {
-            border-color: #FBCFE8;
-            background: #FFFFFF;
-        }
-        .chip-info {
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-            flex: 1;
-            margin-right: 6px;
-        }
-        .chip-name {
-            font-weight: 600;
-            color: #374151;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .chip-stock-info {
-            font-size: 0.72rem;
-            color: #6B7280;
-            font-weight: 500;
-        }
-        .chip-qty-wrap {
-            display: flex;
-            align-items: center;
-            gap: 3px;
-            flex-shrink: 0;
-        }
-        .chip-qty-input {
-            width: 54px;
-            height: 24px;
-            padding: 0 4px;
-            text-align: center;
-            font-size: 0.82rem;
-            font-weight: 600;
-            border: 1px solid #D1D5DB;
-            border-radius: 4px;
-        }
-        .chip-unit {
-            font-size: 0.74rem;
-            color: var(--rose-muted);
-        }
-        .btn-chip-remove {
-            background: none;
-            border: none;
-            color: #9CA3AF;
-            font-size: 1.1rem;
-            line-height: 1;
-            padding: 0 0 0 6px;
-            cursor: pointer;
-        }
-        .btn-chip-remove:hover {
-            color: #EF4444;
-        }
-        .empty-state-chip {
-            grid-column: 1 / -1;
-            color: #9CA3AF;
-            font-size: 0.8rem;
-            display: flex;
-            align-items: center;
-            height: 34px;
-            font-style: italic;
-        }
-
-        /* ── Action Buttons ────────────────────────────────── */
-        .btn-action-primary {
-            background: var(--rose-primary);
-            color: #FFFFFF;
-            border: none;
-            font-weight: 600;
-            font-size: 0.88rem;
-            padding: 8px 18px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            display: inline-flex;
-            align-items: center;
-        }
-        .btn-action-primary:hover {
-            background: var(--rose-primary-hover);
-        }
-        .btn-action-secondary {
-            background: #FFFFFF;
-            color: #4B5563;
-            border: 1px solid #D1D5DB;
-            font-weight: 600;
-            font-size: 0.88rem;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            display: inline-flex;
-            align-items: center;
-        }
-        .btn-action-secondary:hover {
-            background: #F9FAFB;
-            border-color: #9CA3AF;
-        }
-
-        /* ── 24. TAB DANH SÁCH MẪU ──────────────────────────── */
-        .template-list {
-            padding: 20px;
-        }
-        .list-toolbar {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 16px;
-            max-width: 540px;
-        }
-        .table-wrapper {
-            overflow-x: auto;
-        }
-        .table-template {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.88rem;
-        }
-        .table-template th {
-            background: #FAF5F8;
-            font-size: 0.78rem;
-            font-weight: 600;
-            color: #6B7280;
-            text-transform: uppercase;
-            padding: 10px 14px;
-            border-bottom: 1px solid var(--rose-border);
-        }
-        .table-template td {
-            padding: 12px 14px;
-            border-bottom: 1px solid #F3F4F6;
-            vertical-align: middle;
-        }
-        .table-template tr:hover td {
-            background: #FFFDFE;
-        }
-        .template-thumb {
-            width: 48px;
-            height: 48px;
-            object-fit: cover;
-            border-radius: 6px;
-            border: 1px solid #E5E7EB;
-        }
-
-        /* ── TAB BÓ HOA SẴN (PREMADE PAGE) ─────────────────── */
-        .premade-page {
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-        }
-        .premade-header {
-            background: var(--rose-card-bg);
-            border: 1px solid var(--rose-border);
-            border-radius: var(--rose-radius);
-            padding: 16px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            box-shadow: var(--rose-shadow);
-        }
-        .premade-header h2 {
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: #831843;
-            margin: 0 0 3px;
-        }
-        .premade-header p {
-            font-size: 0.84rem;
-            color: var(--rose-muted);
-            margin: 0;
-        }
-        .premade-create-panel {
-            background: var(--rose-card-bg);
-            border: 1px solid var(--rose-border);
-            border-radius: var(--rose-radius);
-            padding: 20px;
-            box-shadow: 0 4px 14px rgba(236, 61, 143, 0.08);
-            animation: fadeInDown 0.2s ease-out;
-        }
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .premade-create-panel h3 {
-            font-size: 1rem;
-            font-weight: 700;
-            color: #831843;
-            margin: 0;
-        }
-        .create-grid {
-            display: grid;
-            grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1.3fr) auto;
-            gap: 14px;
-            align-items: flex-end;
-            background: #FFFDFE;
-            border: 1px solid var(--rose-border-light);
-            border-radius: 8px;
-            padding: 14px 16px;
-        }
-        .create-grid .field label {
-            display: block;
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 4px;
-        }
-        .create-grid .form-control,
-        .create-grid .form-select {
-            font-size: 0.88rem;
-            height: 38px;
-            border-radius: 6px;
-            border: 1px solid #D1D5DB;
-            padding: 6px 10px;
-        }
-        .create-grid .form-control:focus,
-        .create-grid .form-select:focus {
-            border-color: var(--rose-primary);
-            box-shadow: 0 0 0 3px rgba(236, 61, 143, 0.12);
-        }
-        .material-preview {
-            background: #FAFAFA;
-            border: 1px solid #E5E7EB;
-            border-radius: 8px;
-            padding: 14px 16px;
-        }
-        .preview-table-wrap {
-            max-height: 260px;
-            overflow-y: auto;
-            border: 1px solid #E5E7EB;
-            border-radius: 6px;
-            background: #FFFFFF;
-        }
-        .table-preview-materials {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.86rem;
-        }
-        .table-preview-materials th {
-            position: sticky;
-            top: 0;
-            background: #F9FAFB;
-            font-size: 0.76rem;
-            font-weight: 600;
-            color: #6B7280;
-            text-transform: uppercase;
-            padding: 8px 12px;
-            border-bottom: 1px solid #E5E7EB;
-            z-index: 2;
-        }
-        .table-preview-materials td {
-            padding: 8px 12px;
-            border-bottom: 1px solid #F3F4F6;
-            vertical-align: middle;
-        }
-        .table-preview-materials tr.row-missing {
-            background-color: #FEF2F2 !important;
-        }
-        .table-preview-materials tr.row-missing td {
-            color: #991B1B;
-            font-weight: 600;
-        }
-        .premade-list-section {
-            background: var(--rose-card-bg);
-            border: 1px solid var(--rose-border);
-            border-radius: var(--rose-radius);
-            padding: 20px;
-            box-shadow: var(--rose-shadow);
-        }
-
-        /* ── 25. RESPONSIVE ─────────────────────────────────── */
-        @media (max-width: 1200px) {
-            .fee-form {
-                grid-template-columns: 1fr 1fr;
-            }
-            .template-top-grid {
-                grid-template-columns: 1.5fr 1fr;
-            }
-        }
-        @media (max-width: 992px) {
-            .fee-tables {
-                grid-template-columns: 1fr;
-            }
-            .template-top-grid {
-                grid-template-columns: 1fr;
-            }
-            .bom-grid {
-                grid-template-columns: 1fr;
-            }
-            .create-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-        @media (max-width: 768px) {
-            .fee-form {
-                grid-template-columns: 1fr;
-            }
-            .template-form-header,
-            .premade-header {
-                position: static;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
-            }
-            .template-form-actions {
-                width: 100%;
-                justify-content: flex-end;
-            }
-            .create-grid {
-                grid-template-columns: 1fr;
-            }
-            .basic-row-1, .basic-row-2 {
-                grid-template-columns: 1fr;
-            }
-            .bom-selected {
-                grid-template-columns: 1fr;
-            }
-            .bouquet-tabs {
-                gap: 14px;
-                overflow-x: auto;
-            }
-        }
-    </style>
+    
 @endpush
 
 @section('content')
@@ -1257,6 +231,41 @@
                  TAB 1: DANH SÁCH MẪU
             ───────────────────────────────────────────────────────────────────── --}}
             <div class="tab-pane-item" id="tab-danh-sach-mau">
+                @php
+                    // Tồn khả dụng nguyên liệu: CÙNG nguồn với trang khách
+                    // (đã trừ hàng giữ chỗ, bỏ lô quá hạn, sản phẩm ngừng bán = 0).
+                    $spIdsMau = $mauBoHoas->flatMap(fn ($mm) => $mm->chiTietMauBoHoa->pluck('ma_san_pham'))
+                        ->filter()->unique()->values()->all();
+                    $tonKhaDungMau = \App\Services\InventoryReservationService::getBatchAvailableForIngredients($spIdsMau);
+
+                    // [ma_mau => danh sách nguyên liệu KHÔNG đủ cho 1 bó]
+                    $thieuTheoMau = $mauBoHoas->mapWithKeys(function ($mm) use ($tonKhaDungMau, $boController) {
+                        $can = [];
+                        $dong = [];
+                        foreach ($mm->chiTietMauBoHoa as $ct) {
+                            $id = (int) $ct->ma_san_pham;
+                            $can[$id] = ($can[$id] ?? 0) + (int) $ct->so_luong;   // cùng SP có thể nằm ở nhiều dòng công thức
+                            $dong[$id] ??= $ct;
+                        }
+                        $ds = [];
+                        foreach ($can as $id => $canMotBo) {
+                            $con = (int) ($tonKhaDungMau[$id] ?? 0);
+                            if ($con >= $canMotBo) continue;
+                            $sp = $dong[$id]->sanPham;
+                            $ds[] = [
+                                'ten'       => $sp?->ten_san_pham ?? ('Sản phẩm #' . $id),
+                                'vai_tro'   => $boController::VAI_TRO[$dong[$id]->vai_tro] ?? $dong[$id]->vai_tro,
+                                'dvt'       => $sp?->don_vi_tinh_text ?: ($sp?->don_vi_tinh ?: ''),
+                                'can'       => $canMotBo,
+                                'con'       => $con,
+                                'thieu'     => $canMotBo - $con,
+                                'ngung_ban' => $sp && $sp->trang_thai !== 'DANG_BAN',
+                            ];
+                        }
+                        return [$mm->ma_mau_bo_hoa => $ds];
+                    });
+                    $soMauHetHang = $thieuTheoMau->filter(fn ($ds) => count($ds) > 0)->count();
+                @endphp
                 <div class="template-list">
                     {{-- Toolbar: tìm tên mẫu + filter trạng thái --}}
                     <div class="list-toolbar">
@@ -1265,7 +274,15 @@
                             <option value="">Tất cả trạng thái</option>
                             <option value="ACTIVE">Hiện (Đang dùng)</option>
                             <option value="INACTIVE">Ẩn</option>
+                            <option value="OUT_OF_STOCK">Hết hàng / thiếu nguyên liệu</option>
                         </select>
+                        @if($soMauHetHang > 0)
+                            <span class="stock-count-chip" title="Mẫu có ít nhất 1 nguyên liệu không đủ để làm 1 bó">
+                                <i class="bi bi-exclamation-triangle-fill"></i> {{ $soMauHetHang }} mẫu đang thiếu nguyên liệu
+                            </span>
+                        @else
+                            <span class="stock-count-chip is-ok"><i class="bi bi-check-circle-fill"></i> Tất cả mẫu đủ nguyên liệu</span>
+                        @endif
                     </div>
 
                     {{-- Table danh sách mẫu --}}
@@ -1289,8 +306,11 @@
                                     @php
                                         $giaVonEst = $m->chiTietMauBoHoa->sum(fn($ct) => ($ct->sanPham?->gia_nhap ?? 0) * $ct->so_luong);
                                         $giaBanEst = round($giaVonEst * 1.5, 2);
+                                        $thieuList = $thieuTheoMau[$m->ma_mau_bo_hoa] ?? [];
+                                        $hetNL     = count($thieuList) > 0;
+                                        $soBoSan   = (int) ($m->so_bo_hoa_chua_ban ?? 0);
                                     @endphp
-                                    <tr class="mau-row" data-name="{{ strtolower($m->ten_mau) }}" data-status="{{ $m->trang_thai }}">
+                                    <tr class="mau-row" data-name="{{ strtolower($m->ten_mau) }}" data-status="{{ $m->trang_thai }}" data-stock="{{ $hetNL ? 'out' : 'ok' }}">
                                         <td>
                                             <img src="{{ $boController::anhMau($m) }}"
                                                  alt="{{ $m->ten_mau }}"
@@ -1336,6 +356,24 @@
                                             @else
                                                 <span class="summary-badge status-warn">Ẩn</span>
                                             @endif
+
+                                            @if($hetNL)
+                                                <div class="mt-1">
+                                                    <button type="button"
+                                                            class="stock-alert-btn {{ $soBoSan > 0 ? 'is-warn' : 'is-danger' }}"
+                                                            data-thieu-toggle="mau-thieu-{{ $m->ma_mau_bo_hoa }}"
+                                                            aria-expanded="false"
+                                                            aria-controls="mau-thieu-{{ $m->ma_mau_bo_hoa }}"
+                                                            title="Bấm để xem nguyên liệu đang thiếu">
+                                                        <i class="bi bi-exclamation-triangle-fill"></i>
+                                                        {{ $soBoSan > 0 ? 'Thiếu NL' : 'Hết hàng' }} · {{ count($thieuList) }}
+                                                        <i class="bi bi-chevron-down stock-alert-caret"></i>
+                                                    </button>
+                                                    @if($soBoSan > 0)
+                                                        <div class="text-muted" style="font-size:11px;">còn {{ $soBoSan }} bó làm sẵn</div>
+                                                    @endif
+                                                </div>
+                                            @endif
                                         </td>
                                         <td class="text-end">
                                             <div class="d-inline-flex gap-2">
@@ -1357,6 +395,62 @@
                                             </div>
                                         </td>
                                     </tr>
+
+                                    {{-- Danh sách nguyên liệu đang thiếu (xổ xuống khi bấm badge) --}}
+                                    @if($hetNL)
+                                        <tr class="mau-thieu-row d-none" id="mau-thieu-{{ $m->ma_mau_bo_hoa }}">
+                                            <td colspan="9" class="p-0 border-0">
+                                                <div>
+                                                    <div class="stock-detail">
+                                                        <div class="stock-detail-title">
+                                                            <i class="bi bi-box-seam me-1"></i>
+                                                            Nguyên liệu không đủ để làm 1 bó «{{ $m->ten_mau }}»
+                                                        </div>
+                                                        <table class="stock-detail-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Nguyên liệu</th>
+                                                                    <th>Vai trò</th>
+                                                                    <th class="text-end">Cần / bó</th>
+                                                                    <th class="text-end">Khả dụng</th>
+                                                                    <th class="text-end">Thiếu</th>
+                                                                    <th class="text-center">Tình trạng</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach($thieuList as $t)
+                                                                    <tr>
+                                                                        <td class="fw-semibold">{{ $t['ten'] }}</td>
+                                                                        <td class="text-muted">{{ $t['vai_tro'] }}</td>
+                                                                        <td class="text-end">{{ $t['can'] }} {{ $t['dvt'] }}</td>
+                                                                        <td class="text-end">{{ $t['con'] }} {{ $t['dvt'] }}</td>
+                                                                        <td class="text-end fw-bold text-danger">{{ $t['thieu'] }} {{ $t['dvt'] }}</td>
+                                                                        <td class="text-center">
+                                                                            @if($t['ngung_ban'])
+                                                                                <span class="summary-badge status-gray">Ngừng bán</span>
+                                                                            @elseif($t['con'] <= 0)
+                                                                                <span class="summary-badge status-danger">Hết hàng</span>
+                                                                            @else
+                                                                                <span class="summary-badge status-warn">Không đủ</span>
+                                                                            @endif
+                                                                        </td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                        <div class="stock-detail-note">
+                                                            Khả dụng = tồn các lô nhập đã xác nhận (chưa quá hạn) trừ hàng đang giữ cho đơn chưa hoàn tất.
+                                                            @if($soBoSan > 0)
+                                                                Mẫu này vẫn còn {{ $soBoSan }} bó làm sẵn nên khách vẫn mua được tới khi hết số bó đó.
+                                                            @else
+                                                                Mẫu này không còn bó làm sẵn nên khách sẽ thấy «Hết hàng» cho tới khi nhập đủ nguyên liệu.
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endif
                                 @empty
                                     <tr>
                                         <td colspan="9" class="text-center py-4 text-muted">
@@ -1899,9 +993,19 @@
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td class="text-center font-monospace">
-                                                <strong>{{ $bo->so_luong }}</strong>
-                                            </td>
+                                                                        @php
+                                $tonFS   = (int) ($bo->flash_sale ?? 0);
+                                $tongAll = $bo->so_luong + $tonFS;
+                            @endphp
+                            <td class="text-center font-monospace">
+                                <div><strong>{{ $bo->so_luong }}</strong> <span style="font-size:10.5px;color:#6b7280;">tồn kho</span></div>
+                                @if($tonFS > 0)
+                                    <div style="font-size:10.5px;color:#e53935;font-weight:600;">+ {{ $tonFS }} FS</div>
+                                @endif
+                                <div style="font-size:10.5px;color:#6b7280;border-top:1px dashed #e0dbd0;margin-top:2px;padding-top:2px;">
+                                    = <strong>{{ $tongAll }}</strong>
+                                </div>
+                            </td>
                                             <td class="text-center font-monospace text-muted">
                                                 0
                                             </td>
@@ -2241,10 +1345,28 @@
             const rName = r.dataset.name;
             const rStatus = r.dataset.status;
             const matchQ = !q || rName.includes(q);
-            const matchSt = !st || rStatus === st;
-            r.style.display = (matchQ && matchSt) ? '' : 'none';
+            const matchSt = !st
+                || (st === 'OUT_OF_STOCK' ? r.dataset.stock === 'out' : rStatus === st);
+            const show = matchQ && matchSt;
+            r.style.display = show ? '' : 'none';
+
+            // Dòng chi tiết nguyên liệu thiếu đi theo dòng mẫu
+            const detail = r.nextElementSibling;
+            if (detail && detail.classList.contains('mau-thieu-row')) {
+                detail.style.display = show ? '' : 'none';
+            }
         });
     }
+    // Bấm "Hết hàng · N" → ẩn/hiện dòng nguyên liệu thiếu (tự xử lý, không phụ thuộc Bootstrap collapse)
+    document.querySelectorAll('[data-thieu-toggle]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const row = document.getElementById(btn.dataset.thieuToggle);
+            if (!row) return;
+            const opening = row.classList.toggle('d-none') === false;
+            btn.setAttribute('aria-expanded', opening ? 'true' : 'false');
+        });
+    });
+
     searchMauName?.addEventListener('input', applyMauFilter);
     filterMauStatus?.addEventListener('change', applyMauFilter);
 

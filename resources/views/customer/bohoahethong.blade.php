@@ -69,6 +69,22 @@
 .bh-cart-notice-btn:hover {
     background: var(--primary-dark, #b82d4f);
 }
+/* Mẫu hết hàng */
+.flower-card--het-hang img {
+    filter: grayscale(.85);
+    opacity: .7;
+}
+.flower-price--het-hang {
+    color: #9c8a91;
+    font-weight: 800;
+}
+.detail-btn--disabled {
+    background: #e7dde1;
+    color: #8f7d85;
+    cursor: not-allowed;
+    pointer-events: none;
+    border: none;
+}
 </style>
 @endsection
 
@@ -182,9 +198,11 @@
                     @php
                         $anh = \App\Http\Controllers\Admin\BoHoaController::anhMau($mau);
                         $kieuDangText = \App\Http\Controllers\Admin\BoHoaController::KIEU_DANG[$mau->kieu_bo_hoa] ?? $mau->kieu_bo_hoa;
+                        // Không có giá hợp lệ (null) ⇒ coi như hết hàng, TUYỆT ĐỐI không in 0đ.
+                        $hetHang = ($mau->het_hang ?? false) || $mau->gia_hien_thi === null;
                     @endphp
 
-                    <div class="flower-card">
+                    <div class="flower-card {{ $hetHang ? 'flower-card--het-hang' : '' }}">
                         <img src="{{ $anh }}" alt="{{ $mau->ten_mau }}" loading="lazy">
 
                         <div class="flower-card-body">
@@ -194,15 +212,23 @@
                                 {{ $mau->mo_ta ?: ($kieuDangText . ' · Size ' . $mau->size) }}
                             </p>
 
-                            <p class="flower-price">
-                                {{ number_format($mau->gia_hien_thi ?? 0, 0, ',', '.') }}đ
-                                <span>/ bó</span>
-                            </p>
+                            @if($hetHang)
+                                <p class="flower-price flower-price--het-hang">Hết hàng</p>
+                            @else
+                                <p class="flower-price">
+                                    {{ number_format($mau->gia_hien_thi, 0, ',', '.') }}đ
+                                    <span>/ bó</span>
+                                </p>
+                            @endif
                             <div class="home-card-bottom">
                                 <span>Size: {{ $mau->size }}</span>
-                                <a href="{{ route('customer.mau-bo-hoa.chi-tiet', $mau->ma_mau_bo_hoa) }}" class="detail-btn">
-                                    Chi tiết
-                                </a>
+                                @if($hetHang)
+                                    <span class="detail-btn detail-btn--disabled" aria-disabled="true">Tạm hết hàng</span>
+                                @else
+                                    <a href="{{ route('customer.mau-bo-hoa.chi-tiet', $mau->ma_mau_bo_hoa) }}" class="detail-btn">
+                                        Chi tiết
+                                    </a>
+                                @endif
                             </div>
                         </div>
                     </div>
