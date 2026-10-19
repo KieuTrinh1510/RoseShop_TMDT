@@ -42,15 +42,19 @@
         overflow: hidden;
     }
     .rs-filter-bar {
-        padding: 20px 24px;
+        padding: 16px 24px;
         border-bottom: 1px solid #EAECF0;
         background: #ffffff;
-    }
-    .rs-filter-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-        gap: 14px;
+        display: flex;
         align-items: flex-end;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .rs-filter-group {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 145px;
+        min-width: 125px;
     }
     .rs-filter-group label {
         display: block;
@@ -58,6 +62,7 @@
         font-weight: 600;
         color: #475467;
         margin-bottom: 6px;
+        white-space: nowrap;
     }
     .rs-filter-group select, .rs-filter-group input {
         width: 100%;
@@ -70,6 +75,7 @@
         background: #ffffff;
         outline: none;
         transition: all 0.15s ease;
+        box-sizing: border-box;
     }
     .rs-filter-group select {
         -webkit-appearance: none !important;
@@ -83,17 +89,17 @@
         border-color: #EC3D8F;
         box-shadow: 0 0 0 3px rgba(236, 61, 143, 0.15);
     }
-    .rs-filter-actions {
-        display: flex;
+    .rs-filter-btn-group {
+        display: inline-flex;
         align-items: center;
-        gap: 10px;
-        margin-top: 16px;
-        padding-top: 14px;
-        border-top: 1px dashed #EAECF0;
+        gap: 8px;
+        flex-shrink: 0;
+        margin-bottom: 0;
     }
     .rs-btn-filter-submit {
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 6px;
         height: 38px;
         padding: 0 18px;
@@ -104,6 +110,7 @@
         font-weight: 500;
         font-size: 13.5px;
         cursor: pointer;
+        white-space: nowrap;
         transition: all 0.2s ease;
     }
     .rs-btn-filter-submit:hover {
@@ -113,26 +120,23 @@
     .rs-btn-filter-reset {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
+        justify-content: center;
+        gap: 6px;
         height: 38px;
         padding: 0 14px;
-        background-color: #F2F4F7;
-        color: #344054;
-        border: 1px solid #D0D5DD;
+        background-color: #FEF3F2;
+        color: #B42318;
+        border: 1px solid #FECDCA;
         border-radius: 8px;
         font-size: 13.5px;
         font-weight: 500;
         text-decoration: none;
+        white-space: nowrap;
         transition: all 0.2s ease;
     }
     .rs-btn-filter-reset:hover {
-        background-color: #E4E7EC;
-        color: #101828;
-    }
-    .filter-result-hint {
-        font-size: 13px;
-        color: #667085;
-        margin-left: 6px;
+        background-color: #FEE4E2;
+        color: #912018;
     }
     .rs-card-title-bar {
         padding: 16px 20px 14px 20px;
@@ -475,183 +479,73 @@
 
         {{-- Filter Bar --}}
         <form method="GET" action="{{ route('don-hang.index') }}" class="rs-filter-bar">
-            <div class="rs-filter-grid">
-
-                {{-- Trạng thái thanh toán --}}
-                <div class="rs-filter-group">
-                    <label>Thanh Toán</label>
-                    <select name="trang_thai_thanh_toan">
-                        <option value="">— Tất cả —</option>
-                        <option value="CHUA_THANH_TOAN" {{ request('trang_thai_thanh_toan') === 'CHUA_THANH_TOAN' ? 'selected' : '' }}>
-                            Chưa thanh toán
-                        </option>
-                        <option value="DA_THANH_TOAN" {{ request('trang_thai_thanh_toan') === 'DA_THANH_TOAN' ? 'selected' : '' }}>
-                            Đã thanh toán
-                        </option>
-                    </select>
-                </div>
-
-                {{-- Tổng tiền từ --}}
-                <div class="rs-filter-group">
-                    <label>Tổng tiền từ (₫)</label>
-                    <input type="number" name="tu_tien"
-                           placeholder="VD: 100000"
-                           value="{{ request('tu_tien') }}"
-                           min="0" step="1000">
-                </div>
-
-                {{-- Tổng tiền đến --}}
-                <div class="rs-filter-group">
-                    <label>Tổng tiền đến (₫)</label>
-                    <input type="number" name="den_tien"
-                           placeholder="VD: 500000"
-                           value="{{ request('den_tien') }}"
-                           min="0" step="1000">
-                </div>
-
-                {{-- Từ ngày --}}
-                <div class="rs-filter-group">
-                    <label>Từ ngày</label>
-                    <input type="date" name="tu_ngay" value="{{ request('tu_ngay') }}">
-                </div>
-
-                {{-- Đến ngày --}}
-                <div class="rs-filter-group">
-                    <label>Đến ngày</label>
-                    <input type="date" name="den_ngay" value="{{ request('den_ngay') }}">
-                </div>
-
+            {{-- Trạng thái thanh toán --}}
+            <div class="rs-filter-group" style="flex: 1 1 140px; min-width: 130px;">
+                <label>Thanh Toán</label>
+                <select name="trang_thai_thanh_toan">
+                    <option value="">— Tất cả —</option>
+                    <option value="CHUA_THANH_TOAN" {{ request('trang_thai_thanh_toan') === 'CHUA_THANH_TOAN' ? 'selected' : '' }}>
+                        Chưa thanh toán
+                    </option>
+                    <option value="DA_THANH_TOAN" {{ request('trang_thai_thanh_toan') === 'DA_THANH_TOAN' ? 'selected' : '' }}>
+                        Đã thanh toán
+                    </option>
+                </select>
             </div>
 
-            <div class="rs-filter-actions">
-                <button type="submit" class="rs-btn-filter-submit"><i class="bi bi-search"></i> Lọc kết quả</button>
-                @if(request()->hasAny(['trang_thai_thanh_toan','tu_tien','den_tien','tu_ngay','den_ngay']))
-                    <a href="{{ route('don-hang.index') }}" class="rs-btn-filter-reset"><i class="bi bi-arrow-clockwise"></i> Đặt lại</a>
-                    <span class="filter-result-hint">
-                        Đang lọc — <strong>{{ $donHangs->total() }}</strong> kết quả
-                    </span>
+            {{-- Tổng tiền từ --}}
+            <div class="rs-filter-group" style="flex: 1 1 130px; min-width: 120px;">
+                <label>Tổng tiền từ (₫)</label>
+                <input type="number" name="tu_tien"
+                       placeholder="VD: 100000"
+                       value="{{ request('tu_tien') }}"
+                       min="0" step="1000">
+            </div>
+
+            {{-- Tổng tiền đến --}}
+            <div class="rs-filter-group" style="flex: 1 1 130px; min-width: 120px;">
+                <label>Tổng tiền đến (₫)</label>
+                <input type="number" name="den_tien"
+                       placeholder="VD: 500000"
+                       value="{{ request('den_tien') }}"
+                       min="0" step="1000">
+            </div>
+
+            {{-- Từ ngày --}}
+            <div class="rs-filter-group" style="flex: 1 1 140px; min-width: 130px;">
+                <label>Từ ngày</label>
+                <input type="date" name="tu_ngay" value="{{ request('tu_ngay') }}">
+            </div>
+
+            {{-- Đến ngày --}}
+            <div class="rs-filter-group" style="flex: 1 1 140px; min-width: 130px;">
+                <label>Đến ngày</label>
+                <input type="date" name="den_ngay" value="{{ request('den_ngay') }}">
+            </div>
+
+            {{-- Nút lọc và Bỏ lọc (chỉ hiện khi có lọc) --}}
+            <div class="rs-filter-btn-group">
+                <button type="submit" class="rs-btn-filter-submit">
+                    <i class="bi bi-search"></i>
+                    <span>Lọc kết quả</span>
+                </button>
+
+                @if(request()->anyFilled(['trang_thai_thanh_toan','tu_tien','den_tien','tu_ngay','den_ngay']))
+                    <a href="{{ route('don-hang.index') }}" class="rs-btn-filter-reset" title="Bỏ lọc">
+                        <i class="bi bi-x-lg"></i>
+                        <span>Bỏ lọc</span>
+                    </a>
                 @endif
-            <div class="table-meta">
-        <span>Tổng: <strong>{{ $donHangs->total() }}</strong> đơn đang chờ duyệt</span>
-        <span>Trang {{ $donHangs->currentPage() }} / {{ $donHangs->lastPage() }}</span>
-    </div>
-    {{-- ⚠️ Cảnh báo không có shipper khả dụng --}}
-    @if($shippers->isEmpty())
-        <div style="padding:12px;background:#fff3cd;border-radius:6px;margin:0 0 12px 0;color:#856404">
-            ⚠️ Không có shipper nào đang ONLINE hoặc tất cả đã đủ 10/10 đơn.
-            Vui lòng chờ shipper bật trạng thái hoặc giao bớt đơn.
-        </div>
-    @endif
-
-            <div class="tbl-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Mã ĐH</th>
-                            <th>Khách Hàng</th>
-                            <th>Ngày Đặt</th>
-                            <th>Tổng Tiền</th>
-                            <th>Thanh Toán</th>
-                            <th>Địa Chỉ Giao</th>
-                            <th>SĐT</th>
-                            <th>Chọn Shipper</th>
-                            <th>Hành Động</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($donHangs as $index => $dh)
-                        <tr id="row-{{ $dh->ma_hoa_don }}">
-                            {{-- STT --}}
-                            <td class="td-mono" style="color:var(--ink-muted)">
-                                {{ $donHangs->firstItem() + $index }}
-                            </td>
-
-                            {{-- Mã đơn hàng --}}
-                            <td class="td-mono">
-                                HD-{{ str_pad($dh->ma_hoa_don, 4, '0', STR_PAD_LEFT) }}
-                                @foreach($boTheoDon->get($dh->ma_hoa_don, collect()) as $bo)
-                                    <small style="display:block;white-space:normal">{{ $bo->ten_bo_hoa }} × {{ $bo->so_luong }} · {{ $bo->size }} · {{ $bo->concept }}</small>
-                                    @if($bo->loi_nhan)<small style="display:block;white-space:normal">Lời nhắn: {{ $bo->loi_nhan }}</small>@endif
-                                @endforeach
-                            </td>
-
-                            {{-- Tên khách hàng --}}
-                            <td>{{ $dh->khachHang?->ten_khach_hang ?? '—' }}</td>
-
-                            {{-- Ngày đặt --}}
-                            <td class="td-mono">
-                                {{ $dh->ngay_dat?->format('d/m/Y H:i') ?? '—' }}
-                            </td>
-
-                            {{-- Tổng tiền --}}
-                            <td class="td-mono" style="font-weight:700">
-                                {{ number_format($dh->tong_tien, 0, ',', '.') }}₫
-                            </td>
-
-                            {{-- Trạng thái thanh toán --}}
-                            <td>
-                                <span class="badge {{ $dh->trang_thai_thanh_toan === 'DA_THANH_TOAN' ? 'badge-paid' : 'badge-unpaid' }}">
-                                    {{ $dh->trang_thai_thanh_toan === 'DA_THANH_TOAN' ? 'Đã TT' : 'Chưa TT' }}
-                                </span>
-                            </td>
-
-                            {{-- Địa chỉ giao (rút gọn, hover xem đầy đủ) --}}
-                            <td title="{{ $dh->dia_chi_giao }}" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-                                {{ $dh->dia_chi_giao ?? '—' }}
-                            </td>
-
-                            {{-- Số điện thoại --}}
-                            <td class="td-mono">{{ $dh->so_dien_thoai ?? '—' }}</td>
-
-                            {{-- Dropdown chọn shipper ──────────────────────────────
-                                 Bắt buộc phải chọn trước khi ấn "Xác nhận".
-                                 ngay_giao sẽ null cho đến khi shipper hoàn tất giao.
-                            --}}
-                            <td>
-                                <select class="shipper-select"
-                            id="shipper-{{ $dh->ma_hoa_don }}"
-                    data-id="{{ $dh->ma_hoa_don }}">
-                     <option value="">— Chọn shipper —</option>
-                         @foreach($shippers as $sp)
-                      <option value="{{ $sp->ma_nhan_vien }}" data-ten="{{ $sp->ten_nhan_vien }}">
-                      {{ $sp->ten_nhan_vien }} ({{ $sp->so_don_live }}/10)
-                       </option>
-                             @endforeach
-                            </select>
-                            </td>
-
-                            {{-- Hành động --}}
-                            <td>
-                                <div class="td-actions">
-                                    <button class="btn btn-success"
-                                            onclick="confirmOrder({{ $dh->ma_hoa_don }})"
-                                            title="Phải chọn shipper trước. Xác nhận → trạng thái chuyển CONFIRMED.">
-                                        ✔ Xác nhận
-                                    </button>
-                                    <button class="btn btn-danger"
-                                            onclick="openCancelDialog({{ $dh->ma_hoa_don }}, 'HD-{{ str_pad($dh->ma_hoa_don, 4, '0', STR_PAD_LEFT) }}')"
-                                            title="Từ chối → trạng thái chuyển CANCELLED.">
-                                        ✕ Từ chối
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="10">
-                                <div class="empty-state">
-                                    <div class="empty-icon">◻</div>
-                                    <p>Không có đơn hàng nào đang chờ xử lý.</p>
-                                </div>
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
             </div>
-
         </form>
+
+        {{-- ⚠️ Cảnh báo không có shipper khả dụng --}}
+        @if($shippers->isEmpty())
+            <div style="padding:12px 20px;background:#FFFAEB;border:1px solid #FEF08A;border-radius:8px;margin:16px 24px 0 24px;color:#B54708;font-size:13.5px;display:flex;align-items:center;gap:8px;">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>Không có shipper nào đang ONLINE hoặc tất cả đã đủ 10/10 đơn. Vui lòng chờ shipper bật trạng thái hoặc giao bớt đơn.</span>
+            </div>
+        @endif
 
         {{-- Card Title Bar --}}
         <div class="rs-card-title-bar">
