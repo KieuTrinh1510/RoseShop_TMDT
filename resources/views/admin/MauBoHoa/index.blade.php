@@ -1651,6 +1651,7 @@
                                 <option value="">-- Tất cả trạng thái --</option>
                                 <option value="ACTIVE">Hiện (Đang dùng)</option>
                                 <option value="INACTIVE">Ẩn</option>
+                                <option value="OUT_OF_STOCK">Hết hàng / Thiếu nguyên liệu</option>
                             </select>
                         </div>
 
@@ -1698,18 +1699,9 @@
                                     <th style="width: 120px; min-width: 120px; text-align: center;">Kiểu dáng</th>
                                     <th style="width: 120px; min-width: 120px; text-align: center;">Concept</th>
                                     <th style="width: 165px; min-width: 165px; text-align: left;">Thời hạn</th>
-                                    <th style="width: 130px; min-width: 130px; text-align: right;">Giá dự kiến</th>
-                                    <th style="width: 95px; min-width: 95px; text-align: center;">Trạng thái</th>
+                                    <th style="width: 160px; min-width: 160px; text-align: right;">Giá vốn / Giá bán dự kiến</th>
+                                    <th style="width: 120px; min-width: 120px; text-align: center;">Trạng thái</th>
                                     <th style="width: 90px; min-width: 90px; text-align: center;">Thao tác</th>
-                                    <th style="width: 60px;">Ảnh</th>
-                                    <th>Tên mẫu</th>
-                                    <th>Size</th>
-                                    <th>Kiểu dáng</th>
-                                    <th>Concept</th>
-                                    <th style="min-width: 120px;">Thời hạn</th>
-                                    <th class="text-end">Giá vốn / Giá bán dự kiến</th>
-                                    <th class="text-center">Trạng thái</th>
-                                    <th class="text-end" style="width: 140px;">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody id="tbody-mau-list">
@@ -1721,7 +1713,7 @@
                                         $hetNL     = count($thieuList) > 0;
                                         $soBoSan   = (int) ($m->so_bo_hoa_chua_ban ?? 0);
                                     @endphp
-                                    <tr class="mau-row" data-name="{{ strtolower($m->ten_mau) }} #{{ $m->ma_mau_bo_hoa }}" data-status="{{ $m->trang_thai }}">
+                                    <tr class="mau-row" data-name="{{ strtolower($m->ten_mau) }} #{{ $m->ma_mau_bo_hoa }}" data-status="{{ $m->trang_thai }}" data-stock="{{ $hetNL ? 'out' : 'ok' }}">
                                         <td style="text-align: center; vertical-align: middle;">
                                             <div class="rs-product-thumb">
                                                 <img src="{{ $boController::anhMau($m) }}"
@@ -1759,8 +1751,6 @@
                                                 </div>
                                             </div>
                                         </td>
-                                        <td style="text-align: right;" class="fw-bold text-success">
-                                            {{ number_format($giaEst, 0, ',', '.') }} đ
                                         <td class="text-end">
                                             <div class="small text-muted text-nowrap">Vốn: <span class="fw-semibold text-secondary">{{ number_format($giaVonEst, 0, ',', '.') }} đ</span></div>
                                             <div class="fw-bold text-nowrap" style="color:var(--rose-primary);">Bán: {{ number_format($giaBanEst, 0, ',', '.') }} đ</div>
@@ -2939,7 +2929,13 @@
         if (currentMauPage > totalPages) currentMauPage = 1;
         if (currentMauPage < 1) currentMauPage = 1;
 
-        mauRows.forEach(r => r.style.display = 'none');
+        mauRows.forEach(r => {
+            r.style.display = 'none';
+            const detail = r.nextElementSibling;
+            if (detail && detail.classList.contains('mau-thieu-row')) {
+                detail.style.display = 'none';
+            }
+        });
 
         const startIdx = (currentMauPage - 1) * perPage;
         const endIdx   = Math.min(startIdx + perPage, total);
@@ -2947,6 +2943,10 @@
         for (let i = startIdx; i < endIdx; i++) {
             if (visibleRows[i]) {
                 visibleRows[i].style.display = '';
+                const detail = visibleRows[i].nextElementSibling;
+                if (detail && detail.classList.contains('mau-thieu-row')) {
+                    detail.style.display = '';
+                }
             }
         }
 
@@ -3052,12 +3052,23 @@
             const rName = r.dataset.name || '';
             const rStatus = r.dataset.status || '';
             const matchQ = !q || rName.includes(q);
-            const matchSt = !st || rStatus === st;
+            const matchSt = !st
+                || (st === 'OUT_OF_STOCK' ? r.dataset.stock === 'out' : rStatus === st);
             return matchQ && matchSt;
         });
 
         renderMauPagination(visibleRows);
     }
+
+    // Bấm "Hết hàng · N" / "Thiếu NL" → ẩn/hiện dòng nguyên liệu thiếu
+    document.querySelectorAll('[data-thieu-toggle]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const row = document.getElementById(btn.dataset.thieuToggle);
+            if (!row) return;
+            const opening = row.classList.toggle('d-none') === false;
+            btn.setAttribute('aria-expanded', opening ? 'true' : 'false');
+        });
+    });
 
     searchMauName?.addEventListener('input', () => applyMauFilter(true));
     filterMauStatus?.addEventListener('change', () => applyMauFilter(true));
