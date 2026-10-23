@@ -6,6 +6,8 @@ const HoaDon = require('../../models/HoaDon');
 const KhachHang = require('../../models/KhachHang');
 const SanPham = require('../../models/SanPham');
 const ChiTietHoaDon = require('../../models/ChiTietHoaDon');
+const BoHoa = require('../../models/BoHoa');
+const MauBoHoa = require('../../models/MauBoHoa');
 const { taoLoi } = require('../../utils/loi');
 
 const NHAN_TRANG_THAI = {
@@ -17,11 +19,23 @@ const NHAN_TRANG_THAI = {
 const INCLUDE_CHI_TIET = {
     model: ChiTietHoaDon,
     as: 'chiTietHoaDon',
-    include: [{
-        model: SanPham,
-        as: 'sanPham',
-        attributes: ['ma_san_pham', 'ten_san_pham', 'loai_san_pham', 'hinh_anh'],
-    }],
+    include: [
+        {
+            model: SanPham,
+            as: 'sanPham',
+            attributes: ['ma_san_pham', 'ten_san_pham', 'loai_san_pham', 'hinh_anh'],
+        },
+        {
+            model: BoHoa,
+            as: 'boHoa',
+            attributes: ['ma_bo_hoa', 'ten_bo_hoa', 'size', 'hinh_anh', 'ma_mau_bo_hoa'],
+            include: [{
+                model: MauBoHoa,
+                as: 'mauBoHoa',
+                attributes: ['ma_mau_bo_hoa', 'ten_mau'],
+            }],
+        },
+    ],
 };
 
 const INCLUDE_KHACH = {
@@ -44,9 +58,28 @@ function moTaSanPham(dsChiTiet) {
     return dsChiTiet.map((ct) => `${ct.tenHienThi} (×${ct.so_luong})`).join(', ');
 }
 
-// Cần đã nạp chiTietHoaDon -> sanPham
+/**
+ * Lọc danh sách chi tiết để hiển thị/mô tả:
+ *   - Có bó hoa → chỉ trả dòng bó (ẩn dòng con nguyên liệu).
+ *   - Không có bó → trả toàn bộ (sản phẩm lẻ).
+ */
+function locChiTietHienThi(dsChiTiet) {
+    if (!Array.isArray(dsChiTiet) || dsChiTiet.length === 0) return dsChiTiet || [];
+    const coBo = dsChiTiet.some((ct) => ct.ma_bo_hoa);
+    return coBo ? dsChiTiet.filter((ct) => ct.ma_bo_hoa) : dsChiTiet;
+}
+
+/**
+ * Đơn có hoa tươi không?
+ *   - Có bất kỳ dòng chi_tiet_hoa_don nào gắn ma_bo_hoa (bó hoa luôn coi là hoa tươi)
+ *   - HOẶC sản phẩm con có laHoaTuoi = true
+ */
 function coHoaTuoi(dh) {
-    return (dh.chiTietHoaDon || []).some((ct) => ct.sanPham?.laHoaTuoi);
+    return (dh.chiTietHoaDon || []).some((ct) => {
+        if (ct.ma_bo_hoa) return true;
+        if (ct.sanPham?.laHoaTuoi) return true;
+        return false;
+    });
 }
 
 // Thông tin thanh toán của đơn: shipper cần thu tiền mặt hay không
@@ -92,6 +125,7 @@ module.exports = {
     INCLUDE_KHACH,
     timDonHoacNemLoi,
     moTaSanPham,
+    locChiTietHienThi,
     coHoaTuoi,
     thongTinThanhToan,
     tomTatDon,

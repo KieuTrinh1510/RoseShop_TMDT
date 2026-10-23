@@ -472,7 +472,9 @@
                                   || request()->routeIs('admin.shipper*');
 
                 // Giao hàng: admin.giao-hang.*
-                $isGiaoHangActive = request()->routeIs('admin.giao-hang.*');
+                // Giao hàng: admin.giao-hang.* + admin.hoan-hang.* (Flash Sale hàng hoàn)
+                $isGiaoHangActive = request()->routeIs('admin.giao-hang.*')
+                                 || request()->routeIs('admin.hoan-hang.*');
 
                 // Báo cáo & Thống kê: bao-cao.*, admin.bao-cao.*
                 $isBaoCaoActive = request()->routeIs('bao-cao.*') 
@@ -633,8 +635,11 @@
                             <a href="{{ route('admin.giao-hang.theo-doi') }}" class="submenu-item {{ request()->routeIs('admin.giao-hang.theo-doi*') ? 'active' : '' }}">
                                 Theo dõi giao hàng
                             </a>
-                            <a href="{{ route('admin.giao-hang.hang-hoan') }}" class="submenu-item {{ request()->routeIs('admin.giao-hang.hang-hoan*') ? 'active' : '' }}">
-                                Hàng hoàn
+                                                        <a href="{{ route('admin.giao-hang.that-bai') }}" class="submenu-item {{ request()->routeIs('admin.giao-hang.that-bai*') ? 'active' : '' }}">
+                                Đơn giao thất bại
+                            </a>
+                            <a href="{{ route('admin.hoan-hang.flash-sale.index') }}" class="submenu-item {{ request()->routeIs('admin.hoan-hang.flash-sale*') ? 'active' : '' }}">
+                                Flash Sale hàng hoàn
                             </a>
                             <a href="{{ route('admin.giao-hang.doi-soat-cod') }}" class="submenu-item {{ request()->routeIs('admin.giao-hang.doi-soat-cod*') ? 'active' : '' }}">
                                 Đối soát COD

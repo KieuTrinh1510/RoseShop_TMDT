@@ -18,6 +18,7 @@ class InventoryReservation extends Model
         'ma_san_pham',
         'ma_chi_tiet_nhap',
         'ma_bo_hoa',
+        'ma_flash_sale',
         'so_luong',
         'trang_thai',
     ];

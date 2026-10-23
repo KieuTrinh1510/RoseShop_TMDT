@@ -6,6 +6,21 @@ const NhanVien = require('../../../../models/NhanVien');
 const NguoiDung = require('../../../../models/NguoiDung');
 const { taoLoi } = require('../../../../utils/loi');
 
+// Email đã thuộc tài khoản khác chưa? (nhan_vien trừ chính mình + khach_hang)
+async function emailDaDuocDung(maNhanVien, email) {
+    const sequelize = NhanVien.sequelize;
+    const [nv] = await sequelize.query(
+        'SELECT ma_nhan_vien FROM nhan_vien WHERE LOWER(email) = LOWER(:email) AND ma_nhan_vien <> :ma LIMIT 1',
+        { replacements: { email, ma: maNhanVien } }
+    );
+    if (nv.length > 0) return true;
+    const [kh] = await sequelize.query(
+        'SELECT 1 FROM khach_hang WHERE LOWER(email) = LOWER(:email) LIMIT 1',
+        { replacements: { email } }
+    );
+    return kh.length > 0;
+}
+
 async function getThongTin(maNhanVien) {
     const nv = await NhanVien.findByPk(maNhanVien);
     if (!nv) {
@@ -53,6 +68,12 @@ async function updateInfo(maNhanVien, { ten_nhan_vien, so_dien_thoai, email } = 
     if (email !== undefined && email !== null && email !== '') {
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email))) {
             throw taoLoi(400, 'INVALID_EMAIL', 'Email không hợp lệ.');
+        }
+        const emailMoi = String(email).trim();
+        const doi = emailMoi.toLowerCase() !== String(nv.email || '').trim().toLowerCase();
+        if (doi && await emailDaDuocDung(maNhanVien, emailMoi)) {
+            throw taoLoi(409, 'EMAIL_ALREADY_USED',
+                'Email này đã được sử dụng cho tài khoản khác.');
         }
     }
 

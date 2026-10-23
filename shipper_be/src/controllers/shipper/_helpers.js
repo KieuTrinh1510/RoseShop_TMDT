@@ -1,9 +1,9 @@
 // src/controllers/shipper/_helpers.js
 // 2 helper dùng chung cho 4 controller tab.
 
-// Mã shipper lấy từ user đã đăng nhập
+// Mã shipper lấy từ JWT đã verify (authMiddleware gắn req.user). Không đọc từ header/body của client.
 function layMaNhanVien(req) {
-    return Number(req.user.ma_nguoi_dung);
+    return Number(req.user.ma_nhan_vien);
 }
 
 // Chạy 1 việc, thành công thì trả data, lỗi thì trả status + code mà service đã ném

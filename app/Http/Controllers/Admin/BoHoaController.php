@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\{BoHoa, MauBoHoa, PhuPhiBoHoa, SanPham, ChiTietNhap, HoaDon, BaoCaoHangHong, InventoryReservation};
+use App\Models\{BoHoa, MauBoHoa, PhuPhiBoHoa, SanPham, ChiTietNhap, HoaDon, BaoCaoHangHong, InventoryReservation, ChiTietHangHoan, HangHoan, FlashSale, PhatShipper};
 use App\Services\InventoryReservationService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -45,6 +45,11 @@ class BoHoaController extends Controller
     ];
 
     public const MA_NHAN_VIEN_MAC_DINH = 7;
+
+    // [MỚI] Nguồn báo hỏng bó hoa
+    public const NGUON_HONG_HET_HAN         = 'HET_HAN';          // luồng cũ (bó ACTIVE hết hạn)
+    public const NGUON_HONG_GIAO_THAT_BAI   = 'GIAO_HANG_THAT_BAI'; // bó hoàn về kho bị hỏng (kể cả bó Flash Sale hỏng sau đó)
+    public const NGUON_HONG_XA_BO           = 'XA_BO';            // xả bó: toàn bộ phần còn lại bị hủy
 
     public static function getDuLieuBoHoa(Request $r): array
     {
@@ -100,6 +105,21 @@ class BoHoaController extends Controller
                 'so_bien_the'   => $group->count(),
             ];
         })->values();
+        $boIds = $merged->pluck('ma_bo_hoa')->all();
+
+$flashSaleMap = \App\Models\FlashSale::whereIn('ma_bo_hoa', $boIds)
+    ->where('trang_thai', 'DANG_BAN')
+    ->where('ket_thuc', '>', now())
+    ->whereColumn('so_luong_da_ban', '<', 'so_luong')
+    ->selectRaw('ma_bo_hoa, SUM(so_luong - so_luong_da_ban) as tong_con')
+    ->groupBy('ma_bo_hoa')
+    ->pluck('tong_con', 'ma_bo_hoa')
+    ->toArray();
+
+$merged = $merged->map(function ($item) use ($flashSaleMap) {
+    $item->flash_sale = (int) ($flashSaleMap[$item->ma_bo_hoa] ?? 0);
+    return $item;
+});
 
         $page    = max(1, (int) $r->input('page_bo_hoa', 1));
         $perPage = (int) $r->input('per_page_bo_hoa', 10);
@@ -381,7 +401,9 @@ class BoHoaController extends Controller
 
     public static function phanBo(array $rows, bool $truKho = true, bool $khachMua = false): array
     {
-        if (DB::transactionLevel() === 0) throw new \LogicException('Phân bổ cần transaction.');
+        if ($truKho && DB::transactionLevel() === 0) {
+            throw new \LogicException('Phân bổ cần transaction.');
+        }
         $result = [];
         foreach (collect($rows)->sortBy('ma_san_pham')->groupBy('ma_san_pham') as $id => $items) {
             $sp = SanPham::whereKey($id)->lockForUpdate()->firstOrFail();
@@ -801,7 +823,10 @@ class BoHoaController extends Controller
     {
         return $this->json(function () use ($r, $id) {
             $d = $r->validate([
-                'so_luong_hong' => 'required|integer|min:1',
+                'so_luong_hong' => 'required_unless:nguon_hong,XA_BO|nullable|integer|min:1',
+                // [MỚI] nguồn hỏng + dòng hàng hoàn (bắt buộc khi hỏng do giao thất bại / xả bó)
+                'nguon_hong'    => 'nullable|in:HET_HAN,GIAO_HANG_THAT_BAI,XA_BO',
+                'ma_chi_tiet_hang_hoan' => 'required_if:nguon_hong,GIAO_HANG_THAT_BAI,XA_BO|nullable|integer|exists:chi_tiet_hang_hoan,ma_chi_tiet_hang_hoan',
                 'ly_do'         => 'required|string|max:255',
                 'ghi_chu'       => 'nullable|string|max:1000',
             ], [
@@ -811,7 +836,17 @@ class BoHoaController extends Controller
                 'ly_do.required'         => 'Vui lòng nhập lý do hỏng.',
                 'ly_do.max'              => 'Lý do hỏng không vượt quá 255 ký tự.',
                 'ghi_chu.max'            => 'Ghi chú không vượt quá 1000 ký tự.',
+                'so_luong_hong.required_unless' => 'Vui lòng nhập số lượng hỏng.',
+                'nguon_hong.in'          => 'Nguồn hỏng không hợp lệ.',
+                'ma_chi_tiet_hang_hoan.required_if' => 'Thiếu dòng hàng hoàn cần ghi nhận hỏng.',
+                'ma_chi_tiet_hang_hoan.exists'      => 'Dòng hàng hoàn không tồn tại.',
             ]);
+
+            // [MỚI] Hỏng do giao hàng thất bại / xả bó → xử lý trên dòng hàng hoàn, KHÔNG đụng luồng hết hạn cũ.
+            $nguon = $d['nguon_hong'] ?? self::NGUON_HONG_HET_HAN;
+            if ($nguon !== self::NGUON_HONG_HET_HAN) {
+                return DB::transaction(fn () => $this->baoHongHangHoan((int) $id, $d, $nguon), 3);
+            }
 
             return DB::transaction(function () use ($d, $id, $r) {
                 $bo = BoHoa::with('chiTietBoHoa')->whereKey($id)->lockForUpdate()->firstOrFail();
@@ -857,6 +892,162 @@ class BoHoaController extends Controller
                 return $bo->fresh();
             });
         }, 'Đã ghi nhận báo cáo hỏng.');
+    }
+
+    /**
+     * [MỚI] Ghi nhận HỎNG cho dòng bó hoa nằm trong hàng hoàn (sau khi hàng hoàn đã DA_KIEM_TRA).
+     *
+     * - GIAO_HANG_THAT_BAI: hỏng `so_luong_hong` đơn vị CHƯA BÁN của bó hoàn (kể cả bó đang mở Flash Sale).
+     * - XA_BO: toàn bộ phần chưa bán của bó bị hủy/hỏng.
+     *
+     * Quy tắc:
+     *  - KHÔNG thu hồi giấy gói / ruy băng / phụ kiện, KHÔNG cộng lại tồn kho nguyên liệu
+     *    (không gọi hoanKho, không đụng SanPham / ChiTietNhap).
+     *  - KHÔNG tạo Flash Sale mới; Flash Sale đang mở của dòng này bị giảm/đóng phần chưa bán.
+     *  - KHÔNG tạo phạt shipper mới: mien_phat_shipper = true, tien_shipper_chiu = 0;
+     *    phần shipper từng chịu chuyển sang hệ thống chịu, phiếu phạt CHUA_THU (nếu có) được giảm tương ứng.
+     *  - Không sửa bản ghi bo_hoa (bó đã gắn ma_hoa_don của đơn hủy nên ton_thuc_te = 0, không bán lại được).
+     */
+    protected function baoHongHangHoan(int $maBoHoa, array $d, string $nguon): array
+    {
+        $bo = BoHoa::whereKey($maBoHoa)->lockForUpdate()->firstOrFail();
+
+        $ct = ChiTietHangHoan::whereKey((int) $d['ma_chi_tiet_hang_hoan'])->lockForUpdate()->first();
+        if (!$ct) self::loi('Không tìm thấy dòng hàng hoàn.');
+        if ((int) $ct->ma_bo_hoa !== (int) $bo->ma_bo_hoa) self::loi('Dòng hàng hoàn này không thuộc bó hoa đã chọn.');
+
+        $hangHoan = HangHoan::whereKey($ct->ma_hang_hoan)->lockForUpdate()->first();
+        if (!$hangHoan || $hangHoan->trang_thai !== 'DA_KIEM_TRA') {
+            self::loi('Hàng hoàn chưa được kiểm tra xong. Vui lòng kiểm tra hàng của đơn trước.');
+        }
+        if ($ct->ket_qua === 'HONG') self::loi('Dòng hàng hoàn này đã được ghi nhận hỏng trước đó.');
+        if ($ct->ket_qua !== 'FLASH_SALE') self::loi('Chỉ ghi nhận hỏng cho bó hoàn có kết quả kiểm tra FLASH_SALE.');
+
+        // ── Số lượng chưa bán: phần chưa phân bổ Flash Sale + phần chưa bán trong các Flash Sale của dòng này ──
+        $dangMo = ['NHAP', 'DANG_BAN', 'AN'];
+        $flashs = FlashSale::where('ma_chi_tiet_hang_hoan', $ct->ma_chi_tiet_hang_hoan)
+            ->orderBy('ma_flash_sale')->lockForUpdate()->get();
+
+        $chuaBanTrongFlash = (int) $flashs->whereIn('trang_thai', $dangMo)
+            ->sum(fn ($f) => max(0, (int) $f->so_luong - (int) $f->so_luong_da_ban));
+        $chuaPhanBo = max(0, (int) $ct->so_luong_con_lai_flash_sale);
+        $coTheHong  = $chuaPhanBo + $chuaBanTrongFlash;
+
+        if ($coTheHong < 1) self::loi('Không còn số lượng chưa bán để ghi nhận hỏng (đã bán hết hoặc đã xử lý).');
+
+        $qty = $nguon === self::NGUON_HONG_XA_BO ? $coTheHong : (int) $d['so_luong_hong'];
+        if ($qty < 1) self::loi('Số lượng hỏng phải từ 1 trở lên.');
+        if ($qty > $coTheHong) {
+            self::loi("Số lượng hỏng ({$qty}) vượt quá số lượng chưa bán của bó hoàn ({$coTheHong}).");
+        }
+
+        // ── Trừ số lượng: ưu tiên phần chưa phân bổ, sau đó giảm Flash Sale đang mở ──
+        $canTru       = $qty;
+        $truChuaPhan  = min($canTru, $chuaPhanBo);
+        $chuaPhanMoi  = $chuaPhanBo - $truChuaPhan;
+        $canTru      -= $truChuaPhan;
+
+        foreach ($flashs->whereIn('trang_thai', $dangMo) as $f) {
+            if ($canTru <= 0) break;
+            $conLaiF = max(0, (int) $f->so_luong - (int) $f->so_luong_da_ban);
+            $lay     = min($canTru, $conLaiF);
+            if ($lay <= 0) continue;
+
+            $f->so_luong = (int) $f->so_luong - $lay;
+            if ($f->so_luong <= (int) $f->so_luong_da_ban) {
+                $f->trang_thai = (int) $f->so_luong_da_ban > 0 ? 'HET_HANG' : 'KET_THUC';
+            }
+            $f->save();
+            $canTru -= $lay;
+        }
+
+        // ── Tính lại tiền theo đơn giá đã snapshot ──
+        $conBanCu    = (int) $ct->so_luong_con_ban_duoc;
+        $conBanMoi   = max(0, $conBanCu - $qty);
+        $hongMoi     = (int) $ct->so_luong_hong + $qty;
+        $giaVon      = (float) $ct->gia_von_snapshot ?: (float) ($bo->gia_von ?? 0);
+        $haoHutDV    = $conBanCu > 0 ? (float) $ct->tien_hao_hut_flash_sale / $conBanCu : 0.0;
+        $doanhThuDV  = $conBanCu > 0 ? (float) $ct->doanh_thu_thanh_ly / $conBanCu : 0.0;
+
+        $thietHai    = round($hongMoi * $giaVon, 2);
+        $haoHut      = round($conBanMoi * $haoHutDV, 2);
+        $doanhThu    = round($conBanMoi * $doanhThuDV, 2);
+
+        $shipperCu   = (float) $ct->tien_shipper_chiu;
+        $hongCu      = (float) $ct->tien_thiet_hai_hang_hong;
+        $haoCu       = (float) $ct->tien_hao_hut_flash_sale;
+
+        $conSauHong  = $coTheHong - $qty;
+        $ketQua      = $conSauHong > 0 ? 'FLASH_SALE' : 'HONG';
+
+        $ghiChu = trim(
+            ($ct->ghi_chu ? $ct->ghi_chu . ' | ' : '')
+            . "[{$nguon}] {$d['ly_do']}"
+            . (!empty($d['ghi_chu']) ? ' - ' . $d['ghi_chu'] : '')
+        );
+
+        $ct->update([
+            'so_luong_hong'               => $hongMoi,
+            'so_luong_con_ban_duoc'       => $conBanMoi,
+            'so_luong_con_lai_flash_sale' => $chuaPhanMoi,
+            'doanh_thu_thanh_ly'          => $doanhThu,
+            'tien_thiet_hai_hang_hong'    => $thietHai,
+            'tien_hao_hut_flash_sale'     => $haoHut,
+            'tien_he_thong_chiu'          => round($thietHai + $haoHut, 2), // shipper = 0 → hệ thống chịu toàn bộ
+            'tien_shipper_chiu'           => 0,
+            'mien_phat_shipper'           => true,
+            'ket_qua'                     => $ketQua,
+            'ghi_chu'                     => $ghiChu,
+        ]);
+
+        $luuY = $shipperCu > 0
+            ? $this->dieuChinhPhatShipperHangHoan($hangHoan, $shipperCu, $hongCu, $haoCu)
+            : null;
+
+        return [
+            'ma_chi_tiet_hang_hoan' => $ct->ma_chi_tiet_hang_hoan,
+            'ma_bo_hoa'             => $bo->ma_bo_hoa,
+            'nguon_hong'            => $nguon,
+            'so_luong_hong_them'    => $qty,
+            'so_luong_hong_tong'    => $hongMoi,
+            'ket_qua'               => $ketQua,
+            'mien_phat_shipper'     => true,
+            'tien_he_thong_chiu'    => round($thietHai + $haoHut, 2),
+            'tien_shipper_chiu'     => 0,
+            'luu_y'                 => $luuY,
+        ];
+    }
+
+    /**
+     * [MỚI] Miễn phạt shipper cho phần bó hỏng: GIẢM phiếu phạt hiện có (không tạo phiếu mới).
+     * Phiếu đã DA_THU thì không tự đổi tiền, trả lưu ý để xử lý hoàn tiền thủ công.
+     */
+    protected function dieuChinhPhatShipperHangHoan(HangHoan $hangHoan, float $shipperCu, float $hongCu, float $haoCu): ?string
+    {
+        $phat = PhatShipper::where('ma_giao_hang_that_bai', $hangHoan->ma_giao_hang_that_bai)
+            ->orderBy('ma_phat_shipper')->lockForUpdate()->first();
+
+        if (!$phat) return 'Không tìm thấy phiếu phạt shipper để điều chỉnh.';
+        if ($phat->trang_thai === 'MIEN_PHAT') return null;
+        if ($phat->trang_thai === 'DA_THU') {
+            return 'Phiếu phạt shipper đã thu tiền: cần hoàn tiền cho shipper thủ công.';
+        }
+
+        $tongCu   = $hongCu + $haoCu;
+        $phanHong = $tongCu > 0 ? round($shipperCu * $hongCu / $tongCu, 2) : 0.0;
+        $phanHao  = round($shipperCu - $phanHong, 2);
+        $conPhat  = max(0.0, round((float) $phat->so_tien - $shipperCu, 2));
+
+        $phat->update([
+            'so_tien'                 => $conPhat,
+            'tien_hang_hong'          => max(0.0, round((float) $phat->tien_hang_hong - $phanHong, 2)),
+            'tien_hao_hut_flash_sale' => max(0.0, round((float) $phat->tien_hao_hut_flash_sale - $phanHao, 2)),
+            'trang_thai'              => $conPhat <= 0 ? 'MIEN_PHAT' : $phat->trang_thai,
+        ]);
+
+        return $conPhat <= 0
+            ? 'Phiếu phạt shipper đã chuyển sang MIEN_PHAT.'
+            : 'Đã giảm khoản phạt shipper tương ứng với phần bó bị hỏng.';
     }
 
     public function chiTietGiaBoHoa(int $id)

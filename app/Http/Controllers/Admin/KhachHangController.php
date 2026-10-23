@@ -7,6 +7,8 @@ use App\Models\KhachHang;
 use App\Models\NguoiDung;
 use App\Models\HoaDon;
 use App\Models\LichSuViPhamCod;
+use App\Models\ViPhamKhachHang;
+use App\Models\ThanhToanViPhamKhachHang;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -77,7 +79,15 @@ class KhachHangController extends Controller
             ->unique()
             ->toArray();
 
+        // 8. Khách còn vi phạm chưa thanh toán/chưa gỡ (để khóa nút "Khôi phục quyền COD")
+        $coViPhamChuaGoIds = ViPhamKhachHang::where('da_go', false)
+            ->pluck('ma_khach_hang')
+            ->unique()
+            ->values()
+            ->toArray();
+
         return view('admin.KhachHang', compact(
+            'coViPhamChuaGoIds',
             'khachHangs',
             'tongKhachHang',
             'khachThanThiet',
@@ -178,6 +188,18 @@ class KhachHangController extends Controller
             return back()->with('error', "Khách hàng \"{$khachHang->ten_khach_hang}\" hiện đang được phép sử dụng COD bình thường!");
         }
 
+        // Còn khoản vi phạm (đơn bom COD) chưa thanh toán/chưa gỡ → admin KHÔNG được khôi phục COD.
+        // Phải để khách thanh toán, hoặc gỡ vi phạm trước (khi hết vi phạm hệ thống tự mở lại COD).
+        $soViPhamChuaGo = ViPhamKhachHang::where('ma_khach_hang', $khachHang->ma_khach_hang)
+            ->where('da_go', false)
+            ->count();
+        if ($soViPhamChuaGo > 0) {
+            return back()->with('error',
+                "Không thể khôi phục quyền COD: khách hàng \"{$khachHang->ten_khach_hang}\" còn {$soViPhamChuaGo} khoản vi phạm chưa thanh toán. "
+                . 'Khách cần thanh toán các khoản này (hoặc gỡ vi phạm) thì quyền COD mới được khôi phục.'
+            );
+        }
+
         $request->validate([
             'ly_do' => 'required|string|max:500',
         ], [
@@ -240,6 +262,143 @@ class KhachHangController extends Controller
             $user->save();
             $actionText = $isLocking ? 'khóa' : 'mở khóa';
             return back()->with('success', "Đã {$actionText} tài khoản khách hàng \"{$khachHang->ten_khach_hang}\" thành công!");
+        }
+    }
+
+        /**
+     * [MỚI] Admin xóa (gỡ) một vi phạm của khách hàng.
+     * Soft delete: đánh dấu da_go = true + ghi lý do + người thực hiện.
+     * Cập nhật lại quyen_cod nếu hết vi phạm chưa gỡ.
+     */
+    public function xoaViPham(Request $request, $id)
+    {
+        $request->validate([
+            'ly_do_go' => 'required|string|max:500',
+        ], [
+            'ly_do_go.required' => 'Vui lòng nhập lý do gỡ vi phạm.',
+            'ly_do_go.max'      => 'Lý do gỡ không vượt quá 500 ký tự.',
+        ]);
+
+        $viPham = ViPhamKhachHang::with('khachHang')->findOrFail($id);
+
+        if ($viPham->da_go) {
+            return back()->with('error', 'Vi phạm này đã được gỡ trước đó.');
+        }
+
+        DB::transaction(function () use ($viPham, $request) {
+            $viPham->update([
+                'da_go'         => true,
+                'ly_do_go'      => $request->ly_do_go,
+                'nguoi_go'      => auth()->user()->ten_dang_nhap ?? 'Admin',
+                'thoi_diem_go'  => now(),
+            ]);
+
+            // Cập nhật lại quyền COD dựa trên số vi phạm CHƯA GỠ còn lại
+            $this->capNhatQuyenCodSauKhiGoViPham(
+                (int) $viPham->ma_khach_hang,
+                'Admin gỡ vi phạm theo yêu cầu.',
+                $viPham->ma_hoa_don ? (int) $viPham->ma_hoa_don : null
+            );
+        });
+
+        return back()->with('success',
+            "Đã gỡ vi phạm #{$viPham->ma_vi_pham} của khách hàng \""
+            . ($viPham->khachHang?->ten_khach_hang ?? '—') . '".'
+        );
+    }
+
+    /**
+     * [MỚI] Admin xác nhận đã nhận tiền chuyển khoản thủ công cho 1 giao dịch vi phạm.
+     */
+    public function xacNhanThanhToanViPham(Request $request, $maThanhToan)
+    {
+        $request->validate([
+            'ghi_chu' => 'nullable|string|max:500',
+        ]);
+
+        $tt = ThanhToanViPhamKhachHang::with('viPham.khachHang')->findOrFail($maThanhToan);
+
+        if ($tt->trang_thai === ThanhToanViPhamKhachHang::TT_DA_THANH_TOAN) {
+            return back()->with('error', 'Giao dịch này đã được xác nhận thanh toán trước đó.');
+        }
+
+        if ($tt->trang_thai === ThanhToanViPhamKhachHang::TT_DA_HUY) {
+            return back()->with('error', 'Giao dịch này đã bị hủy, không thể xác nhận.');
+        }
+
+        DB::transaction(function () use ($tt, $request) {
+            $tt->update([
+                'trang_thai'            => ThanhToanViPhamKhachHang::TT_DA_THANH_TOAN,
+                'thoi_diem_thanh_toan'  => now(),
+                'ghi_chu'               => $request->ghi_chu ?: $tt->ghi_chu,
+            ]);
+
+            // Soft-delete vi phạm tương ứng nếu chưa gỡ
+            $viPham = $tt->viPham;
+            if ($viPham && !$viPham->da_go) {
+                $viPham->update([
+                    'da_go'        => true,
+                    'ly_do_go'     => 'Khách đã thanh toán khoản vi phạm (admin xác nhận thủ công).',
+                    'nguoi_go'     => auth()->user()->ten_dang_nhap ?? 'Admin',
+                    'thoi_diem_go' => now(),
+                ]);
+            }
+
+            // Cập nhật lại quyền COD
+            if ($viPham) {
+                $this->capNhatQuyenCodSauKhiGoViPham(
+                    (int) $viPham->ma_khach_hang,
+                    'Khách đã thanh toán khoản vi phạm.',
+                    $viPham->ma_hoa_don ? (int) $viPham->ma_hoa_don : null
+                );
+            }
+        });
+
+        return back()->with('success', 'Đã xác nhận khách hàng thanh toán vi phạm.');
+    }
+
+    /**
+     * [PRIVATE] Cập nhật quyen_cod của khách sau khi một vi phạm được gỡ.
+     * Nếu không còn vi phạm CHƯA GỠ → CHO_PHEP + gửi thông báo mở lại COD.
+     */
+    private function capNhatQuyenCodSauKhiGoViPham(int $maKhachHang, string $lyDoLog, ?int $maHoaDon = null): void
+    {
+        $khach = KhachHang::whereKey($maKhachHang)->lockForUpdate()->first();
+        if (!$khach) return;
+
+        $conLai = ViPhamKhachHang::where('ma_khach_hang', $maKhachHang)
+            ->where('da_go', false)
+            ->count();
+
+        // Còn vi phạm chưa gỡ → vẫn báo khách biết vừa được gỡ 1 vi phạm
+        // (khi hết sạch vi phạm thì gửi thông báo mở lại COD ở nhánh dưới).
+        if ($conLai > 0) {
+            $maHD = $maHoaDon ? ' của đơn #HD-' . str_pad((string) $maHoaDon, 4, '0', STR_PAD_LEFT) : '';
+            \App\Models\ThongBao::gui(
+                (int) $maKhachHang,
+                'info',
+                "✅ Bạn vừa được gỡ bỏ 1 vi phạm{$maHD}. Bạn còn {$conLai} vi phạm chưa gỡ. Hãy mua sắm trung thực nhé! 💐",
+                $maHoaDon
+            );
+        }
+
+        if ($conLai === 0) {
+            // Mở lại COD
+            $khach->update(['quyen_cod' => 'CHO_PHEP']);
+
+            \App\Models\ThongBao::gui(
+                (int) $maKhachHang,
+                'info',
+                '🎉 Bạn đã được gỡ bỏ toàn bộ vi phạm. Quyền đặt hàng COD đã được khôi phục. Hãy mua sắm trung thực nhé! 💐',
+                null
+            );
+
+            \Log::info("[ViPham] Mở lại COD cho KH#{$maKhachHang}. Lý do: {$lyDoLog}");
+        } else {
+            // Vẫn còn vi phạm chưa gỡ → giữ GIOI_HAN
+            if ($khach->quyen_cod !== 'GIOI_HAN') {
+                $khach->update(['quyen_cod' => 'GIOI_HAN']);
+            }
         }
     }
 

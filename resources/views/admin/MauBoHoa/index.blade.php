@@ -4,6 +4,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
+      
+    <link rel="stylesheet" href="{{ asset('css/Admin/MauBoHoa.css') }}">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -1715,6 +1717,9 @@
                                     @php
                                         $giaVonEst = $m->chiTietMauBoHoa->sum(fn($ct) => ($ct->sanPham?->gia_nhap ?? 0) * $ct->so_luong);
                                         $giaBanEst = round($giaVonEst * 1.5, 2);
+                                        $thieuList = $thieuTheoMau[$m->ma_mau_bo_hoa] ?? [];
+                                        $hetNL     = count($thieuList) > 0;
+                                        $soBoSan   = (int) ($m->so_bo_hoa_chua_ban ?? 0);
                                     @endphp
                                     <tr class="mau-row" data-name="{{ strtolower($m->ten_mau) }} #{{ $m->ma_mau_bo_hoa }}" data-status="{{ $m->trang_thai }}">
                                         <td style="text-align: center; vertical-align: middle;">
@@ -1766,6 +1771,24 @@
                                             @else
                                                 <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">Ẩn</span>
                                             @endif
+
+                                            @if($hetNL)
+                                                <div class="mt-1">
+                                                    <button type="button"
+                                                            class="stock-alert-btn {{ $soBoSan > 0 ? 'is-warn' : 'is-danger' }}"
+                                                            data-thieu-toggle="mau-thieu-{{ $m->ma_mau_bo_hoa }}"
+                                                            aria-expanded="false"
+                                                            aria-controls="mau-thieu-{{ $m->ma_mau_bo_hoa }}"
+                                                            title="Bấm để xem nguyên liệu đang thiếu">
+                                                        <i class="bi bi-exclamation-triangle-fill"></i>
+                                                        {{ $soBoSan > 0 ? 'Thiếu NL' : 'Hết hàng' }} · {{ count($thieuList) }}
+                                                        <i class="bi bi-chevron-down stock-alert-caret"></i>
+                                                    </button>
+                                                    @if($soBoSan > 0)
+                                                        <div class="text-muted" style="font-size:11px;">còn {{ $soBoSan }} bó làm sẵn</div>
+                                                    @endif
+                                                </div>
+                                            @endif
                                         </td>
                                         <td style="text-align: center; white-space: nowrap;">
                                             <div class="rs-action-group">
@@ -1805,6 +1828,62 @@
                                             </div>
                                         </td>
                                     </tr>
+
+                                    {{-- Danh sách nguyên liệu đang thiếu (xổ xuống khi bấm badge) --}}
+                                    @if($hetNL)
+                                        <tr class="mau-thieu-row d-none" id="mau-thieu-{{ $m->ma_mau_bo_hoa }}">
+                                            <td colspan="9" class="p-0 border-0">
+                                                <div>
+                                                    <div class="stock-detail">
+                                                        <div class="stock-detail-title">
+                                                            <i class="bi bi-box-seam me-1"></i>
+                                                            Nguyên liệu không đủ để làm 1 bó «{{ $m->ten_mau }}»
+                                                        </div>
+                                                        <table class="stock-detail-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Nguyên liệu</th>
+                                                                    <th>Vai trò</th>
+                                                                    <th class="text-end">Cần / bó</th>
+                                                                    <th class="text-end">Khả dụng</th>
+                                                                    <th class="text-end">Thiếu</th>
+                                                                    <th class="text-center">Tình trạng</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach($thieuList as $t)
+                                                                    <tr>
+                                                                        <td class="fw-semibold">{{ $t['ten'] }}</td>
+                                                                        <td class="text-muted">{{ $t['vai_tro'] }}</td>
+                                                                        <td class="text-end">{{ $t['can'] }} {{ $t['dvt'] }}</td>
+                                                                        <td class="text-end">{{ $t['con'] }} {{ $t['dvt'] }}</td>
+                                                                        <td class="text-end fw-bold text-danger">{{ $t['thieu'] }} {{ $t['dvt'] }}</td>
+                                                                        <td class="text-center">
+                                                                            @if($t['ngung_ban'])
+                                                                                <span class="summary-badge status-gray">Ngừng bán</span>
+                                                                            @elseif($t['con'] <= 0)
+                                                                                <span class="summary-badge status-danger">Hết hàng</span>
+                                                                            @else
+                                                                                <span class="summary-badge status-warn">Không đủ</span>
+                                                                            @endif
+                                                                        </td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                        <div class="stock-detail-note">
+                                                            Khả dụng = tồn các lô nhập đã xác nhận (chưa quá hạn) trừ hàng đang giữ cho đơn chưa hoàn tất.
+                                                            @if($soBoSan > 0)
+                                                                Mẫu này vẫn còn {{ $soBoSan }} bó làm sẵn nên khách vẫn mua được tới khi hết số bó đó.
+                                                            @else
+                                                                Mẫu này không còn bó làm sẵn nên khách sẽ thấy «Hết hàng» cho tới khi nhập đủ nguyên liệu.
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endif
                                 @empty
                                     <tr>
                                         <td colspan="9" class="text-center py-4 text-muted">

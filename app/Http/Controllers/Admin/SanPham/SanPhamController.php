@@ -57,35 +57,50 @@ class SanPhamController extends Controller
     ];
 
     public function index(Request $request)
-    {
-        $query = SanPham::query()->whereNotIn('loai_san_pham', $this->maLoaiNguyenLieu);
+{
+    $query = SanPham::query()->whereNotIn('loai_san_pham', $this->maLoaiNguyenLieu);
 
-        if ($request->filled('loai_san_pham')) {
-            $query->where('loai_san_pham', $request->loai_san_pham);
-        }
-
-        $perPage = (int) $request->input('per_page', 10);
-        if (!in_array($perPage, [10, 20, 50, 100])) {
-            $perPage = 10;
-        }
-
-        $danhSachSanPham = $query
-            ->with(['chiTietNhaps' => function ($q) {
-                $q->where('so_luong_con_lai', '>', 0)
-                  ->whereHas('phieuNhap', fn($q2) => $q2->where('trang_thai', 'CONFIRMED'))
-                  ->orderBy('gia_nhap', 'asc');
-            }])
-            ->orderBy('ma_san_pham', 'desc')
-            ->paginate($perPage)->withQueryString();
-
-        $danhSachLoai      = $this->danhSachLoai;
-        $danhSachLoaiBanRa = collect($this->danhSachLoai)->except($this->maLoaiNguyenLieu);
-
-        // KHÔNG query NVL, KHÔNG gọi getDuLieuBoHoa() — 2 trang kia tự lo.
-        return view('admin.SanPham.SanPham', compact(
-            'danhSachSanPham', 'danhSachLoai', 'danhSachLoaiBanRa'
-        ));
+    if ($request->filled('loai_san_pham')) {
+        $query->where('loai_san_pham', $request->loai_san_pham);
     }
+
+    $perPage = (int) $request->input('per_page', 10);
+    if (!in_array($perPage, [10, 20, 50, 100])) {
+        $perPage = 10;
+    }
+
+    $danhSachSanPham = $query
+        ->with(['chiTietNhaps' => function ($q) {
+            $q->where('so_luong_con_lai', '>', 0)
+              ->whereHas('phieuNhap', fn($q2) => $q2->where('trang_thai', 'CONFIRMED'))
+              ->orderBy('gia_nhap', 'asc');
+        }])
+        ->orderBy('ma_san_pham', 'desc')
+        ->paginate($perPage)->withQueryString();
+
+    // ─── NEW: Query tồn FlashSale đang bán cho từng sản phẩm trong trang ──
+    $spIds = $danhSachSanPham->pluck('ma_san_pham')->all();
+    $flashSaleMap = \App\Models\FlashSale::whereIn('ma_san_pham', $spIds)
+        ->where('trang_thai', 'DANG_BAN')
+        ->where('ket_thuc', '>', now())
+        ->whereColumn('so_luong_da_ban', '<', 'so_luong')
+        ->selectRaw('ma_san_pham, SUM(so_luong - so_luong_da_ban) as tong_con')
+        ->groupBy('ma_san_pham')
+        ->pluck('tong_con', 'ma_san_pham')
+        ->toArray();
+
+    $danhSachSanPham->getCollection()->transform(function ($sp) use ($flashSaleMap) {
+        $sp->setAttribute('ton_flash_sale', (int) ($flashSaleMap[$sp->ma_san_pham] ?? 0));
+        return $sp;
+    });
+
+    $danhSachLoai      = $this->danhSachLoai;
+    $danhSachLoaiBanRa = collect($this->danhSachLoai)->except($this->maLoaiNguyenLieu);
+
+    return view('admin.SanPham.SanPham', compact(
+        'danhSachSanPham', 'danhSachLoai', 'danhSachLoaiBanRa'
+    ));
+}
 
     public function store(Request $request)
     {

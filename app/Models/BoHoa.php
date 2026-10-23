@@ -126,6 +126,16 @@ class BoHoa extends Model
         );
     }
 
+    public function chiTietHangHoan()
+    {
+        return $this->hasMany(ChiTietHangHoan::class, 'ma_bo_hoa', 'ma_bo_hoa');
+    }
+
+    public function flashSales()
+    {
+        return $this->hasMany(FlashSale::class, 'ma_bo_hoa', 'ma_bo_hoa');
+    }
+
     public function getTonThucTeAttribute(): int
     {
         return ($this->trang_thai === 'ACTIVE' && is_null($this->ma_hoa_don)) ? (int) $this->so_luong : 0;

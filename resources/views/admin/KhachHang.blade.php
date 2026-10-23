@@ -548,6 +548,7 @@
                                 <th style="width: 130px;">Loại ghi nhận</th>
                                 <th>Lý do</th>
                                 <th style="width: 90px;">Thực hiện</th>
+                                <th style="width: 100px; text-align:center;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody id="detail_vi_pham_tbody">
@@ -829,6 +830,45 @@
     </div>
 </div>
 
+{{-- MODAL 7: XÁC NHẬN GỠ VI PHẠM --}}
+<div class="rs-modal" id="xoaViPhamModal">
+    <div class="rs-modal-dialog" style="max-width: 500px;">
+        <div class="rs-modal-header">
+            <h3 class="rs-modal-title" style="color: #dc2626;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                Gỡ bỏ vi phạm
+            </h3>
+            <button type="button" class="rs-modal-close" onclick="closeModal('xoaViPhamModal')">&times;</button>
+        </div>
+
+        <form method="POST" id="xoaViPhamForm">
+            @csrf
+            @method('PATCH')
+
+            <div class="rs-modal-body">
+                <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:12px 14px; margin-bottom:14px; font-size:13.5px; color:#991b1b;">
+                    <strong>⚠ Bạn sắp gỡ bỏ vi phạm #<span id="xoa_vp_ma">—</span> của khách hàng.</strong>
+                    <div style="margin-top:6px; color:#7f1d1d;" id="xoa_vp_ly_do_goc"></div>
+                </div>
+
+                <div class="rs-form-group">
+                    <label class="rs-form-label">Lý do gỡ vi phạm <span style="color:#e11d48;">*</span></label>
+                    <textarea name="ly_do_go" class="rs-form-control" rows="3"
+                              style="height:auto !important; padding:8px 12px;" required
+                              maxlength="500"
+                              placeholder="VD: Khách hàng khiếu nại thành công, sự cố ngoài ý muốn, ..."></textarea>
+                    <small class="text-muted" style="font-size:11px;">Lý do này sẽ được lưu vào lịch sử để đối soát.</small>
+                </div>
+            </div>
+
+            <div class="rs-modal-footer">
+                <button type="button" class="rs-btn-cancel" onclick="closeModal('xoaViPhamModal')">Hủy</button>
+                <button type="submit" class="rs-btn-submit" style="background:#dc2626;">Xác nhận gỡ</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 {{-- JAVASCRIPT ĐIỀU KHIỂN GIAO DIỆN & MODAL --}}
 <script>
     // 1. Quản lý Modal chung
@@ -983,12 +1023,27 @@
 
             viPhamList.forEach(item => {
                 const dateStr = item.created_at ? new Date(item.created_at).toLocaleString('vi-VN') : '—';
+                const isDaGo = item.da_go === true;
                 const row = document.createElement('tr');
+                if (isDaGo) {
+                    row.style.opacity = '0.5';
+                }
                 row.innerHTML = `
                     <td style="font-size:12px; color:#64748b;">${dateStr}</td>
                     <td><span class="rs-badge ${item.hanh_dong === 'KHOI_PHUC_COD' ? 'green' : 'red'}" style="font-size:11px;">${item.loai_vi_pham}</span></td>
-                    <td style="font-size:12.5px; color:#334155;">${item.ly_do}</td>
+                    <td style="font-size:12.5px; color:#334155;">${item.ly_do}${isDaGo ? ' <span style="color:#16a34a;font-size:11px;">(Đã gỡ)</span>' : ''}</td>
                     <td style="font-size:12px; color:#64748b;">${item.nguoi_thuc_hien || 'Admin'}</td>
+                    <td style="text-align:center;">
+                        ${isDaGo
+                            ? '<span style="font-size:11px;color:#16a34a;">✓ Đã gỡ</span>'
+                            : `<button type="button" class="rs-action-btn delete"
+                                       style="width:28px;height:28px;"
+                                       title="Xóa vi phạm này"
+                                       onclick='openXoaViPhamModal(${item.ma_vi_pham}, ${item.ma_khach_hang}, ${JSON.stringify(item.ly_do || "")})'>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                               </button>`
+                        }
+                    </td>
                 `;
                 tbody.appendChild(row);
             });
@@ -1107,6 +1162,19 @@
         const btn = document.getElementById('btnConfirmDelete');
         btn.disabled = true;
         btn.textContent = 'Đang xóa...';
+    }
+
+    // 10. Modal Xóa vi phạm
+    function openXoaViPhamModal(maViPham, maKhachHang, lyDoGoc) {
+        const form = document.getElementById('xoaViPhamForm');
+        form.action = `/khach-hang/vi-pham/${maViPham}/xoa`;
+        document.getElementById('xoa_vp_ma').textContent = maViPham;
+        document.getElementById('xoa_vp_ly_do_goc').textContent = lyDoGoc ? ('Lý do ghi nhận: ' + lyDoGoc) : '';
+
+        // Reset textarea
+        form.querySelector('textarea[name="ly_do_go"]').value = '';
+
+        openModal('xoaViPhamModal');
     }
 </script>
 

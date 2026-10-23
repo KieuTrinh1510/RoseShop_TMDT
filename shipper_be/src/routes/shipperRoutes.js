@@ -8,6 +8,7 @@ const homeController = require('../controllers/shipper/home_controller');
 const orderController = require('../controllers/shipper/order_controller');
 const historyController = require('../controllers/shipper/history_controller');
 const profileController = require('../controllers/shipper/profile_controller');
+const shipperFailureController = require('../controllers/shipper/shipper_failure_controller');
 
 const router = express.Router();
 
@@ -27,14 +28,23 @@ router.delete('/notifications/:id', homeController.deleteNotification);
 router.get('/orders', orderController.getAssignedOrders);
 router.get('/orders/:id', orderController.getOrderDetail);
 
-// 3 nút thao tác (đúng thứ tự pickup -> arrived -> delivered)
+// 3 nút hành động (đúng thứ tự pickup → arrived → delivered)
 router.post('/orders/:id/pickup', orderController.confirmPickup);
 router.post('/orders/:id/arrived', orderController.notifyArrival);
 router.post('/orders/:id/delivered', orderController.confirmDelivery);
 
 // Đồng hồ 3h hoa tươi
 router.get('/orders/:id/timeout', orderController.getTimeoutRemaining); // chỉ đọc
-router.post('/orders/:id/overdue', orderController.xuLyQuaHan);        // ghi: phạt
+router.post('/orders/:id/overdue', orderController.xuLyQuaHan);          // ghi: phạt
+
+// ── BÁO GIAO HÀNG THẤT BẠI ──
+// GET  /orders/:id/failure-check   → kiểm tra điều kiện, trả về trạng thái để Flutter render UI
+// POST /orders/:id/report-failure  → shipper gửi báo cáo thất bại (body: loai_loi, ly_do, ghi_chu)
+//        SHIPPER: hủy ngay. CUSTOMER: chỉ ghi nhận chờ khách 10 phút (đơn vẫn SHIPPING).
+// POST /orders/:id/finalize-customer-failure → hết 10 phút chờ lần hai: hủy đơn do khách không nhận hàng
+router.get('/orders/:id/failure-check', shipperFailureController.kiemTraDieuKien);
+router.post('/orders/:id/report-failure', shipperFailureController.baoCaoThatBai);
+router.post('/orders/:id/finalize-customer-failure', shipperFailureController.finalizeLoiKhachHang);
 
 // ── TAB LỊCH SỬ ──
 router.get('/history', historyController.getHistory);

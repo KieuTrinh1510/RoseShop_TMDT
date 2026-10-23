@@ -183,6 +183,8 @@ StatusStyle statusStyle(String tt, [String? nhan]) {
       return StatusStyle(pick(tr('f_shipping')), Pink.roseDeep);
     case 'DELIVERED':
       return StatusStyle(pick(tr('st_delivered')), Pink.leaf);
+    case 'CANCELLED':
+      return StatusStyle(pick(tr('st_cancelled')), Pink.danger);
     default:
       return StatusStyle(pick(tt.isEmpty ? '—' : tt), Pink.grey);
   }

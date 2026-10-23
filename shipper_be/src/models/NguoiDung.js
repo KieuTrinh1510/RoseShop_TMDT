@@ -52,6 +52,9 @@ NguoiDung.init({
     },
     mat_khau: DataTypes.STRING,
     vai_tro: DataTypes.STRING,
+    // Cột đã có sẵn trong DB (Laravel dùng): CHO_XAC_THUC | HOAT_DONG | BI_KHOA
+    trang_thai: DataTypes.STRING(30),
+    email_verified_at: DataTypes.DATE,
 }, {
     sequelize,
     modelName: 'NguoiDung',

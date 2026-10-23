@@ -76,6 +76,15 @@ class AuthenticatedSessionController extends Controller
             ])->onlyInput('ten_dang_nhap');
     }
 
+    // Shipper không còn đăng nhập trên web → đăng xuất và chuyển sang trang hướng dẫn tải app
+    if ($authenticatedUser->vai_tro === 'SHIPPER') {
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('shipper.mobile-only');
+    }
+
     $request->session()->regenerate();
 
     // Khôi phục lại giỏ hàng sau khi regenerate session
@@ -90,7 +99,7 @@ class AuthenticatedSessionController extends Controller
 
     return match($vai_tro) {
         'ADMIN', 'NHAN_VIEN' => redirect()->route('admin.dashboard'),
-        'SHIPPER'            => redirect()->route('shipper.dashboard'),
+        'SHIPPER'            => redirect()->route('shipper.mobile-only'),
         default              => redirect()->route('customer.dashboard'),
     };
 }

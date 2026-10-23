@@ -854,10 +854,94 @@
             modalBody.innerHTML = '<div class="alert alert-danger mb-0">Lỗi kết nối máy chủ khi tải dữ liệu.</div>';
         });
     }
+    // ── Panel xem log kiểm tra hàng hoàn ─────────────────────────────
+function openKiemTraLog(id, btn) {
+    const panel = document.getElementById('detail-panel');
+    const body  = document.getElementById('panel-body');
+
+    // Reset panel chi tiết nếu đang mở
+    if (activeDetailId && activeDetailId !== id) closeDetail();
+    activeDetailId = null;
+    activeBtn = btn;
+
+    document.querySelectorAll('tr.highlighted').forEach(r => r.classList.remove('highlighted'));
+    const row = document.getElementById('row-' + id);
+    if (row) row.classList.add('highlighted');
+
+    document.getElementById('panel-title').textContent =
+        'Log kiểm tra hàng hoàn — #HD-' + String(id).padStart(4, '0');
+
+    body.innerHTML = '<div class="panel-loading">Đang tải...</div>';
+    panel.classList.add('open');
+    document.getElementById('page-body').classList.add('panel-open');
+
+    fetch(`/admin/hoa-don/${id}/kiem-tra-hang`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (!res.success) {
+            body.innerHTML = '<p style="padding:20px;color:#888">Không tải được dữ liệu.</p>';
+            return;
+        }
+        renderKiemTraLog(res.data);
+    })
+    .catch(() => {
+        body.innerHTML = '<p style="padding:20px;color:#888">Lỗi kết nối.</p>';
+    });
+}
+
+function renderKiemTraLog(d) {
+    const esc = v => String(v ?? '—').replace(/[&<>"']/g, c =>
+        ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+
+    const hangHoan = d.hangHoan || {};
+    const thoiDiem = hangHoan.thoi_diem_kiem_tra || null;
+
+    const rows = (d.dongKiemTra || []).map(x => `
+        <tr>
+            <td>${esc(x.la_bo_hoa ? 'Bó hoa' : 'Sản phẩm')}: ${esc(x.ten)}</td>
+            <td style="text-align:center">${Number(x.so_luong_theo_don) || 0}</td>
+            <td style="text-align:center;color:#c0392b">${Number(x.so_luong_hong) || 0}</td>
+            <td style="text-align:center;color:#2e7d52">${Number(x.so_luong_con_ban_duoc) || 0}</td>
+            <td>${esc(x.ket_qua)}</td>
+            <td>${esc(x.ghi_chu)}</td>
+        </tr>
+    `).join('') || '<tr><td colspan="6" style="text-align:center;color:#888">Chưa có dữ liệu</td></tr>';
+
+    document.getElementById('panel-body').innerHTML = `
+        <div class="panel-section">
+            <div class="panel-section-title">Kết quả kiểm tra hàng hoàn</div>
+            <table class="product-table">
+                <thead>
+                    <tr>
+                        <th>Sản phẩm</th>
+                        <th style="text-align:center">SL đơn</th>
+                        <th style="text-align:center">Hỏng</th>
+                        <th style="text-align:center">Còn bán</th>
+                        <th>Kết quả</th>
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+        <div class="panel-section" style="padding-top:0;">
+            <small style="color:#64748b;font-size:12px;">
+                ${thoiDiem
+                    ? 'Log đã lưu cố định vào ' + esc(thoiDiem) + ' — không thể chỉnh sửa.'
+                    : 'Log kiểm tra — chỉ đọc.'}
+            </small>
+        </div>
+    `;
+}
 
     function renderModalContent(d) {
         const statusLabel = {PENDING:'Chờ xử lý',CONFIRMED:'Đã xác nhận',SHIPPING:'Đang giao',DELIVERED:'Đã giao',CANCELLED:'Đã hủy'};
         const fmt = v => v ? Number(v).toLocaleString('vi-VN') + '₫' : '—';
+        const escapeHtml = v => String(v ?? '—').replace(/[&<>"']/g, c => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
 
         // 1. Nhóm sản phẩm / vật phẩm
         let productsHtml = '';
