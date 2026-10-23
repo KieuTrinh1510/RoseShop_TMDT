@@ -2,6 +2,73 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/Admin/NhanVien.css') }}">
+    <style>
+        .rs-table thead th {
+            background-color: #F8F9FA !important;
+            color: #475467 !important;
+            font-weight: 600 !important;
+            font-size: 13.5px !important;
+            border-bottom: 1px solid #EAECF0 !important;
+            white-space: nowrap !important;
+        }
+        .rs-table tbody tr:hover {
+            background-color: #F9FAFB !important;
+        }
+        .rs-table td {
+            white-space: nowrap !important;
+            padding: 12px 14px !important;
+        }
+        .rs-truncate-cell {
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+        }
+        .rs-card-title-bar {
+            padding: 16px 20px 14px 20px;
+            background: #ffffff;
+            border-bottom: 1px solid #EAECF0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .rs-card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #101828;
+        }
+        .rs-count-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background-color: #F2F4F7;
+            color: #344054;
+            font-size: 12.5px;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+        .rs-code-employee {
+            font-family: monospace;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #EC3D8F !important;
+            white-space: nowrap !important;
+        }
+        .rs-btn-search {
+            background-color: #EC3D8F !important;
+            border-radius: 8px !important;
+        }
+        .rs-btn-search:hover {
+            background-color: #D82C7C !important;
+        }
+        .rs-table th:last-child, .rs-table td:last-child {
+            padding-right: 20px !important;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -10,19 +77,9 @@
 
     {{-- 1. HEADER TRANG --}}
     <div class="rs-header-block" style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 24px;">
-        <div style="display: flex; align-items: center; gap: 16px;">
-            <div class="rs-header-icon-box">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                </svg>
-            </div>
-            <div>
-                <h1 class="rs-header-title">Quản lý nhân viên</h1>
-                <p class="rs-header-subtitle">Theo dõi, quản lý thông tin nhân viên và phân quyền hệ thống</p>
-            </div>
+        <div>
+            <h1 class="rs-header-title">Quản lý nhân viên</h1>
+            <p class="rs-header-subtitle">Theo dõi, quản lý thông tin nhân viên và phân quyền hệ thống</p>
         </div>
     </div>
 
@@ -174,20 +231,36 @@
             @endif
         </form>
 
+        {{-- TIÊU ĐỀ BẢNG DANH SÁCH CHUẨN --}}
+        <div class="rs-card-title-bar">
+            <div class="rs-card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="8" y1="6" x2="21" y2="6"/>
+                    <line x1="8" y1="12" x2="21" y2="12"/>
+                    <line x1="8" y1="18" x2="21" y2="18"/>
+                    <line x1="3" y1="6" x2="3.01" y2="6"/>
+                    <line x1="3" y1="12" x2="3.01" y2="12"/>
+                    <line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+                <span>Danh sách nhân viên</span>
+                <span class="rs-count-badge">{{ $nhanViens->total() }}</span>
+            </div>
+        </div>
+
         {{-- 4. BẢNG DỮ LIỆU CHUẨN HÓA VỚI CỘT MÃ NHÂN VIÊN VÀ TIỀN COD --}}
         <div class="rs-table-container">
             <table class="rs-table">
                 <colgroup>
-                    <col style="width: 100px;">
-                    <col style="width: 180px;">
-                    <col style="width: 130px;">
-                    <col style="width: 200px;">
-                    <col style="width: 120px;">
-                    <col style="width: 180px;">
-                    <col style="width: 130px;">
+                    <col style="width: 95px;">
+                    <col style="width: 170px;">
                     <col style="width: 125px;">
-                    <col style="width: 140px;">
-                    <col style="width: 120px;">
+                    <col style="width: 220px;">
+                    <col style="width: 115px;">
+                    <col style="width: 200px;">
+                    <col style="width: 135px;">
+                    <col style="width: 115px;">
+                    <col style="width: 135px;">
+                    <col style="width: 110px;">
                 </colgroup>
                 <thead>
                     <tr>
@@ -214,23 +287,23 @@
                         @endphp
                         <tr>
                             {{-- 1. Mã nhân viên --}}
-                            <td style="text-align: center; font-weight: 700; color: #f43f5e; font-family: monospace; font-size: 13px;">
-                                NV-{{ str_pad($nv->ma_nhan_vien, 4, '0', STR_PAD_LEFT) }}
+                            <td style="text-align: center; white-space: nowrap;">
+                                <span class="rs-code-employee">NV-{{ str_pad($nv->ma_nhan_vien, 4, '0', STR_PAD_LEFT) }}</span>
                             </td>
-                            <td>
+                            <td style="white-space: nowrap;">
                                 <span class="rs-text-bold">{{ $nv->ten_nhan_vien }}</span>
                             </td>
                             <td style="white-space: nowrap; font-family: monospace; font-size: 13px;">{{ $nv->so_dien_thoai ?: '—' }}</td>
-                            <td>{{ $nv->email ?: '—' }}</td>
-                            <td style="white-space: nowrap;">
+                            <td class="rs-truncate-cell" title="{{ $nv->email }}" style="font-size: 12.5px;">{{ $nv->email ?: '—' }}</td>
+                            <td style="white-space: nowrap; text-align: center;">
                                 <span class="rs-role-badge {{ $isShipper ? 'shipper' : '' }}">
                                     {{ $chucVus[$nv->chuc_vu] ?? $nv->chuc_vu }}
                                 </span>
                             </td>
-                            <td>{{ $nv->cong_viec ?: '—' }}</td>
+                            <td class="rs-truncate-cell" title="{{ $nv->cong_viec }}">{{ $nv->cong_viec ?: '—' }}</td>
                             <td style="text-align: right; white-space: nowrap;">
                                 @if($nv->luong > 0)
-                                    <span style="font-weight: 600; color: #0f172a;">{{ number_format($nv->luong, 0, ',', '.') }} đ</span>
+                                    <span style="font-weight: 600; color: #0f172a; white-space: nowrap;">{{ number_format($nv->luong, 0, ',', '.') }} đ</span>
                                 @else
                                     <span style="color: #94a3b8;">Chưa cập nhật</span>
                                 @endif

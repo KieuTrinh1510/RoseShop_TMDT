@@ -207,10 +207,10 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 .rs-btn-search {
     height: 40px !important;
     padding: 0 18px !important;
-    background: #f43f5e !important;
+    background: #EC3D8F !important;
     color: #ffffff !important;
     border: none !important;
-    border-radius: 10px !important;
+    border-radius: 8px !important;
     font-size: 13.5px !important;
     font-weight: 600 !important;
     cursor: pointer !important;
@@ -220,13 +220,13 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
     gap: 6px !important;
     transition: all 0.2s ease !important;
     white-space: nowrap !important;
-    box-shadow: 0 2px 8px rgba(244, 63, 94, 0.2) !important;
+    box-shadow: 0 1px 3px rgba(236, 61, 143, 0.25) !important;
 }
 
 .rs-btn-search:hover {
-    background: #e11d48 !important;
+    background: #D82C7C !important;
     transform: translateY(-1px) !important;
-    box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3) !important;
+    box-shadow: 0 4px 12px rgba(236, 61, 143, 0.35) !important;
 }
 
 .rs-filter-left {
@@ -305,10 +305,10 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 .rs-btn-create {
     height: 44px !important;
     padding: 0 20px !important;
-    background: #f43f5e !important;
+    background: #EC3D8F !important;
     color: #ffffff !important;
     border: none !important;
-    border-radius: 12px !important;
+    border-radius: 8px !important;
     font-size: 14px !important;
     font-weight: 600 !important;
     cursor: pointer !important;
@@ -317,15 +317,13 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
     gap: 8px !important;
     transition: all 0.2s ease !important;
     white-space: nowrap !important;
-    box-shadow: 0 2px 6px rgba(244, 63, 94, 0.2) !important;
+    box-shadow: 0 1px 3px rgba(236, 61, 143, 0.25) !important;
 }
 
 .rs-btn-create:hover {
-    background: #e11d48 !important;
+    background: #D82C7C !important;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(244, 63, 94, 0.3) !important;
-}
-    background: #e11d48 !important;
+    box-shadow: 0 4px 12px rgba(236, 61, 143, 0.35) !important;
 }
 
 /* Thanh phụ: Bộ chọn số lượng hiển thị (per_page) */
@@ -671,11 +669,11 @@ input, button, select, textarea, table, th, td, span, p, h1, h2, h3, h4, h5, h6,
 .pagination .page-item.active .page-link,
 .page-item.active .page-link,
 .active > .page-link {
-    background: #f43f5e !important;
-    border-color: #f43f5e !important;
+    background: #EC3D8F !important;
+    border-color: #EC3D8F !important;
     color: #ffffff !important;
     font-weight: 700 !important;
-    box-shadow: 0 2px 6px rgba(244, 63, 94, 0.35) !important;
+    box-shadow: 0 1px 3px rgba(236, 61, 143, 0.25) !important;
 }
 
 .rs-pagination .page-item.disabled .page-link, .pagination .page-item.disabled .page-link {
@@ -878,7 +876,7 @@ select.rs-form-control {
     height: 38px;
     padding: 0 20px;
     border: none;
-    background: #f43f5e;
+    background: #EC3D8F;
     border-radius: 8px;
     font-size: 13.5px;
     font-weight: 600;
@@ -888,5 +886,5 @@ select.rs-form-control {
 }
 
 .rs-btn-submit:hover {
-    background: #e11d48;
+    background: #D82C7C;
 }

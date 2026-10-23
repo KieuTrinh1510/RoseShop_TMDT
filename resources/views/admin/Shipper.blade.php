@@ -2,6 +2,61 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/Admin/Shipper.css') }}">
+    <style>
+        .rs-table thead th {
+            background-color: #F8F9FA !important;
+            color: #475467 !important;
+            font-weight: 600 !important;
+            font-size: 13.5px !important;
+            border-bottom: 1px solid #EAECF0 !important;
+            white-space: nowrap !important;
+        }
+        .rs-table tbody tr:hover {
+            background-color: #F9FAFB !important;
+        }
+        .rs-table td {
+            white-space: nowrap !important;
+            padding: 12px 14px !important;
+        }
+        .rs-code-shipper {
+            font-family: monospace;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #EC3D8F !important;
+            white-space: nowrap !important;
+        }
+        .rs-card-title-bar {
+            padding: 16px 20px 14px 20px;
+            background: #ffffff;
+            border-bottom: 1px solid #EAECF0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .rs-card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #101828;
+        }
+        .rs-count-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background-color: #F2F4F7;
+            color: #344054;
+            font-size: 12.5px;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+        .rs-table th:last-child, .rs-table td:last-child {
+            padding-right: 20px !important;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -10,20 +65,9 @@
 
     {{-- 1. HEADER TRANG --}}
     <div class="rs-header-block">
-        <div style="display: flex; align-items: center; gap: 16px;">
-            <div class="rs-header-icon-box">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/>
-                    <path d="M15 18H9"/>
-                    <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/>
-                    <circle cx="17" cy="18" r="2"/>
-                    <circle cx="7" cy="18" r="2"/>
-                </svg>
-            </div>
-            <div>
-                <h1 class="rs-header-title">Quản lý Shipper</h1>
-                <p class="rs-header-subtitle">Theo dõi danh sách, trạng thái làm việc và lịch sử giao hàng của đội ngũ giao vận</p>
-            </div>
+        <div>
+            <h1 class="rs-header-title">Quản lý Shipper</h1>
+            <p class="rs-header-subtitle">Theo dõi danh sách, trạng thái làm việc và lịch sử giao hàng của đội ngũ giao vận</p>
         </div>
     </div>
 
@@ -164,6 +208,22 @@
             @endif
         </form>
 
+        {{-- TIÊU ĐỀ BẢNG DANH SÁCH CHUẨN --}}
+        <div class="rs-card-title-bar">
+            <div class="rs-card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="8" y1="6" x2="21" y2="6"/>
+                    <line x1="8" y1="12" x2="21" y2="12"/>
+                    <line x1="8" y1="18" x2="21" y2="18"/>
+                    <line x1="3" y1="6" x2="3.01" y2="6"/>
+                    <line x1="3" y1="12" x2="3.01" y2="12"/>
+                    <line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+                <span>Danh sách nhân viên giao hàng (Shipper)</span>
+                <span class="rs-count-badge">{{ $shippers->total() }}</span>
+            </div>
+        </div>
+
         {{-- BẢNG DỮ LIỆU SHIPPER --}}
         <div class="rs-table-container">
             <table class="rs-table">
@@ -171,9 +231,9 @@
                     <tr>
                         <th style="width: 100px; text-align: center;">Mã Shipper</th>
                         <th style="min-width: 160px; text-align: center;">Tên Shipper</th>
-                        <th style="min-width: 180px; text-align: center;">Số điện thoại & Email</th>
+                        <th style="min-width: 220px; text-align: center;">Số điện thoại & Email</th>
                         <th style="min-width: 130px; text-align: center;">Ca làm việc</th>
-                        <th style="width: 130px; text-align: center;">Trạng thái làm việc</th>
+                        <th style="width: 160px; text-align: center;">Trạng thái làm việc</th>
                         <th style="width: 100px; text-align: center;">Nhận đơn</th>
                         <th style="width: 110px; text-align: center;">Đang giao</th>
                         <th style="width: 130px; text-align: center;">Tài khoản</th>
@@ -190,20 +250,20 @@
                         @endphp
                         <tr>
                             {{-- Mã Shipper: Đồng bộ theo mã nhân viên toàn hệ thống NV-xxxx --}}
-                            <td style="text-align: center; font-weight: 700; color: #f43f5e; font-family: monospace; font-size: 13px;">
-                                NV-{{ str_pad($sp->ma_nhan_vien, 4, '0', STR_PAD_LEFT) }}
+                            <td style="text-align: center; white-space: nowrap;">
+                                <span class="rs-code-shipper">NV-{{ str_pad($sp->ma_nhan_vien, 4, '0', STR_PAD_LEFT) }}</span>
                             </td>
 
                             {{-- Tên Shipper --}}
-                            <td>
+                            <td style="white-space: nowrap;">
                                 <div class="rs-text-bold">{{ $sp->ten_nhan_vien }}</div>
                                 <div style="font-size: 12px; color: #64748b;">TK: {{ $user->ten_dang_nhap ?? 'N/A' }}</div>
                             </td>
 
                             {{-- SĐT & Email --}}
-                            <td>
-                                <div style="color: #0f172a; font-weight: 500; font-family: monospace; font-size: 13px;">{{ $sp->so_dien_thoai }}</div>
-                                <div style="font-size: 12px; color: #64748b;">{{ $sp->email ?: '—' }}</div>
+                            <td style="min-width: 220px; max-width: 260px;">
+                                <div style="color: #0f172a; font-weight: 500; font-family: monospace; font-size: 13px; white-space: nowrap;">{{ $sp->so_dien_thoai }}</div>
+                                <div title="{{ $sp->email }}" style="font-size: 12px; color: #64748b; white-space: normal !important; overflow-wrap: anywhere; word-break: break-word; line-height: 1.4;">{{ $sp->email ?: '—' }}</div>
                             </td>
 
                             {{-- Ca làm việc --}}

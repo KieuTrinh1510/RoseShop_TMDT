@@ -268,9 +268,9 @@
 }.hoa-don-container .pagination-wrap a:hover{
     background: var(--gray-6);
 }.hoa-don-container .pagination-wrap span.active-page{
-    background: #f43f5e !important;
+    background: #EC3D8F !important;
     color: #ffffff !important;
-    border-color: #f43f5e !important;
+    border-color: #EC3D8F !important;
 }.hoa-don-container .pagination-wrap span.disabled{
     color: var(--gray-4);
     pointer-events: none;

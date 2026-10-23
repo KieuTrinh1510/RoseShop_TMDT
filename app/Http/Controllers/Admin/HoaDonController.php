@@ -56,9 +56,8 @@ class HoaDonController extends Controller
             $query->where('ngay_dat', '<=', Carbon::parse($request->den_ngay)->endOfDay());
         }
 
-        $hoaDons    = $query->orderByDesc('ngay_dat')->paginate(15)->withQueryString();
-
-        $hoaDons->getCollection()->each(fn (HoaDon $hd) => $this->ganThongTinHuyHangHoan($hd));
+        $perPage    = in_array((int)$request->get('per_page'), [10, 15, 20, 50, 100]) ? (int)$request->get('per_page') : 10;
+        $hoaDons    = $query->orderByDesc('ngay_dat')->paginate($perPage)->withQueryString();
         $khachHangs = KhachHang::orderBy('ten_khach_hang')->get();
 
         return view('admin.HoaDon', compact('hoaDons', 'khachHangs'));
@@ -192,6 +191,7 @@ class HoaDonController extends Controller
                         'kieu_bo_hoa' => $customBouquet->kieu_bo_hoa,
                         'concept'     => $customBouquet->concept,
                         'loi_nhan'    => $customBouquet->loi_nhan,
+                        'so_luong'    => $customBouquet->so_luong ?? 1,
                     ] : null,
                     'anh_mau_custom'          => $anhMauCustom,
                 ],

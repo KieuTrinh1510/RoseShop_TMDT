@@ -70,7 +70,8 @@ class LoHangController extends Controller
             }
         }
 
-        $loHangs = $query->orderBy('ma_chi_tiet_nhap', 'desc')->paginate(15)->withQueryString();
+        $perPage = in_array((int) $request->get('per_page'), [10, 15, 20, 50]) ? (int) $request->get('per_page') : 10;
+        $loHangs = $query->orderBy('ma_chi_tiet_nhap', 'desc')->paginate($perPage)->withQueryString();
 
         $nhaCungCaps = NhaCungCap::orderBy('ten_nha_cung_cap')->get(['ma_nha_cung_cap', 'ten_nha_cung_cap']);
 

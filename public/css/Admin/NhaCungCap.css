@@ -259,6 +259,19 @@
     background-color: #FDEAF3;
 }
 
+.ncc-action-btn.rate {
+    background-color: #FDEAF3;
+    color: #EC3D8F;
+    border-color: #FCCEE2;
+}
+
+.ncc-action-btn.rate:hover {
+    background-color: #EC3D8F;
+    color: #ffffff;
+    border-color: #EC3D8F;
+    box-shadow: 0 2px 6px rgba(236, 61, 143, 0.25);
+}
+
 .ncc-action-btn.edit:hover {
     color: #027A48;
     border-color: #A6F4C5;
@@ -610,3 +623,140 @@
     white-space: nowrap !important;
 }
 
+.pagination .page-item.active .page-link,
+.page-item.active .page-link,
+.active > .page-link {
+    background-color: #EC3D8F !important;
+    background: #EC3D8F !important;
+    border-color: #EC3D8F !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    box-shadow: 0 1px 3px rgba(236, 61, 143, 0.25) !important;
+}
+
+/* ===================================================================
+   RS TABLE FOOTER – Đồng bộ chuẩn cho NhaCungCap & LoHang
+   =================================================================== */
+.rs-table-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    background: #ffffff;
+    border-top: 1px solid #EAECF0;
+    flex-wrap: wrap;
+    gap: 12px;
+    border-radius: 0 0 12px 12px;
+}
+
+.rs-footer-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.rs-footer-pagination {
+    display: flex;
+    align-items: center;
+}
+
+.rs-per-page-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #475467;
+}
+
+.rs-per-page-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #475467;
+    white-space: nowrap;
+}
+
+.rs-per-page-select {
+    width: 68px !important;
+    height: 34px !important;
+    padding: 0 24px 0 10px !important;
+    border: 1px solid #D0D5DD !important;
+    border-radius: 8px !important;
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    color: #101828 !important;
+    background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475467' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    outline: none !important;
+    cursor: pointer !important;
+}
+
+.rs-records-count {
+    font-size: 13px;
+    color: #667085;
+    white-space: nowrap;
+}
+
+.rs-pagination,
+.rs-pagination .pagination,
+ul.rs-pagination {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    list-style: none !important;
+    flex-wrap: wrap !important;
+}
+
+.rs-pagination .page-item .page-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 34px !important;
+    height: 34px !important;
+    padding: 0 8px !important;
+    border-radius: 8px !important;
+    border: 1px solid #D0D5DD !important;
+    background: #ffffff !important;
+    color: #344054 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    transition: all 0.15s ease !important;
+}
+
+.rs-pagination .page-item .page-link:hover {
+    border-color: #EC3D8F !important;
+    color: #EC3D8F !important;
+    background-color: #FDEAF3 !important;
+}
+
+.rs-pagination .page-item.active .page-link,
+.rs-pagination .page-item.active > .page-link {
+    background-color: #EC3D8F !important;
+    border-color: #EC3D8F !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    box-shadow: 0 1px 3px rgba(236, 61, 143, 0.25) !important;
+}
+
+.rs-pagination .page-item.disabled .page-link {
+    color: #D0D5DD !important;
+    border-color: #EAECF0 !important;
+    background: #ffffff !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+    opacity: 0.6 !important;
+}
+
+.rs-pagination .page-link.ellipsis {
+    border: none !important;
+    background: transparent !important;
+    color: #94a3b8 !important;
+    cursor: default !important;
+    padding: 0 4px !important;
+    min-width: 24px !important;
+}

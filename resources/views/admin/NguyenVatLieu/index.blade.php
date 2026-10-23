@@ -5,7 +5,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         .rs-management-page {
-            padding: 24px 32px 32px 32px;
+            padding: 24px 32px 24px 32px !important;
             background-color: #f8f9fa;
             min-height: 100vh;
         }
@@ -209,6 +209,7 @@
         }
         .rs-table {
             width: 100%;
+            min-width: 1140px;
             border-collapse: separate;
             border-spacing: 0;
             text-align: left;
@@ -222,12 +223,13 @@
             top: 0;
             z-index: 10;
             background-color: #F8F9FA !important;
-            padding: 14px 16px;
-            font-size: 13.5px;
+            padding: 10px 8px;
+            font-size: 13px;
             font-weight: 600;
             color: #475467 !important;
             text-transform: none;
             border-bottom: 1px solid #EAECF0 !important;
+            white-space: nowrap !important;
         }
         .rs-table tbody tr {
             border-bottom: 1px solid #EAECF0;
@@ -237,34 +239,42 @@
             background-color: #F9FAFB;
         }
         .rs-table td {
-            padding: 14px 16px;
-            font-size: 14px;
+            padding: 10px 8px;
+            font-size: 13px;
             color: #344054;
             vertical-align: middle;
             word-wrap: break-word;
             border-bottom: 1px solid #EAECF0;
         }
+        .rs-table th:last-child,
+        .rs-table td:last-child {
+            padding-right: 14px !important;
+        }
         .badge-confirmed {
             display: inline-flex;
             align-items: center;
-            padding: 3px 10px;
+            justify-content: center;
+            padding: 3px 8px;
             border-radius: 12px;
             background-color: #ECFDF3;
             color: #027A48;
             border: 1px solid #ABEFC6;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 500;
+            white-space: nowrap !important;
         }
         .badge-cancelled {
             display: inline-flex;
             align-items: center;
-            padding: 3px 10px;
+            justify-content: center;
+            padding: 3px 8px;
             border-radius: 12px;
             background-color: #FEF3F2;
             color: #B42318;
             border: 1px solid #FECDCA;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 500;
+            white-space: nowrap !important;
         }
         .badge-draft {
             display: inline-flex;
@@ -336,15 +346,20 @@
             color: #475467;
         }
         .rs-per-page-select {
-            height: 36px;
-            padding: 0 10px;
-            border: 1px solid #D0D5DD;
-            border-radius: 8px;
-            font-size: 13.5px;
-            color: #101828;
-            background: #ffffff;
-            outline: none;
-            cursor: pointer;
+            width: 68px !important;
+            height: 34px !important;
+            padding: 0 24px 0 10px !important;
+            border: 1px solid #D0D5DD !important;
+            border-radius: 8px !important;
+            font-size: 13.5px !important;
+            font-weight: 500 !important;
+            color: #101828 !important;
+            background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475467' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            outline: none !important;
+            cursor: pointer !important;
         }
         .rs-records-count {
             font-size: 13.5px;
@@ -532,18 +547,9 @@
 
     {{-- 1. HEADER TRANG: Tiêu đề + Nút Thêm mới (Đồng bộ Người dùng, Nhân viên, Khách hàng) --}}
     <div class="rs-header-block">
-        <div class="rs-header-left">
-            <div class="rs-header-icon-box">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
-                    <line x1="12" y1="22.08" x2="12" y2="12"/>
-                </svg>
-            </div>
-            <div>
-                <h1 class="rs-header-title">Quản lý nguyên vật liệu</h1>
-                <p class="rs-header-subtitle">Kiểm soát tồn kho nguyên vật liệu (giấy gói, ruy băng, phụ kiện, thiệp, mút xốp) phục vụ bó hoa</p>
-            </div>
+        <div>
+            <h1 class="rs-header-title">Quản lý nguyên vật liệu</h1>
+            <p class="rs-header-subtitle">Kiểm soát tồn kho nguyên vật liệu (giấy gói, ruy băng, phụ kiện, thiệp, mút xốp) phục vụ bó hoa</p>
         </div>
         <button type="button" class="rs-btn-create" onclick="openModalCreateNVL()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -651,43 +657,43 @@
 
         {{-- BẢNG DANH SÁCH --}}
         <div class="rs-table-container">
-            <table class="rs-table">
+            <table class="rs-table" style="min-width: 1220px;">
                 <colgroup>
-                    <col style="width: 90px;">
-                    <col style="width: 80px;">
-                    <col style="width: 200px;">
-                    <col style="width: 140px;">
-                    <col style="width: 80px;">
-                    <col style="width: 150px;">
-                    <col style="width: 120px;">
-                    <col style="width: 90px;">
-                    <col style="width: 130px;">
-                    <col style="width: 110px;">
-                    <col style="width: 110px;">
-                    <col style="width: 140px;">
+                    <col style="width: 85px;">
+                    <col style="width: 60px;">
+                    <col style="width: 180px;">
+                    <col style="width: 145px;">
+                    <col style="width: 70px;">
+                    <col style="width: 125px;">
+                    <col style="width: 95px;">
+                    <col style="width: 75px;">
+                    <col style="width: 105px;">
+                    <col style="width: 100px;">
+                    <col style="width: 95px;">
+                    <col style="width: 115px;">
                 </colgroup>
                 <thead>
                     <tr>
-                        <th style="text-align: center;">Mã NVL</th>
-                        <th style="text-align: center;">Hình ảnh</th>
+                        <th style="text-align: center; white-space: nowrap;">Mã NVL</th>
+                        <th style="text-align: center; white-space: nowrap;">Hình ảnh</th>
                         <th style="text-align: left;">Tên nguyên vật liệu</th>
-                        <th style="text-align: center;">Loại NVL</th>
-                        <th style="text-align: center;">ĐVT</th>
-                        <th style="text-align: right;">Giá nhập lô</th>
-                        <th style="text-align: right;">Giá hiện tại</th>
-                        <th style="text-align: center;">Tồn kho</th>
-                        <th style="text-align: right;">Tổng giá vốn</th>
-                        <th style="text-align: center;">Trạng thái kho</th>
-                        <th style="text-align: center;">Kinh doanh</th>
-                        <th style="text-align: center;">Thao tác</th>
+                        <th style="text-align: center; white-space: nowrap;">Loại NVL</th>
+                        <th style="text-align: center; white-space: nowrap;">ĐVT</th>
+                        <th style="text-align: right; white-space: nowrap;">Giá nhập lô</th>
+                        <th style="text-align: right; white-space: nowrap;">Giá hiện tại</th>
+                        <th style="text-align: center; white-space: nowrap;">Tồn kho</th>
+                        <th style="text-align: right; white-space: nowrap;">Tổng giá vốn</th>
+                        <th style="text-align: center; white-space: nowrap;">Trạng thái kho</th>
+                        <th style="text-align: center; white-space: nowrap;">Kinh doanh</th>
+                        <th style="text-align: center; white-space: nowrap;">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($dsNguyenVatLieu as $vl)
                         @php $loCoHang = $vl->chiTietNhaps; @endphp
                         <tr>
-                            <td style="text-align: center; font-weight: 700; color: #EC3D8F; font-family: monospace; font-size: 13px;">
-                                NVL-{{ str_pad($vl->ma_san_pham, 4, '0', STR_PAD_LEFT) }}
+                            <td style="text-align: center; white-space: nowrap;">
+                                <span class="fw-bold" style="color:#EC3D8F; font-family: monospace; font-size: 11px;">NVL-{{ str_pad($vl->ma_san_pham, 4, '0', STR_PAD_LEFT) }}</span>
                             </td>
 
                             <td style="text-align:center;">
@@ -708,7 +714,7 @@
                             </td>
 
                             <td style="text-align:center;">
-                                <span class="badge bg-light text-dark border" style="font-size:12px; font-weight:600;">
+                                <span class="badge bg-light text-dark border px-2 py-1" style="font-size:12px; font-weight:600; max-width: 135px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: middle;" title="{{ $danhSachLoaiNguyenLieu[$vl->loai_san_pham] ?? $vl->loai_san_pham }}">
                                     {{ $danhSachLoaiNguyenLieu[$vl->loai_san_pham] ?? $vl->loai_san_pham }}
                                 </span>
                             </td>
@@ -781,7 +787,7 @@
                                 {{ $vl->gia_ban_hien_tai ? number_format($vl->gia_ban_hien_tai, 0, ',', '.') . ' ₫' : '—' }}
                             </td>
 
-                            <td style="text-align:center;">
+                            <td style="text-align:center; white-space: nowrap;">
                                 @if($vl->ton_kho_hien_thi > 0)
                                     <span class="badge-confirmed">{{ $vl->ton_kho_hien_thi }}</span>
                                 @else
@@ -803,7 +809,7 @@
                                 @endif
                             </td>
 
-                            <td style="text-align:center;">
+                            <td style="text-align:center; white-space: nowrap;">
                                 @if($vl->trang_thai === 'DANG_BAN')
                                     <span class="badge-confirmed"><i class="bi bi-check-circle me-1"></i>Đang bán</span>
                                 @else
@@ -999,7 +1005,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-4" id="vl_khuVucDonVi">
+                    <div class="col-md-6" id="vl_khuVucDonVi">
                         <label class="form-label fw-semibold">Đơn vị tính</label>
                         <input type="text" class="form-control" id="vl_donViTinhHienThi" readonly
                                placeholder="Chọn loại NVL..." style="border-radius:8px;">
@@ -1011,7 +1017,7 @@
                         <small class="text-muted"><i class="bi bi-lock-fill me-1"></i>Chỉ thay đổi qua nhập hàng</small>
                     </div>
 
-                    <div class="col-md-4">
+                    <div class="col-md-6" id="vl_khuVucGiaBan">
                         <label class="form-label fw-semibold">Giá bán hiện tại (₫)</label>
                         <input type="number" name="gia_ban_hien_tai" id="vl_inp_gia_ban"
                                class="form-control" min="0" step="1000"
@@ -1162,6 +1168,9 @@
                 document.getElementById('vl_donViTinhHienThi').value =
                     DON_VI_THEO_LOAI[sp.loai_san_pham] ?? sp.don_vi_tinh ?? '';
 
+                document.getElementById('vl_khuVucDonVi').className = 'col-md-4';
+                document.getElementById('vl_khuVucSoLuong').className = 'col-md-4';
+                document.getElementById('vl_khuVucGiaBan').className = 'col-md-4';
                 document.getElementById('vl_khuVucSoLuong').style.display = 'block';
                 document.getElementById('vl_inp_so_luong').value = sp.ton_kho_thuc_te ?? sp.so_luong;
 
@@ -1201,6 +1210,8 @@
         document.getElementById('vl_inp_loai').setAttribute('required', 'required');
         document.getElementById('vl_loaiHienThi').style.display = 'none';
         document.getElementById('vl_loaiRequired').style.display = 'inline';
+        document.getElementById('vl_khuVucDonVi').className = 'col-md-6';
+        document.getElementById('vl_khuVucGiaBan').className = 'col-md-6';
         document.getElementById('vl_khuVucSoLuong').style.display = 'none';
         document.getElementById('vl_donViTinhHienThi').value = '';
         document.getElementById('vl_inp_gia_ban').value = '';

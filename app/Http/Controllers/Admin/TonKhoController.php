@@ -236,7 +236,7 @@ class TonKhoController extends Controller
 
         // ── 4. PHÂN TRANG (LengthAwarePaginator) ──
         $page = (int) LengthAwarePaginator::resolveCurrentPage('page');
-        $perPage = 20;
+        $perPage = in_array((int) $request->get('per_page'), [10, 15, 20, 50]) ? (int) $request->get('per_page') : 10;
         $maxPage = max(1, (int) ceil($sorted->count() / $perPage));
         if ($page > $maxPage) {
             $page = 1;

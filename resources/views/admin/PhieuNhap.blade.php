@@ -6,6 +6,48 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 <link rel="stylesheet" href="{{ asset('css/Admin/NhaCungCap.css') }}">
 <link rel="stylesheet" href="{{ asset('css/Admin/PhieuNhap.css') }}">
+<style>
+    .pn-code-link {
+        color: #EC3D8F !important;
+        font-family: monospace;
+        font-weight: 700;
+        font-size: 11.5px;
+        white-space: nowrap !important;
+        text-decoration: none;
+    }
+    .pn-code-link:hover {
+        color: #D8287C !important;
+        text-decoration: underline;
+    }
+    .ncc-table th {
+        white-space: nowrap !important;
+        padding: 12px 10px !important;
+    }
+    .ncc-table td {
+        padding: 12px 10px !important;
+    }
+    #rsPaginationList .page-item .page-link {
+        border-radius: 8px !important;
+        color: #344054;
+        border: 1px solid #D0D5DD;
+        min-width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 2px;
+        font-weight: 500;
+    }
+    #rsPaginationList .page-item.active .page-link,
+    #rsPaginationList .page-item.active > .page-link {
+        background-color: #EC3D8F !important;
+        background: #EC3D8F !important;
+        border-color: #EC3D8F !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        box-shadow: 0 1px 3px rgba(236, 61, 143, 0.25) !important;
+    }
+</style>
 @endpush
 
 @section('content')
@@ -124,27 +166,27 @@
             <table class="ncc-table">
                 <thead>
                     <tr>
-                        <th style="width: 85px; text-align: center;">Mã PN</th>
-                        <th style="width: 140px; text-align: center;">Ngày nhập</th>
-                        <th>Nhân viên</th>
-                        <th>Nhà cung cấp</th>
-                        <th style="width: 130px; text-align: center;">SĐT NCC</th>
-                        <th style="width: 140px; text-align: center;">Trạng thái</th>
-                        <th class="text-end" style="width: 180px;">Thao tác</th>
+                        <th style="width: 100px; text-align: center; white-space: nowrap;">Mã PN</th>
+                        <th style="width: 140px; text-align: center; white-space: nowrap;">Ngày nhập</th>
+                        <th style="white-space: nowrap;">Nhân viên</th>
+                        <th style="white-space: nowrap;">Nhà cung cấp</th>
+                        <th style="width: 140px; text-align: center; white-space: nowrap;">SĐT NCC</th>
+                        <th style="width: 140px; text-align: center; white-space: nowrap;">Trạng thái</th>
+                        <th class="text-end" style="width: 180px; white-space: nowrap;">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody id="tbodyPhieuNhap">
                     @forelse($danhSachPhieuNhap as $pn)
                     <tr class="dong-phieu-nhap">
                         {{-- Mã PN --}}
-                        <td style="text-align: center;">
+                        <td style="text-align: center; white-space: nowrap;">
                             <a href="{{ route('phieu-nhap.show', $pn->ma_phieu_nhap) }}" class="pn-code-link" title="Mở trang chi tiết">
                                 #PN-{{ $pn->ma_phieu_nhap }}
                             </a>
                         </td>
 
                         {{-- Ngày nhập --}}
-                        <td style="text-align: center;" class="text-muted">
+                        <td style="text-align: center; white-space: nowrap;" class="text-muted">
                             {{ $pn->ngay_nhap ? \Carbon\Carbon::parse($pn->ngay_nhap)->format('d/m/Y H:i') : '—' }}
                         </td>
 
@@ -166,12 +208,12 @@
                         </td>
 
                         {{-- SĐT NCC --}}
-                        <td style="text-align: center;">
+                        <td style="text-align: center; white-space: nowrap;">
                             @php
                                 $sdt = $pn->nhaCungCap->so_dien_thoai ?? $pn->so_dien_thoai_ncc;
                             @endphp
                             @if($sdt)
-                                <a href="tel:{{ $sdt }}" class="text-muted text-decoration-none">
+                                <a href="tel:{{ $sdt }}" class="text-muted text-decoration-none" style="font-size: 12.5px; white-space: nowrap;">
                                     <i class="bi bi-telephone me-1 text-secondary"></i>{{ $sdt }}
                                 </a>
                             @else

@@ -34,7 +34,8 @@ class NhaCungCapController extends Controller
             default => $query->orderBy('ma_nha_cung_cap', 'desc'),
         };
 
-        $nhaCungCaps = $query->paginate(10)->withQueryString();
+        $perPage = in_array((int) $request->get('per_page'), [10, 15, 20, 50]) ? (int) $request->get('per_page') : 10;
+        $nhaCungCaps = $query->paginate($perPage)->withQueryString();
 
         $stats = [
             'tong_ncc'       => NhaCungCap::count(),
