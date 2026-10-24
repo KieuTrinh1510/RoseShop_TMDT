@@ -1,10 +1,42 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
+import 'config.dart';
 import 'controllers/profile/app_settings_controller.dart';
-import 'screens/dang_nhap_screen.dart';
+import 'screens/login/login_screen.dart';
+import 'screens/home/home_screen.dart';
+import 'services/auth_service.dart';
 
-void main() {
-  runApp(const ShipperTestApp());
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AppConfig.load(); // URL backend đã lưu
+  await AuthService.init(); // token đã lưu (bỏ nếu hết hạn)
+
+  // Backend trả 401 TOKEN_* -> AuthService đã xóa phiên, ở đây đưa về LoginScreen.
+  AuthService.onSessionExpired = () {
+    navigatorKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (_) => false,
+    );
+    scaffoldMessengerKey.currentState
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+  };
+
+  // Có token còn hạn -> vào thẳng Home; chưa có -> Splash + Login.
+  runApp(
+    ShipperTestApp(
+      home: AuthService.isLoggedIn ? const HomeScreen() : const LoginScreen(),
+    ),
+  );
 }
 
 // Ma trận "đảo sáng/tối nhưng giữ nguyên tông màu" (invert + hue-rotate 180°).
@@ -28,7 +60,8 @@ List<double> _lerpMatrix(double t) => [
 ];
 
 class ShipperTestApp extends StatelessWidget {
-  const ShipperTestApp({super.key});
+  final Widget home;
+  const ShipperTestApp({super.key, required this.home});
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +71,8 @@ class ShipperTestApp extends StatelessWidget {
         final mode = AppSettings.instance.themeMode;
         return MaterialApp(
           title: 'Shipper Test App',
+          navigatorKey: navigatorKey,
+          scaffoldMessengerKey: scaffoldMessengerKey,
           debugShowCheckedModeBanner: false,
           theme: ThemeData(
             useMaterial3: true,
@@ -62,7 +97,7 @@ class ShipperTestApp extends StatelessWidget {
               ),
             );
           },
-          home: const LoginScreen(),
+          home: home,
         );
       },
     );

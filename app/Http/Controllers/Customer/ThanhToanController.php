@@ -68,6 +68,7 @@ class ThanhToanController extends Controller
                 'diemSuDung'     => $diemSuDung,
                 'danhSachDiaChi' => $danhSachDiaChi,
                 'diaChiHienTai'  => $diaChiHienTai,
+                'loaiCheckout'   => 'bo_hoa',         
             ]);
         }
 
@@ -91,6 +92,7 @@ class ThanhToanController extends Controller
                 'diemSuDung'     => $diemSuDung,
                 'danhSachDiaChi' => $danhSachDiaChi,
                 'diaChiHienTai'  => $diaChiHienTai,
+                 'loaiCheckout'   => 'mua_ngay_bo_hoa',
             ]);
         }
 
@@ -113,7 +115,10 @@ class ThanhToanController extends Controller
 
         $diemSuDung = session('diem_su_dung', 0);
 
-        return view('customer.ThanhToan', compact('user', 'gioHang', 'diemSuDung', 'danhSachDiaChi', 'diaChiHienTai'));
+        return view('customer.ThanhToan', 
+        compact('user', 'gioHang', 'diemSuDung', 'danhSachDiaChi', 'diaChiHienTai')
+        + ['loaiCheckout' => 'san_pham']
+        );
     }
 
     public function store(Request $request)
@@ -138,6 +143,21 @@ class ThanhToanController extends Controller
 
         $user      = Auth::user()->load('khachHang');
         $khachHang = $user->khachHang;
+
+        // ─── Chặn theo mức vi phạm (chỉ tính vi phạm CHƯA GỠ) ───
+        $viPhamChuaGo = \App\Models\ViPhamKhachHang::where('ma_khach_hang', $khachHang->ma_khach_hang)
+            ->where('da_go', false);
+
+        if ((clone $viPhamChuaGo)->where('han_che_ap_dung', 'TAM_KHOA_MUA_HANG')->exists()) {
+            return redirect()->route('customer.vi-pham.index')
+                ->with('error', 'Tài khoản đang bị tạm khóa mua hàng do vi phạm. Vui lòng thanh toán các khoản vi phạm để được mở lại.');
+        }
+        if ($request->phuong_thuc_thanh_toan === 'COD'
+            && ($khachHang->quyen_cod === 'GIOI_HAN' || (clone $viPhamChuaGo)->count() >= 2)) {
+            return redirect()->route('customer.thanh-toan')
+                ->with('error', 'Tài khoản của bạn đang bị hạn chế COD do vi phạm. Vui lòng thanh toán trước (VNPay) hoặc thanh toán khoản vi phạm tại mục "Vi phạm & Thanh toán".');
+        }
+
         $diemSuDung = (int) session('diem_su_dung', 0);
         $diaChiGiao = $request->dia_chi_chi_tiet . ', ' . $request->xa_phuong
             . ', ' . $request->quan_huyen . ', Hà Nội';
@@ -240,22 +260,42 @@ class ThanhToanController extends Controller
                 $allocatedRows = \App\Services\InventoryReservationService::reserveSingleItems($hoaDon, $gioHang);
 
                 // 2. LƯU CHI TIẾT HÓA ĐƠN
-                $grouped = collect($allocatedRows)->groupBy(
-                    fn ($r) => ($r['ma_san_pham'] ?? 0).'-'.($r['ma_chi_tiet_nhap'] ?? 0)
-                );
+                // 2. LƯU CHI TIẾT HÓA ĐƠN (hỗ trợ cả sản phẩm lẻ + bó hoa FlashSale)
+$grouped = collect($allocatedRows)->groupBy(function ($r) {
+    // Bó hoa FlashSale → group riêng theo ma_bo_hoa
+    if (!empty($r['ma_bo_hoa'])) {
+        return 'bo_' . $r['ma_bo_hoa'];
+    }
+    return ($r['ma_san_pham'] ?? 0) . '-' . ($r['ma_chi_tiet_nhap'] ?? 0);
+});
 
-                foreach ($grouped as $items) {
-                    $first = $items->first();
-                    $item  = collect($gioHang)->firstWhere('ma_san_pham', $first['ma_san_pham']);
-                    ChiTietHoaDon::create([
-                        'ma_hoa_don'        => $hoaDon->getKey(),
-                        'ma_san_pham'       => $first['ma_san_pham'],
-                        'ma_chi_tiet_nhap'  => $first['ma_chi_tiet_nhap'] ?? null,
-                        'so_luong'          => $items->sum('so_luong'),
-                        'gia_nhap_snapshot' => $first['gia_nhap_snapshot'] ?? 0,
-                        'gia_ban_snapshot'  => $item['gia_ban'] ?? ($first['gia_ban_snapshot'] ?? 0),
-                    ]);
-                }
+foreach ($grouped as $items) {
+    $first = $items->first();
+
+    // Tìm dòng gốc trong giỏ để lấy giá bán ưu tiên
+    $item = null;
+    if (!empty($first['ma_bo_hoa'])) {
+        $item = collect($gioHang)->first(fn ($row) =>
+            !empty($row['ma_bo_hoa'])
+            && (int) $row['ma_bo_hoa'] === (int) $first['ma_bo_hoa']
+        );
+    } else {
+        $item = collect($gioHang)->first(fn ($row) =>
+            !empty($row['ma_san_pham'])
+            && (int) $row['ma_san_pham'] === (int) $first['ma_san_pham']
+        );
+    }
+
+    ChiTietHoaDon::create([
+        'ma_hoa_don'        => $hoaDon->getKey(),
+        'ma_san_pham'       => $first['ma_san_pham'] ?? null,
+        'ma_bo_hoa'         => $first['ma_bo_hoa']   ?? null,   // ← THÊM
+        'ma_chi_tiet_nhap'  => $first['ma_chi_tiet_nhap'] ?? null,
+        'so_luong'          => $items->sum('so_luong'),
+        'gia_nhap_snapshot' => $first['gia_nhap_snapshot'] ?? 0,
+        'gia_ban_snapshot'  => $first['gia_ban_snapshot']  ?? ($item['gia_ban'] ?? 0),
+    ]);
+}
 
                 if ($diemSuDung > 0 && $khachHang) {
                     $khachHang->decrement('diem_tich_luy', $diemSuDung);

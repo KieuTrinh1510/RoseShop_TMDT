@@ -337,6 +337,11 @@
         HOA TƯƠI
     </a>
 
+    <a href="{{ route('customer.flash-sale') }}"
+       class="cat-link {{ request()->routeIs('customer.flash-sale*') ? 'active' : '' }}">
+        ⚡ FLASH SALE
+    </a>
+
     <div class="nav-dropdown" id="navDropdownBoHoa">
         <button type="button"
                 id="btnMuaBoHoa"
@@ -385,6 +390,25 @@
     </a>
 </nav>
 </div>
+
+{{-- BANNER VI PHẠM: hiện khi khách còn vi phạm chưa gỡ, dẫn tới trang thanh toán --}}
+@auth
+    @php
+        $khachVp = auth()->user()->khachHang ?? null;
+        $soViPhamChuaGo = $khachVp
+            ? \App\Models\ViPhamKhachHang::where('ma_khach_hang', $khachVp->ma_khach_hang)->where('da_go', false)->count()
+            : 0;
+    @endphp
+    @if($soViPhamChuaGo > 0 && !request()->routeIs('customer.vi-pham.*'))
+        <div style="background:#fef2f2;border-bottom:1px solid #fecaca;color:#991b1b;padding:10px 20px;text-align:center;font-size:.9rem;">
+            ⚠️ Tài khoản của bạn đang có <strong>{{ $soViPhamChuaGo }}/2</strong> vi phạm
+            @if($soViPhamChuaGo >= 2) và đã bị hạn chế mua hàng COD @endif.
+            <a href="{{ route('customer.vi-pham.index') }}" style="color:#dc2626;font-weight:700;text-decoration:underline;margin-left:6px;">
+                Xem &amp; thanh toán để gỡ vi phạm →
+            </a>
+        </div>
+    @endif
+@endauth
 
 @yield('content')
 
@@ -671,6 +695,9 @@
 <div id="success-toast" class="success-toast">
     ✅ Đã thêm sản phẩm vào giỏ hàng thành công
 </div>
+
+{{-- RoseBot AI Customer Support Widget --}}
+@include('components.chatbot-widget')
 
 </body>
 </html>

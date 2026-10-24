@@ -4,6 +4,48 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/Admin/NhaCungCap.css') }}">
+    <style>
+        .ncc-table th {
+            white-space: nowrap !important;
+            padding: 12px 12px !important;
+        }
+        .ncc-table td {
+            padding: 12px 12px !important;
+        }
+        .rs-filter-search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        .rs-filter-search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #667085;
+            pointer-events: none;
+            z-index: 2;
+            font-size: 14px;
+        }
+        .rs-filter-search-box input {
+            width: 100%;
+            height: 38px;
+            padding-left: 36px !important;
+            padding-right: 12px;
+            border-radius: 8px;
+            border: 1px solid #D0D5DD !important;
+            font-size: 13.5px;
+            color: #101828;
+            background-color: #ffffff;
+            outline: none;
+            box-shadow: none !important;
+        }
+        .rs-filter-search-box input:focus {
+            border-color: #EC3D8F !important;
+            box-shadow: 0 0 0 3px rgba(236, 61, 143, 0.15) !important;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -77,11 +119,11 @@
             <div class="ncc-filter-grid">
                 <div>
                     <label class="form-label" style="font-size:13px; font-weight:600; color:#475467;">Tìm kiếm</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white text-muted"><i class="bi bi-search"></i></span>
-                        <input type="text" name="keyword" class="form-control"
+                    <div class="rs-filter-search-box">
+                        <i class="bi bi-search"></i>
+                        <input type="text" name="keyword"
                                placeholder="Tìm theo tên, SĐT, email, mã..."
-                               value="{{ request('keyword') }}">
+                               value="{{ request('keyword') }}" autocomplete="off">
                     </div>
                 </div>
 
@@ -136,20 +178,20 @@
             <table class="ncc-table">
                 <thead>
                     <tr>
-                        <th style="width: 70px;">Mã</th>
-                        <th>Nhà cung cấp</th>
-                        <th>Số điện thoại</th>
-                        <th>Email</th>
-                        <th>Địa chỉ</th>
-                        <th class="text-center" style="width: 120px;">Lần nhập</th>
-                        <th style="width: 150px;">Trạng thái</th>
-                        <th class="text-end" style="width: 150px;">Thao tác</th>
+                        <th style="width: 70px; white-space: nowrap;">Mã</th>
+                        <th style="white-space: nowrap;">Nhà cung cấp</th>
+                        <th style="width: 140px; white-space: nowrap;">Số điện thoại</th>
+                        <th style="width: 220px; white-space: nowrap;">Email</th>
+                        <th style="white-space: nowrap;">Địa chỉ</th>
+                        <th class="text-center" style="width: 110px; white-space: nowrap;">Lần nhập</th>
+                        <th style="width: 150px; white-space: nowrap;">Trạng thái</th>
+                        <th class="text-end" style="width: 130px; white-space: nowrap;">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($nhaCungCaps as $ncc)
                         <tr>
-                            <td class="text-muted fw-semibold">
+                            <td class="text-muted fw-semibold" style="white-space: nowrap;">
                                 #{{ $ncc->ma_nha_cung_cap }}
                             </td>
 
@@ -161,9 +203,9 @@
                                 </a>
                             </td>
 
-                            <td>
+                            <td style="white-space: nowrap;">
                                 @if($ncc->so_dien_thoai)
-                                    <a href="tel:{{ $ncc->so_dien_thoai }}" class="text-muted text-decoration-none">
+                                    <a href="tel:{{ $ncc->so_dien_thoai }}" class="text-muted text-decoration-none" style="font-size: 13px; white-space: nowrap;">
                                         <i class="bi bi-telephone me-1 text-secondary"></i>{{ $ncc->so_dien_thoai }}
                                     </a>
                                 @else
@@ -171,9 +213,9 @@
                                 @endif
                             </td>
 
-                            <td>
+                            <td style="white-space: nowrap;">
                                 @if($ncc->email)
-                                    <a href="mailto:{{ $ncc->email }}" class="text-muted text-decoration-none">
+                                    <a href="mailto:{{ $ncc->email }}" class="text-muted text-decoration-none" style="font-size: 13px; white-space: nowrap;">
                                         <i class="bi bi-envelope me-1 text-secondary"></i>{{ $ncc->email }}
                                     </a>
                                 @else
@@ -263,9 +305,77 @@
             </table>
         </div>
 
-        @if($nhaCungCaps->hasPages())
-            <div class="p-3 border-top d-flex justify-content-end">
-                {{ $nhaCungCaps->links('pagination::bootstrap-5') }}
+        {{-- FOOTER PHÂN TRANG ĐỒNG BỘ CHUẨN --}}
+        @if($nhaCungCaps->total() > 0)
+            <div class="rs-table-footer">
+                <div class="rs-footer-left">
+                    <div class="rs-per-page-inline">
+                        <span class="rs-per-page-label">Số hàng mỗi trang</span>
+                        <select class="rs-per-page-select" onchange="location = this.value;">
+                            @foreach([10, 15, 20, 50] as $perPage)
+                                <option value="{{ request()->fullUrlWithQuery(['per_page' => $perPage, 'page' => 1]) }}" {{ (request('per_page', $nhaCungCaps->perPage()) == $perPage) ? 'selected' : '' }}>
+                                    {{ $perPage }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <span class="rs-records-count">
+                        {{ $nhaCungCaps->firstItem() ?? 0 }}-{{ $nhaCungCaps->lastItem() ?? 0 }} / {{ $nhaCungCaps->total() }} bản ghi
+                    </span>
+                </div>
+                <div class="rs-footer-pagination">
+                    <ul class="rs-pagination">
+                        @if ($nhaCungCaps->onFirstPage())
+                            <li class="page-item disabled"><span class="page-link">&lsaquo;</span></li>
+                        @else
+                            <li class="page-item"><a class="page-link" href="{{ $nhaCungCaps->previousPageUrl() }}" rel="prev">&lsaquo;</a></li>
+                        @endif
+
+                        @php
+                            $currentPage = $nhaCungCaps->currentPage();
+                            $lastPage = $nhaCungCaps->lastPage();
+                            $pages = [];
+
+                            if ($lastPage <= 3) {
+                                for ($i = 1; $i <= $lastPage; $i++) {
+                                    $pages[] = $i;
+                                }
+                            } else {
+                                if ($currentPage == 1) {
+                                    $pages = [1, '...', $lastPage];
+                                } elseif ($currentPage == $lastPage) {
+                                    $pages = [1, '...', $lastPage];
+                                } else {
+                                    $pages[] = 1;
+                                    if ($currentPage > 2) {
+                                        $pages[] = '...';
+                                    }
+                                    $pages[] = $currentPage;
+                                    if ($currentPage < $lastPage - 1) {
+                                        $pages[] = '...';
+                                    }
+                                    $pages[] = $lastPage;
+                                }
+                            }
+                        @endphp
+
+                        @foreach ($pages as $p)
+                            @if ($p === '...')
+                                <li class="page-item disabled"><span class="page-link ellipsis">&hellip;</span></li>
+                            @elseif ($p == $currentPage)
+                                <li class="page-item active"><span class="page-link">{{ $p }}</span></li>
+                            @else
+                                <li class="page-item"><a class="page-link" href="{{ $nhaCungCaps->url($p) }}">{{ $p }}</a></li>
+                            @endif
+                        @endforeach
+
+                        @if ($nhaCungCaps->hasMorePages())
+                            <li class="page-item"><a class="page-link" href="{{ $nhaCungCaps->nextPageUrl() }}" rel="next">&rsaquo;</a></li>
+                        @else
+                            <li class="page-item disabled"><span class="page-link">&rsaquo;</span></li>
+                        @endif
+                    </ul>
+                </div>
             </div>
         @endif
     </div>

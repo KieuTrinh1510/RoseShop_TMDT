@@ -8,8 +8,13 @@ const HoaDon = require('../../../models/HoaDon');
 const NhanVien = require('../../../models/NhanVien');
 const ChiTietHoaDon = require('../../../models/ChiTietHoaDon');
 const { taoLoi, parseMaHoaDon } = require('../../../utils/loi');
-const { timDonHoacNemLoi, moTaSanPham } = require('../order_helper');
+const {
+    timDonHoacNemLoi,
+    moTaSanPham,
+    locChiTietHienThi,
+} = require('../order_helper');
 const customerNotif = require('../customer_notification/customer_notification_services');
+const failureService = require('../shipper_failure/shipper_failure_service');
 
 async function confirmDelivery(maNhanVien, id) {
     const maHoaDon = parseMaHoaDon(id);
@@ -22,12 +27,10 @@ async function confirmDelivery(maNhanVien, id) {
         throw taoLoi(422, 'NOT_ARRIVED', 'Bạn cần báo "đã đến điểm giao" trước khi hoàn thành đơn hàng.');
     }
 
-    // CHUA_THANH_TOAN  → COD hoặc NGAN_HANG-khách-chưa-CK → shipper vừa thu tiền mặt
-    // DA_THANH_TOAN    → khách đã CK trước → shipper không giữ tiền
+    // CHUA_THANH_TOAN → shipper vừa thu tiền mặt; DA_THANH_TOAN → không giữ tiền
     const thuTienMat = hoaDon.trang_thai_thanh_toan === 'CHUA_THANH_TOAN';
     const ngayGiao = new Date();
 
-    // Điều kiện trong UPDATE chống bấm 2 lần ghi đè
     await sequelize.transaction(async (t) => {
         const updateFields = {
             trang_thai: 'DELIVERED',
@@ -53,14 +56,23 @@ async function confirmDelivery(maNhanVien, id) {
         }
     });
 
-    // Lỗi gửi thông báo không làm hỏng việc giao hàng
+    // Đóng báo cáo "chờ khách" nếu có (không làm hỏng giao hàng nếu lỗi)
     try {
-        const dsChiTiet = await ChiTietHoaDon.findByHoaDonWithSanPham(maHoaDon);
+        await failureService.dongBaoCaoKhiDaGiao(maHoaDon);
+    } catch (err) {
+        console.error(`[Delivery] Đóng báo cáo chờ khách đơn ${maHoaDon} thất bại:`, err.message);
+    }
+
+    // Gửi notification hoàn thành
+    try {
+        const dsChiTietRaw = await ChiTietHoaDon.findByHoaDonWithSanPham(maHoaDon);
+        const dsChiTietMoTa = locChiTietHienThi(dsChiTietRaw);
+
         await customerNotif.taoHoanThanh(
             hoaDon.ma_khach_hang,
             maHoaDon,
             hoaDon.maHienThi,
-            moTaSanPham(dsChiTiet)
+            moTaSanPham(dsChiTietMoTa)
         );
     } catch (err) {
         console.error(`[Delivery] Gửi thông báo "hoàn thành" đơn ${maHoaDon} thất bại:`, err.message);

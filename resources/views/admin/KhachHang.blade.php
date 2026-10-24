@@ -2,6 +2,61 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/Admin/KhachHang.css') }}">
+    <style>
+        .rs-table thead th {
+            background-color: #F8F9FA !important;
+            color: #475467 !important;
+            font-weight: 600 !important;
+            font-size: 13.5px !important;
+            border-bottom: 1px solid #EAECF0 !important;
+            white-space: nowrap !important;
+        }
+        .rs-table tbody tr:hover {
+            background-color: #F9FAFB !important;
+        }
+        .rs-table td {
+            white-space: nowrap !important;
+            padding: 12px 14px !important;
+        }
+        .rs-code-customer {
+            font-family: monospace;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #EC3D8F !important;
+            white-space: nowrap !important;
+        }
+        .rs-card-title-bar {
+            padding: 16px 20px 14px 20px;
+            background: #ffffff;
+            border-bottom: 1px solid #EAECF0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .rs-card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #101828;
+        }
+        .rs-count-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background-color: #F2F4F7;
+            color: #344054;
+            font-size: 12.5px;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+        .rs-table th:last-child, .rs-table td:last-child {
+            padding-right: 20px !important;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -10,14 +65,6 @@
 
     {{-- 1. HEADER TRANG --}}
     <div class="rs-header-block">
-        <div class="rs-header-icon-box">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-        </div>
         <div>
             <h1 class="rs-header-title">Quản lý khách hàng</h1>
             <p class="rs-header-subtitle">Theo dõi hồ sơ, quyền COD, lịch sử vi phạm và điểm tích lũy</p>
@@ -164,6 +211,22 @@
             @endif
         </form>
 
+        {{-- TIÊU ĐỀ BẢNG DANH SÁCH CHUẨN --}}
+        <div class="rs-card-title-bar">
+            <div class="rs-card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="8" y1="6" x2="21" y2="6"/>
+                    <line x1="8" y1="12" x2="21" y2="12"/>
+                    <line x1="8" y1="18" x2="21" y2="18"/>
+                    <line x1="3" y1="6" x2="3.01" y2="6"/>
+                    <line x1="3" y1="12" x2="3.01" y2="12"/>
+                    <line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+                <span>Danh sách khách hàng</span>
+                <span class="rs-count-badge">{{ $khachHangs->total() }}</span>
+            </div>
+        </div>
+
         {{-- BẢNG KHÁCH HÀNG 7 CỘT TINH GỌN (THÔNG TIN CẦN NHÌN NHANH, KHÔNG TRÀN MÀN HÌNH) --}}
         <div class="rs-table-container">
             <table class="rs-table">
@@ -200,12 +263,12 @@
                         @endphp
                         <tr>
                             {{-- 1. Mã khách hàng --}}
-                            <td style="text-align: center; font-weight: 700; color: #f43f5e; font-family: monospace; font-size: 13px;">
-                                KH-{{ str_pad($kh->ma_khach_hang, 4, '0', STR_PAD_LEFT) }}
+                            <td style="text-align: center; white-space: nowrap;">
+                                <span class="rs-code-customer">KH-{{ str_pad($kh->ma_khach_hang, 4, '0', STR_PAD_LEFT) }}</span>
                             </td>
 
                             {{-- 3. Khách hàng (Tên) --}}
-                            <td>
+                            <td style="white-space: nowrap;">
                                 <div class="rs-customer-cell">
                                     <div class="rs-customer-avatar">{{ $initial }}</div>
                                     <div class="rs-customer-name">{{ $kh->ten_khach_hang }}</div>
@@ -213,7 +276,7 @@
                             </td>
 
                             {{-- 4. Liên hệ (Số điện thoại) --}}
-                            <td style="font-weight: 500; font-family: monospace; font-size: 13px;">
+                            <td style="font-weight: 500; font-family: monospace; font-size: 13px; white-space: nowrap;">
                                 {{ $kh->so_dien_thoai }}
                             </td>
 
@@ -485,6 +548,7 @@
                                 <th style="width: 130px;">Loại ghi nhận</th>
                                 <th>Lý do</th>
                                 <th style="width: 90px;">Thực hiện</th>
+                                <th style="width: 100px; text-align:center;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody id="detail_vi_pham_tbody">
@@ -766,6 +830,45 @@
     </div>
 </div>
 
+{{-- MODAL 7: XÁC NHẬN GỠ VI PHẠM --}}
+<div class="rs-modal" id="xoaViPhamModal">
+    <div class="rs-modal-dialog" style="max-width: 500px;">
+        <div class="rs-modal-header">
+            <h3 class="rs-modal-title" style="color: #dc2626;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                Gỡ bỏ vi phạm
+            </h3>
+            <button type="button" class="rs-modal-close" onclick="closeModal('xoaViPhamModal')">&times;</button>
+        </div>
+
+        <form method="POST" id="xoaViPhamForm">
+            @csrf
+            @method('PATCH')
+
+            <div class="rs-modal-body">
+                <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:12px 14px; margin-bottom:14px; font-size:13.5px; color:#991b1b;">
+                    <strong>⚠ Bạn sắp gỡ bỏ vi phạm #<span id="xoa_vp_ma">—</span> của khách hàng.</strong>
+                    <div style="margin-top:6px; color:#7f1d1d;" id="xoa_vp_ly_do_goc"></div>
+                </div>
+
+                <div class="rs-form-group">
+                    <label class="rs-form-label">Lý do gỡ vi phạm <span style="color:#e11d48;">*</span></label>
+                    <textarea name="ly_do_go" class="rs-form-control" rows="3"
+                              style="height:auto !important; padding:8px 12px;" required
+                              maxlength="500"
+                              placeholder="VD: Khách hàng khiếu nại thành công, sự cố ngoài ý muốn, ..."></textarea>
+                    <small class="text-muted" style="font-size:11px;">Lý do này sẽ được lưu vào lịch sử để đối soát.</small>
+                </div>
+            </div>
+
+            <div class="rs-modal-footer">
+                <button type="button" class="rs-btn-cancel" onclick="closeModal('xoaViPhamModal')">Hủy</button>
+                <button type="submit" class="rs-btn-submit" style="background:#dc2626;">Xác nhận gỡ</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 {{-- JAVASCRIPT ĐIỀU KHIỂN GIAO DIỆN & MODAL --}}
 <script>
     // 1. Quản lý Modal chung
@@ -920,12 +1023,27 @@
 
             viPhamList.forEach(item => {
                 const dateStr = item.created_at ? new Date(item.created_at).toLocaleString('vi-VN') : '—';
+                const isDaGo = item.da_go === true;
                 const row = document.createElement('tr');
+                if (isDaGo) {
+                    row.style.opacity = '0.5';
+                }
                 row.innerHTML = `
                     <td style="font-size:12px; color:#64748b;">${dateStr}</td>
                     <td><span class="rs-badge ${item.hanh_dong === 'KHOI_PHUC_COD' ? 'green' : 'red'}" style="font-size:11px;">${item.loai_vi_pham}</span></td>
-                    <td style="font-size:12.5px; color:#334155;">${item.ly_do}</td>
+                    <td style="font-size:12.5px; color:#334155;">${item.ly_do}${isDaGo ? ' <span style="color:#16a34a;font-size:11px;">(Đã gỡ)</span>' : ''}</td>
                     <td style="font-size:12px; color:#64748b;">${item.nguoi_thuc_hien || 'Admin'}</td>
+                    <td style="text-align:center;">
+                        ${isDaGo
+                            ? '<span style="font-size:11px;color:#16a34a;">✓ Đã gỡ</span>'
+                            : `<button type="button" class="rs-action-btn delete"
+                                       style="width:28px;height:28px;"
+                                       title="Xóa vi phạm này"
+                                       onclick='openXoaViPhamModal(${item.ma_vi_pham}, ${item.ma_khach_hang}, ${JSON.stringify(item.ly_do || "")})'>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                               </button>`
+                        }
+                    </td>
                 `;
                 tbody.appendChild(row);
             });
@@ -1044,6 +1162,19 @@
         const btn = document.getElementById('btnConfirmDelete');
         btn.disabled = true;
         btn.textContent = 'Đang xóa...';
+    }
+
+    // 10. Modal Xóa vi phạm
+    function openXoaViPhamModal(maViPham, maKhachHang, lyDoGoc) {
+        const form = document.getElementById('xoaViPhamForm');
+        form.action = `/khach-hang/vi-pham/${maViPham}/xoa`;
+        document.getElementById('xoa_vp_ma').textContent = maViPham;
+        document.getElementById('xoa_vp_ly_do_goc').textContent = lyDoGoc ? ('Lý do ghi nhận: ' + lyDoGoc) : '';
+
+        // Reset textarea
+        form.querySelector('textarea[name="ly_do_go"]').value = '';
+
+        openModal('xoaViPhamModal');
     }
 </script>
 

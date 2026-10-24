@@ -40,6 +40,9 @@ class DonHangController extends Controller
             $query->where('ngay_dat', '<=', Carbon::parse($request->den_ngay)->endOfDay());
         }
 
+        $perPage  = in_array((int)$request->get('per_page'), [10, 15, 20, 50, 100]) ? (int)$request->get('per_page') : 10;
+        $donHangs = $query->orderByDesc('ngay_dat')->paginate($perPage)->withQueryString();
+        $shippers = NhanVien::where('chuc_vu', 'SHIPPER')->get();
         $donHangs = $query->orderByDesc('ngay_dat')->paginate(15)->withQueryString();
         $shippers = NhanVien::where('chuc_vu', 'SHIPPER')
     ->where('trang_thai_hoat_dong', 'ONLINE')

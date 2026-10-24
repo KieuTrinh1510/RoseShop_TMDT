@@ -5,10 +5,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/Admin/NhaCungCap.css') }}">
     <style>
-        .badge-ton-thuc-te { background: #e0f2fe; color: #0369a1; font-weight: 600; padding: 4px 10px; border-radius: 6px; }
-        .badge-ton-dang-giu { background: #fef3c7; color: #b45309; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer; }
+        .badge-ton-thuc-te { background: #e0f2fe; color: #0369a1; font-weight: 700; padding: 4px 10px; border-radius: 6px; font-size: 12px; }
+        .badge-ton-dang-giu { background: #fef3c7; color: #b45309; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; }
         .badge-ton-dang-giu:hover { background: #fde68a; }
-        .badge-ton-kha-dung { background: #dcfce7; color: #15803d; font-weight: 700; padding: 4px 10px; border-radius: 6px; }
+        .badge-ton-kha-dung { background: #dcfce7; color: #15803d; font-weight: 700; padding: 4px 10px; border-radius: 6px; font-size: 12px; }
         .stat-card-tk {
             background: #fff;
             border: 1px solid #eaecf0;
@@ -25,12 +25,107 @@
         .stat-card-tk .title { font-size: 13px; color: #667085; font-weight: 500; margin-bottom: 6px; }
         .stat-card-tk .value { font-size: 24px; font-weight: 700; color: #101828; }
         .ncc-filter-grid {
-            grid-template-columns: 1.3fr 1.5fr 1.1fr 1.1fr 1fr auto;
+            display: grid !important;
+            grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.5fr) minmax(0, 1.15fr) minmax(0, 1.25fr) minmax(0, 1.15fr) auto !important;
+            gap: 12px 12px !important;
+            align-items: flex-end !important;
         }
-        @media (max-width: 1200px) {
-            .ncc-filter-grid {
-                grid-template-columns: 1fr 1fr;
-            }
+        .ncc-filter-grid > div { min-width: 0; }
+        .ncc-filter-grid select,
+        .ncc-filter-grid input { width: 100% !important; text-overflow: ellipsis; }
+        .ncc-filter-grid select { font-size: 12.5px !important; padding-right: 26px !important; }
+        @media (max-width: 1199.98px) {
+            .ncc-filter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+        }
+        @media (max-width: 767.98px) {
+            .ncc-filter-grid { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
+        }
+        .ncc-filter-grid .form-label {
+            font-size: 12.5px !important;
+            font-weight: 600 !important;
+            color: #475467 !important;
+            margin-bottom: 5px !important;
+            white-space: nowrap !important;
+        }
+        .ncc-filter-grid select,
+        .ncc-filter-grid input {
+            height: 38px !important;
+            border: 1px solid #D0D5DD !important;
+            border-radius: 8px !important;
+            font-size: 13px !important;
+            color: #101828 !important;
+            padding: 0 10px !important;
+            background-color: #ffffff !important;
+        }
+        .ncc-filter-grid select:focus,
+        .ncc-filter-grid input:focus {
+            border-color: #EC3D8F !important;
+            box-shadow: 0 0 0 3px rgba(236, 61, 143, 0.15) !important;
+            outline: none !important;
+        }
+        .ncc-filter-box {
+            background: #ffffff !important;
+            border: 1px solid #EAECF0 !important;
+            border-radius: 12px !important;
+            padding: 16px 20px !important;
+            margin-bottom: 20px !important;
+            box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05) !important;
+        }
+        .ncc-table-card {
+            background: #ffffff !important;
+            border: 1px solid #EAECF0 !important;
+            border-radius: 12px !important;
+            box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05) !important;
+            overflow: hidden !important;
+        }
+        .ncc-table {
+            width: 100% !important;
+            min-width: 1050px !important;
+            border-collapse: separate !important;
+            border-spacing: 0 !important;
+        }
+        .ncc-table thead tr {
+            background-color: #F8F9FA !important;
+        }
+        .ncc-table th {
+            background-color: #F8F9FA !important;
+            color: #475467 !important;
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            border-bottom: 1px solid #EAECF0 !important;
+            white-space: nowrap !important;
+            padding: 12px 10px !important;
+            text-transform: none !important;
+            letter-spacing: normal !important;
+        }
+        .ncc-table td {
+            padding: 12px 10px !important;
+            font-size: 13.5px !important;
+            vertical-align: middle !important;
+            border-bottom: 1px solid #F2F4F7 !important;
+            color: #344054 !important;
+        }
+        .ncc-table tbody tr:hover {
+            background-color: #FDF9FA !important;
+        }
+        .pagination .page-item .page-link {
+            border-radius: 8px !important;
+            margin: 0 2px !important;
+            border: 1px solid #D0D5DD !important;
+            color: #344054 !important;
+            font-size: 13px !important;
+            padding: 6px 12px !important;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: #EC3D8F !important;
+            border-color: #EC3D8F !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+        }
+        .pagination .page-item.disabled .page-link {
+            color: #98A2B3 !important;
+            background-color: #F9FAFB !important;
+            border-color: #EAECF0 !important;
         }
     </style>
 @endpush
@@ -151,12 +246,12 @@
                         <option value="NGUNG_BAN" {{ request('trang_thai') === 'NGUNG_BAN' ? 'selected' : '' }}>Ngừng bán</option>
                     </select>
                 </div>
-                <div style="display:flex; align-items:flex-end; gap:8px;">
-                    <button type="submit" class="ncc-btn-primary" style="flex:1;">
+                <div style="display:flex; align-items:flex-end; gap:8px; white-space:nowrap;">
+                    <button type="submit" class="ncc-btn-primary" style="background-color:#EC3D8F; border-color:#EC3D8F; color:#fff; border-radius:8px; height:38px; padding:0 18px; font-weight:500; font-size:13px; display:inline-flex; align-items:center; justify-content:center; gap:6px; white-space:nowrap;">
                         <i class="bi bi-funnel"></i> Lọc
                     </button>
                     @if(request()->anyFilled(['loai_ton_kho', 'keyword', 'loai_san_pham', 'tinh_trang_ton', 'trang_thai']))
-                        <a href="{{ route('admin.ton-kho') }}" class="btn btn-outline-secondary" title="Xóa bộ lọc">
+                        <a href="{{ route('admin.ton-kho') }}" class="btn" style="background:#F2F4F7; border:1px solid #D0D5DD; color:#344054; border-radius:8px; height:38px; width:38px; display:inline-flex; align-items:center; justify-content:center;" title="Xóa bộ lọc">
                             <i class="bi bi-x-lg"></i>
                         </a>
                     @endif
@@ -167,6 +262,13 @@
 
     {{-- Main Table --}}
     <div class="ncc-table-card">
+        <div class="rs-card-title-bar" style="padding: 16px 20px 14px 20px; background: #ffffff; border-bottom: 1px solid #EAECF0; display: flex; align-items: center; justify-content: space-between;">
+            <div class="rs-card-title" style="display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; color: #101828;">
+                <i class="bi bi-box-seam" style="font-size: 16px; color: #475467;"></i>
+                <span>Danh sách tồn kho</span>
+                <span class="rs-count-badge" style="display: inline-flex; align-items: center; justify-content: center; padding: 2px 8px; border-radius: 12px; background-color: #F2F4F7; color: #344054; font-size: 12.5px; font-weight: 600; margin-left: 4px;">{{ $items->total() }}</span>
+            </div>
+        </div>
         <div class="table-responsive">
             <table class="table ncc-table align-middle mb-0">
                 <thead>
@@ -190,19 +292,15 @@
                             $isBoHoa = !empty($sp->is_bo_hoa);
                         @endphp
                         <tr>
-                            <td>
-                                @if($isBoHoa)
-                                    <strong class="text-primary" title="Bó hoa thành phẩm">{{ $sp->ma_dinh_danh }}</strong>
-                                @else
-                                    <strong class="text-secondary">{{ $sp->ma_dinh_danh }}</strong>
-                                @endif
+                            <td style="white-space: nowrap;">
+                                <span class="fw-bold" style="color:#EC3D8F; font-size: 12.5px; white-space: nowrap;">{{ $sp->ma_dinh_danh }}</span>
                             </td>
                             <td>
                                 <div class="d-flex align-items-center gap-2">
                                     @if($sp->hinh_anh)
-                                        <img src="{{ asset($sp->hinh_anh) }}" alt="" style="width: 38px; height: 38px; object-fit: cover; border-radius: 6px; border: 1px solid #f2f4f7;">
+                                        <img src="{{ asset($sp->hinh_anh) }}" alt="" style="width: 38px; height: 38px; object-fit: cover; border-radius: 8px; border: 1px solid #eaecf0;">
                                     @else
-                                        <div style="width: 38px; height: 38px; background: #f2f4f7; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #98a2b3;">
+                                        <div style="width: 38px; height: 38px; background: #f2f4f7; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #98a2b3;">
                                             <i class="bi bi-image"></i>
                                         </div>
                                     @endif
@@ -247,30 +345,30 @@
                             <td class="text-center">
                                 <span class="badge-ton-kha-dung">{{ number_format($khaDung) }}</span>
                             </td>
-                            <td class="text-center">
+                            <td class="text-center" style="white-space: nowrap;">
                                 @if($khaDung <= 0)
-                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">Hết hàng</span>
+                                    <span class="badge" style="background:#FEF3F2; color:#B42318; border:1px solid #FECDCA; border-radius:12px; padding:3px 10px; font-size:11.5px; font-weight:600; white-space:nowrap;">Hết hàng</span>
                                 @elseif($khaDung <= 10)
-                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">Sắp hết</span>
+                                    <span class="badge" style="background:#FFFAEB; color:#B54708; border:1px solid #FEDF89; border-radius:12px; padding:3px 10px; font-size:11.5px; font-weight:600; white-space:nowrap;">Sắp hết</span>
                                 @else
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Còn hàng</span>
+                                    <span class="badge" style="background:#ECFDF3; color:#027A48; border:1px solid #ABEFC6; border-radius:12px; padding:3px 10px; font-size:11.5px; font-weight:600; white-space:nowrap;">Còn hàng</span>
                                 @endif
                             </td>
-                            <td class="text-end">
+                            <td class="text-end" style="white-space: nowrap;">
                                 @if($isBoHoa)
                                     @if($dangGiu > 0)
-                                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="xemDonGiuBoHoa({{ $sp->id }})" title="Xem đơn giữ">
-                                            <i class="bi bi-eye"></i> Đơn giữ
+                                        <button type="button" class="btn btn-sm" style="background:#FEF3C7; border:1px solid #FDE68A; color:#B45309; border-radius:6px; font-size:12px; font-weight:600; padding:4px 10px;" onclick="xemDonGiuBoHoa({{ $sp->id }})" title="Xem đơn giữ">
+                                            <i class="bi bi-eye me-1"></i> Đơn giữ
                                         </button>
                                     @else
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="xemChiTietBoHoa({{ $sp->id }})" title="Xem chi tiết tồn bó">
-                                            <i class="bi bi-info-circle"></i> Chi tiết
+                                        <button type="button" class="btn btn-sm" style="background:#FDEAF3; border:1px solid #FCCEE2; color:#EC3D8F; border-radius:6px; font-size:12px; font-weight:600; padding:4px 10px;" onclick="xemChiTietBoHoa({{ $sp->id }})" title="Xem chi tiết tồn bó">
+                                            <i class="bi bi-info-circle me-1"></i> Chi tiết
                                         </button>
                                     @endif
                                 @else
                                     @if($dangGiu > 0)
-                                        <button type="button" class="btn btn-sm btn-outline-warning" onclick="xemDonGiu({{ $sp->id }})" title="Xem đơn giữ">
-                                            <i class="bi bi-eye"></i> Đơn giữ
+                                        <button type="button" class="btn btn-sm" style="background:#FEF3C7; border:1px solid #FDE68A; color:#B45309; border-radius:6px; font-size:12px; font-weight:600; padding:4px 10px;" onclick="xemDonGiu({{ $sp->id }})" title="Xem đơn giữ">
+                                            <i class="bi bi-eye me-1"></i> Đơn giữ
                                         </button>
                                     @else
                                         <span class="text-muted" style="font-size: 13px;">—</span>
@@ -290,9 +388,77 @@
             </table>
         </div>
 
-        @if($items->hasPages())
-            <div class="ncc-pagination-wrapper p-3 border-top">
-                {{ $items->links() }}
+        {{-- FOOTER PHÂN TRANG ĐỒNG BỘ CHUẨN --}}
+        @if($items->total() > 0)
+            <div class="rs-table-footer">
+                <div class="rs-footer-left">
+                    <div class="rs-per-page-inline">
+                        <span class="rs-per-page-label">Số hàng mỗi trang</span>
+                        <select class="rs-per-page-select" onchange="location = this.value;">
+                            @foreach([10, 15, 20, 50] as $perPage)
+                                <option value="{{ request()->fullUrlWithQuery(['per_page' => $perPage, 'page' => 1]) }}" {{ (request('per_page', $items->perPage()) == $perPage) ? 'selected' : '' }}>
+                                    {{ $perPage }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <span class="rs-records-count">
+                        {{ $items->firstItem() ?? 0 }}-{{ $items->lastItem() ?? 0 }} / {{ $items->total() }} bản ghi
+                    </span>
+                </div>
+                <div class="rs-footer-pagination">
+                    <ul class="rs-pagination">
+                        @if ($items->onFirstPage())
+                            <li class="page-item disabled"><span class="page-link">&lsaquo;</span></li>
+                        @else
+                            <li class="page-item"><a class="page-link" href="{{ $items->previousPageUrl() }}" rel="prev">&lsaquo;</a></li>
+                        @endif
+
+                        @php
+                            $currentPage = $items->currentPage();
+                            $lastPage = $items->lastPage();
+                            $pages = [];
+
+                            if ($lastPage <= 3) {
+                                for ($i = 1; $i <= $lastPage; $i++) {
+                                    $pages[] = $i;
+                                }
+                            } else {
+                                if ($currentPage == 1) {
+                                    $pages = [1, '...', $lastPage];
+                                } elseif ($currentPage == $lastPage) {
+                                    $pages = [1, '...', $lastPage];
+                                } else {
+                                    $pages[] = 1;
+                                    if ($currentPage > 2) {
+                                        $pages[] = '...';
+                                    }
+                                    $pages[] = $currentPage;
+                                    if ($currentPage < $lastPage - 1) {
+                                        $pages[] = '...';
+                                    }
+                                    $pages[] = $lastPage;
+                                }
+                            }
+                        @endphp
+
+                        @foreach ($pages as $p)
+                            @if ($p === '...')
+                                <li class="page-item disabled"><span class="page-link ellipsis">&hellip;</span></li>
+                            @elseif ($p == $currentPage)
+                                <li class="page-item active"><span class="page-link">{{ $p }}</span></li>
+                            @else
+                                <li class="page-item"><a class="page-link" href="{{ $items->url($p) }}">{{ $p }}</a></li>
+                            @endif
+                        @endforeach
+
+                        @if ($items->hasMorePages())
+                            <li class="page-item"><a class="page-link" href="{{ $items->nextPageUrl() }}" rel="next">&rsaquo;</a></li>
+                        @else
+                            <li class="page-item disabled"><span class="page-link">&rsaquo;</span></li>
+                        @endif
+                    </ul>
+                </div>
             </div>
         @endif
     </div>

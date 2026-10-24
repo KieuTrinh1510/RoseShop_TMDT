@@ -42,6 +42,28 @@ class KhachHang extends Model
         return $this->hasMany(HoaDon::class, 'ma_khach_hang', 'ma_khach_hang');
     }
 
+    public function viPhamGiaoHang()
+    {
+        return $this->hasMany(ViPhamKhachHang::class, 'ma_khach_hang', 'ma_khach_hang')
+            ->orderByDesc('created_at');
+    }
+    // [MỚI] Các giao dịch thanh toán vi phạm của khách
+    public function thanhToanViPham()
+    {
+        return $this->hasMany(
+            ThanhToanViPhamKhachHang::class,
+            'ma_khach_hang',
+            'ma_khach_hang'
+        )->orderByDesc('created_at');
+    }
+
+    // [MỚI] Các vi phạm CHƯA bị gỡ (dùng để đếm 0/2, 1/2, 2/2)
+    public function viPhamChuaGo()
+    {
+        return $this->hasMany(ViPhamKhachHang::class, 'ma_khach_hang', 'ma_khach_hang')
+            ->where('da_go', false);
+    }
+
     public function lichSuViPhamCod()
     {
         return $this->hasMany(LichSuViPhamCod::class, 'ma_khach_hang', 'ma_khach_hang')->orderBy('id', 'desc');

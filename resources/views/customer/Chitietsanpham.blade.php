@@ -1,18 +1,18 @@
 @extends('customer.layouts.customer')
 
-@section('title',
-    ($type ?? 'san-pham') === 'mau-bo-hoa'
-        ? (($boHoaMau->ten_mau ?? 'Mẫu bó hoa') . ' – Hoa Tươi Shop 🌸')
-        : ((($type ?? 'san-pham') === 'bo-hoa-tu-tao')
-            ? (($preview['ten_bo_hoa'] ?? 'Bó hoa tự tạo') . ' – Hoa Tươi Shop 🌸')
-            : (($sanPham->ten_san_pham ?? 'Sản phẩm') . ' – Hoa Tươi Shop 🌸')))
+@section('title', match($type ?? 'san-pham') {
+    'mau-bo-hoa'    => ($boHoaMau->ten_mau ?? 'Mẫu bó hoa') . ' – Hoa Tươi Shop 🌸',
+    'bo-hoa-tu-tao' => ($preview['ten_bo_hoa'] ?? 'Bó hoa tự tạo') . ' – Hoa Tươi Shop 🌸',
+    'flash-sale'    => ($flashSale['ten'] ?? 'Flash Sale') . ' – Hoa Tươi Shop 🌸',
+    default         => ($sanPham->ten_san_pham ?? 'Sản phẩm') . ' – Hoa Tươi Shop 🌸',
+})
 
 @section('head-styles')
 <link rel="stylesheet" href="{{ asset('css/Customer/ChiTietSanPham.css') }}?v={{ time() }}">
 @endsection
 
 @section('content')
-@if(($type ?? 'san-pham') === 'mau-bo-hoa')
+
 {{-- ═══════════════════════════════════════════════════════════
      NHÁNH 1: MẪU BÓ HOA HỆ THỐNG
 ═══════════════════════════════════════════════════════════ --}}
@@ -148,7 +148,6 @@
     </div>
 </div>
 
-@elseif(($type ?? 'san-pham') === 'bo-hoa-tu-tao')
 {{-- ═══════════════════════════════════════════════════════════
      NHÁNH 2: BÓ HOA TỰ TẠO (PREVIEW TỪ SESSION)
 ═══════════════════════════════════════════════════════════ --}}
@@ -372,10 +371,139 @@
     </div>
 </div>
 
-@else
 {{-- ═══════════════════════════════════════════════════════════
-     NHÁNH 3: SẢN PHẨM ĐƠN LẺ (GIỮ NGUYÊN)
+     NHÁNH 3: FLASH SALE
+     Biến: $flashSale = array từ Customer\FlashSaleController::chuanHoa()
 ═══════════════════════════════════════════════════════════ --}}
+@elseif(($type ?? 'san-pham') === 'flash-sale')
+@php
+    $fsLaBo  = ($flashSale['loai'] ?? '') === 'BO_HOA';
+    $fsEmoji = $fsLaBo ? '💐' : '🌸';
+    $fsConLai = (int) ($flashSale['so_luong_con_lai'] ?? 0);
+@endphp
+
+{{-- BREADCRUMB --}}
+<div class="breadcrumb">
+    <a onclick="navigateTo('{{ route('customer.dashboard') }}')">🏠 Trang chủ</a>
+    <span class="sep">›</span>
+    <a href="{{ route('customer.flash-sale') }}">⚡ Flash Sale</a>
+    <span class="sep">›</span>
+    <span>{{ $flashSale['ten'] }}</span>
+</div>
+
+<div class="detail-wrap">
+
+    {{-- LEFT: Ảnh --}}
+    <div>
+        <div class="gallery-main">
+            @if(!empty($flashSale['anh']))
+                <img src="{{ $flashSale['anh'] }}" alt="{{ $flashSale['ten'] }}"
+                     onerror="this.style.display='none'; document.getElementById('fsImgFallback').style.display='flex';">
+                <div class="gallery-placeholder" id="fsImgFallback" style="display:none;">{{ $fsEmoji }}</div>
+            @else
+                <div class="gallery-placeholder">{{ $fsEmoji }}</div>
+            @endif
+            <span class="badge-detail-status" style="background:#e53935; color:#fff;">⚡ Flash Sale</span>
+            <span class="badge-detail-type">{{ $fsLaBo ? 'Bó hoa' : 'Sản phẩm' }}</span>
+        </div>
+    </div>
+
+    {{-- RIGHT: Info --}}
+    <div class="info-panel">
+
+        <div>
+            <div class="info-category-tag" style="background:#e53935; color:#fff; border:none;">
+                ⚡ Flash Sale
+            </div>
+        </div>
+
+        <h1 class="info-title">{{ $flashSale['ten'] }}</h1>
+
+        {{-- Giá Flash Sale --}}
+        <div class="price-table-wrap" style="background:#fff5f5; border:1px solid #fcd5d5; border-radius:12px; padding:18px; margin-top:14px;">
+            <div style="display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;">
+                <span style="color:#a09890; text-decoration:line-through; font-size:1rem;">
+                    {{ number_format($flashSale['gia_goc'], 0, ',', '.') }}₫
+                </span>
+                <span style="color:#e53935; font-weight:700; font-size:2rem;">
+                    {{ number_format($flashSale['gia_flash_sale'], 0, ',', '.') }}₫
+                </span>
+                @if(($flashSale['phan_tram_giam'] ?? 0) > 0)
+                    <span style="background:#fff; color:#e53935; font-weight:700; padding:2px 10px; border-radius:6px; border:1px solid #e53935;">
+                        -{{ $flashSale['phan_tram_giam'] }}%
+                    </span>
+                @endif
+            </div>
+
+            <div style="margin-top:12px; font-size:.9rem; color:#6b6560;">
+                Còn lại
+                <strong style="color:#e53935;">{{ $fsConLai }}</strong>
+                / {{ (int) $flashSale['so_luong'] }} sản phẩm
+            </div>
+
+            @if(!empty($flashSale['ket_thuc']))
+                <div style="margin-top:6px; font-size:.9rem; color:#6b6560;">
+                    Kết thúc: <strong>{{ \Carbon\Carbon::parse($flashSale['ket_thuc'])->format('d/m/Y H:i') }}</strong>
+                </div>
+            @endif
+        </div>
+
+        {{-- Mô tả --}}
+        @if(!empty($flashSale['mo_ta']))
+            <div class="info-desc" style="margin-top:14px;">
+                <div class="info-desc-label">📝 Mô tả sản phẩm</div>
+                {{ $flashSale['mo_ta'] }}
+            </div>
+        @endif
+
+        {{-- Form mua --}}
+        @if($fsConLai > 0)
+            @auth
+                <form method="POST" action="{{ route('customer.flash-sale.add') }}" style="margin-top:20px;">
+                    @csrf
+                    <input type="hidden" name="ma_flash_sale" value="{{ $flashSale['ma_flash_sale'] }}">
+                    <input type="hidden" name="so_luong" id="qty-hidden-fs" value="1">
+
+                    <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
+                        <span style="font-weight:500;">Số lượng:</span>
+                        <div style="display:inline-flex; align-items:center; border:1px solid #e0dbd0; border-radius:8px; overflow:hidden; background:#fff;">
+                            <button type="button" onclick="stepQtyFs(-1)"
+                                    style="width:40px; height:40px; border:none; background:transparent; font-size:1.2rem; font-weight:600; color:#6b6560; cursor:pointer;">−</button>
+                            <input type="number" id="qty-fs" value="1" min="1"
+                                   max="{{ $fsConLai }}" readonly
+                                   style="width:60px; height:40px; border:none; border-left:1px solid #e0dbd0; border-right:1px solid #e0dbd0; text-align:center; font-size:1rem; font-weight:600; outline:none;">
+                            <button type="button" onclick="stepQtyFs(1)"
+                                    style="width:40px; height:40px; border:none; background:transparent; font-size:1.2rem; font-weight:600; color:#6b6560; cursor:pointer;">+</button>
+                        </div>
+                    </div>
+
+                    <button type="submit"
+                            style="width:100%; padding:14px 24px; background:#e53935; color:#fff; border:none; border-radius:8px; font-size:1rem; font-weight:600; cursor:pointer;">
+                        🛒 Mua ngay
+                    </button>
+                </form>
+            @else
+                <div class="login-notice" style="margin-top:16px;">
+                    💡 Vui lòng <a href="{{ route('login') }}">đăng nhập</a> để mua sản phẩm Flash Sale.
+                </div>
+                <a href="{{ route('login') }}"
+                   style="display:block; margin-top:16px; width:100%; padding:14px 24px; background:#e53935; color:#fff; text-align:center; border-radius:8px; font-weight:600; text-decoration:none; box-sizing:border-box;">
+                    Đăng nhập để mua
+                </a>
+            @endauth
+        @else
+            <button disabled
+                    style="display:block; margin-top:16px; width:100%; padding:14px 24px; background:#ccc; color:#fff; text-align:center; border-radius:8px; font-weight:600; border:none; cursor:not-allowed;">
+                Hết hàng
+            </button>
+        @endif
+    </div>
+</div>
+
+{{-- ═══════════════════════════════════════════════════════════
+     NHÁNH 4: SẢN PHẨM ĐƠN LẺ (MẶC ĐỊNH)
+═══════════════════════════════════════════════════════════ --}}
+@else
 @php
     $categoryLabels = [
         'HOA_TUOI'         => 'Hoa Tươi',
@@ -855,7 +983,7 @@ if (document.getElementById('lo-row-0')) {
 }
 
 (function() {
-    const giaGoc = {{ isset($quote) && $type === 'mau-bo-hoa' ? (float) $quote['gia_moi_bo'] : 0 }};
+    const giaGoc = {{ isset($quote) && ($type ?? '') === 'mau-bo-hoa' ? (float) $quote['gia_moi_bo'] : 0 }};
     const sel = document.getElementById('thiepSelectMau');
     const priceEl = document.querySelector('.price-val');
     if (!sel || !priceEl || !giaGoc) return;
@@ -869,6 +997,7 @@ if (document.getElementById('lo-row-0')) {
     sel.addEventListener('change', update);
 })();
 
+// ── Cập nhật giá tự tạo khi chọn thiệp (nhánh bó hoa tự tạo) ───────────────
 (function() {
     const giaMoiBoGoc = {{ isset($quote) && ($type ?? '') === 'bo-hoa-tu-tao' ? (float) $quote['gia_moi_bo'] : 0 }};
     const soLuongBo = {{ isset($preview) && isset($preview['so_luong']) ? (int) $preview['so_luong'] : 1 }};

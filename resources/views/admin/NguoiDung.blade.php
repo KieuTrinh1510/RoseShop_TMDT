@@ -2,6 +2,68 @@
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/Admin/NguoiDung.css') }}">
+    <style>
+        .rs-table thead th {
+            background-color: #F8F9FA !important;
+            color: #475467 !important;
+            font-weight: 600 !important;
+            font-size: 13.5px !important;
+            border-bottom: 1px solid #EAECF0 !important;
+            white-space: nowrap !important;
+        }
+        .rs-table tbody tr:hover {
+            background-color: #F9FAFB !important;
+        }
+        .rs-table td {
+            white-space: nowrap !important;
+            padding: 12px 14px !important;
+        }
+        .rs-code-user {
+            font-family: monospace;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #EC3D8F !important;
+            white-space: nowrap !important;
+        }
+        .rs-card-title-bar {
+            padding: 16px 20px 14px 20px;
+            background: #ffffff;
+            border-bottom: 1px solid #EAECF0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .rs-card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #101828;
+        }
+        .rs-count-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background-color: #F2F4F7;
+            color: #344054;
+            font-size: 12.5px;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+        .rs-btn-create, .rs-btn-search {
+            background: #EC3D8F !important;
+            border-color: #EC3D8F !important;
+        }
+        .rs-btn-create:hover, .rs-btn-search:hover {
+            background: #D82677 !important;
+        }
+        .rs-table th:last-child, .rs-table td:last-child {
+            padding-right: 20px !important;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -10,17 +72,9 @@
 
     {{-- 1. HEADER TRANG: Tiêu đề + Nút Thêm tài khoản --}}
     <div class="rs-header-block">
-        <div class="rs-header-left">
-            <div class="rs-header-icon-box">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                </svg>
-            </div>
-            <div>
-                <h1 class="rs-header-title">Tài khoản hệ thống</h1>
-                <p class="rs-header-subtitle">Quản lý định danh đăng nhập, phân quyền vai trò và trạng thái Khóa / Mở khóa tài khoản</p>
-            </div>
+        <div>
+            <h1 class="rs-header-title">Tài khoản hệ thống</h1>
+            <p class="rs-header-subtitle">Quản lý định danh đăng nhập, phân quyền vai trò và trạng thái Khóa / Mở khóa tài khoản</p>
         </div>
 
         {{-- Nút Thêm tài khoản mới --}}
@@ -188,29 +242,45 @@
 
         </form>
 
+        {{-- TIÊU ĐỀ BẢNG DANH SÁCH CHUẨN --}}
+        <div class="rs-card-title-bar">
+            <div class="rs-card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="8" y1="6" x2="21" y2="6"/>
+                    <line x1="8" y1="12" x2="21" y2="12"/>
+                    <line x1="8" y1="18" x2="21" y2="18"/>
+                    <line x1="3" y1="6" x2="3.01" y2="6"/>
+                    <line x1="3" y1="12" x2="3.01" y2="12"/>
+                    <line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+                <span>Danh sách tài khoản người dùng</span>
+                <span class="rs-count-badge">{{ $nguoiDungs->total() }}</span>
+            </div>
+        </div>
+
         {{-- 4. BẢNG DỮ LIỆU TÀI KHOẢN HỆ THỐNG --}}
         <div class="rs-table-container">
             <table class="rs-table">
                 <colgroup>
+                    <col style="width: 105px;">
+                    <col style="width: 175px;">
+                    <col style="width: 135px;">
+                    <col style="width: 185px;">
+                    <col style="width: 235px;">
+                    <col style="width: 135px;">
+                    <col style="width: 130px;">
                     <col style="width: 110px;">
-                    <col style="width: 190px;">
-                    <col style="width: 140px;">
-                    <col style="width: 200px;">
-                    <col style="width: 210px;">
-                    <col style="width: 130px;">
-                    <col style="width: 130px;">
-                    <col style="width: 120px;">
                 </colgroup>
                 <thead>
                     <tr>
-                        <th style="text-align: center;">Mã TK</th>
-                        <th style="text-align: left;">Tên đăng nhập</th>
-                        <th style="text-align: center;">Vai trò</th>
-                        <th style="text-align: left;">Chủ sở hữu</th>
-                        <th style="text-align: left;">Email liên kết</th>
-                        <th style="text-align: center;">Số điện thoại</th>
-                        <th style="text-align: center;">Trạng thái</th>
-                        <th style="text-align: center;">Thao tác</th>
+                        <th style="text-align: center; white-space: nowrap;">Mã TK</th>
+                        <th style="text-align: left; white-space: nowrap;">Tên đăng nhập</th>
+                        <th style="text-align: center; white-space: nowrap;">Vai trò</th>
+                        <th style="text-align: left; white-space: nowrap;">Chủ sở hữu</th>
+                        <th style="text-align: left; white-space: nowrap;">Email liên kết</th>
+                        <th style="text-align: center; white-space: nowrap;">Số điện thoại</th>
+                        <th style="text-align: center; white-space: nowrap;">Trạng thái</th>
+                        <th style="text-align: center; white-space: nowrap;">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -238,22 +308,22 @@
                         @endphp
                         <tr>
                             {{-- 1. Mã tài khoản --}}
-                            <td style="text-align: center; font-weight: 700; color: #f43f5e; font-family: monospace; font-size: 13px;">
-                                TK-{{ str_pad($user->ma_nguoi_dung, 4, '0', STR_PAD_LEFT) }}
+                            <td style="text-align: center; white-space: nowrap;">
+                                <span class="rs-code-user">TK-{{ str_pad($user->ma_nguoi_dung, 4, '0', STR_PAD_LEFT) }}</span>
                             </td>
 
                             {{-- 2. Tên đăng nhập --}}
-                            <td>
-                                <span class="rs-text-bold" style="font-family: monospace; font-size: 13.5px; color: #0f172a;">
+                            <td style="white-space: nowrap;">
+                                <span class="rs-text-bold" style="font-family: monospace; font-size: 13px; color: #0f172a;">
                                     {{ $user->ten_dang_nhap }}
                                 </span>
                                 @if($isCurrentAuth)
-                                    <span style="font-size:11px; color:#f43f5e; font-weight:600; background:#fff1f2; padding:2px 6px; border-radius:4px; margin-left:4px;">(Bạn)</span>
+                                    <span style="font-size:11px; color:#EC3D8F; font-weight:600; background:#fff1f2; padding:2px 6px; border-radius:4px; margin-left:4px;">(Bạn)</span>
                                 @endif
                             </td>
 
                             {{-- 3. Vai trò --}}
-                            <td style="text-align: center;">
+                            <td style="text-align: center; white-space: nowrap;">
                                 @if($user->vai_tro === 'ADMIN')
                                     <span class="rs-role-badge admin">Quản trị viên</span>
                                 @elseif($user->vai_tro === 'NHAN_VIEN')
@@ -266,12 +336,12 @@
                             </td>
 
                             {{-- 4. Chủ sở hữu (Họ và tên người dùng liên kết - Chỉ đọc) --}}
-                            <td>
+                            <td style="white-space: nowrap;">
                                 <span class="rs-text-bold" style="color: #334155;">{{ $chuSoHuu }}</span>
                             </td>
 
                             {{-- 5. Email --}}
-                            <td style="font-size: 13px; color: #64748b;">{{ $email ?: '—' }}</td>
+                            <td style="font-size: 12.5px; color: #64748b; white-space: nowrap;">{{ $email ?: '—' }}</td>
 
                             {{-- 6. Số điện thoại --}}
                             <td style="text-align: center; white-space: nowrap; font-family: monospace; font-size: 13px; color: #334155;">

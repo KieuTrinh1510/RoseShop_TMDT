@@ -114,6 +114,13 @@
                             'icon_bg'    => '#fffbeb',
                             'icon_color' => '#f59e0b',
                         ],
+                        'vi_pham_thanh_toan' => [
+                            'label'      => 'Yêu cầu thanh toán khoản vi phạm',
+                            'icon'       => 'fa-exclamation-triangle',
+                            'border'     => '#dc2626',
+                            'icon_bg'    => '#fef2f2',
+                            'icon_color' => '#dc2626',
+                        ],
                         default => [
                             'label'      => 'Shipper đã đến nơi',
                             'icon'       => 'fa-map-marker-alt',
@@ -141,6 +148,16 @@
                             <i class="fas {{ $notifConfig['icon'] }}"></i> {{ $notifConfig['label'] }}
                         </div>
                         <div class="notif-content">{{ $tb['noi_dung'] }}</div>
+                        @if(($tb['loai'] ?? '') === 'vi_pham_thanh_toan')
+                            <div style="margin-top:8px;">
+                                <a href="{{ route('customer.vi-pham.index') }}"
+                                   style="display:inline-block;background:#dc2626;color:#fff;
+                                          padding:6px 14px;border-radius:6px;font-size:.8rem;
+                                          font-weight:600;text-decoration:none;">
+                                    <i class="fas fa-credit-card"></i> Thanh toán ngay
+                                </a>
+                            </div>
+                        @endif
                         <div class="notif-time">
                             <i class="fas fa-clock"></i> {{ $tb['thoi_gian'] }}
                         </div>
@@ -190,7 +207,8 @@
                         'SHIPPING'  => ['Đang giao',     'pill-shipping',  'fa-motorcycle'],
                     ];
                     $st = $stMap[$hd->trang_thai] ?? [$hd->trang_thai, 'pill-pending', 'fa-circle'];
-                    $boLines = $boTheoDon->get($hd->ma_hoa_don, collect());
+                    $coBoHoaTrongDon = $hd->chiTietHoaDon->whereNotNull('ma_bo_hoa')->isNotEmpty()
+                        || !is_null($hd->__fallbackBoHoa ?? null);
                 @endphp
                 <div class="order-card" id="don-{{ $hd->ma_hoa_don }}" data-status="{{ $hd->trang_thai }}">
                     <div class="order-card-header" onclick="toggleOrder('don-{{ $hd->ma_hoa_don }}')">
@@ -198,7 +216,7 @@
                             <div class="order-id">
                                 <i class="fas fa-receipt" style="font-size:.8rem"></i>
                                 #HD-{{ str_pad($hd->ma_hoa_don, 4, '0', STR_PAD_LEFT) }}
-                                @if($boLines->isNotEmpty()) <span class="pill pill-confirmed">Bó hoa</span> @endif
+                                @if($coBoHoaTrongDon) <span class="pill pill-confirmed">Bó hoa</span> @endif
                                 <span class="pill {{ $st[1] }}">
                                     <i class="fas {{ $st[2] }}"></i> {{ $st[0] }}
                                 </span>
@@ -344,29 +362,42 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @if($boLines->isNotEmpty())
-                                            @foreach($boLines as $bo)
+                                        @php
+                                            $chiTietHienThi = $hd->chi_tiet_hien_thi;
+                                            $fallbackBo = $hd->__fallbackBoHoa ?? null;
+                                        @endphp
+
+                                        @if($chiTietHienThi->isNotEmpty())
+                                            @foreach($chiTietHienThi as $ct)
+                                                <tr>
+                                                    <td>
+                                                        <strong>{{ $ct->ten_hien_thi }}</strong>
+                                                        @if($ct->ma_bo_hoa && $ct->boHoa?->size)
+                                                            · <span style="color:#888">{{ $ct->boHoa->size }}</span>
+                                                        @endif
+                                                        @if($ct->ma_bo_hoa && $ct->boHoa?->loi_nhan)
+                                                            <div style="font-size:.8rem;color:#888;margin-top:4px;">
+                                                                <i class="fas fa-comment"></i> Lời nhắn: {{ $ct->boHoa->loi_nhan }}
+                                                            </div>
+                                                        @endif
+                                                    </td>
+                                                    <td class="text-center">×{{ $ct->so_luong }}</td>
+                                                    <td class="text-right">{{ number_format($ct->gia_ban_snapshot, 0, ',', '.') }} đ</td>
+                                                </tr>
+                                            @endforeach
+                                        @elseif($fallbackBo)
                                             <tr>
                                                 <td>
-                                                    {{ $bo->ten_bo_hoa }} · {{ $bo->size }}
-                                                    @if($bo->loi_nhan)
-                                                        <div style="font-size:.8rem;color:#888;margin-top:4px;">
-                                                            <i class="fas fa-comment"></i> Lời nhắn: {{ $bo->loi_nhan }}
-                                                        </div>
+                                                    <strong>{{ $fallbackBo->ten_bo_hoa }}</strong>
+                                                    @if($fallbackBo->size)
+                                                        · <span style="color:#888">{{ $fallbackBo->size }}</span>
                                                     @endif
                                                 </td>
-                                                <td class="text-center">×{{ $bo->so_luong }}</td>
-                                                <td class="text-right">{{ number_format($bo->gia_ban, 0, ',', '.') }} đ</td>
+                                                <td class="text-center">×{{ $fallbackBo->so_luong }}</td>
+                                                <td class="text-right">{{ number_format($fallbackBo->gia_ban, 0, ',', '.') }} đ</td>
                                             </tr>
-                                            @endforeach
                                         @else
-                                            @foreach($hd->chiTietHoaDon as $ct)
-                                            <tr>
-                                                <td>{{ $ct->sanPham->ten_san_pham ?? '#' . $ct->ma_san_pham }}</td>
-                                                <td class="text-center">×{{ $ct->so_luong }}</td>
-                                                <td class="text-right">{{ number_format($ct->gia_ban_snapshot, 0, ',', '.') }} đ</td>
-                                            </tr>
-                                            @endforeach
+                                            <tr><td colspan="3" style="text-align:center;color:#888">Không có sản phẩm</td></tr>
                                         @endif
                                     </tbody>
                                 </table>
@@ -420,7 +451,6 @@
                         'CANCELLED' => ['Đã hủy',   'pill-cancelled', 'fa-times-circle'],
                     ];
                     $st2 = $stMap2[$hd->trang_thai] ?? [$hd->trang_thai, 'pill-pending', 'fa-circle'];
-                    $boLinesLs = $boTheoDonLichSu->get($hd->ma_hoa_don, collect());
                 @endphp
                 <div class="order-card" id="ls-{{ $hd->ma_hoa_don }}" data-status="{{ $hd->trang_thai }}">
                     <div class="order-card-header" onclick="toggleOrder('ls-{{ $hd->ma_hoa_don }}')">
@@ -509,31 +539,34 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @if($boLinesLs->isNotEmpty())
-                                            @foreach($boLinesLs as $bo)
-                                            <tr>
-                                                <td>
-                                                    {{ $bo->ten_bo_hoa }} · {{ $bo->size }}
-                                                    @if($bo->loi_nhan)
-                                                        <div style="font-size:.8rem;color:#888;margin-top:4px;">
-                                                            <i class="fas fa-comment"></i> Lời nhắn: {{ $bo->loi_nhan }}
-                                                        </div>
-                                                    @endif
-                                                </td>
-                                                <td class="text-center">×{{ $bo->so_luong }}</td>
-                                                <td class="text-right">{{ number_format($bo->gia_ban, 0, ',', '.') }} đ</td>
-                                                <td class="text-right">{{ number_format($bo->gia_ban * $bo->so_luong, 0, ',', '.') }} đ</td>
-                                            </tr>
+                                        @php
+                                            $chiTietHienThiLs = $hd->chi_tiet_hien_thi;
+                                            $fallbackBoLs = $hd->__fallbackBoHoa ?? null;
+                                        @endphp
+
+                                        @if($chiTietHienThiLs->isNotEmpty())
+                                            @foreach($chiTietHienThiLs as $ct)
+                                                <tr>
+                                                    <td>
+                                                        <strong>{{ $ct->ten_hien_thi }}</strong>
+                                                        @if($ct->ma_bo_hoa && $ct->boHoa?->size)
+                                                            · <span style="color:#888">{{ $ct->boHoa->size }}</span>
+                                                        @endif
+                                                    </td>
+                                                    <td class="text-center">×{{ $ct->so_luong }}</td>
+                                                    <td class="text-right">{{ number_format($ct->gia_ban_snapshot, 0, ',', '.') }} đ</td>
+                                                    <td class="text-right">{{ number_format($ct->gia_ban_snapshot * $ct->so_luong, 0, ',', '.') }} đ</td>
+                                                </tr>
                                             @endforeach
+                                        @elseif($fallbackBoLs)
+                                            <tr>
+                                                <td><strong>{{ $fallbackBoLs->ten_bo_hoa }}</strong> · {{ $fallbackBoLs->size }}</td>
+                                                <td class="text-center">×{{ $fallbackBoLs->so_luong }}</td>
+                                                <td class="text-right">{{ number_format($fallbackBoLs->gia_ban, 0, ',', '.') }} đ</td>
+                                                <td class="text-right">{{ number_format($fallbackBoLs->gia_ban * $fallbackBoLs->so_luong, 0, ',', '.') }} đ</td>
+                                            </tr>
                                         @else
-                                            @foreach($hd->chiTietHoaDon as $ct)
-                                            <tr>
-                                                <td>{{ $ct->sanPham->ten_san_pham ?? '#' . $ct->ma_san_pham }}</td>
-                                                <td class="text-center">×{{ $ct->so_luong }}</td>
-                                                <td class="text-right">{{ number_format($ct->gia_ban_snapshot, 0, ',', '.') }} đ</td>
-                                                <td class="text-right">{{ number_format($ct->gia_ban_snapshot * $ct->so_luong, 0, ',', '.') }} đ</td>
-                                            </tr>
-                                            @endforeach
+                                            <tr><td colspan="4" style="text-align:center;color:#888">Không có sản phẩm</td></tr>
                                         @endif
                                     </tbody>
                                 </table>

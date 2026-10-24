@@ -2,6 +2,7 @@
 // Danh sách đơn đã giao của shipper: tổng số + phân trang 10/trang.
 // Nhận query filter từ history_filter để lọc ngày/tháng/khoảng/mã.
 
+const { Op, fn, col } = require('sequelize');
 const HoaDon = require('../../../../models/HoaDon');
 const KhachHang = require('../../../../models/KhachHang');
 const { phanTrang } = require('../../../orders/order_helper');
@@ -10,18 +11,31 @@ const { timShipperHoacNemLoi } = require('../../../home/shipper_status/shipper_s
 
 const SO_DON_MOI_TRANG = 10;
 
+// Chỉ lấy đơn hủy do SHIPPER hoặc CUSTOMER; đơn bị từ chối/hủy thông thường thì bỏ qua.
+const NGUON_HUY_HIEN_TRONG_LICH_SU = ['SHIPPER', 'CUSTOMER'];
+
 const INCLUDE_KHACH = {
     model: KhachHang,
     as: 'khachHang',
     attributes: ['ma_khach_hang', 'ten_khach_hang'],
 };
 
-// Bản gọn cho card lịch sử
+// Bản gọn cho card lịch sử (DELIVERED hoặc CANCELLED do SHIPPER/CUSTOMER)
 function tomTatLichSu(dh) {
+    const daHuy = dh.trang_thai === 'CANCELLED';
     return {
         ma_hoa_don: dh.ma_hoa_don,
         ma_hien_thi: dh.maHienThi,
+        trang_thai: dh.trang_thai,
+        nhan_trang_thai: daHuy ? 'Đã hủy' : 'Đã giao',
         ngay_giao: dh.ngay_giao,
+        thoi_diem_huy: dh.thoi_diem_huy || null,
+        ngay_hoan_tat: daHuy ? dh.thoi_diem_huy : dh.ngay_giao, // mốc thời gian hiển thị chung
+        nguon_huy: daHuy ? dh.nguon_huy : null,
+        nhan_nguon_huy: daHuy
+            ? (dh.nguon_huy === 'SHIPPER' ? 'Lỗi phía shipper' : 'Lỗi phía khách hàng')
+            : null,
+        ly_do_huy: daHuy ? dh.ly_do_huy : null,
         tong_tien: Number(dh.tong_tien),
         khach_hang: dh.khachHang && {
             ten: dh.khachHang.ten_khach_hang,
@@ -36,21 +50,52 @@ async function demTongDaGiao(maNhanVien) {
     });
 }
 
+// Tổng số đơn hủy do shipper/khách (hiển thị riêng nếu cần)
+async function demTongDaHuy(maNhanVien) {
+    return HoaDon.count({
+        where: {
+            ma_nhan_vien_giao: maNhanVien,
+            trang_thai: 'CANCELLED',
+            nguon_huy: { [Op.in]: NGUON_HUY_HIEN_TRONG_LICH_SU },
+        },
+    });
+}
+
+// Điều kiện lịch sử: DELIVERED, hoặc CANCELLED với nguon_huy thuộc SHIPPER/CUSTOMER.
+// buildFilter() lọc ngày trên ngay_giao; đơn hủy không có ngay_giao nên điều kiện ngày
+// được áp sang thoi_diem_huy cho nhánh CANCELLED.
+function buildWhereLichSu(maNhanVien, boLoc) {
+    const { ngay_giao: locNgay, ...locKhac } = buildFilter(boLoc) || {};
+
+    return {
+        [Op.and]: [
+            { ma_nhan_vien_giao: maNhanVien },
+            locKhac,
+            {
+                [Op.or]: [
+                    { trang_thai: 'DELIVERED', ...(locNgay ? { ngay_giao: locNgay } : {}) },
+                    {
+                        trang_thai: 'CANCELLED',
+                        nguon_huy: { [Op.in]: NGUON_HUY_HIEN_TRONG_LICH_SU },
+                        ...(locNgay ? { thoi_diem_huy: locNgay } : {}),
+                    },
+                ],
+            },
+        ],
+    };
+}
+
 // Danh sách có phân trang + filter
 async function getHistory(maNhanVien, { page, limit, ...boLoc } = {}) {
     await timShipperHoacNemLoi(maNhanVien);
     const { soTrang, soDongMoiTrang, offset } = phanTrang(page, limit, SO_DON_MOI_TRANG);
 
-    const where = {
-        ma_nhan_vien_giao: maNhanVien,
-        trang_thai: 'DELIVERED',
-        ...buildFilter(boLoc),
-    };
+    const where = buildWhereLichSu(maNhanVien, boLoc);
 
     const { rows, count } = await HoaDon.findAndCountAll({
         where,
         include: [INCLUDE_KHACH],
-        order: [['ngay_giao', 'DESC']],
+        order: [[fn('COALESCE', col('HoaDon.ngay_giao'), col('HoaDon.thoi_diem_huy')), 'DESC']],
         limit: soDongMoiTrang,
         offset,
     });
@@ -66,6 +111,9 @@ async function getHistory(maNhanVien, { page, limit, ...boLoc } = {}) {
 
 module.exports = {
     SO_DON_MOI_TRANG,
+    NGUON_HUY_HIEN_TRONG_LICH_SU,
     demTongDaGiao,
+    demTongDaHuy,
+    buildWhereLichSu,
     getHistory,
 };

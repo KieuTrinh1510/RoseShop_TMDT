@@ -260,16 +260,83 @@
         }
 
         /* ==========================================================================
-           ĐỒNG BỘ PHÂN TRANG TOÀN BỘ HỆ THỐNG ADMIN ROSESHOP (MÀU HỒNG #f43f5e)
+           ĐỒNG BỘ PHÂN TRANG & THIẾT KẾ CHUẨN TOÀN BỘ HỆ THỐNG ADMIN ROSESHOP (#EC3D8F)
            ========================================================================== */
         :root {
-            --bs-pagination-active-bg: #f43f5e !important;
-            --bs-pagination-active-border-color: #f43f5e !important;
+            --bs-pagination-active-bg: #EC3D8F !important;
+            --bs-pagination-active-border-color: #EC3D8F !important;
             --bs-pagination-active-color: #ffffff !important;
             --bs-pagination-color: #475467 !important;
-            --bs-pagination-hover-color: #f43f5e !important;
-            --bs-pagination-focus-color: #f43f5e !important;
-            --bs-pagination-focus-box-shadow: 0 0 0 0.2rem rgba(244, 63, 94, 0.25) !important;
+            --bs-pagination-hover-color: #EC3D8F !important;
+            --bs-pagination-focus-color: #EC3D8F !important;
+            --bs-pagination-focus-box-shadow: 0 0 0 0.2rem rgba(236, 61, 143, 0.25) !important;
+        }
+
+        /* Khoảng cách căn lề chuẩn trang: Top 24px, Left 32px, Right 32px, Bottom 24px */
+        .rs-management-page,
+        .ncc-container,
+        .admin-home {
+            padding: 24px 32px 24px 32px !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Header bảng: nền #F8F9FA, chữ xám #475467, border xám nhạt #EAECF0 */
+        table.rs-table thead th,
+        table.ncc-table thead th,
+        .table thead th,
+        thead.table-light th {
+            background-color: #F8F9FA !important;
+            color: #475467 !important;
+            font-weight: 600 !important;
+            border-bottom: 1px solid #EAECF0 !important;
+        }
+
+        /* Badge xác nhận: nền xanh rất nhạt #ECFDF3, chữ #027A48 */
+        .badge-confirmed,
+        .badge-paid,
+        .badge-success,
+        .badge-du-hang {
+            background-color: #ECFDF3 !important;
+            color: #027A48 !important;
+            border: 1px solid #ABEFC6 !important;
+        }
+
+        /* Badge draft / pending: nền vàng nhạt #FFFAEB, chữ #B54708 */
+        .badge-draft,
+        .badge-pending,
+        .badge-warning {
+            background-color: #FFFAEB !important;
+            color: #B54708 !important;
+            border: 1px solid #FEDF89 !important;
+        }
+
+        /* Badge hủy: nền đỏ nhạt #FEF3F2, chữ #B42318 */
+        .badge-cancelled,
+        .badge-unpaid,
+        .badge-danger,
+        .badge-het-hang {
+            background-color: #FEF3F2 !important;
+            color: #B42318 !important;
+            border: 1px solid #FECDCA !important;
+        }
+
+        /* Dropdown số hàng mỗi trang chuẩn RoseShop (Tránh đè chữ / icon) */
+        .rs-per-page-select {
+            width: 68px !important;
+            height: 34px !important;
+            padding: 0 24px 0 10px !important;
+            border: 1px solid #D0D5DD !important;
+            border-radius: 8px !important;
+            font-size: 13.5px !important;
+            font-weight: 500 !important;
+            color: #101828 !important;
+            background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475467' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            outline: none !important;
+            cursor: pointer !important;
+            box-sizing: border-box !important;
         }
 
         .pagination,
@@ -280,11 +347,11 @@
             margin: 0 !important;
             padding: 0 !important;
             list-style: none !important;
-            --bs-pagination-active-bg: #f43f5e !important;
-            --bs-pagination-active-border-color: #f43f5e !important;
+            --bs-pagination-active-bg: #EC3D8F !important;
+            --bs-pagination-active-border-color: #EC3D8F !important;
             --bs-pagination-active-color: #ffffff !important;
             --bs-pagination-color: #475467 !important;
-            --bs-pagination-hover-color: #f43f5e !important;
+            --bs-pagination-hover-color: #EC3D8F !important;
         }
 
         .pagination .page-item,
@@ -315,25 +382,31 @@
 
         .pagination .page-link:hover,
         .rs-pagination .page-link:hover {
-            border-color: #f43f5e !important;
+            border-color: #EC3D8F !important;
             background: #fff1f2 !important;
-            color: #f43f5e !important;
+            color: #EC3D8F !important;
         }
 
-        /* Nút Active: Màu hồng RoseShop #f43f5e */
+        /* Nút Active: Màu hồng RoseShop #EC3D8F */
         .pagination .page-item.active .page-link,
+        .pagination .page-item.active > .page-link,
         .rs-pagination .page-item.active .page-link,
+        .rs-pagination .page-item.active > .page-link,
         .page-item.active .page-link,
+        .page-item.active > .page-link,
         .active > .page-link,
+        .active-page,
+        span.current,
         ul.pagination li.active a,
         ul.pagination li.active span,
         ul.rs-pagination li.active a,
         ul.rs-pagination li.active span {
-            background-color: #f43f5e !important;
-            border-color: #f43f5e !important;
+            background-color: #EC3D8F !important;
+            background: #EC3D8F !important;
+            border-color: #EC3D8F !important;
             color: #ffffff !important;
             font-weight: 700 !important;
-            box-shadow: 0 2px 6px rgba(244, 63, 94, 0.35) !important;
+            box-shadow: 0 2px 6px rgba(236, 61, 143, 0.35) !important;
         }
 
         /* Nút Disabled */
@@ -399,7 +472,9 @@
                                   || request()->routeIs('admin.shipper*');
 
                 // Giao hàng: admin.giao-hang.*
-                $isGiaoHangActive = request()->routeIs('admin.giao-hang.*');
+                // Giao hàng: admin.giao-hang.* + admin.hoan-hang.* (Flash Sale hàng hoàn)
+                $isGiaoHangActive = request()->routeIs('admin.giao-hang.*')
+                                 || request()->routeIs('admin.hoan-hang.*');
 
                 // Báo cáo & Thống kê: bao-cao.*, admin.bao-cao.*
                 $isBaoCaoActive = request()->routeIs('bao-cao.*') 
@@ -560,8 +635,11 @@
                             <a href="{{ route('admin.giao-hang.theo-doi') }}" class="submenu-item {{ request()->routeIs('admin.giao-hang.theo-doi*') ? 'active' : '' }}">
                                 Theo dõi giao hàng
                             </a>
-                            <a href="{{ route('admin.giao-hang.hang-hoan') }}" class="submenu-item {{ request()->routeIs('admin.giao-hang.hang-hoan*') ? 'active' : '' }}">
-                                Hàng hoàn
+                                                        <a href="{{ route('admin.giao-hang.that-bai') }}" class="submenu-item {{ request()->routeIs('admin.giao-hang.that-bai*') ? 'active' : '' }}">
+                                Đơn giao thất bại
+                            </a>
+                            <a href="{{ route('admin.hoan-hang.flash-sale.index') }}" class="submenu-item {{ request()->routeIs('admin.hoan-hang.flash-sale*') ? 'active' : '' }}">
+                                Flash Sale hàng hoàn
                             </a>
                             <a href="{{ route('admin.giao-hang.doi-soat-cod') }}" class="submenu-item {{ request()->routeIs('admin.giao-hang.doi-soat-cod*') ? 'active' : '' }}">
                                 Đối soát COD

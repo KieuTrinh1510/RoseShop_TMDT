@@ -4,6 +4,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
+      
+    <link rel="stylesheet" href="{{ asset('css/Admin/MauBoHoa.css') }}">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -1034,6 +1036,381 @@
                 overflow-x: auto;
             }
         }
+        /* ── HEADER TRANG ĐỒNG BỘ ROSESHOP ── */
+        .rs-header-block {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+        }
+        .rs-header-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #101828;
+            margin: 0 0 4px 0;
+        }
+        .rs-header-subtitle {
+            font-size: 14px;
+            color: #667085;
+            margin: 0;
+        }
+
+        /* ── HỆ THỐNG GIAO DIỆN BẢNG & PHÂN TRANG CHUẨN ROSESHOP (ĐỒNG BỘ VỚI SẢN PHẨM) ── */
+        .rs-main-card {
+            background: #ffffff;
+            border: 1px solid #EAECF0;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05);
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+        .rs-filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background-color: #ffffff;
+            border-bottom: 1px solid #EAECF0;
+            flex-wrap: wrap;
+        }
+        .rs-filter-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .rs-filter-label {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #344054;
+            margin: 0;
+            white-space: nowrap;
+        }
+        .rs-filter-select {
+            height: 40px;
+            padding: 0 32px 0 12px;
+            border: 1px solid #D0D5DD;
+            border-radius: 8px;
+            font-size: 13.5px;
+            color: #101828;
+            background: #ffffff;
+            outline: none;
+            transition: all 0.15s ease;
+        }
+        .rs-filter-select:focus,
+        .rs-filter-search-box input:focus {
+            border-color: #EC3D8F !important;
+            box-shadow: 0 0 0 3px rgba(236, 61, 143, 0.15) !important;
+        }
+        .rs-filter-search-box {
+            position: relative;
+            flex: 1;
+            min-width: 260px;
+            display: flex;
+            align-items: center;
+        }
+        .rs-filter-search-box svg {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #667085;
+            pointer-events: none;
+            z-index: 2;
+            width: 16px;
+            height: 16px;
+        }
+        .rs-filter-search-box input {
+            width: 100%;
+            height: 40px;
+            padding-left: 40px !important;
+            padding-right: 14px;
+            border-radius: 8px;
+            border: 1px solid #D0D5DD !important;
+            font-size: 14px;
+            color: #101828;
+            background-color: #ffffff;
+            outline: none;
+            box-shadow: none !important;
+            transition: all 0.15s ease;
+        }
+        .rs-btn-filter-submit {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 40px;
+            padding: 0 18px;
+            background-color: #EC3D8F;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+        .rs-btn-filter-submit:hover {
+            background-color: #D82677;
+        }
+        .rs-btn-filter-reset {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            height: 40px;
+            padding: 0 14px;
+            background-color: #F2F4F7;
+            color: #344054;
+            border: 1px solid #D0D5DD;
+            border-radius: 8px;
+            font-size: 13.5px;
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+        .rs-btn-filter-reset:hover {
+            background-color: #E4E7EC;
+            color: #101828;
+        }
+        .rs-card-title-bar {
+            padding: 16px 20px 14px 20px;
+            background: #ffffff;
+            border-bottom: 1px solid #EAECF0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .rs-card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #101828;
+        }
+        .rs-card-title svg {
+            color: #475467;
+        }
+        .rs-count-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background-color: #F2F4F7;
+            color: #344054;
+            font-size: 12.5px;
+            font-weight: 600;
+            margin-left: 4px;
+        }
+        .rs-table-container {
+            width: 100%;
+            overflow-x: auto;
+            position: relative;
+        }
+        .rs-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            text-align: left;
+            table-layout: fixed;
+            min-width: 1120px;
+        }
+        .rs-table thead tr {
+            background-color: #F8F9FA !important;
+        }
+        .rs-table th {
+            background-color: #F8F9FA !important;
+            padding: 12px 12px !important;
+            font-size: 13px !important;
+            font-weight: 600 !important;
+            color: #475467 !important;
+            text-transform: none;
+            border-bottom: 1px solid #EAECF0 !important;
+            white-space: nowrap !important;
+        }
+        .rs-table tbody tr {
+            border-bottom: 1px solid #EAECF0;
+            transition: background-color 0.15s ease;
+        }
+        .rs-table tbody tr:hover {
+            background-color: #F9FAFB;
+        }
+        .rs-table td {
+            padding: 12px 12px !important;
+            font-size: 13.5px;
+            color: #344054;
+            vertical-align: middle;
+            border-bottom: 1px solid #EAECF0;
+        }
+        .rs-product-thumb {
+            width: 44px;
+            height: 44px;
+            min-width: 44px;
+            min-height: 44px;
+            max-width: 44px;
+            max-height: 44px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f1f5f9;
+        }
+        .rs-product-thumb-img {
+            width: 44px;
+            height: 44px;
+            min-width: 44px;
+            min-height: 44px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            display: block;
+        }
+        .rs-product-thumb-placeholder {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 20px;
+        }
+        .rs-action-group {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        .rs-action-btn {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #D0D5DD;
+            background: #ffffff;
+            color: #667085;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            padding: 0;
+            text-decoration: none;
+        }
+        .rs-action-btn svg {
+            width: 15px !important;
+            height: 15px !important;
+            stroke-width: 1.8px;
+            stroke: currentColor;
+            fill: none;
+            display: block;
+            flex-shrink: 0;
+        }
+        .rs-action-btn:hover {
+            background-color: #F2F4F7 !important;
+            color: #101828 !important;
+            border-color: #98A2B3 !important;
+        }
+        .rs-action-btn.danger:hover {
+            background-color: #FEF3F2 !important;
+            color: #D92D20 !important;
+            border-color: #FECDCA !important;
+        }
+        .rs-table-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: #ffffff;
+            border-top: 1px solid #EAECF0;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .rs-footer-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .rs-per-page-inline {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13.5px;
+            color: #475467;
+        }
+        .rs-per-page-select {
+            width: 68px !important;
+            height: 34px !important;
+            padding: 0 24px 0 10px !important;
+            border: 1px solid #D0D5DD !important;
+            border-radius: 8px !important;
+            font-size: 13.5px !important;
+            font-weight: 500 !important;
+            color: #101828 !important;
+            background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475467' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            outline: none !important;
+            cursor: pointer !important;
+        }
+        .rs-records-count {
+            font-size: 13.5px;
+            color: #667085;
+            white-space: nowrap;
+        }
+        .rs-table-footer .rs-pagination,
+        .rs-table-footer .pagination {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        .rs-table-footer .page-item .page-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+            height: 36px;
+            padding: 0 10px;
+            border-radius: 8px !important;
+            border: 1px solid #D0D5DD;
+            background: #ffffff;
+            color: #344054;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+        .rs-table-footer .page-item.active .page-link,
+        .rs-table-footer .page-item.active > .page-link,
+        .rs-pagination .page-item.active .page-link,
+        .rs-pagination .page-item.active > .page-link,
+        .pagination .page-item.active .page-link,
+        .pagination .page-item.active > .page-link,
+        ul.pagination li.active span.page-link,
+        ul.pagination li.active a.page-link,
+        .page-item.active .page-link,
+        .active > .page-link {
+            background-color: #EC3D8F !important;
+            background: #EC3D8F !important;
+            border-color: #EC3D8F !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            box-shadow: 0 1px 3px rgba(236, 61, 143, 0.25) !important;
+        }
+        .rs-table-footer .page-item.disabled .page-link {
+            color: #D0D5DD;
+            background-color: #F9FAFB;
+            border-color: #EAECF0;
+            cursor: not-allowed;
+        }
+        .rs-table-footer .page-item .page-link:hover:not(.active):not(.disabled) {
+            background-color: #F2F4F7;
+            border-color: #D0D5DD;
+            color: #101828;
+        }
     </style>
 @endpush
 
@@ -1041,6 +1418,14 @@
 
 <div class="bouquet-page">
     <div class="container-fluid px-3 px-lg-4">
+
+        {{-- 1. HEADER TRANG: Tiêu đề Quản lý mẫu bó hoa (Đồng bộ các trang quản lý khác) --}}
+        <div class="rs-header-block">
+            <div>
+                <h1 class="rs-header-title">Quản lý mẫu bó hoa</h1>
+                <p class="rs-header-subtitle">Theo dõi danh sách mẫu bó hoa, cấu hình phụ phí và quản lý bó hoa sẵn</p>
+            </div>
+        </div>
 
         {{-- Flash message --}}
         <div id="bo-message" class="alert d-none py-2 px-3 mb-3 font-semibold rounded-2" role="status"></div>
@@ -1257,31 +1642,66 @@
                  TAB 1: DANH SÁCH MẪU
             ───────────────────────────────────────────────────────────────────── --}}
             <div class="tab-pane-item" id="tab-danh-sach-mau">
-                <div class="template-list">
-                    {{-- Toolbar: tìm tên mẫu + filter trạng thái --}}
-                    <div class="list-toolbar">
-                        <input type="text" id="search-mau-name" class="form-control" placeholder="Tìm tên mẫu...">
-                        <select id="filter-mau-status" class="form-select" style="max-width: 170px;">
-                            <option value="">Tất cả trạng thái</option>
-                            <option value="ACTIVE">Hiện (Đang dùng)</option>
-                            <option value="INACTIVE">Ẩn</option>
-                        </select>
+                <div class="rs-main-card">
+                    {{-- Bộ lọc chuẩn RoseShop --}}
+                    <div class="rs-filter-bar">
+                        <div class="rs-filter-item">
+                            <label class="rs-filter-label">Trạng thái:</label>
+                            <select id="filter-mau-status" class="rs-filter-select">
+                                <option value="">-- Tất cả trạng thái --</option>
+                                <option value="ACTIVE">Hiện (Đang dùng)</option>
+                                <option value="INACTIVE">Ẩn</option>
+                                <option value="OUT_OF_STOCK">Hết hàng / Thiếu nguyên liệu</option>
+                            </select>
+                        </div>
+
+                        <div class="rs-filter-search-box">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"/>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                            </svg>
+                            <input type="text" id="search-mau-name" placeholder="Tìm tên mẫu, mã mẫu...">
+                        </div>
+
+                        <button type="button" class="rs-btn-filter-submit" id="btn-search-mau">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"/>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                            </svg>
+                            <span>Lọc</span>
+                        </button>
                     </div>
 
-                    {{-- Table danh sách mẫu --}}
-                    <div class="table-wrapper">
-                        <table class="table-template">
+                    {{-- Tiêu đề bảng danh sách chuẩn --}}
+                    <div class="rs-card-title-bar">
+                        <div class="rs-card-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="8" y1="6" x2="21" y2="6"/>
+                                <line x1="8" y1="12" x2="21" y2="12"/>
+                                <line x1="8" y1="18" x2="21" y2="18"/>
+                                <line x1="3" y1="6" x2="3.01" y2="6"/>
+                                <line x1="3" y1="12" x2="3.01" y2="12"/>
+                                <line x1="3" y1="18" x2="3.01" y2="18"/>
+                            </svg>
+                            <span>Danh sách mẫu bó hoa</span>
+                            <span class="rs-count-badge" id="mau-total-count">{{ $mauBoHoas->count() }}</span>
+                        </div>
+                    </div>
+
+                    {{-- Table danh sách mẫu chuẩn --}}
+                    <div class="rs-table-container">
+                        <table class="rs-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 60px;">Ảnh</th>
-                                    <th>Tên mẫu</th>
-                                    <th>Size</th>
-                                    <th>Kiểu dáng</th>
-                                    <th>Concept</th>
-                                    <th style="min-width: 120px;">Thời hạn</th>
-                                    <th class="text-end">Giá vốn / Giá bán dự kiến</th>
-                                    <th class="text-center">Trạng thái</th>
-                                    <th class="text-end" style="width: 140px;">Thao tác</th>
+                                    <th style="width: 65px; min-width: 65px; text-align: center;">Ảnh</th>
+                                    <th style="min-width: 180px; text-align: left;">Tên mẫu</th>
+                                    <th style="width: 85px; min-width: 85px; text-align: center;">Size</th>
+                                    <th style="width: 120px; min-width: 120px; text-align: center;">Kiểu dáng</th>
+                                    <th style="width: 120px; min-width: 120px; text-align: center;">Concept</th>
+                                    <th style="width: 165px; min-width: 165px; text-align: left;">Thời hạn</th>
+                                    <th style="width: 160px; min-width: 160px; text-align: right;">Giá vốn / Giá bán dự kiến</th>
+                                    <th style="width: 120px; min-width: 120px; text-align: center;">Trạng thái</th>
+                                    <th style="width: 90px; min-width: 90px; text-align: center;">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody id="tbody-mau-list">
@@ -1289,25 +1709,30 @@
                                     @php
                                         $giaVonEst = $m->chiTietMauBoHoa->sum(fn($ct) => ($ct->sanPham?->gia_nhap ?? 0) * $ct->so_luong);
                                         $giaBanEst = round($giaVonEst * 1.5, 2);
+                                        $thieuList = $thieuTheoMau[$m->ma_mau_bo_hoa] ?? [];
+                                        $hetNL     = count($thieuList) > 0;
+                                        $soBoSan   = (int) ($m->so_bo_hoa_chua_ban ?? 0);
                                     @endphp
-                                    <tr class="mau-row" data-name="{{ strtolower($m->ten_mau) }}" data-status="{{ $m->trang_thai }}">
-                                        <td>
-                                            <img src="{{ $boController::anhMau($m) }}"
-                                                 alt="{{ $m->ten_mau }}"
-                                                 class="template-thumb"
-                                                 onerror="this.src='https://images.unsplash.com/photo-1563245372-f21724e3856d?w=100&auto=format&fit=crop&q=80'">
+                                    <tr class="mau-row" data-name="{{ strtolower($m->ten_mau) }} #{{ $m->ma_mau_bo_hoa }}" data-status="{{ $m->trang_thai }}" data-stock="{{ $hetNL ? 'out' : 'ok' }}">
+                                        <td style="text-align: center; vertical-align: middle;">
+                                            <div class="rs-product-thumb">
+                                                <img src="{{ $boController::anhMau($m) }}"
+                                                     alt="{{ $m->ten_mau }}"
+                                                     class="rs-product-thumb-img"
+                                                     onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'rs-product-thumb-placeholder\'><i class=\'bi bi-flower1\'></i></div>';">
+                                            </div>
                                         </td>
                                         <td>
-                                            <strong class="d-block text-dark">{{ $m->ten_mau }}</strong>
-                                            <small class="text-muted">#{{ $m->ma_mau_bo_hoa }} · {{ $m->chiTietMauBoHoa->count() }} thành phần</small>
+                                            <strong class="d-block text-dark text-nowrap" style="font-size:13.5px;">{{ $m->ten_mau }}</strong>
+                                            <small class="text-muted text-nowrap" style="font-size:12px;">#{{ $m->ma_mau_bo_hoa }} · {{ $m->chiTietMauBoHoa->count() }} thành phần</small>
                                         </td>
-                                        <td>
+                                        <td style="text-align: center;">
                                             <span class="badge bg-light text-dark border">
                                                 Size {{ $m->size === 'SPECIAL' ? 'Special' : $m->size }}
                                             </span>
                                         </td>
-                                        <td>{{ $kieusBo[$m->kieu_bo_hoa] ?? $m->kieu_bo_hoa }}</td>
-                                        <td>
+                                        <td style="text-align: center;">{{ $kieusBo[$m->kieu_bo_hoa] ?? $m->kieu_bo_hoa }}</td>
+                                        <td style="text-align: center;">
                                             <span class="badge bg-light text-secondary border">
                                                 {{ $concepts[$m->concept] ?? $m->concept }}
                                             </span>
@@ -1330,33 +1755,125 @@
                                             <div class="small text-muted text-nowrap">Vốn: <span class="fw-semibold text-secondary">{{ number_format($giaVonEst, 0, ',', '.') }} đ</span></div>
                                             <div class="fw-bold text-nowrap" style="color:var(--rose-primary);">Bán: {{ number_format($giaBanEst, 0, ',', '.') }} đ</div>
                                         </td>
-                                        <td class="text-center">
+                                        <td style="text-align: center;">
                                             @if($m->trang_thai === 'ACTIVE')
-                                                <span class="summary-badge status-ok">Hiện</span>
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Hiện</span>
                                             @else
-                                                <span class="summary-badge status-warn">Ẩn</span>
+                                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">Ẩn</span>
+                                            @endif
+
+                                            @if($hetNL)
+                                                <div class="mt-1">
+                                                    <button type="button"
+                                                            class="stock-alert-btn {{ $soBoSan > 0 ? 'is-warn' : 'is-danger' }}"
+                                                            data-thieu-toggle="mau-thieu-{{ $m->ma_mau_bo_hoa }}"
+                                                            aria-expanded="false"
+                                                            aria-controls="mau-thieu-{{ $m->ma_mau_bo_hoa }}"
+                                                            title="Bấm để xem nguyên liệu đang thiếu">
+                                                        <i class="bi bi-exclamation-triangle-fill"></i>
+                                                        {{ $soBoSan > 0 ? 'Thiếu NL' : 'Hết hàng' }} · {{ count($thieuList) }}
+                                                        <i class="bi bi-chevron-down stock-alert-caret"></i>
+                                                    </button>
+                                                    @if($soBoSan > 0)
+                                                        <div class="text-muted" style="font-size:11px;">còn {{ $soBoSan }} bó làm sẵn</div>
+                                                    @endif
+                                                </div>
                                             @endif
                                         </td>
-                                        <td class="text-end">
-                                            <div class="d-inline-flex gap-2">
-                                                <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none"
+                                        <td style="text-align: center; white-space: nowrap;">
+                                            <div class="rs-action-group">
+                                                <button type="button" 
+                                                        class="rs-action-btn"
                                                         data-bo-action="{{ route('admin.bo-hoa.mau.trang-thai', $m->ma_mau_bo_hoa) }}"
                                                         data-method="PATCH"
                                                         title="{{ $m->trang_thai === 'ACTIVE' ? 'Ẩn mẫu' : 'Bật sử dụng' }}">
-                                                    {{ $m->trang_thai === 'ACTIVE' ? 'Ẩn' : 'Bật' }}
+                                                    @if($m->trang_thai === 'ACTIVE')
+                                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                                                            <circle cx="12" cy="12" r="3"/>
+                                                        </svg>
+                                                    @else
+                                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
+                                                            <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
+                                                            <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
+                                                            <line x1="2" y1="2" x2="22" y2="22"/>
+                                                        </svg>
+                                                    @endif
                                                 </button>
 
-                                                <button type="button" class="btn btn-sm btn-link p-0 text-danger text-decoration-none"
+                                                <button type="button" 
+                                                        class="rs-action-btn danger"
                                                         data-bo-action="{{ route('admin.bo-hoa.mau.destroy', $m->ma_mau_bo_hoa) }}"
                                                         data-method="DELETE"
                                                         data-confirm="Bạn có chắc chắn muốn xóa mẫu '{{ $m->ten_mau }}'?"
                                                         {{ ($m->so_bo_hoa_chua_ban ?? 0) > 0 ? 'disabled' : '' }}
                                                         title="{{ ($m->so_bo_hoa_chua_ban ?? 0) > 0 ? 'Còn bó hoa tồn kho từ mẫu này' : 'Xóa mẫu' }}">
-                                                    Xóa
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M3 6h18"/>
+                                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                                    </svg>
                                                 </button>
                                             </div>
                                         </td>
                                     </tr>
+
+                                    {{-- Danh sách nguyên liệu đang thiếu (xổ xuống khi bấm badge) --}}
+                                    @if($hetNL)
+                                        <tr class="mau-thieu-row d-none" id="mau-thieu-{{ $m->ma_mau_bo_hoa }}">
+                                            <td colspan="9" class="p-0 border-0">
+                                                <div>
+                                                    <div class="stock-detail">
+                                                        <div class="stock-detail-title">
+                                                            <i class="bi bi-box-seam me-1"></i>
+                                                            Nguyên liệu không đủ để làm 1 bó «{{ $m->ten_mau }}»
+                                                        </div>
+                                                        <table class="stock-detail-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Nguyên liệu</th>
+                                                                    <th>Vai trò</th>
+                                                                    <th class="text-end">Cần / bó</th>
+                                                                    <th class="text-end">Khả dụng</th>
+                                                                    <th class="text-end">Thiếu</th>
+                                                                    <th class="text-center">Tình trạng</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach($thieuList as $t)
+                                                                    <tr>
+                                                                        <td class="fw-semibold">{{ $t['ten'] }}</td>
+                                                                        <td class="text-muted">{{ $t['vai_tro'] }}</td>
+                                                                        <td class="text-end">{{ $t['can'] }} {{ $t['dvt'] }}</td>
+                                                                        <td class="text-end">{{ $t['con'] }} {{ $t['dvt'] }}</td>
+                                                                        <td class="text-end fw-bold text-danger">{{ $t['thieu'] }} {{ $t['dvt'] }}</td>
+                                                                        <td class="text-center">
+                                                                            @if($t['ngung_ban'])
+                                                                                <span class="summary-badge status-gray">Ngừng bán</span>
+                                                                            @elseif($t['con'] <= 0)
+                                                                                <span class="summary-badge status-danger">Hết hàng</span>
+                                                                            @else
+                                                                                <span class="summary-badge status-warn">Không đủ</span>
+                                                                            @endif
+                                                                        </td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                        <div class="stock-detail-note">
+                                                            Khả dụng = tồn các lô nhập đã xác nhận (chưa quá hạn) trừ hàng đang giữ cho đơn chưa hoàn tất.
+                                                            @if($soBoSan > 0)
+                                                                Mẫu này vẫn còn {{ $soBoSan }} bó làm sẵn nên khách vẫn mua được tới khi hết số bó đó.
+                                                            @else
+                                                                Mẫu này không còn bó làm sẵn nên khách sẽ thấy «Hết hàng» cho tới khi nhập đủ nguyên liệu.
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endif
                                 @empty
                                     <tr>
                                         <td colspan="9" class="text-center py-4 text-muted">
@@ -1366,6 +1883,26 @@
                                 @endforelse
                             </tbody>
                         </table>
+                    </div>
+
+                    {{-- Phân trang chuẩn RoseShop cho Danh sách mẫu --}}
+                    <div class="rs-table-footer" id="mau-table-footer">
+                        <div class="rs-footer-left">
+                            <div class="rs-per-page-inline">
+                                <span class="rs-per-page-label">Số hàng mỗi trang</span>
+                                <select class="rs-per-page-select" id="mau-per-page-select">
+                                    <option value="10">10</option>
+                                    <option value="20">20</option>
+                                    <option value="50">50</option>
+                                </select>
+                            </div>
+                            <div class="rs-records-count" id="mau-records-count">
+                                1-{{ min(10, $mauBoHoas->count()) }} / {{ $mauBoHoas->count() }} bản ghi
+                            </div>
+                        </div>
+                        <div class="rs-footer-pagination">
+                            <ul class="rs-pagination" id="mau-pagination-list"></ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1798,24 +2335,79 @@
                         </form>
                     </div>
 
-                    {{-- 9. DANH SÁCH BÓ HOA SẴN --}}
-                    <div class="premade-list-section">
-                        <div class="list-toolbar">
-                            <form class="d-flex gap-2" action="{{ route('admin.mau-bo-hoa') }}" method="GET">
-                                <input type="text" name="q_bo_hoa" value="{{ request('q_bo_hoa') }}" class="form-control" placeholder="Tìm tên bó hoa...">
-                                <select name="trang_thai_bo_hoa" class="form-select" style="max-width: 170px;">
-                                    <option value="">Tất cả trạng thái</option>
+                    {{-- 9. DANH SÁCH BÓ HOA SẴN (ĐỒNG BỘ CHUẨN GIAO DIỆN SẢN PHẨM) --}}
+                    <div class="rs-main-card">
+                        {{-- BỘ LỌC CHUẨN ROSESHOP --}}
+                        <form method="GET" action="{{ route('admin.mau-bo-hoa') }}" class="rs-filter-bar">
+                            <input type="hidden" name="page_bo_hoa" value="1">
+                            <div class="rs-filter-item">
+                                <label class="rs-filter-label">Trạng thái:</label>
+                                <select name="trang_thai_bo_hoa" class="rs-filter-select" onchange="this.form.submit()">
+                                    <option value="">-- Tất cả trạng thái --</option>
                                     <option value="ACTIVE" @selected(request('trang_thai_bo_hoa') === 'ACTIVE')>Hiện</option>
                                     <option value="DRAFT" @selected(request('trang_thai_bo_hoa') === 'DRAFT')>Ẩn</option>
                                 </select>
-                                <button type="submit" class="btn btn-sm btn-outline-secondary">Lọc</button>
-                            </form>
+                            </div>
+
+                            <div class="rs-filter-search-box">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"/>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                </svg>
+                                <input type="text" name="q_bo_hoa" value="{{ request('q_bo_hoa') }}" placeholder="Tìm tên bó hoa, mã bó, concept...">
+                            </div>
+
+                            <button type="submit" class="rs-btn-filter-submit">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"/>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                                </svg>
+                                <span>Lọc</span>
+                            </button>
+
+                            @if(request()->anyFilled(['q_bo_hoa', 'trang_thai_bo_hoa']))
+                                <a href="{{ route('admin.mau-bo-hoa') }}#tab-bo-hoa-san" class="rs-btn-filter-reset" title="Bỏ lọc">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="18" y1="6" x2="6" y2="18"/>
+                                        <line x1="6" y1="6" x2="18" y2="18"/>
+                                    </svg>
+                                    <span>Bỏ lọc</span>
+                                </a>
+                            @endif
+                        </form>
+
+                        {{-- TIÊU ĐỀ BẢNG DANH SÁCH CHUẨN --}}
+                        <div class="rs-card-title-bar">
+                            <div class="rs-card-title">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="8" y1="6" x2="21" y2="6"/>
+                                    <line x1="8" y1="12" x2="21" y2="12"/>
+                                    <line x1="8" y1="18" x2="21" y2="18"/>
+                                    <line x1="3" y1="6" x2="3.01" y2="6"/>
+                                    <line x1="3" y1="12" x2="3.01" y2="12"/>
+                                    <line x1="3" y1="18" x2="3.01" y2="18"/>
+                                </svg>
+                                <span>Danh sách bó hoa sẵn</span>
+                                <span class="rs-count-badge">{{ $danhSachBoHoa->total() }}</span>
+                            </div>
                         </div>
 
-                        <div class="table-wrapper">
-                            <table class="table-template">
+                        {{-- TABLE DANH SÁCH BÓ HOA SẴN --}}
+                        <div class="rs-table-container">
+                            <table class="rs-table">
                                 <thead>
                                     <tr>
+                                        <th style="width: 65px; min-width: 65px; text-align: center;">Ảnh</th>
+                                        <th style="min-width: 180px; text-align: left;">Tên bó hoa</th>
+                                        <th style="width: 110px; min-width: 110px; text-align: center;">Mẫu nguồn</th>
+                                        <th style="width: 115px; min-width: 115px; text-align: center;">Size / Kiểu</th>
+                                        <th style="width: 200px; min-width: 200px; text-align: left;">Thời hạn</th>
+                                        <th style="width: 105px; min-width: 105px; text-align: center;">Tồn thực tế</th>
+                                        <th style="width: 85px; min-width: 85px; text-align: center;">Đang giữ</th>
+                                        <th style="width: 90px; min-width: 90px; text-align: center;">Khả dụng</th>
+                                        <th style="width: 125px; min-width: 125px; text-align: right;">Giá bán</th>
+                                        <th style="width: 95px; min-width: 95px; text-align: center;">Trạng thái</th>
+                                        <th style="width: 90px; min-width: 90px; text-align: center;">Thao tác</th>
                                         <th style="width: 52px;">Ảnh</th>
                                         <th>Tên bó hoa</th>
                                         <th>Mẫu nguồn</th>
@@ -1831,42 +2423,42 @@
                                 </thead>
                                 <tbody>
                                     @forelse($danhSachBoHoa as $bo)
-                                        <?php
+                                        @php
                                             $boModel = $bo->bo_dau_tien ?? null;
                                             $mauNguon = $bo->ma_mau_bo_hoa ? $mauMap->get($bo->ma_mau_bo_hoa)?->ten_mau : null;
                                             $anhBo = ($boModel instanceof \App\Models\BoHoa) ? $boController::anh($boModel) : asset('img/default.jpg');
-                                        ?>
+                                            $ngayTao = $bo->created_at ?? $boModel?->created_at;
+                                            $ngayHetHan = $bo->ngay_het_han ?? $boModel?->ngay_het_han;
+                                            $ngayTaoCarbon = $ngayTao ? \Carbon\Carbon::parse($ngayTao) : null;
+                                            if (!$ngayHetHan && $ngayTaoCarbon) {
+                                                $ngayHetHan = $ngayTaoCarbon->copy()->addDays(5)->toDateString();
+                                            }
+                                        @endphp
                                         <tr>
-                                            <td>
-                                                <img src="{{ $anhBo }}"
-                                                     alt="{{ $bo->ten_bo_hoa }}"
-                                                     class="template-thumb"
-                                                     onerror="this.src='https://images.unsplash.com/photo-1563245372-f21724e3856d?w=100&auto=format&fit=crop&q=80'">
+                                            <td style="text-align: center; vertical-align: middle;">
+                                                <div class="rs-product-thumb">
+                                                    <img src="{{ $anhBo }}"
+                                                         alt="{{ $bo->ten_bo_hoa }}"
+                                                         class="rs-product-thumb-img"
+                                                         onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'rs-product-thumb-placeholder\'><i class=\'bi bi-flower1\'></i></div>';">
+                                                </div>
                                             </td>
                                             <td>
-                                                <strong class="d-block text-dark">{{ $bo->ten_bo_hoa }}</strong>
-                                                <small class="text-muted">#{{ $bo->ma_bo_hoa }} · {{ $concepts[$bo->concept] ?? $bo->concept }}</small>
+                                                <strong class="d-block text-dark text-nowrap" style="font-size:13.5px;">{{ $bo->ten_bo_hoa }}</strong>
+                                                <small class="text-muted text-nowrap" style="font-size:12px;">#{{ $bo->ma_bo_hoa }} · {{ $concepts[$bo->concept] ?? $bo->concept }}</small>
                                             </td>
-                                            <td>
+                                            <td style="text-align: center;">
                                                 @if($mauNguon)
-                                                    <span class="badge bg-light text-dark border">{{ $mauNguon }}</span>
+                                                    <span class="badge bg-light text-dark border text-nowrap">{{ $mauNguon }}</span>
                                                 @else
-                                                    <span class="text-muted small">Tự thiết kế</span>
+                                                    <span class="text-muted small text-nowrap">Tự thiết kế</span>
                                                 @endif
                                             </td>
-                                            <td>
-                                                <span class="badge bg-light text-dark border">{{ $bo->size }}</span>
-                                                <span class="text-muted ms-1 small">{{ $kieusBo[$bo->kieu_bo_hoa] ?? $bo->kieu_bo_hoa }}</span>
+                                            <td style="text-align: center;">
+                                                <span class="badge bg-light text-dark border">Size {{ $bo->size }}</span>
+                                                <small class="text-muted d-block text-nowrap mt-0.5" style="font-size:11.5px;">{{ $kieusBo[$bo->kieu_bo_hoa] ?? $bo->kieu_bo_hoa }}</small>
                                             </td>
                                             <td>
-                                                @php
-                                                    $ngayTao = $bo->created_at ?? $boModel?->created_at;
-                                                    $ngayHetHan = $bo->ngay_het_han ?? $boModel?->ngay_het_han;
-                                                    $ngayTaoCarbon = $ngayTao ? \Carbon\Carbon::parse($ngayTao) : null;
-                                                    if (!$ngayHetHan && $ngayTaoCarbon) {
-                                                        $ngayHetHan = $ngayTaoCarbon->copy()->addDays(5)->toDateString();
-                                                    }
-                                                @endphp
                                                 <div class="d-flex flex-column gap-1" style="font-size:12px;">
                                                     <div class="text-nowrap" title="Ngày cắm/tạo bó hoa">
                                                         <span class="text-muted"><i class="bi bi-calendar-event me-1"></i>Tạo:</span>
@@ -1881,15 +2473,15 @@
                                                                 $diffBo = $today->diffInDays($hsdBo, false);
                                                             @endphp
                                                             @if($diffBo < 0)
-                                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold" style="font-size:10.5px; padding:2px 5px;" title="Bó hoa đã quá hạn {{ abs($diffBo) }} ngày">
+                                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold text-nowrap" style="font-size:11px; padding:2px 6px;" title="Bó hoa đã quá hạn {{ abs($diffBo) }} ngày">
                                                                     {{ $hsdBo->format('d/m/Y') }} (Quá hạn)
                                                                 </span>
                                                             @elseif($diffBo <= 2)
-                                                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fw-semibold" style="font-size:10.5px; padding:2px 5px;" title="Sắp hết hạn trong {{ $diffBo }} ngày">
+                                                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fw-semibold text-nowrap" style="font-size:11px; padding:2px 6px;" title="Sắp hết hạn trong {{ $diffBo }} ngày">
                                                                     {{ $hsdBo->format('d/m/Y') }} (Còn {{ $diffBo }}n)
                                                                 </span>
                                                             @else
-                                                                <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold" style="font-size:10.5px; padding:2px 5px;" title="Hạn sử dụng còn {{ $diffBo }} ngày">
+                                                                <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold text-nowrap" style="font-size:11px; padding:2px 6px;" title="Hạn sử dụng còn {{ $diffBo }} ngày">
                                                                     {{ $hsdBo->format('d/m/Y') }} (Còn {{ $diffBo }}n)
                                                                 </span>
                                                             @endif
@@ -1899,40 +2491,55 @@
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td class="text-center font-monospace">
+                                            <td style="text-align: center; font-family: monospace;">
                                                 <strong>{{ $bo->so_luong }}</strong>
                                             </td>
-                                            <td class="text-center font-monospace text-muted">
+                                            <td style="text-align: center; font-family: monospace; color: #64748b;">
                                                 0
                                             </td>
-                                            <td class="text-center font-monospace fw-bold text-success">
+                                            <td style="text-align: center; font-family: monospace;" class="fw-bold text-success">
                                                 {{ $bo->so_luong }}
                                             </td>
+                                            <td style="text-align: right;" class="fw-bold text-success">
+                                                {{ number_format($bo->gia_ban, 0, ',', '.') }} đ
                                             <td class="text-end">
                                                 <div class="small text-muted text-nowrap">Vốn: <span class="fw-semibold text-secondary">{{ number_format($bo->gia_von ?? 0, 0, ',', '.') }} đ</span></div>
                                                 <div class="fw-bold text-nowrap" style="color:var(--rose-primary);">Bán: {{ number_format($bo->gia_ban, 0, ',', '.') }} đ</div>
                                             </td>
-                                            <td class="text-center">
+                                            <td style="text-align: center;">
                                                 @if($bo->trang_thai === 'ACTIVE')
-                                                    <span class="summary-badge status-ok">Hiện</span>
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Hiện</span>
                                                 @else
-                                                    <span class="summary-badge status-warn">Ẩn</span>
+                                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">Ẩn</span>
                                                 @endif
                                             </td>
-                                            <td class="text-end">
-                                                <div class="d-inline-flex gap-2">
-                                                    <button type="button" class="btn btn-sm btn-link p-0 text-info text-decoration-none"
+                                            <td style="text-align: center; white-space: nowrap;">
+                                                <div class="rs-action-group">
+                                                    {{-- Nút Xem chi tiết giá --}}
+                                                    <button type="button"
+                                                            class="rs-action-btn"
                                                             data-bo-chitiet-gia="{{ route('admin.bo-hoa.chi-tiet-gia', $bo->ma_bo_hoa) }}"
-                                                            title="Xem chi tiết giá">
-                                                        Chi tiết giá
+                                                            title="Xem chi tiết giá bó hoa">
+                                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <circle cx="12" cy="12" r="10"/>
+                                                            <line x1="12" y1="16" x2="12" y2="12"/>
+                                                            <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                                        </svg>
                                                     </button>
-                                                    <button type="button" class="btn btn-sm btn-link p-0 text-danger text-decoration-none"
+
+                                                    {{-- Nút Báo hỏng --}}
+                                                    <button type="button"
+                                                            class="rs-action-btn danger"
                                                             data-bo-baohong="{{ route('admin.bo-hoa.bao-hong', $bo->ma_bo_hoa) }}"
                                                             data-ten="{{ $bo->ten_bo_hoa }}"
                                                             data-sl="{{ $bo->so_luong }}"
-                                                            {{ $bo->so_luong < 1 ? 'disabled' : '' }}
-                                                            title="Báo hỏng">
-                                                        Hỏng
+                                                            {{ $bo->so_luong < 1 ? 'disabled style=opacity:0.4;cursor:not-allowed;' : '' }}
+                                                            title="Báo hỏng bó hoa">
+                                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                                                            <line x1="12" y1="9" x2="12" y2="13"/>
+                                                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                                        </svg>
                                                     </button>
                                                 </div>
                                             </td>
@@ -1951,9 +2558,80 @@
                                 </tbody>
                             </table>
                         </div>
-                        <div class="mt-3">
-                            {{ $danhSachBoHoa->links('pagination::bootstrap-5') }}
-                        </div>
+
+                        {{-- FOOTER PHÂN TRANG ĐỒNG BỘ CHUẨN ROSESHOP --}}
+                        @if($danhSachBoHoa->total() > 0)
+                            <div class="rs-table-footer">
+                                <div class="rs-footer-left">
+                                    <div class="rs-per-page-inline">
+                                        <span class="rs-per-page-label">Số hàng mỗi trang</span>
+                                        <select class="rs-per-page-select" onchange="location = this.value;">
+                                            @foreach([10, 20, 50, 100] as $perPage)
+                                                <option value="{{ request()->fullUrlWithQuery(['per_page_bo_hoa' => $perPage, 'page_bo_hoa' => 1]) }}#tab-bo-hoa-san" {{ request('per_page_bo_hoa', 10) == $perPage ? 'selected' : '' }}>
+                                                    {{ $perPage }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="rs-records-count">
+                                        {{ $danhSachBoHoa->firstItem() ?? 0 }}-{{ $danhSachBoHoa->lastItem() ?? 0 }} / {{ $danhSachBoHoa->total() }} bản ghi
+                                    </div>
+                                </div>
+                                <div class="rs-footer-pagination">
+                                    <ul class="rs-pagination">
+                                        @if ($danhSachBoHoa->onFirstPage())
+                                            <li class="page-item disabled"><span class="page-link">&lsaquo;</span></li>
+                                        @else
+                                            <li class="page-item"><a class="page-link" href="{{ $danhSachBoHoa->previousPageUrl() }}#tab-bo-hoa-san" rel="prev">&lsaquo;</a></li>
+                                        @endif
+
+                                        @php
+                                            $currentPage = $danhSachBoHoa->currentPage();
+                                            $lastPage = $danhSachBoHoa->lastPage();
+                                            $pages = [];
+
+                                            if ($lastPage <= 3) {
+                                                for ($i = 1; $i <= $lastPage; $i++) {
+                                                    $pages[] = $i;
+                                                }
+                                            } else {
+                                                if ($currentPage == 1) {
+                                                    $pages = [1, '...', $lastPage];
+                                                } elseif ($currentPage == $lastPage) {
+                                                    $pages = [1, '...', $lastPage];
+                                                } else {
+                                                    $pages[] = 1;
+                                                    if ($currentPage > 2) {
+                                                        $pages[] = '...';
+                                                    }
+                                                    $pages[] = $currentPage;
+                                                    if ($currentPage < $lastPage - 1) {
+                                                        $pages[] = '...';
+                                                    }
+                                                    $pages[] = $lastPage;
+                                                }
+                                            }
+                                        @endphp
+
+                                        @foreach ($pages as $p)
+                                            @if ($p === '...')
+                                                <li class="page-item disabled"><span class="page-link ellipsis">&hellip;</span></li>
+                                            @elseif ($p == $currentPage)
+                                                <li class="page-item active"><span class="page-link" style="background-color: #EC3D8F !important; background: #EC3D8F !important; border-color: #EC3D8F !important; color: #ffffff !important; font-weight: 600 !important; box-shadow: 0 1px 3px rgba(236, 61, 143, 0.25) !important;">{{ $p }}</span></li>
+                                            @else
+                                                <li class="page-item"><a class="page-link" href="{{ $danhSachBoHoa->url($p) }}#tab-bo-hoa-san">{{ $p }}</a></li>
+                                            @endif
+                                        @endforeach
+
+                                        @if ($danhSachBoHoa->hasMorePages())
+                                            <li class="page-item"><a class="page-link" href="{{ $danhSachBoHoa->nextPageUrl() }}#tab-bo-hoa-san" rel="next">&rsaquo;</a></li>
+                                        @else
+                                            <li class="page-item disabled"><span class="page-link">&rsaquo;</span></li>
+                                        @endif
+                                    </ul>
+                                </div>
+                            </div>
+                        @endif
                     </div>
 
                 </div>
@@ -2229,24 +2907,175 @@
     // =========================================================================
     // 24. TAB DANH SÁCH MẪU: SEARCH & FILTER
     // =========================================================================
-    const searchMauName   = document.getElementById('search-mau-name');
-    const filterMauStatus = document.getElementById('filter-mau-status');
-    const mauRows         = document.querySelectorAll('#tbody-mau-list .mau-row');
+    // =========================================================================
+    // 24. TAB DANH SÁCH MẪU: SEARCH, FILTER & PHÂN TRANG CHUẨN ROSESHOP
+    // =========================================================================
+    const searchMauName      = document.getElementById('search-mau-name');
+    const filterMauStatus    = document.getElementById('filter-mau-status');
+    const btnSearchMau       = document.getElementById('btn-search-mau');
+    const mauRows            = Array.from(document.querySelectorAll('#tbody-mau-list .mau-row'));
+    const mauPerPageSelect   = document.getElementById('mau-per-page-select');
+    const mauRecordsCount    = document.getElementById('mau-records-count');
+    const mauPaginationList  = document.getElementById('mau-pagination-list');
+    const mauTotalCountBadge = document.getElementById('mau-total-count');
 
-    function applyMauFilter() {
+    let currentMauPage = 1;
+
+    function renderMauPagination(visibleRows) {
+        const total = visibleRows.length;
+        const perPage = parseInt(mauPerPageSelect?.value || 10, 10);
+        const totalPages = Math.max(1, Math.ceil(total / perPage));
+
+        if (currentMauPage > totalPages) currentMauPage = 1;
+        if (currentMauPage < 1) currentMauPage = 1;
+
+        mauRows.forEach(r => {
+            r.style.display = 'none';
+            const detail = r.nextElementSibling;
+            if (detail && detail.classList.contains('mau-thieu-row')) {
+                detail.style.display = 'none';
+            }
+        });
+
+        const startIdx = (currentMauPage - 1) * perPage;
+        const endIdx   = Math.min(startIdx + perPage, total);
+
+        for (let i = startIdx; i < endIdx; i++) {
+            if (visibleRows[i]) {
+                visibleRows[i].style.display = '';
+                const detail = visibleRows[i].nextElementSibling;
+                if (detail && detail.classList.contains('mau-thieu-row')) {
+                    detail.style.display = '';
+                }
+            }
+        }
+
+        if (mauRecordsCount) {
+            if (total === 0) {
+                mauRecordsCount.textContent = '0 / 0 bản ghi';
+            } else {
+                mauRecordsCount.textContent = `${startIdx + 1}-${endIdx} / ${total} bản ghi`;
+            }
+        }
+
+        if (mauTotalCountBadge) {
+            mauTotalCountBadge.textContent = total;
+        }
+
+        if (!mauPaginationList) return;
+        mauPaginationList.replaceChildren();
+
+        if (total === 0) return;
+
+        // Nút Prev
+        const prevLi = document.createElement('li');
+        prevLi.className = `page-item ${currentMauPage === 1 ? 'disabled' : ''}`;
+        if (currentMauPage === 1) {
+            prevLi.innerHTML = `<span class="page-link">&lsaquo;</span>`;
+        } else {
+            const prevA = document.createElement('a');
+            prevA.className = 'page-link';
+            prevA.href = 'javascript:void(0)';
+            prevA.innerHTML = '&lsaquo;';
+            prevA.addEventListener('click', () => {
+                currentMauPage--;
+                applyMauFilter(false);
+            });
+            prevLi.appendChild(prevA);
+        }
+        mauPaginationList.appendChild(prevLi);
+
+        // Danh sách số trang
+        let pages = [];
+        if (totalPages <= 3) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            if (currentMauPage === 1 || currentMauPage === totalPages) {
+                pages = [1, '...', totalPages];
+            } else {
+                pages.push(1);
+                if (currentMauPage > 2) pages.push('...');
+                pages.push(currentMauPage);
+                if (currentMauPage < totalPages - 1) pages.push('...');
+                pages.push(totalPages);
+            }
+        }
+
+        pages.forEach(p => {
+            const li = document.createElement('li');
+            if (p === '...') {
+                li.className = 'page-item disabled';
+                li.innerHTML = '<span class="page-link ellipsis">&hellip;</span>';
+            } else if (p === currentMauPage) {
+                li.className = 'page-item active';
+                li.innerHTML = `<span class="page-link" style="background-color: #EC3D8F !important; background: #EC3D8F !important; border-color: #EC3D8F !important; color: #ffffff !important; font-weight: 600 !important; box-shadow: 0 1px 3px rgba(236, 61, 143, 0.25) !important;">${p}</span>`;
+            } else {
+                li.className = 'page-item';
+                const a = document.createElement('a');
+                a.className = 'page-link';
+                a.href = 'javascript:void(0)';
+                a.textContent = p;
+                a.addEventListener('click', () => {
+                    currentMauPage = p;
+                    applyMauFilter(false);
+                });
+                li.appendChild(a);
+            }
+            mauPaginationList.appendChild(li);
+        });
+
+        // Nút Next
+        const nextLi = document.createElement('li');
+        nextLi.className = `page-item ${currentMauPage === totalPages ? 'disabled' : ''}`;
+        if (currentMauPage === totalPages) {
+            nextLi.innerHTML = `<span class="page-link">&rsaquo;</span>`;
+        } else {
+            const nextA = document.createElement('a');
+            nextA.className = 'page-link';
+            nextA.href = 'javascript:void(0)';
+            nextA.innerHTML = '&rsaquo;';
+            nextA.addEventListener('click', () => {
+                currentMauPage++;
+                applyMauFilter(false);
+            });
+            nextLi.appendChild(nextA);
+        }
+        mauPaginationList.appendChild(nextLi);
+    }
+
+    function applyMauFilter(resetPage = true) {
+        if (resetPage) currentMauPage = 1;
         const q = (searchMauName?.value || '').trim().toLowerCase();
         const st = filterMauStatus?.value || '';
 
-        mauRows.forEach(r => {
-            const rName = r.dataset.name;
-            const rStatus = r.dataset.status;
+        const visibleRows = mauRows.filter(r => {
+            const rName = r.dataset.name || '';
+            const rStatus = r.dataset.status || '';
             const matchQ = !q || rName.includes(q);
-            const matchSt = !st || rStatus === st;
-            r.style.display = (matchQ && matchSt) ? '' : 'none';
+            const matchSt = !st
+                || (st === 'OUT_OF_STOCK' ? r.dataset.stock === 'out' : rStatus === st);
+            return matchQ && matchSt;
         });
+
+        renderMauPagination(visibleRows);
     }
-    searchMauName?.addEventListener('input', applyMauFilter);
-    filterMauStatus?.addEventListener('change', applyMauFilter);
+
+    // Bấm "Hết hàng · N" / "Thiếu NL" → ẩn/hiện dòng nguyên liệu thiếu
+    document.querySelectorAll('[data-thieu-toggle]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const row = document.getElementById(btn.dataset.thieuToggle);
+            if (!row) return;
+            const opening = row.classList.toggle('d-none') === false;
+            btn.setAttribute('aria-expanded', opening ? 'true' : 'false');
+        });
+    });
+
+    searchMauName?.addEventListener('input', () => applyMauFilter(true));
+    filterMauStatus?.addEventListener('change', () => applyMauFilter(true));
+    btnSearchMau?.addEventListener('click', () => applyMauFilter(true));
+    mauPerPageSelect?.addEventListener('change', () => applyMauFilter(true));
+
+    applyMauFilter(true);
 
     // Thao tác đổi trạng thái / xóa mẫu
     document.querySelectorAll('[data-bo-action]').forEach(btn => {

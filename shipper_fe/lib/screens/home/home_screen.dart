@@ -32,6 +32,12 @@ class HomeScreenState extends State<HomeScreen> {
     NavItemData(icon: Icons.person_rounded, label: tr('nav_profile')),
   ];
 
+  /// Về tab Trang chủ (dùng sau khi đổi mật khẩu xong).
+  void goHome() {
+    if (_index == 0) return;
+    setState(() => _index = 0);
+  }
+
   void _onTap(int i) {
     if (i == _index) return;
     setState(() {
