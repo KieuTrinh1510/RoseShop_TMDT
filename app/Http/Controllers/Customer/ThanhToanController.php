@@ -35,17 +35,21 @@ class ThanhToanController extends Controller
         $diaChiHienTai  = $danhSachDiaChi->firstWhere('la_mac_dinh', true) ?? $danhSachDiaChi->first();
         $type           = request('type');
 
-        // ─── Nhánh: Mua ngay 1 bó hoa đơn lẻ ──────────────────────────
-        if ($type === 'mua_ngay_bo_hoa' && session()->has('bo_hoa_checkout')) {
+        // ─── Nhánh: Mua ngay 1 bó hoa đơn lẻ (tự tạo Custom Mix hoặc mẫu mua ngay) ───
+        if (session()->has('bo_hoa_checkout')) {
+            $boHoaCheckoutData = session('bo_hoa_checkout');
             try {
                 $info = \App\Http\Controllers\Customer\BoHoaController::duLieuCheckout(
-                    session('bo_hoa_checkout'), $khachId
+                    $boHoaCheckoutData, $khachId
                 );
                 $info['key'] = 'bo_hoa_checkout';
                 $dsBoHoa = [$info];
             } catch (\Throwable $e) {
                 session()->forget('bo_hoa_checkout');
-                return redirect()->route('customer.bo-hoa.he-thong')->with('error', $e->getMessage());
+                $redirectRoute = ($boHoaCheckoutData['loai'] ?? '') === 'TUY_CHON'
+                    ? route('customer.bo-hoa.tu-tao')
+                    : route('customer.bo-hoa.he-thong');
+                return redirect($redirectRoute)->with('error', $e->getMessage());
             }
             $diemSuDung = session('diem_su_dung', 0);
             return view('customer.ThanhToan', [

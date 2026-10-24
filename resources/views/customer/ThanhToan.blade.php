@@ -198,17 +198,42 @@
                         {{-- NHÁNH BÓ HOA (NẾU CÓ) --}}
                         @if(!empty($dsBoHoa))
                             @foreach($dsBoHoa as $idx => $bo)
+                            @php
+                                $anhBo = asset('img/placeholder-flower.svg');
+                                $sizeText = 'Tiêu chuẩn';
+                                $badgeText = 'Bó hoa';
+                                $src = $bo['source'] ?? ($bo['mau'] ?? null);
+
+                                if ($src) {
+                                    if ($src instanceof \App\Models\MauBoHoa) {
+                                        $anhBo = \App\Http\Controllers\Admin\BoHoaController::anhMau($src);
+                                        $sizeText = $src->size ?? 'Tiêu chuẩn';
+                                        $badgeText = 'Bó hoa';
+                                    } else {
+                                        if (!empty($src->hinh_anh)) {
+                                            $anhBo = asset($src->hinh_anh);
+                                        } elseif (!empty($src->customMixImages) && $src->customMixImages->first()) {
+                                            $anhBo = asset('storage/' . $src->customMixImages->first()->path);
+                                        }
+                                        $sizeText = $src->size ?? 'Tiêu chuẩn';
+                                        if (!empty($src->kieu_bo_hoa)) {
+                                            $sizeText .= ' · Kiểu ' . $src->kieu_bo_hoa;
+                                        }
+                                        $badgeText = 'Tự tạo';
+                                    }
+                                }
+                            @endphp
                             <div class="order-item-row">
-                                <img src="{{ !empty($bo['mau']) ? \App\Http\Controllers\Admin\BoHoaController::anhMau($bo['mau']) : asset('img/placeholder-flower.svg') }}"
+                                <img src="{{ $anhBo }}"
                                      alt="{{ $bo['ten'] }}" class="order-item-thumb"
                                      onerror="this.src='{{ asset('img/placeholder-flower.svg') }}';">
                                 <div class="order-item-info">
                                     <div class="order-item-title">
-                                        <span class="order-item-type-badge">Bó hoa</span>
+                                        <span class="order-item-type-badge">{{ $badgeText }}</span>
                                         {{ $bo['ten'] }}
                                     </div>
                                     <div class="order-item-sub">
-                                        {{ $bo['so_luong'] }} bó · Size {{ $bo['mau']->size ?? 'Tiêu chuẩn' }}
+                                        {{ $bo['so_luong'] }} bó · Size {{ $sizeText }}
                                         @if(!empty($bo['thiep']))
                                             <span class="order-thiep-tag">· Thiệp: {{ $bo['thiep']->ten_san_pham }}</span>
                                         @endif
