@@ -42,6 +42,7 @@ use App\Http\Controllers\Admin\HoanHang\GiaoHangThatBaiController;
 use App\Http\Controllers\VnPayController;
 use App\Http\Controllers\Customer\ThanhToanViPhamController;
 use App\Http\Controllers\VnPayViPhamController;
+use App\Http\Controllers\Customer\ChatbotController;
 
 Route::middleware(['auth', 'role:ADMIN,NHAN_VIEN'])->prefix('admin/bo-hoa')->name('admin.bo-hoa.')->group(function () {
     // Mẫu
@@ -138,6 +139,14 @@ Route::get('/shipper/ung-dung-di-dong', function (\Illuminate\Http\Request $requ
     }
     return view('Shipper.layouts.Shipper');
 })->name('shipper.mobile-only');
+
+// ─── Chatbot AI Trợ lý Khách hàng ───────────────────────────────────────────
+Route::prefix('chatbot')->name('chatbot.')->group(function () {
+    Route::post('/message', [ChatbotController::class, 'sendMessage'])->name('message');
+    Route::get('/history',  [ChatbotController::class, 'getHistory'])->name('history');
+    Route::post('/reset',   [ChatbotController::class, 'resetHistory'])->name('reset');
+    Route::post('/apply-custom-mix', [ChatbotController::class, 'applyCustomMix'])->name('apply-custom-mix');
+});
 
 // ─── Trang chủ ────────────────────────────────────────────────────────────────
 Route::get('/', function () {
