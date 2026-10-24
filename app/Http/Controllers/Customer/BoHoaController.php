@@ -38,7 +38,9 @@ class BoHoaController extends Controller
             ->get()
             ->groupBy('ma_mau_bo_hoa');
 
-        $mauList = $query->orderByDesc('ma_mau_bo_hoa')->get();
+        $mauList = $query->withCount(['boHoas as da_ban' => fn ($q) => $q->whereNotNull('ma_hoa_don')])
+            ->orderByDesc('ma_mau_bo_hoa')
+            ->get();
 
         // Tồn khả dụng của toàn bộ nguyên liệu trong trang — 1 lần truy vấn, tránh N+1.
         $spIds = $mauList
@@ -76,9 +78,10 @@ class BoHoaController extends Controller
             return $m;
         });
 
-        // Sắp xếp: Ưu tiên các mẫu còn hàng lên đầu, mẫu hết hàng đẩy xuống cuối
+        // Sắp xếp: Ưu tiên các mẫu còn hàng lên đầu -> Bán chạy nhất (da_ban desc) -> Mới nhất
         $allMaus = $allMaus->sortBy([
             fn ($a, $b) => ($a->het_hang ? 1 : 0) <=> ($b->het_hang ? 1 : 0),
+            fn ($a, $b) => ($b->da_ban ?? 0) <=> ($a->da_ban ?? 0),
             fn ($a, $b) => $b->ma_mau_bo_hoa <=> $a->ma_mau_bo_hoa,
         ])->values();
 
