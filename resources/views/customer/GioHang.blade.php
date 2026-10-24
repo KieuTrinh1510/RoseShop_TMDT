@@ -572,33 +572,34 @@
         }
     });
 
-    async function proceedToCheckout() {
-        const keysSP = Object.keys(selectedItems).filter(k => selectedItems[k]);
-        const keysBH = Object.keys(selectedBouquets).filter(k => selectedBouquets[k]);
+    function updateCheckoutButtonState() {
+        const btn = document.getElementById('btnProceed');
+        if (!btn) return;
 
-        if (!keysSP.length && !keysBH.length) {
+        const totalSelected = document.querySelectorAll('.select-item:checked').length;
+        btn.disabled = totalSelected === 0;
+        btn.title = totalSelected === 0
+            ? 'Vui lòng chọn ít nhất 1 sản phẩm để thanh toán'
+            : 'Tiến hành thanh toán (' + totalSelected + ' món)';
+    }
+
+    async function proceedToCheckout() {
+        // Lấy trực tiếp danh sách được chọn từ DOM
+        const keysSP = Array.from(document.querySelectorAll('.select-item[data-type="san_pham"]:checked')).map(el => el.dataset.key);
+        const keysBH = Array.from(document.querySelectorAll('.select-item[data-type="bo_hoa"]:checked')).map(el => el.dataset.key);
+
+        if (keysSP.length === 0 && keysBH.length === 0) {
             alert('Vui lòng chọn ít nhất một sản phẩm hoặc bó hoa để thanh toán.');
             return;
         }
 
         const btn = document.getElementById('btnProceed');
-        if (btn) { btn.disabled = true; btn.innerHTML = '<span>⏳ Đang xử lý...</span>'; }
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span>⏳ Đang chuyển tới thanh toán...</span>';
+        }
 
         try {
-            // Nếu chọn cả sản phẩm lẻ và bó hoa thiết kế
-            if (keysSP.length > 0 && keysBH.length > 0) {
-                const ok = confirm("Giỏ hàng đang chọn cả Bó hoa thiết kế và Sản phẩm lẻ.\nDo quy trình xuất kho và cắm hoa khác nhau, hệ thống sẽ tiến hành thanh toán " + keysSP.length + " sản phẩm lẻ trước (Bó hoa vẫn được lưu an toàn trong giỏ để bạn đặt tiếp ngay sau đó).\n\nBạn có đồng ý tiếp tục không?");
-                if (!ok) {
-                    if (btn) {
-                        btn.disabled = false;
-                        btn.innerHTML = '<span>Tiến hành thanh toán</span> <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>';
-                        updateCheckoutButtonState();
-                    }
-                    return;
-                }
-            }
-
-            // Trường hợp 1: Chọn sản phẩm đơn lẻ
             if (keysSP.length > 0) {
                 const res = await fetch(CHECKOUT_POST_URL, {
                     method: 'POST',
@@ -614,7 +615,6 @@
                     alert(data.message || 'Không thể chuyển đến trang thanh toán.');
                 }
             } else if (keysBH.length > 0) {
-                // Trường hợp 2: Chỉ chọn bó hoa
                 window.location.href = CHECKOUT_PAGE_URL + '?type=bo_hoa';
                 return;
             }

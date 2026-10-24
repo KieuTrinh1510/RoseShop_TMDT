@@ -275,13 +275,6 @@
                                 <i class="fa-solid fa-bag-shopping" style="color: #be185d;"></i>
                                 <span>Xem giỏ hàng</span>
                             </a>
-
-                            @if($soItemGioBoHoa > 0)
-                                <a href="{{ route('customer.bo-hoa.gio.index') }}">
-                                    <i class="fa-solid fa-seedling" style="color: #e11d48;"></i>
-                                    <span>Giỏ bó hoa ({{ $soItemGioBoHoa }})</span>
-                                </a>
-                            @endif
                         </div>
                     </div>
                 </div>
@@ -353,13 +346,6 @@
         <div class="dropdown-menu" id="dropdownMenuBoHoa">
             <a href="{{ route('customer.bo-hoa.he-thong') }}" class="dropdown-cat">💐 Bó hoa đề xuất</a>
             <a href="{{ route('customer.bo-hoa.tu-tao') }}" class="dropdown-cat">✿ Tự tạo bó hoa</a>
-            @auth
-                @if($soItemGioBoHoa > 0)
-                    <a href="{{ route('customer.bo-hoa.gio.index') }}" class="dropdown-cat">
-                        🛒 Giỏ bó hoa ({{ $soItemGioBoHoa }})
-                    </a>
-                @endif
-            @endauth
         </div>
     </div>
 
