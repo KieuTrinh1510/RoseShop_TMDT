@@ -406,6 +406,19 @@
     text-overflow: ellipsis;
 }
 
+.order-item-type-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    background: #FFF1F5;
+    color: var(--primary-rose);
+    border: 1px solid var(--primary-rose-border);
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
 .order-item-sub {
     font-size: 0.78rem;
     color: var(--text-subtle);

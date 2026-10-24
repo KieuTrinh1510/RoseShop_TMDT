@@ -600,23 +600,21 @@
         }
 
         try {
-            if (keysSP.length > 0) {
-                const res = await fetch(CHECKOUT_POST_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
-                    body: JSON.stringify({ selected_items: keysSP })
-                });
+            const res = await fetch(CHECKOUT_POST_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
+                body: JSON.stringify({
+                    selected_items: keysSP,
+                    selected_bouquets: keysBH
+                })
+            });
 
-                const data = await res.json();
-                if (data.success) {
-                    window.location.href = CHECKOUT_PAGE_URL + '?type=san_pham';
-                    return;
-                } else {
-                    alert(data.message || 'Không thể chuyển đến trang thanh toán.');
-                }
-            } else if (keysBH.length > 0) {
-                window.location.href = CHECKOUT_PAGE_URL + '?type=bo_hoa';
+            const data = await res.json();
+            if (data.success) {
+                window.location.href = CHECKOUT_PAGE_URL;
                 return;
+            } else {
+                alert(data.message || 'Không thể chuyển đến trang thanh toán.');
             }
         } catch (err) {
             console.error(err);

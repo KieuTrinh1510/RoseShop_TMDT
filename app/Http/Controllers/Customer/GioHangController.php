@@ -182,29 +182,36 @@ class GioHangController extends Controller
 
     public function checkout(Request $request)
     {
-        $request->validate([
-            'selected_items' => 'required|array|min:1',
-            'selected_items.*' => 'required|string'
-        ]);
+        $selectedItems    = $request->input('selected_items', []);
+        $selectedBouquets = $request->input('selected_bouquets', []);
 
-        $gioHang = session('gio_hang', []);
+        $gioHang  = session('gio_hang', []);
+        $gioBoHoa = session('gio_bo_hoa', []);
 
-        $checkout = [];
-        foreach ($request->selected_items as $key) {
+        $checkout   = [];
+        $checkoutBH = [];
+
+        foreach ($selectedItems as $key) {
             if (isset($gioHang[$key])) {
                 $checkout[$key] = $gioHang[$key];
             }
         }
 
-        if (empty($checkout)) {
+        foreach ($selectedBouquets as $bKey) {
+            if (isset($gioBoHoa[$bKey])) {
+                $checkoutBH[$bKey] = $gioBoHoa[$bKey];
+            }
+        }
+
+        if (empty($checkout) && empty($checkoutBH)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Không có sản phẩm hợp lệ được chọn.'
+                'message' => 'Không có sản phẩm hoặc bó hoa hợp lệ được chọn.'
             ], 400);
         }
 
-        // Save selected items for checkout
-        session(['checkout_items' => $checkout]);
+        session(['checkout_items'  => $checkout]);
+        session(['checkout_bo_hoa' => $checkoutBH]);
 
         return response()->json(['success' => true]);
     }

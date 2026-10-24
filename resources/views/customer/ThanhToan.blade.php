@@ -179,22 +179,34 @@
                         <a href="{{ route('customer.gio-hang') }}" class="link-edit-cart">Chỉnh sửa giỏ hàng</a>
                     </div>
 
+                    {{-- TÍNH TỔNG TIỀN GỐC GỘP CẢ BÓ HOA VÀ SẢN PHẨM --}}
+                    @php
+                        $tongTienGoc = 0;
+                        if (!empty($dsBoHoa)) {
+                            foreach ($dsBoHoa as $bo) {
+                                $tongTienGoc += (float) ($bo['quote']['tong_tien'] ?? 0);
+                            }
+                        }
+                        if (!empty($gioHang)) {
+                            $tongTienGoc += collect($gioHang)->sum(fn($i) => $i['gia_ban'] * $i['so_luong']);
+                        }
+                    @endphp
+
                     {{-- DANH SÁCH MÓN HÀNG --}}
                     <div class="order-items-scroll">
 
-                        {{-- NHÁNH BÓ HOA --}}
-                        @if(isset($dsBoHoa) && count($dsBoHoa) > 0)
-                            @php
-                                $tongTienGoc = 0;
-                                foreach ($dsBoHoa as $bo) $tongTienGoc += (float) $bo['quote']['tong_tien'];
-                            @endphp
+                        {{-- NHÁNH BÓ HOA (NẾU CÓ) --}}
+                        @if(!empty($dsBoHoa))
                             @foreach($dsBoHoa as $idx => $bo)
                             <div class="order-item-row">
                                 <img src="{{ !empty($bo['mau']) ? \App\Http\Controllers\Admin\BoHoaController::anhMau($bo['mau']) : asset('img/placeholder-flower.svg') }}"
                                      alt="{{ $bo['ten'] }}" class="order-item-thumb"
                                      onerror="this.src='{{ asset('img/placeholder-flower.svg') }}';">
                                 <div class="order-item-info">
-                                    <div class="order-item-title">{{ $bo['ten'] }}</div>
+                                    <div class="order-item-title">
+                                        <span class="order-item-type-badge">Bó hoa</span>
+                                        {{ $bo['ten'] }}
+                                    </div>
                                     <div class="order-item-sub">
                                         {{ $bo['so_luong'] }} bó · Size {{ $bo['mau']->size ?? 'Tiêu chuẩn' }}
                                         @if(!empty($bo['thiep']))
@@ -203,15 +215,13 @@
                                     </div>
                                 </div>
                                 <div class="order-item-qty">x{{ $bo['so_luong'] }}</div>
-                                <div class="order-item-amount">{{ number_format($bo['quote']['tong_tien'], 0, ',', '.') }}₫</div>
+                                <div class="order-item-amount">{{ number_format($bo['quote']['tong_tien'] ?? 0, 0, ',', '.') }}₫</div>
                             </div>
                             @endforeach
+                        @endif
 
-                        {{-- NHÁNH SẢN PHẨM ĐƠN LẺ --}}
-                        @elseif(isset($gioHang) && count($gioHang) > 0)
-                            @php
-                                $tongTienGoc = collect($gioHang)->sum(fn($i) => $i['gia_ban'] * $i['so_luong']);
-                            @endphp
+                        {{-- NHÁNH SẢN PHẨM ĐƠN LẺ (NẾU CÓ) --}}
+                        @if(!empty($gioHang))
                             @foreach($gioHang as $key => $item)
                             <div class="order-item-row">
                                 @if(!empty($item['hinh_anh']))
@@ -228,8 +238,6 @@
                                 <div class="order-item-amount">{{ number_format($item['gia_ban'] * $item['so_luong'], 0, ',', '.') }}₫</div>
                             </div>
                             @endforeach
-                        @else
-                            @php $tongTienGoc = 0; @endphp
                         @endif
 
                     </div>
