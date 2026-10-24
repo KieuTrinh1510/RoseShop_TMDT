@@ -1,46 +1,63 @@
 @extends('customer.layouts.customer')
 
-@section('title', match($type ?? 'san-pham') {
-    'mau-bo-hoa'    => ($boHoaMau->ten_mau ?? 'Mẫu bó hoa') . ' – Hoa Tươi Shop 🌸',
-    'bo-hoa-tu-tao' => ($preview['ten_bo_hoa'] ?? 'Bó hoa tự tạo') . ' – Hoa Tươi Shop 🌸',
-    'flash-sale'    => ($flashSale['ten'] ?? 'Flash Sale') . ' – Hoa Tươi Shop 🌸',
-    default         => ($sanPham->ten_san_pham ?? 'Sản phẩm') . ' – Hoa Tươi Shop 🌸',
-})
+@section('title',
+    ($type ?? 'san-pham') === 'mau-bo-hoa'
+        ? (($boHoaMau->ten_mau ?? 'Mẫu bó hoa') . ' – Hoa Tươi Shop 🌸')
+        : ((($type ?? 'san-pham') === 'bo-hoa-tu-tao')
+            ? (($preview['ten_bo_hoa'] ?? 'Bó hoa tự tạo') . ' – Hoa Tươi Shop 🌸')
+            : (($sanPham->ten_san_pham ?? 'Sản phẩm') . ' – Hoa Tươi Shop 🌸')))
 
 @section('head-styles')
-<link rel="stylesheet" href="{{ asset('css/Customer/ChiTietSanPham.css') }}">
+<link rel="stylesheet" href="{{ asset('css/Customer/ChiTietSanPham.css') }}?v={{ time() }}">
 @endsection
 
 @section('content')
-
+@if(($type ?? 'san-pham') === 'mau-bo-hoa')
 {{-- ═══════════════════════════════════════════════════════════
      NHÁNH 1: MẪU BÓ HOA HỆ THỐNG
 ═══════════════════════════════════════════════════════════ --}}
-@if(($type ?? 'san-pham') === 'mau-bo-hoa')
-@php $style = \App\Http\Controllers\Admin\BoHoaController::KIEU_DANG[$boHoaMau->kieu_bo_hoa] ?? $boHoaMau->kieu_bo_hoa; @endphp
+@php
+    $style    = \App\Http\Controllers\Admin\BoHoaController::KIEU_DANG[$boHoaMau->kieu_bo_hoa] ?? $boHoaMau->kieu_bo_hoa;
+    $anhBoHoa = \App\Http\Controllers\Admin\BoHoaController::anhMau($boHoaMau);
+    $moTaDai  = trim(strip_tags($boHoaMau->mo_ta ?? ''));
+    $moTaNgan = \Illuminate\Support\Str::limit($moTaDai, 160);
+@endphp
 <div class="detail-wrap">
-    <div>
+    {{-- LEFT: Ảnh --}}
+    <div class="pd-gallery">
         <div class="gallery-main">
-            <img src="{{ \App\Http\Controllers\Admin\BoHoaController::anhMau($boHoaMau) }}" alt="{{ $boHoaMau->ten_mau }}">
+            <img src="{{ $anhBoHoa }}" alt="{{ $boHoaMau->ten_mau }}" onerror="this.onerror=null; this.src='{{ asset('img/placeholder-flower.svg') }}';">
+            <button type="button" class="pd-btn-wishlist" title="Yêu thích" onclick="toggleHeart(this)"><i class="fa-regular fa-heart"></i></button>
+            <button type="button" class="pd-btn-expand" title="Phóng to" onclick="window.open('{{ $anhBoHoa }}', '_blank')"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></button>
+        </div>
+        <div class="pd-thumbs">
+            <button type="button" class="pd-thumb is-active" aria-label="Ảnh bó hoa">
+                <img src="{{ $anhBoHoa }}" alt="" onerror="this.onerror=null; this.src='{{ asset('img/placeholder-flower.svg') }}';">
+            </button>
         </div>
     </div>
-    <div class="info-panel">
-        <div class="info-category-tag">💐 Mẫu bó hoa</div>
+
+    {{-- RIGHT: Thông tin --}}
+    <div class="info-panel pd-info">
+        <span class="pd-tag">Bó hoa</span>
         <h1 class="info-title">{{ $boHoaMau->ten_mau }}</h1>
+        <p class="pd-subtitle">{{ $moTaNgan !== '' ? $moTaNgan : ($style . ' · Size ' . $boHoaMau->size) }}</p>
+
+        <div class="pd-price-row">
+            <p class="pd-price price-val">{{ number_format($quote['gia_moi_bo'], 0, ',', '.') }}₫ / bó</p>
+            <span class="pd-badge pd-badge--ok"><i class="fa-solid fa-leaf"></i> Đang bán</span>
+        </div>
 
         <div class="meta-strip">
             <div class="meta-chip">Kiểu dáng: <strong>{{ $style }}</strong></div>
             <div class="meta-chip">Size: <strong>{{ $boHoaMau->size }}</strong></div>
         </div>
 
-        <div class="price-table-wrap">
-            <div class="price-table-label">💰 Giá bán</div>
-            <p class="price-val">{{ number_format($quote['gia_moi_bo'], 0, ',', '.') }}₫ / bó</p>
-        </div>
+        @include('customer.partials.pd-features')
 
-        <div class="info-desc">
-            <div class="info-desc-label">Thành phần bó hoa</div>
-            <ul>
+        <section class="pd-card" aria-labelledby="pdCompTitle">
+            <h2 class="pd-card-title" id="pdCompTitle">Thành phần bó hoa</h2>
+            <ul class="pd-composition">
                 @foreach($boHoaMau->chiTietMauBoHoa->groupBy('vai_tro') as $vaiTro => $items)
                     <li>
                         <strong>{{ \App\Http\Controllers\Admin\BoHoaController::VAI_TRO[$vaiTro] ?? $vaiTro }}:</strong>
@@ -48,335 +65,317 @@
                     </li>
                 @endforeach
             </ul>
-            @if($boHoaMau->mo_ta)
-                <p style="margin-top:12px;">{{ $boHoaMau->mo_ta }}</p>
+            @if(mb_strlen($moTaDai) > 160)
+                <p class="pd-composition-note">{{ $boHoaMau->mo_ta }}</p>
             @endif
-        </div>
+        </section>
 
         @auth
-        <form method="POST" action="{{ route('customer.mau-bo-hoa.mua', $boHoaMau->ma_mau_bo_hoa) }}" class="action-row" id="formMuaMau">
+        <form method="POST" action="{{ route('customer.mau-bo-hoa.mua', $boHoaMau->ma_mau_bo_hoa) }}" class="pd-card pd-options" id="formMuaMau">
             @csrf
 
-            {{-- ✅ FIX: hidden field để route gio.add nhận được ma_mau_bo_hoa --}}
+            {{-- Hidden field để route gio.add nhận được ma_mau_bo_hoa --}}
             <input type="hidden" name="ma_mau_bo_hoa" value="{{ $boHoaMau->ma_mau_bo_hoa }}">
 
-            {{-- ✅ FIX: hiện lỗi validation/runtime khi bấm "Thêm vào giỏ" --}}
+            <h2 class="pd-card-title">Tùy chọn đặt mua</h2>
+
             @if(session('error'))
-                <div style="padding:10px 14px;background:#fff0ef;color:#9e2924;border-radius:8px;margin-bottom:12px;font-size:14px;">
-                    ❌ {{ session('error') }}
-                </div>
+                <div class="pd-alert pd-alert--danger"><i class="fa-solid fa-circle-exclamation"></i> {{ session('error') }}</div>
             @endif
             @if($errors->any())
-                <div style="padding:10px 14px;background:#fff0ef;color:#9e2924;border-radius:8px;margin-bottom:12px;font-size:14px;">
-                    <ul style="margin:0;padding-left:18px;">
+                <div class="pd-alert pd-alert--danger">
+                    <ul>
                         @foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach
                     </ul>
                 </div>
             @endif
 
-            <label>Số lượng (tối đa 10 bó)
-                <input type="number" name="so_luong" id="soLuongMau" min="1" max="10" value="{{ old('so_luong', 1) }}" required>
-            </label>
+            <div class="pd-options-row">
+                <div class="pd-field">
+                    <label for="soLuongMau">Số lượng <small>(tối đa 10 bó)</small></label>
+                    <div class="pd-stepper">
+                        <button type="button" onclick="pdStep('soLuongMau', -1)" aria-label="Giảm số lượng">−</button>
+                        <input type="number" name="so_luong" id="soLuongMau" min="1" max="10" value="{{ old('so_luong', 1) }}" required>
+                        <button type="button" onclick="pdStep('soLuongMau', 1)" aria-label="Tăng số lượng">+</button>
+                    </div>
+                </div>
 
-            @if(isset($dsThiep) && $dsThiep->count() > 0)
-            <label>Thêm thiệp (tùy chọn, cộng vào giá bó)
-                <select name="ma_thiep" id="thiepSelectMau">
-                    <option value="" data-gia="0">-- Không thêm thiệp --</option>
-                    @foreach($dsThiep as $t)
-                        <option value="{{ $t->ma_san_pham }}" data-gia="{{ $t->gia_ban_hien_tai }}"
-                            {{ old('ma_thiep') == $t->ma_san_pham ? 'selected' : '' }}>
-                            {{ $t->ten_san_pham }} — +{{ number_format($t->gia_ban_hien_tai, 0, ',', '.') }}₫
-                        </option>
-                    @endforeach
-                </select>
-            </label>
-            @endif
+                @if(isset($dsThiep) && $dsThiep->count() > 0)
+                <div class="pd-field pd-field--grow">
+                    <label for="thiepSelectMau">Thiệp đi kèm <small>(tùy chọn)</small></label>
+                    <select name="ma_thiep" id="thiepSelectMau" class="pd-select">
+                        <option value="" data-gia="0">Không thêm thiệp</option>
+                        @foreach($dsThiep as $t)
+                            <option value="{{ $t->ma_san_pham }}" data-gia="{{ $t->gia_ban_hien_tai }}"
+                                {{ old('ma_thiep') == $t->ma_san_pham ? 'selected' : '' }}>
+                                {{ $t->ten_san_pham }} — +{{ number_format($t->gia_ban_hien_tai, 0, ',', '.') }}₫
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
+            </div>
 
-            <label>Lời nhắn gửi kèm (không bắt buộc)
-                <textarea name="loi_nhan" maxlength="2000" placeholder="Ví dụ: Chúc mừng sinh nhật em!">{{ old('loi_nhan') }}</textarea>
-            </label>
+            <div class="pd-field">
+                <label for="loiNhanMau">Lời nhắn gửi kèm <small>(tùy chọn)</small></label>
+                <div class="pd-textarea-wrap">
+                    <textarea name="loi_nhan" id="loiNhanMau" class="pd-textarea" maxlength="2000" data-counter="loiNhanMauCounter"
+                              placeholder="Ví dụ: Chúc mừng sinh nhật em!">{{ old('loi_nhan') }}</textarea>
+                    <span class="pd-counter" id="loiNhanMauCounter">0/2000</span>
+                </div>
+            </div>
 
-            <div class="action-row" style="display:flex;gap:12px;flex-wrap:wrap;">
-                <button type="submit" class="btn-cart" style="flex:1;min-width:180px;"
-                        formaction="{{ route('customer.bo-hoa.gio.add') }}">
-                   Thêm vào giỏ
+            <div class="pd-actions">
+                <button type="submit" class="btn-cart" formaction="{{ route('customer.bo-hoa.gio.add') }}">
+                    <i class="fa-solid fa-cart-shopping"></i><span class="btn-label">Thêm vào giỏ</span>
                 </button>
-                <button type="submit" class="btn-buy-now" style="flex:1;min-width:180px;">
-                    Mua ngay
+                <button type="submit" class="btn-buy-now">
+                    <i class="fa-solid fa-bolt"></i><span class="btn-label">Mua ngay</span>
                 </button>
             </div>
 
-            <div style="margin-top:12px;text-align:center;">
-                <a href="{{ route('customer.gio-hang') }}"
-                   style="color:#8e3555;font-size:14px;font-weight:600;text-decoration:underline;">
-                    🛒 Xem giỏ hàng của bạn ({{ count(session('gio_hang', [])) + count(session('gio_bo_hoa', [])) }})
-                </a>
-            </div>
+            {{-- Link vào giỏ hàng thống nhất --}}
+            <a class="pd-cart-link" href="{{ route('customer.gio-hang') }}">
+                <i class="fa-solid fa-bag-shopping"></i>
+                Xem giỏ hàng của bạn ({{ count(session('gio_hang', [])) + count(session('gio_bo_hoa', [])) }})
+            </a>
         </form>
         @else
         <div class="login-notice">Vui lòng <a href="{{ route('login') }}">đăng nhập</a> để đặt bó hoa.</div>
         @endauth
+
+        @include('customer.partials.pd-promises')
     </div>
 </div>
 
+@elseif(($type ?? 'san-pham') === 'bo-hoa-tu-tao')
 {{-- ═══════════════════════════════════════════════════════════
      NHÁNH 2: BÓ HOA TỰ TẠO (PREVIEW TỪ SESSION)
 ═══════════════════════════════════════════════════════════ --}}
-@elseif(($type ?? 'san-pham') === 'bo-hoa-tu-tao')
+<div class="breadcrumb">
+    <a onclick="navigateTo('{{ route('customer.dashboard') }}')">🏠 Trang chủ</a>
+    <span class="sep">›</span>
+    <a onclick="navigateTo('{{ route('customer.bo-hoa.he-thong') }}')">Mua bó hoa</a>
+    <span class="sep">›</span>
+    <span class="current">Bó hoa tự tạo (Custom Mix)</span>
+    <span class="sep">›</span>
+    <span class="current">{{ $preview['ten_bo_hoa'] }}</span>
+</div>
+
 <div class="detail-wrap">
+    {{-- Cột trái: Gallery ảnh mẫu bó hoa tự tạo --}}
     <div>
-        <div class="gallery-main" style="background:#fff; border:1px solid #fce7f3; border-radius:16px; padding:12px; box-shadow:0 4px 12px rgba(236,72,153,0.06);">
-            @if(!empty($anhMau) && count($anhMau) > 0)
-                <div style="position:relative; width:100%; border-radius:12px; overflow:hidden; border:1px solid #fbcfe8; background:#fff5f7;">
-                    <img id="mainTuTaoImg" src="{{ $anhMau[0]['url'] }}" alt="{{ $anhMau[0]['original_name'] ?? 'Ảnh mẫu' }}" style="width:100%; max-height:420px; object-fit:contain; border-radius:12px; display:block; margin:0 auto;">
-                </div>
-                @if(count($anhMau) > 1)
-                    <div style="display:flex; gap:10px; margin-top:12px; justify-content:center;">
-                        @foreach($anhMau as $idx => $img)
-                            <div style="width:72px; height:72px; border-radius:10px; overflow:hidden; border:2px solid {{ $idx === 0 ? '#ec4899' : '#e5e7eb' }}; cursor:pointer; transition:all 0.2s; box-shadow:0 2px 4px rgba(0,0,0,0.05);"
-                                 onclick="document.getElementById('mainTuTaoImg').src = '{{ $img['url'] }}'; this.parentElement.querySelectorAll('div').forEach(el => el.style.borderColor = '#e5e7eb'); this.style.borderColor = '#ec4899';">
-                                <img src="{{ $img['url'] }}" alt="Ảnh mẫu {{ $idx + 1 }}" style="width:100%; height:100%; object-fit:cover;">
-                            </div>
-                        @endforeach
-                    </div>
-                @endif
-                <div style="margin-top:12px; padding:10px 14px; background:#fff1f2; border-radius:8px; border-left:3px solid #ec4899; font-size:12px; color:#9f1239; line-height:1.5;">
-                    💡 <strong>Lưu ý:</strong> Ảnh mẫu chỉ dùng để tham khảo về phong cách và cách phối. Bó hoa thực tế được thực hiện dựa trên thành phần và số lượng đã được xác nhận trong Custom Mix.
-                </div>
-            @else
-                <div class="gallery-placeholder" style="font-size:72px; padding:40px 0; text-align:center;">💐</div>
-                <div style="text-align:center; padding:10px; font-size:13px; color:#9ca3af; font-style:italic;">
-                    Không có ảnh mẫu đính kèm
-                </div>
-            @endif
-        </div>
-    </div>
-    <div class="info-panel">
-        <div class="info-category-tag" style="background:#fdf2f8; color:#be185d; border:1px solid #fbcfe8; display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:20px; font-weight:600; font-size:13px;">
-            💐 Bó hoa tự tạo (Custom Mix)
-        </div>
-        <h1 class="info-title" style="margin-top:8px;">{{ $preview['ten_bo_hoa'] }}</h1>
+        @php
+            $hasImgs = !empty($anhMau) && count($anhMau) > 0;
+            $sampleFlowerImages = [
+                'img/1791790828_hoa thác đổ.jpeg',
+                'img/hoa 4.jpg',
+                'img/hoa 5.jpeg',
+                'img/1780566907_hongdo.jpg',
+            ];
+            $mainImgUrl = $hasImgs ? $anhMau[0]['url'] : asset($sampleFlowerImages[0]);
+        @endphp
+        <div class="custom-mix-gallery">
+            <div class="custom-mix-main-box">
+                <button type="button" class="custom-mix-heart-btn" title="Yêu thích" onclick="toggleHeart(this)">
+                    <i class="far fa-heart"></i>
+                </button>
+                <button type="button" class="custom-mix-nav-btn prev" onclick="prevTuTaoImg()">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <img id="mainTuTaoImg" src="{{ $mainImgUrl }}" alt="{{ $preview['ten_bo_hoa'] }}">
+                <button type="button" class="custom-mix-nav-btn next" onclick="nextTuTaoImg()">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
 
-        <div class="meta-strip" style="display:flex; gap:10px; flex-wrap:wrap; margin:12px 0;">
-            <div class="meta-chip">Kiểu dáng: <strong>{{ \App\Http\Controllers\Admin\BoHoaController::KIEU_DANG[$preview['kieu_bo_hoa']] ?? $preview['kieu_bo_hoa'] }}</strong></div>
-            <div class="meta-chip">Size: <strong>{{ $preview['size'] }}</strong></div>
-            <div class="meta-chip">Số bó: <strong>{{ $preview['so_luong'] }}</strong></div>
-        </div>
-
-        <div class="price-table-wrap" style="background:#fff5f7; border:1px solid #fce7f3; border-radius:12px; padding:16px; margin-bottom:16px;">
-            <div class="price-table-label" style="font-weight:600; color:#831843;">💰 Giá tạm tính</div>
-            <p class="price-val" id="priceValTuTao" style="font-size:24px; font-weight:700; color:#db2777; margin:6px 0;">
-                {{ number_format($quote['gia_moi_bo'], 0, ',', '.') }}₫ <span style="font-size:15px; font-weight:400; color:#6b7280;">/ bó</span>
-            </p>
-            <div style="font-size:13px; color:#4b5563; line-height:1.6;" id="priceBreakdownTuTao">
-                <div>• Tiền hoa: <strong>{{ number_format($quote['chi_tiet_tien']['hoa'] ?? 0, 0, ',', '.') }}₫</strong></div>
-                <div>• Tiền giấy gói: <strong>{{ number_format($quote['chi_tiet_tien']['giay'] ?? 0, 0, ',', '.') }}₫</strong> · Ruy băng: <strong>{{ number_format($quote['chi_tiet_tien']['ruy_bang'] ?? 0, 0, ',', '.') }}₫</strong> · Xốp: <strong>{{ number_format($quote['chi_tiet_tien']['xop'] ?? 0, 0, ',', '.') }}₫</strong></div>
-                @if(!empty($quote['chi_tiet_tien']['phu_kien']))
-                    <div>• Tiền phụ kiện: <strong>{{ number_format($quote['chi_tiet_tien']['phu_kien'], 0, ',', '.') }}₫</strong></div>
+            <div class="custom-mix-thumbs">
+                @if($hasImgs)
+                    @foreach($anhMau as $idx => $img)
+                        <div class="custom-mix-thumb-item {{ $idx === 0 ? 'active' : '' }}"
+                             onclick="changeTuTaoImg('{{ $img['url'] }}', this)">
+                            <img src="{{ $img['url'] }}" alt="Ảnh mẫu {{ $idx + 1 }}">
+                        </div>
+                    @endforeach
+                @else
+                    @foreach($sampleFlowerImages as $idx => $samplePath)
+                        <div class="custom-mix-thumb-item {{ $idx === 0 ? 'active' : '' }}"
+                             onclick="changeTuTaoImg('{{ asset($samplePath) }}', this)">
+                            <img src="{{ asset($samplePath) }}" alt="Mẫu {{ $idx + 1 }}">
+                        </div>
+                    @endforeach
                 @endif
-                <div>• Phụ phí: <strong>{{ number_format($quote['phu_phi']['tong'], 0, ',', '.') }}₫</strong> (Size: {{ number_format($quote['phu_phi']['kich_thuoc'] ?? 0, 0, ',', '.') }}₫ · Kiểu dáng: {{ number_format($quote['phu_phi']['kieu_dang'] ?? 0, 0, ',', '.') }}₫)</div>
-                <div id="thiepTotalNotice" style="display:none; color:#be185d; font-weight:600;"></div>
-                <hr style="border:none; border-top:1px dashed #fbcfe8; margin:8px 0;">
-                <div style="font-size:15px;">
-                    Tổng cộng ({{ $preview['so_luong'] }} bó): <strong id="priceTotalTuTao" style="color:#db2777; font-size:18px;">{{ number_format($quote['tong_tien'], 0, ',', '.') }}₫</strong>
-                </div>
             </div>
         </div>
+    </div>
 
-        <div class="info-desc" style="background:#fff; border:1px solid #f3f4f6; border-radius:12px; padding:16px; margin-bottom:16px;">
-            <div class="info-desc-label" style="font-weight:600; color:#1f2937; margin-bottom:8px;">Thành phần bó hoa (cho 1 bó)</div>
-            <ul style="padding-left:20px; margin:0; line-height:1.6; font-size:14px;">
-                @foreach($chiTietPreview->groupBy('vai_tro') as $vaiTro => $items)
-                    <li>
-                        <strong>{{ \App\Http\Controllers\Admin\BoHoaController::VAI_TRO[$vaiTro] ?? $vaiTro }}:</strong>
-                        {{ $items->map(fn($i) => ($i->sanPham->ten_san_pham ?? 'Nguyên liệu').' × '.$i->so_luong)->join(', ') }}
-                    </li>
-                @endforeach
-            </ul>
-            @if(!empty($preview['concept']))
-                <p style="margin-top:10px; font-size:13px; color:#4b5563;"><em>Concept thiết kế: {{ $preview['concept'] }}</em></p>
-            @endif
+    {{-- Cột phải: Thông tin bó hoa tự tạo --}}
+    <div class="info-panel">
+        <div class="custom-mix-tag">
+            💐 Bó hoa tự tạo (Custom Mix)
         </div>
 
-        <div style="margin:16px 0; padding:14px; background:#fffbeb; border-radius:10px; font-size:13px; color:#92400e; border:1px solid #fef3c7;">
-            ⚠️ <strong>Lưu ý:</strong> Đây là bản xem trước — kho chưa bị trừ hay giữ chỗ. Sau khi nhấn "Xác nhận mua hàng", hệ thống sẽ chuyển sang bước thanh toán và giữ chỗ nguyên liệu.
+        <h1 class="info-title" style="margin-top:8px; margin-bottom:8px;">{{ $preview['ten_bo_hoa'] }}</h1>
+
+        <div class="custom-mix-meta-row">
+            <div class="custom-mix-chip">Kiểu dáng: <strong>{{ \App\Http\Controllers\Admin\BoHoaController::KIEU_DANG[$preview['kieu_bo_hoa']] ?? $preview['kieu_bo_hoa'] }}</strong></div>
+            <div class="custom-mix-chip">Size: <strong>{{ $preview['size'] }}</strong></div>
+            <div class="custom-mix-chip">Số bó: <strong>{{ $preview['so_luong'] }}</strong></div>
+        </div>
+
+        <div class="custom-mix-rating">
+            <span class="custom-mix-stars">
+                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
+                <strong style="color:#101828; margin-left:4px;">4.8</strong>
+            </span>
+            <span>(120 đánh giá)</span>
+            <span style="color:#D0D5DD;">|</span>
+            <span>Đã bán 256+ bó</span>
+        </div>
+
+        {{-- Khối 2 ô: Giá tạm tính & Thành phần bó hoa --}}
+        <div class="custom-mix-grid-cards">
+            <div class="custom-mix-subcard price-card">
+                <div class="custom-mix-subcard-title" style="color:#BE185D;">
+                    <i class="fas fa-coins" style="color:#EC3D8F;"></i> Giá tạm tính
+                </div>
+                <div class="custom-mix-price-val" id="priceValTuTao">
+                    {{ number_format($quote['gia_moi_bo'], 0, ',', '.') }}₫ <span>/ bó</span>
+                </div>
+                <div class="custom-mix-price-breakdown" id="priceBreakdownTuTao">
+                    <div class="breakdown-line">Tiền hoa: <strong>{{ number_format($quote['chi_tiet_tien']['hoa'] ?? 0, 0, ',', '.') }}₫</strong></div>
+                    <div class="breakdown-line">Tiền giấy gói: <strong>{{ number_format($quote['chi_tiet_tien']['giay'] ?? 0, 0, ',', '.') }}₫</strong></div>
+                    <div class="breakdown-line">Ruy băng: <strong>{{ number_format($quote['chi_tiet_tien']['ruy_bang'] ?? 0, 0, ',', '.') }}₫</strong></div>
+                    <div class="breakdown-line">Xốp cắm: <strong>{{ number_format($quote['chi_tiet_tien']['xop'] ?? 0, 0, ',', '.') }}₫</strong></div>
+                    @if(!empty($quote['chi_tiet_tien']['phu_kien']))
+                        <div class="breakdown-line">Tiền phụ kiện: <strong>{{ number_format($quote['chi_tiet_tien']['phu_kien'], 0, ',', '.') }}₫</strong></div>
+                    @endif
+                    <div class="breakdown-line">Phụ phí: <strong>{{ number_format($quote['phu_phi']['tong'] ?? 0, 0, ',', '.') }}₫</strong> <span class="breakdown-sub">(Size: {{ number_format($quote['phu_phi']['kich_thuoc'] ?? 0, 0, ',', '.') }}₫ · Kiểu: {{ number_format($quote['phu_phi']['kieu_dang'] ?? 0, 0, ',', '.') }}₫)</span></div>
+                    <div id="thiepTotalNotice" style="display:none; color:#BE185D; font-weight:600; margin-top:4px;"></div>
+                </div>
+                <div class="custom-mix-price-bottom">
+                    <hr style="border:none; border-top:1px dashed #FCE7F3; margin:10px 0 8px;">
+                    <div class="price-bottom-total-row">
+                        <span>Tổng cộng ({{ $preview['so_luong'] }} bó):</span>
+                        <strong id="priceTotalTuTao" style="color:#EC3D8F; font-size:16.5px;">{{ number_format($quote['tong_tien'], 0, ',', '.') }}₫</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="custom-mix-subcard spec-card">
+                <div class="custom-mix-subcard-title" style="color:#101828;">
+                    <i class="fas fa-cog" style="color:#EC3D8F;"></i> Thành phần bó hoa (cho 1 bó)
+                </div>
+                <ul class="custom-mix-spec-list">
+                    @php
+                        $roleIcons = [
+                            'HOA_CHINH'     => '🌺',
+                            'HOA_PHU'       => '🌸',
+                            'LA_PHU'        => '🌿',
+                            'GIAY_GOI'      => '🎁',
+                            'RUY_BANG'      => '🎗',
+                            'XOP_CAM'       => '💎',
+                            'PHU_KIEN'      => '🎀',
+                        ];
+                    @endphp
+                    @foreach($chiTietPreview->groupBy('vai_tro') as $vaiTro => $items)
+                        <li>
+                            <span class="spec-role-icon">{{ $roleIcons[$vaiTro] ?? '🌸' }}</span>
+                            <span class="spec-role-text"><strong>{{ \App\Http\Controllers\Admin\BoHoaController::VAI_TRO[$vaiTro] ?? $vaiTro }}:</strong>
+                            {{ $items->map(fn($i) => ($i->sanPham->ten_san_pham ?? 'Nguyên liệu').' × '.$i->so_luong)->join(', ') }}</span>
+                        </li>
+                    @endforeach
+                </ul>
+                <div class="custom-mix-spec-concept">
+                    Concept thiết kế: <strong style="color:#BE185D;">{{ $preview['concept'] ?? 'ROMANTIC' }}</strong>
+                </div>
+            </div>
         </div>
 
         <form method="POST" action="{{ route('customer.bo-hoa.tu-tao.mua') }}" id="formTuTaoMua">
             @csrf
 
-            @if(isset($dsThiep) && $dsThiep->count() > 0)
-            <div style="margin-bottom:14px; background:#faf5ff; border:1px solid #f3e8ff; border-radius:10px; padding:12px 14px;">
-                <label style="font-weight:600; color:#6b21a8; display:block; margin-bottom:6px; font-size:14px;">
-                    💌 Chọn thiệp chúc mừng (tùy chọn — 1 thiệp / bó):
-                </label>
-                <select name="ma_thiep" id="thiepSelectTuTao" style="width:100%; padding:10px 12px; border:1px solid #d8b4fe; border-radius:8px; background:#fff; font-size:14px; outline:none;">
-                    <option value="" data-gia="0">-- Không lấy thiệp --</option>
-                    @foreach($dsThiep as $t)
-                        <option value="{{ $t->ma_san_pham }}" data-gia="{{ $t->gia_ban_hien_tai }}"
-                            {{ old('ma_thiep') == $t->ma_san_pham ? 'selected' : '' }}>
-                            {{ $t->ten_san_pham }} (+{{ number_format($t->gia_ban_hien_tai, 0, ',', '.') }}₫ / bó)
-                        </option>
-                    @endforeach
-                </select>
-                <div style="font-size:12px; color:#7e22ce; margin-top:4px;">
-                    * Lưu ý: Giá thiệp sẽ tự động nhân với số lượng bó hoa ({{ $preview['so_luong'] }} bó).
+            {{-- Card tùy chỉnh thiệp & ghi chú (2 cột) --}}
+            <div class="custom-mix-custom-card">
+                <div class="custom-mix-subcard-title" style="color:#EC3D8F;">
+                    <i class="fas fa-heart"></i> Tùy chỉnh và ghi chú
+                </div>
+                <div class="custom-mix-custom-grid">
+                    <div>
+                        <label class="custom-mix-field-label">
+                            <span class="label-main">Chọn thiệp chúc mừng</span>
+                            <span class="label-sub">(Tùy chọn — 1 thiệp / bó)</span>
+                        </label>
+                        @if(isset($dsThiep) && $dsThiep->count() > 0)
+                            <select name="ma_thiep" id="thiepSelectTuTao" class="custom-mix-select">
+                                <option value="" data-gia="0">-- Không lấy thiệp --</option>
+                                @foreach($dsThiep as $t)
+                                    <option value="{{ $t->ma_san_pham }}" data-gia="{{ $t->gia_ban_hien_tai }}"
+                                        {{ old('ma_thiep') == $t->ma_san_pham ? 'selected' : '' }}>
+                                        {{ $t->ten_san_pham }} (+{{ number_format($t->gia_ban_hien_tai, 0, ',', '.') }}₫)
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div style="font-size:11.5px; color:#667085; margin-top:5px;">
+                                * Lưu ý: Giá thiệp sẽ tự động nhân với số lượng bó hoa ({{ $preview['so_luong'] }} bó).
+                            </div>
+                        @else
+                            <select name="ma_thiep" id="thiepSelectTuTao" class="custom-mix-select" disabled>
+                                <option value="" data-gia="0">-- Không lấy thiệp --</option>
+                            </select>
+                        @endif
+                    </div>
+
+                    <div>
+                        <label class="custom-mix-field-label">
+                            <span class="label-main">Lời nhắn trên thiệp</span>
+                            <span class="label-sub">(Nếu có lời chúc gửi người nhận)</span>
+                        </label>
+                        <textarea name="loi_nhan" id="loiNhanTuTao" rows="2" maxlength="200"
+                                  class="custom-mix-textarea"
+                                  placeholder="Nhập lời chúc bạn muốn viết gửi người nhận..."
+                                  oninput="document.getElementById('charCountTuTao').textContent = this.value.length + '/200'">{{ old('loi_nhan') }}</textarea>
+                        <div id="charCountTuTao" style="text-align:right; font-size:11px; color:#98A2B3; margin-top:2px;">
+                            {{ mb_strlen(old('loi_nhan', '')) }}/200
+                        </div>
+                    </div>
                 </div>
             </div>
-            @endif
 
-            <div style="margin-bottom:16px;">
-                <label style="font-weight:600; color:#374151; display:block; margin-bottom:6px; font-size:14px;">
-                    Lời nhắn trên thiệp (nếu có):
-                </label>
-                <textarea name="loi_nhan" maxlength="2000" rows="3" style="width:100%; padding:10px 12px; border:1px solid #e5e7eb; border-radius:8px; font-size:14px; box-sizing:border-box;" placeholder="Nhập lời chúc bạn muốn viết gửi người nhận...">{{ old('loi_nhan') }}</textarea>
+            <div class="custom-mix-warning">
+                ⚠️ <strong>Lưu ý:</strong> Đây là bản xem trước — kho chưa bị trừ hay giữ chỗ. Sau khi nhấn "Xác nhận mua hàng", hệ thống sẽ chuyển sang bước thanh toán và giữ chỗ nguyên liệu.
             </div>
 
-            <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                <a href="{{ route('customer.bo-hoa.tu-tao') }}" class="btn-cart" style="text-decoration:none; text-align:center; display:inline-flex; align-items:center; justify-content:center; flex:1; min-width:160px; padding:12px 18px; border-radius:10px; background:#f3f4f6; color:#374151; font-weight:600; border:1px solid #e5e7eb;">
-                    ← Thay đổi thiết kế
-                </a>
-                <button type="submit" class="btn-buy-now" style="flex:2; min-width:200px; text-align:center; font-size:15px; font-weight:700; padding:12px 20px; border-radius:10px; background:linear-gradient(135deg, #ec4899 0%, #db2777 100%); color:#fff; border:none; cursor:pointer; box-shadow:0 4px 12px rgba(219,39,119,0.25);">
-                    ⚡ Xác nhận mua hàng (Direct Checkout)
-                </button>
+            <div class="custom-mix-action-bar">
+                <div class="custom-mix-action-top-row">
+                    <div class="custom-mix-qty-wrap">
+                        <span>Số lượng</span>
+                        <div class="custom-mix-qty-stepper">
+                            <button type="button" onclick="alert('Số lượng được điều chỉnh ở bước thiết kế Custom Mix!')">−</button>
+                            <span>{{ $preview['so_luong'] }}</span>
+                            <button type="button" onclick="alert('Số lượng được điều chỉnh ở bước thiết kế Custom Mix!')">+</button>
+                        </div>
+                    </div>
+
+                    <a href="{{ route('customer.bo-hoa.tu-tao') }}" class="custom-mix-btn-back">
+                        ← Thay đổi thiết kế
+                    </a>
+                </div>
+
+                <div class="custom-mix-action-bottom-row">
+                    <button type="submit" class="custom-mix-btn-buy">
+                        ⚡ Xác nhận mua hàng (Direct Checkout)
+                    </button>
+                </div>
             </div>
         </form>
     </div>
 </div>
 
-{{-- ═══════════════════════════════════════════════════════════
-     NHÁNH 3: FLASH SALE
-     Biến: $flashSale = array từ Customer\FlashSaleController::chuanHoa()
-═══════════════════════════════════════════════════════════ --}}
-@elseif(($type ?? 'san-pham') === 'flash-sale')
-@php
-    $fsLaBo  = ($flashSale['loai'] ?? '') === 'BO_HOA';
-    $fsEmoji = $fsLaBo ? '💐' : '🌸';
-    $fsConLai = (int) ($flashSale['so_luong_con_lai'] ?? 0);
-@endphp
-
-{{-- BREADCRUMB --}}
-<div class="breadcrumb">
-    <a onclick="navigateTo('{{ route('customer.dashboard') }}')">🏠 Trang chủ</a>
-    <span class="sep">›</span>
-    <a href="{{ route('customer.flash-sale') }}">⚡ Flash Sale</a>
-    <span class="sep">›</span>
-    <span>{{ $flashSale['ten'] }}</span>
-</div>
-
-<div class="detail-wrap">
-
-    {{-- LEFT: Ảnh --}}
-    <div>
-        <div class="gallery-main">
-            @if(!empty($flashSale['anh']))
-                <img src="{{ $flashSale['anh'] }}" alt="{{ $flashSale['ten'] }}"
-                     onerror="this.style.display='none'; document.getElementById('fsImgFallback').style.display='flex';">
-                <div class="gallery-placeholder" id="fsImgFallback" style="display:none;">{{ $fsEmoji }}</div>
-            @else
-                <div class="gallery-placeholder">{{ $fsEmoji }}</div>
-            @endif
-            <span class="badge-detail-status" style="background:#e53935; color:#fff;">⚡ Flash Sale</span>
-            <span class="badge-detail-type">{{ $fsLaBo ? 'Bó hoa' : 'Sản phẩm' }}</span>
-        </div>
-    </div>
-
-    {{-- RIGHT: Info --}}
-    <div class="info-panel">
-
-        <div>
-            <div class="info-category-tag" style="background:#e53935; color:#fff; border:none;">
-                ⚡ Flash Sale
-            </div>
-        </div>
-
-        <h1 class="info-title">{{ $flashSale['ten'] }}</h1>
-
-        {{-- Giá Flash Sale --}}
-        <div class="price-table-wrap" style="background:#fff5f5; border:1px solid #fcd5d5; border-radius:12px; padding:18px; margin-top:14px;">
-            <div style="display:flex; align-items:baseline; gap:14px; flex-wrap:wrap;">
-                <span style="color:#a09890; text-decoration:line-through; font-size:1rem;">
-                    {{ number_format($flashSale['gia_goc'], 0, ',', '.') }}₫
-                </span>
-                <span style="color:#e53935; font-weight:700; font-size:2rem;">
-                    {{ number_format($flashSale['gia_flash_sale'], 0, ',', '.') }}₫
-                </span>
-                @if(($flashSale['phan_tram_giam'] ?? 0) > 0)
-                    <span style="background:#fff; color:#e53935; font-weight:700; padding:2px 10px; border-radius:6px; border:1px solid #e53935;">
-                        -{{ $flashSale['phan_tram_giam'] }}%
-                    </span>
-                @endif
-            </div>
-
-            <div style="margin-top:12px; font-size:.9rem; color:#6b6560;">
-                Còn lại
-                <strong style="color:#e53935;">{{ $fsConLai }}</strong>
-                / {{ (int) $flashSale['so_luong'] }} sản phẩm
-            </div>
-
-            @if(!empty($flashSale['ket_thuc']))
-                <div style="margin-top:6px; font-size:.9rem; color:#6b6560;">
-                    Kết thúc: <strong>{{ \Carbon\Carbon::parse($flashSale['ket_thuc'])->format('d/m/Y H:i') }}</strong>
-                </div>
-            @endif
-        </div>
-
-        {{-- Mô tả --}}
-        @if(!empty($flashSale['mo_ta']))
-            <div class="info-desc" style="margin-top:14px;">
-                <div class="info-desc-label">📝 Mô tả sản phẩm</div>
-                {{ $flashSale['mo_ta'] }}
-            </div>
-        @endif
-
-        {{-- Form mua --}}
-        @if($fsConLai > 0)
-            @auth
-                <form method="POST" action="{{ route('customer.flash-sale.add') }}" style="margin-top:20px;">
-                    @csrf
-                    <input type="hidden" name="ma_flash_sale" value="{{ $flashSale['ma_flash_sale'] }}">
-                    <input type="hidden" name="so_luong" id="qty-hidden-fs" value="1">
-
-                    <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
-                        <span style="font-weight:500;">Số lượng:</span>
-                        <div style="display:inline-flex; align-items:center; border:1px solid #e0dbd0; border-radius:8px; overflow:hidden; background:#fff;">
-                            <button type="button" onclick="stepQtyFs(-1)"
-                                    style="width:40px; height:40px; border:none; background:transparent; font-size:1.2rem; font-weight:600; color:#6b6560; cursor:pointer;">−</button>
-                            <input type="number" id="qty-fs" value="1" min="1"
-                                   max="{{ $fsConLai }}" readonly
-                                   style="width:60px; height:40px; border:none; border-left:1px solid #e0dbd0; border-right:1px solid #e0dbd0; text-align:center; font-size:1rem; font-weight:600; outline:none;">
-                            <button type="button" onclick="stepQtyFs(1)"
-                                    style="width:40px; height:40px; border:none; background:transparent; font-size:1.2rem; font-weight:600; color:#6b6560; cursor:pointer;">+</button>
-                        </div>
-                    </div>
-
-                    <button type="submit"
-                            style="width:100%; padding:14px 24px; background:#e53935; color:#fff; border:none; border-radius:8px; font-size:1rem; font-weight:600; cursor:pointer;">
-                        🛒 Mua ngay
-                    </button>
-                </form>
-            @else
-                <div class="login-notice" style="margin-top:16px;">
-                    💡 Vui lòng <a href="{{ route('login') }}">đăng nhập</a> để mua sản phẩm Flash Sale.
-                </div>
-                <a href="{{ route('login') }}"
-                   style="display:block; margin-top:16px; width:100%; padding:14px 24px; background:#e53935; color:#fff; text-align:center; border-radius:8px; font-weight:600; text-decoration:none; box-sizing:border-box;">
-                    Đăng nhập để mua
-                </a>
-            @endauth
-        @else
-            <button disabled
-                    style="display:block; margin-top:16px; width:100%; padding:14px 24px; background:#ccc; color:#fff; text-align:center; border-radius:8px; font-weight:600; border:none; cursor:not-allowed;">
-                Hết hàng
-            </button>
-        @endif
-    </div>
-</div>
-
-{{-- ═══════════════════════════════════════════════════════════
-     NHÁNH 4: SẢN PHẨM ĐƠN LẺ (MẶC ĐỊNH)
-═══════════════════════════════════════════════════════════ --}}
 @else
+{{-- ═══════════════════════════════════════════════════════════
+     NHÁNH 3: SẢN PHẨM ĐƠN LẺ (GIỮ NGUYÊN)
+═══════════════════════════════════════════════════════════ --}}
 @php
     $categoryLabels = [
         'HOA_TUOI'         => 'Hoa Tươi',
@@ -400,6 +399,19 @@
     $soLuong  = ($sanPham->chiTietNhaps ?? collect())->sum('so_luong_con_lai');
     $catLabel = $categoryLabels[$sanPham->loai_san_pham] ?? $sanPham->loai_san_pham;
     $emoji    = $catEmoji[$sanPham->loai_san_pham] ?? '🌸';
+
+    // Dữ liệu giá / lô đại diện (giữ nguyên cách tính cũ)
+    $loGia        = $sanPham->chiTietNhaps ?? collect();
+    $loGiaConHang = $loGia->where('so_luong_con_lai', '>', 0);
+    $giaApDung    = $sanPham->gia_ban_hien_tai;
+    $tongTon      = $loGiaConHang->sum('so_luong_con_lai');
+    $loDaiDien    = $loGiaConHang->sortBy('ma_chi_tiet_nhap')->first();
+    $sanSangMua   = $loDaiDien && $tongTon > 0;
+
+    $donVi    = trim((string) ($sanPham->don_vi_tinh_text ?? ''));
+    $donVi    = $donVi !== '' ? mb_strtolower($donVi) : 'sản phẩm';
+    $moTaDai  = trim(strip_tags($sanPham->mo_ta ?? ''));
+    $moTaNgan = \Illuminate\Support\Str::limit($moTaDai, 160);
 @endphp
 
 {{-- BREADCRUMB --}}
@@ -414,8 +426,8 @@
 {{-- DETAIL SECTION --}}
 <div class="detail-wrap">
 
-    {{-- LEFT: Image --}}
-    <div>
+    {{-- LEFT: Ảnh + mô tả --}}
+    <div class="pd-gallery">
         <div class="gallery-main">
             @if($sanPham->hinh_anh)
                 <img src="{{ asset($sanPham->hinh_anh) }}" alt="{{ $sanPham->ten_san_pham }}"
@@ -424,157 +436,136 @@
             @else
                 <div class="gallery-placeholder">{{ $emoji }}</div>
             @endif
-            <span class="badge-detail-status">Đang bán</span>
+            <span class="badge-detail-status {{ $soLuong > 0 ? '' : 'is-out' }}">{{ $soLuong > 0 ? 'Đang bán' : 'Hết hàng' }}</span>
             <span class="badge-detail-type">{{ $catLabel }}</span>
         </div>
+
+        @if($sanPham->hinh_anh)
+        <div class="pd-thumbs">
+            <button type="button" class="pd-thumb is-active" aria-label="Ảnh sản phẩm">
+                <img src="{{ asset($sanPham->hinh_anh) }}" alt="" onerror="this.style.display='none'">
+            </button>
+        </div>
+        @endif
+
+        @if($sanPham->mo_ta)
+        <section class="pd-card" aria-labelledby="pdDescTitle">
+            <h2 class="pd-card-title" id="pdDescTitle">Mô tả sản phẩm</h2>
+            <div class="pd-desc">{{ $sanPham->mo_ta }}</div>
+        </section>
+        @endif
     </div>
 
-    {{-- RIGHT: Info --}}
-    <div class="info-panel">
+    {{-- RIGHT: Thông tin --}}
+    <div class="info-panel pd-info">
 
-        <div>
-            <div class="info-category-tag">{{ $emoji }} {{ $catLabel }}</div>
-        </div>
+        <span class="pd-tag">{{ $emoji }} {{ $catLabel }}</span>
 
         <h1 class="info-title">{{ $sanPham->ten_san_pham }}</h1>
 
-        {{-- Stock status --}}
-        <div class="info-stock-row">
-            @if($soLuong === 0)
-                <span class="stock-badge no-stock">❌ Hết hàng</span>
-            @elseif($soLuong <= 5)
-                <span class="stock-badge low-stock">⚠️ Còn {{ $soLuong }} sản phẩm – Sắp hết!</span>
+        @if($moTaNgan !== '')
+            <p class="pd-subtitle">{{ $moTaNgan }}</p>
+        @endif
+
+        {{-- Giá + tình trạng kho --}}
+        <div class="pd-price-row">
+            @if($sanSangMua)
+                <p class="pd-price">
+                    {{ $giaApDung ? number_format($giaApDung, 0, ',', '.') . '₫' : 'Liên hệ' }}
+                    <span>/ {{ $donVi }}</span>
+                </p>
             @else
-                <!-- <span class="stock-badge in-stock">✅ Còn hàng ({{ $soLuong }} sp)</span> -->
+                <p class="pd-price pd-price--empty">Liên hệ để biết giá</p>
+            @endif
+
+            @if($soLuong === 0)
+                <span class="pd-badge pd-badge--danger"><i class="fa-solid fa-circle-xmark"></i> Hết hàng</span>
+            @elseif($soLuong <= 5)
+                <span class="pd-badge pd-badge--warn"><i class="fa-solid fa-triangle-exclamation"></i> Sắp hết · còn {{ $soLuong }}</span>
+            @else
+                <span class="pd-badge pd-badge--ok"><i class="fa-solid fa-leaf"></i> Còn {{ $soLuong }} {{ $donVi }}</span>
             @endif
         </div>
 
         {{-- Meta chips --}}
         <div class="meta-strip">
-            <div class="meta-chip">📦 Số lượng: <strong>{{ $soLuong }}</strong></div>
-            <div class="meta-chip">📂 Loại: <strong>{{ $catLabel }}</strong></div>
+            <div class="meta-chip">Số lượng: <strong>{{ $soLuong }}</strong></div>
+            <div class="meta-chip">Loại: <strong>{{ $catLabel }}</strong></div>
         </div>
 
-        {{-- Bảng giá bán theo lô nhập --}}
-        @php $loGia = $sanPham->chiTietNhaps ?? collect(); @endphp
+        @include('customer.partials.pd-features')
 
-        @if($loGia->count() > 0)
-        <div class="price-table-wrap">
-            <div class="price-table-label">💰 Giá bán</div>
-            <table class="price-table">
-                <thead>
-                    <tr>
-                        <th>Giá bán</th>
-                        <th>Còn lại</th>
-                        <th>Chọn</th>
-                    </tr>
-                </thead>
-                <tbody>
+        {{-- Tùy chọn đặt mua --}}
+        <section class="pd-card pd-options" aria-labelledby="pdOptionsTitle">
+            <h2 class="pd-card-title" id="pdOptionsTitle">Tùy chọn đặt mua</h2>
 
-@php
-    $loGiaConHang = $loGia->where('so_luong_con_lai', '>', 0);
-    $giaApDung    = $sanPham->gia_ban_hien_tai;
-    $tongTon      = $loGiaConHang->sum('so_luong_con_lai');
-    $loDaiDien    = $loGiaConHang->sortBy('ma_chi_tiet_nhap')->first();
-@endphp
-
-@if($loDaiDien && $tongTon > 0)
-<tr id="lo-row-0">
-    <td class="price-val">
-        {{ number_format($giaApDung, 0, ',', '.') }}₫
-    </td>
-    <td>
-        <span class="stock-pill {{ $tongTon <= 5 ? 'low' : '' }}">
-            {{ $tongTon }} sp
-        </span>
-    </td>
-    <td>
-        <div class="lo-qty-row">
-            <button class="lo-minus-btn"
-                    onclick="changeLo(0, -1)"
-                    id="lo-minus-0"
-                    style="display:none;">
-                −
-            </button>
-            <span class="lo-qty-count" id="lo-qty-0">0</span>
-            <button class="lo-plus-btn"
-                    onclick="changeLo(0, 1)"
-                    data-max="{{ $loDaiDien->so_luong_con_lai }}"
-                    data-gia="{{ $giaApDung }}"
-                    data-id="{{ $loDaiDien->ma_chi_tiet_nhap }}">
-                +
-            </button>
-        </div>
-    </td>
-</tr>
-@endif
-
-                </tbody>
-            </table>
-
-            {{-- Cart summary --}}
-            <div class="cart-summary" id="cartSummary" style="display:none;">
-                <div class="cart-summary-inner">
-                    <div class="cart-summary-label">🛒 Đã chọn</div>
-                    <div id="cartLines"></div>
-                    <div class="cart-total-row">
-                        <span>Tổng cộng:</span>
-                        <span class="cart-total-price" id="cartTotal">0₫</span>
+            @if($soLuong > 0)
+                @if($sanSangMua)
+                <div class="pd-field pd-qty-row">
+                    <label>Số lượng <small>(tối đa {{ $loDaiDien->so_luong_con_lai }})</small></label>
+                    <div class="pd-stepper" id="lo-row-0">
+                        <button type="button" class="lo-minus-btn" id="lo-minus-0"
+                                onclick="changeLo(0, -1)" aria-label="Giảm số lượng">−</button>
+                        <span class="lo-qty-count" id="lo-qty-0">1</span>
+                        <button type="button" class="lo-plus-btn"
+                                onclick="changeLo(0, 1)"
+                                data-max="{{ $loDaiDien->so_luong_con_lai }}"
+                                data-gia="{{ $giaApDung }}"
+                                data-id="{{ $loDaiDien->ma_chi_tiet_nhap }}"
+                                aria-label="Tăng số lượng">+</button>
                     </div>
-                    <button class="cart-reset-btn" onclick="resetCart()">✕ Xóa chọn</button>
                 </div>
+
+                {{-- Tạm tính --}}
+                <div class="cart-summary" id="cartSummary" style="display:none;">
+                    <div class="cart-summary-inner">
+                        <div class="cart-summary-label">Tạm tính</div>
+                        <div id="cartLines"></div>
+                        <div class="cart-total-row">
+                            <span>Tổng cộng:</span>
+                            <span class="cart-total-price" id="cartTotal">0₫</span>
+                        </div>
+                    </div>
+                </div>
+                @else
+                    <p class="price-no-data">Chưa có thông tin giá. Vui lòng liên hệ để được tư vấn.</p>
+                @endif
+            @endif
+
+            {{-- Login notice if guest --}}
+            @guest
+            <div class="login-notice">
+                💡 <span>Vui lòng <a href="{{ route('login') }}">đăng nhập</a> để đặt hoa và theo dõi đơn hàng nhé!</span>
             </div>
-        </div>
-        @else
-        <div class="price-table-wrap">
-            <div class="price-table-label">💰 Giá bán</div>
-            <p class="price-no-data">Chưa có thông tin giá. Vui lòng liên hệ để được tư vấn.</p>
-        </div>
-        @endif
+            @endguest
 
-        {{-- Description --}}
-        @if($sanPham->mo_ta)
-        <div class="info-desc">
-            <div class="info-desc-label">📝 Mô tả sản phẩm</div>
-            {{ $sanPham->mo_ta }}
-        </div>
-        @endif
-
-        {{-- Login notice if guest --}}
-        @guest
-        <div class="login-notice">
-            💡 <span>Vui lòng <a href="{{ route('login') }}">đăng nhập</a> để đặt hoa và theo dõi đơn hàng nhé!</span>
-        </div>
-        @endguest
-
-        {{-- Action Buttons --}}
-        @if($soLuong > 0)
-        <div class="action-row">
-            @auth
-                <button class="btn-cart" id="btnAddCart" onclick="addToCart()" disabled>
-               Thêm vào giỏ hàng
-                </button>
-                <button class="btn-buy-now" id="btnBuyNow" onclick="addToCartAndRedirect()" disabled>
-                    Mua ngay
-                </button>
+            {{-- Action Buttons --}}
+            @if($soLuong > 0)
+            <div class="pd-actions">
+                @auth
+                    <button class="btn-cart" id="btnAddCart" onclick="addToCart()" disabled>
+                        <i class="fa-solid fa-cart-shopping"></i><span class="btn-label">Thêm vào giỏ</span>
+                    </button>
+                    <button class="btn-buy-now" id="btnBuyNow" onclick="addToCartAndRedirect()" disabled>
+                        <i class="fa-solid fa-bolt"></i><span class="btn-label">Mua ngay</span>
+                    </button>
+                @else
+                    <button class="btn-cart pd-actions-wide" onclick="navigateTo('{{ route('login') }}')">
+                        <i class="fa-solid fa-right-to-bracket"></i><span class="btn-label">Đăng nhập để đặt hoa</span>
+                    </button>
+                @endauth
+            </div>
+            <a href="https://zalo.me/0357634696" target="_blank" rel="noopener" class="btn-contact">
+                <i class="fa-regular fa-comments"></i> Tư vấn qua Zalo
+            </a>
             @else
-                <button class="btn-cart" onclick="navigateTo('{{ route('login') }}')">
-                Đăng nhập để đặt hoa
-                </button>
-            @endauth
-
-            <a href="https://zalo.me/0357634696" target="_blank" class="btn-contact">
-            Tư vấn Zalo
+            <a href="https://zalo.me/0357634696" target="_blank" rel="noopener" class="btn-contact btn-contact--solid">
+                <i class="fa-regular fa-comments"></i> Liên hệ để đặt trước qua Zalo
             </a>
-        </div>
-        @else
-        <div class="action-row">
-            <a href="https://zalo.me/0357634696" target="_blank" class="btn-contact" style="flex:1; justify-content:center;">
-                💬 Liên hệ để đặt trước qua Zalo
-            </a>
-        </div>
-        @endif
+            @endif
+        </section>
 
+        @include('customer.partials.pd-promises')
     </div>
 </div>
 
@@ -605,14 +596,14 @@
                 <span class="badge-status on-sale">Đang bán</span>
             </div>
             <div class="card-body">
-                <div class="card-name">{{ $sp->ten_san_pham }}</div>
+                <div class="card-name" title="{{ $sp->ten_san_pham }}">{{ $sp->ten_san_pham }}</div>
                 <div class="card-footer">
                     <span class="card-stock {{ $spStock === 0 ? 'out' : ($spStock <= 5 ? 'low' : '') }}">
                         {{ $spStock === 0 ? 'Hết hàng' : 'Còn '.$spStock.' sp' }}
                     </span>
                     <button class="add-btn"
                             onclick="event.stopPropagation(); navigateTo('{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}')">
-                        Xem chi tiết
+                        Chi tiết
                     </button>
                 </div>
             </div>
@@ -646,6 +637,32 @@ const fmt = v => new Intl.NumberFormat('vi-VN').format(v) + '₫';
 
 const cart = {};
 
+// UI helper: đổi nhãn nút nhưng giữ nguyên icon
+function setBtnLabel(btn, text) {
+    if (!btn) return;
+    const label = btn.querySelector('.btn-label');
+    if (label) label.textContent = text; else btn.textContent = text;
+}
+
+// UI helper: nút +/- cho ô số lượng của form mẫu bó hoa
+function pdStep(inputId, delta) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const min = parseInt(input.min || 1);
+    const max = parseInt(input.max || 999);
+    const cur = parseInt(input.value || min);
+    input.value = Math.max(min, Math.min(max, (isNaN(cur) ? min : cur) + delta));
+}
+
+// UI helper: đếm ký tự lời nhắn
+document.querySelectorAll('[data-counter]').forEach(function (ta) {
+    const out = document.getElementById(ta.dataset.counter);
+    if (!out) return;
+    const render = () => out.textContent = ta.value.length + '/' + (ta.maxLength > 0 ? ta.maxLength : '');
+    ta.addEventListener('input', render);
+    render();
+});
+
 function changeLo(idx, delta) {
     const row = document.getElementById('lo-row-' + idx);
     if (!row) return;
@@ -661,26 +678,28 @@ function changeLo(idx, delta) {
         cart[idx] = { qty: 0, maxQty: max, giaBan: gia, maChiTietNhap: id };
     }
 
-    cart[idx].qty = Math.max(0, Math.min(cart[idx].qty + delta, cart[idx].maxQty));
+    cart[idx].qty = Math.max(1, Math.min(cart[idx].qty + delta, cart[idx].maxQty));
 
     const qtyEl   = document.getElementById('lo-qty-' + idx);
     const minusEl = document.getElementById('lo-minus-' + idx);
 
     if (qtyEl) qtyEl.textContent = cart[idx].qty;
-    if (minusEl) minusEl.style.display = cart[idx].qty > 0 ? '' : 'none';
+    if (minusEl) minusEl.disabled = cart[idx].qty <= 1;
+    plusEl.disabled = cart[idx].qty >= cart[idx].maxQty;
 
     renderSummary();
 }
 
 function resetCart() {
     Object.keys(cart).forEach(idx => {
-        cart[idx].qty = 0;
+        // Sau khi thêm giỏ: trả số lượng về mặc định 1
+        cart[idx].qty = Math.min(1, cart[idx].maxQty);
 
         const qtyEl   = document.getElementById('lo-qty-' + idx);
         const minusEl = document.getElementById('lo-minus-' + idx);
 
-        if (qtyEl) qtyEl.textContent = 0;
-        if (minusEl) minusEl.style.display = 'none';
+        if (qtyEl) qtyEl.textContent = cart[idx].qty;
+        if (minusEl) minusEl.disabled = true;
     });
 
     renderSummary();
@@ -720,16 +739,22 @@ function renderSummary() {
 
         if (btnCart) {
             btnCart.disabled = false;
-            btnCart.textContent = `Thêm vào giỏ `;
+            setBtnLabel(btnCart, 'Thêm vào giỏ');
         }
-        if (btnBuy) btnBuy.disabled = false;
+        if (btnBuy) {
+            btnBuy.disabled = false;
+            setBtnLabel(btnBuy, 'Mua ngay');
+        }
     } else {
         summary.style.display = 'none';
         if (btnCart) {
             btnCart.disabled = true;
-            btnCart.textContent = '🛒 Thêm vào giỏ hàng';
+            setBtnLabel(btnCart, 'Thêm vào giỏ');
         }
-        if (btnBuy) btnBuy.disabled = true;
+        if (btnBuy) {
+            btnBuy.disabled = true;
+            setBtnLabel(btnBuy, 'Mua ngay');
+        }
     }
 }
 
@@ -751,7 +776,7 @@ async function addToCart() {
 
     if (btn) {
         btn.disabled = true;
-        btn.textContent = '⏳ Đang thêm...';
+        setBtnLabel(btn, 'Đang thêm...');
     }
 
     try {
@@ -774,12 +799,8 @@ async function addToCart() {
 
             showSuccessToast('Đã thêm sản phẩm vào giỏ hàng thành công!');
             resetCart();
-
-            if (btn) {
-                btn.disabled = true;
-                btn.textContent = '🛒 Thêm vào giỏ hàng';
-            }
-            if (btnBuy) btnBuy.disabled = true;
+            // Giữ nút bấm được cho lần thêm tiếp theo (số lượng đã về mặc định 1)
+            renderSummary();
         } else {
             alert(data.message || 'Có lỗi xảy ra!');
             renderSummary();
@@ -799,7 +820,7 @@ async function addToCartAndRedirect() {
 
     if (btn) {
         btn.disabled = true;
-        btn.textContent = '⏳ Đang xử lý...';
+        setBtnLabel(btn, 'Đang xử lý...');
     }
 
     try {
@@ -828,9 +849,13 @@ async function addToCartAndRedirect() {
     }
 }
 
-// ── Cập nhật giá mẫu khi chọn thiệp (nhánh mẫu bó hoa) ─────────────────────
+// Khởi tạo số lượng mặc định = 1 cho sản phẩm đơn lẻ (chỉ UI)
+if (document.getElementById('lo-row-0')) {
+    changeLo(0, 1);
+}
+
 (function() {
-    const giaGoc = {{ isset($quote) && ($type ?? '') === 'mau-bo-hoa' ? (float) $quote['gia_moi_bo'] : 0 }};
+    const giaGoc = {{ isset($quote) && $type === 'mau-bo-hoa' ? (float) $quote['gia_moi_bo'] : 0 }};
     const sel = document.getElementById('thiepSelectMau');
     const priceEl = document.querySelector('.price-val');
     if (!sel || !priceEl || !giaGoc) return;
@@ -844,7 +869,6 @@ async function addToCartAndRedirect() {
     sel.addEventListener('change', update);
 })();
 
-// ── Cập nhật giá tự tạo khi chọn thiệp (nhánh bó hoa tự tạo) ───────────────
 (function() {
     const giaMoiBoGoc = {{ isset($quote) && ($type ?? '') === 'bo-hoa-tu-tao' ? (float) $quote['gia_moi_bo'] : 0 }};
     const soLuongBo = {{ isset($preview) && isset($preview['so_luong']) ? (int) $preview['so_luong'] : 1 }};
@@ -876,18 +900,46 @@ async function addToCartAndRedirect() {
     recalc();
 })();
 
-// ── Flash Sale: nút +/- số lượng ──────────────────────────────────────────
-const FS_QTY_MAX = {{ ($type ?? '') === 'flash-sale' ? (int) ($flashSale['so_luong_con_lai'] ?? 0) : 0 }};
+function changeTuTaoImg(url, el) {
+    const main = document.getElementById('mainTuTaoImg');
+    if (main) main.src = url;
+    document.querySelectorAll('.custom-mix-thumb-item').forEach(item => item.classList.remove('active'));
+    if (el) el.classList.add('active');
+}
 
-function stepQtyFs(delta) {
-    const qty    = document.getElementById('qty-fs');
-    const hidden = document.getElementById('qty-hidden-fs');
-    if (!qty) return;
+function prevTuTaoImg() {
+    const thumbs = Array.from(document.querySelectorAll('.custom-mix-thumb-item'));
+    if (!thumbs.length) return;
+    const activeIdx = thumbs.findIndex(t => t.classList.contains('active'));
+    const prevIdx = (activeIdx - 1 + thumbs.length) % thumbs.length;
+    thumbs[prevIdx].click();
+}
 
-    let v = Number(qty.value) + delta;
-    v = Math.max(1, Math.min(FS_QTY_MAX, v));
-    qty.value = v;
-    if (hidden) hidden.value = v;
+function nextTuTaoImg() {
+    const thumbs = Array.from(document.querySelectorAll('.custom-mix-thumb-item'));
+    if (!thumbs.length) return;
+    const activeIdx = thumbs.findIndex(t => t.classList.contains('active'));
+    const nextIdx = (activeIdx + 1) % thumbs.length;
+    thumbs[nextIdx].click();
+}
+
+function nextTuTaoThumb() {
+    nextTuTaoImg();
+}
+
+function toggleHeart(btn) {
+    const icon = btn.querySelector('i');
+    if (icon) {
+        if (icon.classList.contains('far')) {
+            icon.classList.remove('far');
+            icon.classList.add('fas');
+            icon.style.color = '#EC3D8F';
+        } else {
+            icon.classList.remove('fas');
+            icon.classList.add('far');
+            icon.style.color = '';
+        }
+    }
 }
 </script>
 @endsection

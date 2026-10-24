@@ -42,7 +42,7 @@
                         <div class="home-product-card">
                             <div class="home-product-img">
                                 <a href="{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}" class="home-product-img-link">
-                                    <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}" loading="lazy" onerror="this.onerror=null; this.src='{{ asset('img/logo.png') }}';">
+                                    <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}" loading="lazy" onerror="this.onerror=null; this.src='{{ asset('img/placeholder-flower.svg') }}';">
                                 </a>
                             </div>
 
@@ -157,7 +157,7 @@
                     <div class="home-product-card">
                         <div class="home-product-img">
                             <a href="{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}" class="home-product-img-link">
-                                <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}" loading="lazy" onerror="this.onerror=null; this.src='{{ asset('img/logo.png') }}';">
+                                <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}" loading="lazy" onerror="this.onerror=null; this.src='{{ asset('img/placeholder-flower.svg') }}';">
                             </a>
                         </div>
 
@@ -212,7 +212,7 @@
                         <div class="home-product-card">
                             <div class="home-product-img">
                                 <a href="{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}" class="home-product-img-link">
-                                    <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}" loading="lazy" onerror="this.onerror=null; this.src='{{ asset('img/logo.png') }}';">
+                                    <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}" loading="lazy" onerror="this.onerror=null; this.src='{{ asset('img/placeholder-flower.svg') }}';">
                                 </a>
                             </div>
 
@@ -268,7 +268,7 @@
                         <div class="home-product-card">
                             <div class="home-product-img">
                                 <a href="{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}" class="home-product-img-link">
-                                    <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}" loading="lazy" onerror="this.onerror=null; this.src='{{ asset('img/logo.png') }}';">
+                                    <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}" loading="lazy" onerror="this.onerror=null; this.src='{{ asset('img/placeholder-flower.svg') }}';">
                                 </a>
                             </div>
 

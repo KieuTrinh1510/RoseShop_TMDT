@@ -203,11 +203,19 @@
                     @endphp
 
                     <div class="flower-card {{ $hetHang ? 'flower-card--het-hang' : '' }}">
-                        <img src="{{ $anh }}" alt="{{ $mau->ten_mau }}" loading="lazy">
+                        <div class="flower-card-img">
+                            <a href="{{ route('customer.mau-bo-hoa.chi-tiet', $mau->ma_mau_bo_hoa) }}" class="flower-card-img-link">
+                                <img src="{{ $anh }}" alt="{{ $mau->ten_mau }}" loading="lazy" onerror="this.onerror=null; this.src='{{ asset('img/placeholder-flower.svg') }}';">
+                            </a>
+                        </div>
 
                         <div class="flower-card-body">
-                            <h3>{{ $mau->ten_mau }}</h3>
-                            <p class="flower-desc">
+                            <h3>
+                                <a href="{{ route('customer.mau-bo-hoa.chi-tiet', $mau->ma_mau_bo_hoa) }}" class="flower-card-title-link" title="{{ $mau->ten_mau }}">
+                                    {{ $mau->ten_mau }}
+                                </a>
+                            </h3>
+                            <p class="flower-desc" title="{{ $mau->mo_ta ?: ($kieuDangText . ' · Size ' . $mau->size) }}">
                                 <strong>Mô tả:</strong>
                                 {{ $mau->mo_ta ?: ($kieuDangText . ' · Size ' . $mau->size) }}
                             </p>
