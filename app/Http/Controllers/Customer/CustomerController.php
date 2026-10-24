@@ -112,7 +112,11 @@ class CustomerController extends Controller
 
         $this->applyPriceFilter($query, $request);
 
-        $hoaTuois = $query->orderBy('ma_san_pham', 'desc')->get();
+        // Sắp xếp: Ưu tiên các loại hoa còn tồn kho khả dụng lên đầu, hết hàng đẩy xuống cuối
+        $hoaTuois = $query->get()->sortBy([
+            fn ($a, $b) => ($b->chiTietNhaps->sum('so_luong_con_lai') > 0 ? 1 : 0) <=> ($a->chiTietNhaps->sum('so_luong_con_lai') > 0 ? 1 : 0),
+            fn ($a, $b) => $b->ma_san_pham <=> $a->ma_san_pham,
+        ])->values();
 
         // Categories cho filter sidebar — cũng phải loại bỏ nguyên vật liệu + phụ kiện + quà tặng.
         $categories = SanPham::where('trang_thai', 'DANG_BAN')

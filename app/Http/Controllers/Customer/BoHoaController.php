@@ -76,6 +76,12 @@ class BoHoaController extends Controller
             return $m;
         });
 
+        // Sắp xếp: Ưu tiên các mẫu còn hàng lên đầu, mẫu hết hàng đẩy xuống cuối
+        $allMaus = $allMaus->sortBy([
+            fn ($a, $b) => ($a->het_hang ? 1 : 0) <=> ($b->het_hang ? 1 : 0),
+            fn ($a, $b) => $b->ma_mau_bo_hoa <=> $a->ma_mau_bo_hoa,
+        ])->values();
+
         // Lọc theo khoảng giá
         if ($request->filled('price')) {
             $prices = (array) $request->price;

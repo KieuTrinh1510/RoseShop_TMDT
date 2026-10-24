@@ -324,16 +324,6 @@
         TRANG CHỦ
     </a>
 
-    <a href="{{ route('customer.hoa-tuoi') }}"
-       class="cat-link {{ request()->routeIs('customer.hoa-tuoi') ? 'active' : '' }}">
-        HOA TƯƠI
-    </a>
-
-    <a href="{{ route('customer.flash-sale') }}"
-       class="cat-link {{ request()->routeIs('customer.flash-sale*') ? 'active' : '' }}">
-        ⚡ FLASH SALE
-    </a>
-
     <div class="nav-dropdown" id="navDropdownBoHoa">
         <button type="button"
                 id="btnMuaBoHoa"
@@ -348,6 +338,16 @@
             <a href="{{ route('customer.bo-hoa.tu-tao') }}" class="dropdown-cat">✿ Tự tạo bó hoa</a>
         </div>
     </div>
+
+    <a href="{{ route('customer.hoa-tuoi') }}"
+       class="cat-link {{ request()->routeIs('customer.hoa-tuoi') ? 'active' : '' }}">
+        HOA TƯƠI
+    </a>
+
+    <a href="{{ route('customer.flash-sale') }}"
+       class="cat-link {{ request()->routeIs('customer.flash-sale*') ? 'active' : '' }}">
+        ⚡ FLASH SALE
+    </a>
 
     <a href="{{ route('customer.phu-kien') }}"
        class="cat-link {{ request()->routeIs('customer.phu-kien') ? 'active' : '' }}">
