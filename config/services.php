@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'ai_bot' => [
+        'base_url' => env('AI_BOT_BASE_URL', 'https://api-ai.vnhat.dev/v1'),
+        'api_key' => env('AI_BOT_API_KEY'),
+        'model' => env('AI_BOT_MODEL', 'v9'),
+    ],
+
 ];

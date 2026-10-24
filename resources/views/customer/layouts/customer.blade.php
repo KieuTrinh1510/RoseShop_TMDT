@@ -695,5 +695,8 @@
     ✅ Đã thêm sản phẩm vào giỏ hàng thành công
 </div>
 
+{{-- RoseBot AI Customer Support Widget --}}
+@include('components.chatbot-widget')
+
 </body>
 </html>
