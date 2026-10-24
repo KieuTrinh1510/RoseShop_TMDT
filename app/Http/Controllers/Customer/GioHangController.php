@@ -233,6 +233,15 @@ class GioHangController extends Controller
 
         $diem = min((int) $request->diem, $khachHang->diem_tich_luy);
 
+        if ($diem <= 0) {
+            session()->forget('diem_su_dung');
+            return response()->json([
+                'success'      => true,
+                'diem_su_dung' => 0,
+                'giam_gia'     => 0,
+            ]);
+        }
+
         session(['diem_su_dung' => $diem]);
 
         return response()->json([

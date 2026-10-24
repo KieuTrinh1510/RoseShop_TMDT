@@ -259,18 +259,19 @@
                     </div>
                 </div>
 
-                <div id="pointsInputArea">
+                <div id="pointsInputArea" style="{{ $diemSuDung > 0 ? 'display:none;' : '' }}">
                     <div class="points-input-group">
                         <input class="points-field" type="number" id="pointsInput"
                                placeholder="Nhập số điểm muốn dùng"
+                               value="{{ $diemSuDung > 0 ? $diemSuDung : '' }}"
                                min="0" max="{{ $user->khachHang->diem_tich_luy }}">
                         <button type="button" class="btn-points-apply" onclick="applyPoints()">Áp dụng</button>
                     </div>
                 </div>
 
-                <div id="pointsApplied" style="display:none;">
+                <div id="pointsApplied" style="{{ $diemSuDung > 0 ? '' : 'display:none;' }}">
                     <div class="points-applied-alert">
-                        <span>✅ Đang dùng <strong id="diemDung">0</strong> điểm (−<span id="giamHienThi">0</span>₫)</span>
+                        <span>✅ Đang dùng <strong id="diemDung">{{ number_format($diemSuDung) }}</strong> điểm (−<span id="giamHienThi">{{ number_format($diemSuDung * 1000, 0, ',', '.') }}</span>₫)</span>
                         <button type="button" class="btn-points-cancel" onclick="cancelPoints()" title="Hủy dùng điểm">✕</button>
                     </div>
                 </div>
