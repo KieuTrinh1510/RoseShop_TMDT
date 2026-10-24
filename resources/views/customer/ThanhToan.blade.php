@@ -32,16 +32,7 @@
         </div>
     </div>
 
-    {{-- NÚT QUAY LẠI GIỎ HÀNG (Ở GÓC TRÊN TRÁI THEO ĐÚNG MŨI TÊN BẠN VẼ) --}}
-    <div class="top-back-wrap">
-        <a href="{{ route('customer.gio-hang') }}" class="btn-top-back-cart">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="19" y1="12" x2="5" y2="12"></line>
-                <polyline points="12 19 5 12 12 5"></polyline>
-            </svg>
-            <span>Quay lại giỏ hàng</span>
-        </a>
-    </div>
+    {{-- Đã có link "Chỉnh sửa giỏ hàng" ở thẻ Đơn hàng của bạn --}}
 
     @if(session('error'))
         <div class="alert-checkout error">❌ {{ session('error') }}</div>

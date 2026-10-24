@@ -585,7 +585,20 @@
         if (btn) { btn.disabled = true; btn.innerHTML = '<span>⏳ Đang xử lý...</span>'; }
 
         try {
-            // Trường hợp 1: Chọn sản phẩm đơn lẻ (hoặc cả 2, ưu tiên chuyển sản phẩm trước)
+            // Nếu chọn cả sản phẩm lẻ và bó hoa thiết kế
+            if (keysSP.length > 0 && keysBH.length > 0) {
+                const ok = confirm("Giỏ hàng đang chọn cả Bó hoa thiết kế và Sản phẩm lẻ.\nDo quy trình xuất kho và cắm hoa khác nhau, hệ thống sẽ tiến hành thanh toán " + keysSP.length + " sản phẩm lẻ trước (Bó hoa vẫn được lưu an toàn trong giỏ để bạn đặt tiếp ngay sau đó).\n\nBạn có đồng ý tiếp tục không?");
+                if (!ok) {
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<span>Tiến hành thanh toán</span> <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>';
+                        updateCheckoutButtonState();
+                    }
+                    return;
+                }
+            }
+
+            // Trường hợp 1: Chọn sản phẩm đơn lẻ
             if (keysSP.length > 0) {
                 const res = await fetch(CHECKOUT_POST_URL, {
                     method: 'POST',
