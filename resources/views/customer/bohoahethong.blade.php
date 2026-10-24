@@ -202,7 +202,7 @@
                         $hetHang = ($mau->het_hang ?? false) || $mau->gia_hien_thi === null;
                     @endphp
 
-                    <div class="flower-card {{ $hetHang ? 'flower-card--het-hang' : '' }}">
+                    <div class="flower-card {{ $hetHang ? 'flower-card--het-hang' : '' }}" onclick="if (!event.target.closest('a')) { window.location.href = '{{ route('customer.mau-bo-hoa.chi-tiet', $mau->ma_mau_bo_hoa) }}'; }">
                         <div class="flower-card-img">
                             <a href="{{ route('customer.mau-bo-hoa.chi-tiet', $mau->ma_mau_bo_hoa) }}" class="flower-card-img-link">
                                 <img src="{{ $anh }}" alt="{{ $mau->ten_mau }}" loading="lazy" onerror="this.onerror=null; this.src='{{ asset('img/placeholder-flower.svg') }}';">

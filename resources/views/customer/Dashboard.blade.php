@@ -39,7 +39,7 @@
                             $tonKho = $loConHang->sum('so_luong_con_lai');
                         @endphp
 
-                        <div class="home-product-card">
+                        <div class="home-product-card" onclick="if (!event.target.closest('a')) { window.location.href = '{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}'; }">
                             <div class="home-product-img">
                                 <a href="{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}" class="home-product-img-link">
                                     <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}" loading="lazy" onerror="this.onerror=null; this.src='{{ asset('img/placeholder-flower.svg') }}';">
@@ -154,7 +154,7 @@
                         $tonKho = $loConHang->sum('so_luong_con_lai');
                     @endphp
 
-                    <div class="home-product-card">
+                    <div class="home-product-card" onclick="if (!event.target.closest('a')) { window.location.href = '{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}'; }">
                         <div class="home-product-img">
                             <a href="{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}" class="home-product-img-link">
                                 <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}" loading="lazy" onerror="this.onerror=null; this.src='{{ asset('img/placeholder-flower.svg') }}';">
@@ -209,7 +209,7 @@
                             $tonKho = $loConHang->sum('so_luong_con_lai');
                         @endphp
 
-                        <div class="home-product-card">
+                        <div class="home-product-card" onclick="if (!event.target.closest('a')) { window.location.href = '{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}'; }">
                             <div class="home-product-img">
                                 <a href="{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}" class="home-product-img-link">
                                     <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}" loading="lazy" onerror="this.onerror=null; this.src='{{ asset('img/placeholder-flower.svg') }}';">
@@ -265,7 +265,7 @@
                             $tonKho = $loConHang->sum('so_luong_con_lai');
                         @endphp
 
-                        <div class="home-product-card">
+                        <div class="home-product-card" onclick="if (!event.target.closest('a')) { window.location.href = '{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}'; }">
                             <div class="home-product-img">
                                 <a href="{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}" class="home-product-img-link">
                                     <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}" loading="lazy" onerror="this.onerror=null; this.src='{{ asset('img/placeholder-flower.svg') }}';">

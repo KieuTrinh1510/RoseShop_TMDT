@@ -1234,6 +1234,7 @@ footer {
     display: flex;
     flex-direction: column;
     height: 100%;
+    cursor: pointer;
 }
 
 .home-product-card:hover {

@@ -96,7 +96,7 @@
                     $tonKho = $loConHang->sum('so_luong_con_lai');
                 @endphp
 
-                <div class="flower-card">
+                <div class="flower-card" onclick="if (!event.target.closest('a')) { window.location.href = '{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}'; }">
                     <div class="flower-card-img">
                         <a href="{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}" class="flower-card-img-link">
                             <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}" loading="lazy" onerror="this.onerror=null; this.src='{{ asset('img/placeholder-flower.svg') }}';">
