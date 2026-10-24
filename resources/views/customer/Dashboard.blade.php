@@ -41,13 +41,19 @@
 
                         <div class="home-product-card">
                             <div class="home-product-img">
-                                <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}">
+                                <a href="{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}" class="home-product-img-link">
+                                    <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}" loading="lazy" onerror="this.onerror=null; this.src='{{ asset('img/logo.png') }}';">
+                                </a>
                             </div>
 
                             <div class="home-product-info">
-                                <h3>{{ $sp->ten_san_pham }}</h3>
+                                <h3>
+                                    <a href="{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}" class="home-product-title-link" title="{{ $sp->ten_san_pham }}">
+                                        {{ $sp->ten_san_pham }}
+                                    </a>
+                                </h3>
 
-                                <p class="home-product-desc">
+                                <p class="home-product-desc" title="{{ $sp->mo_ta ?? 'Chưa có mô tả' }}">
                                     <strong>Mô tả:</strong>
                                     {{ $sp->mo_ta ?? 'Chưa có mô tả' }}
                                 </p>
@@ -150,13 +156,19 @@
 
                     <div class="home-product-card">
                         <div class="home-product-img">
-                            <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}">
+                            <a href="{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}" class="home-product-img-link">
+                                <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}" loading="lazy" onerror="this.onerror=null; this.src='{{ asset('img/logo.png') }}';">
+                            </a>
                         </div>
 
                         <div class="home-product-info">
-                            <h3>{{ $sp->ten_san_pham }}</h3>
+                            <h3>
+                                <a href="{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}" class="home-product-title-link" title="{{ $sp->ten_san_pham }}">
+                                    {{ $sp->ten_san_pham }}
+                                </a>
+                            </h3>
 
-                            <p class="home-product-desc">
+                            <p class="home-product-desc" title="{{ $sp->mo_ta ?? 'Chưa có mô tả' }}">
                                 <strong>Mô tả:</strong>
                                 {{ $sp->mo_ta ?? 'Chưa có mô tả' }}
                             </p>
@@ -199,13 +211,19 @@
 
                         <div class="home-product-card">
                             <div class="home-product-img">
-                                <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}">
+                                <a href="{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}" class="home-product-img-link">
+                                    <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}" loading="lazy" onerror="this.onerror=null; this.src='{{ asset('img/logo.png') }}';">
+                                </a>
                             </div>
 
                             <div class="home-product-info">
-                                <h3>{{ $sp->ten_san_pham }}</h3>
+                                <h3>
+                                    <a href="{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}" class="home-product-title-link" title="{{ $sp->ten_san_pham }}">
+                                        {{ $sp->ten_san_pham }}
+                                    </a>
+                                </h3>
 
-                                <p class="home-product-desc">
+                                <p class="home-product-desc" title="{{ $sp->mo_ta ?? 'Chưa có mô tả' }}">
                                     <strong>Mô tả:</strong>
                                     {{ $sp->mo_ta ?? 'Chưa có mô tả' }}
                                 </p>
@@ -249,13 +267,19 @@
 
                         <div class="home-product-card">
                             <div class="home-product-img">
-                                <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}">
+                                <a href="{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}" class="home-product-img-link">
+                                    <img src="{{ $sp->anh }}" alt="{{ $sp->ten_san_pham }}" loading="lazy" onerror="this.onerror=null; this.src='{{ asset('img/logo.png') }}';">
+                                </a>
                             </div>
 
                             <div class="home-product-info">
-                                <h3>{{ $sp->ten_san_pham }}</h3>
+                                <h3>
+                                    <a href="{{ route('customer.san-pham.chi-tiet', $sp->ma_san_pham) }}" class="home-product-title-link" title="{{ $sp->ten_san_pham }}">
+                                        {{ $sp->ten_san_pham }}
+                                    </a>
+                                </h3>
 
-                                <p class="home-product-desc">
+                                <p class="home-product-desc" title="{{ $sp->mo_ta ?? 'Chưa có mô tả' }}">
                                     <strong>Mô tả:</strong>
                                     {{ $sp->mo_ta ?? 'Chưa có mô tả' }}
                                 </p>
