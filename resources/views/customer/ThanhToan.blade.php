@@ -8,25 +8,31 @@
 @endsection
 
 @section('content')
-@if(isset($dsBoHoa) && count($dsBoHoa) > 0)
-@php
-    $diaChiKH = optional($user->khachHang)->dia_chi ?? '';
-    $parts    = array_map('trim', explode(',', $diaChiKH));
-    if (count($parts) >= 1 && strtolower(end($parts)) === 'hà nội') array_pop($parts);
-    $ttQuan    = old('quan_huyen',        count($parts) >= 2 ? $parts[count($parts)-1] : '');
-    $ttPhuong  = old('xa_phuong',         count($parts) >= 3 ? $parts[count($parts)-2] : '');
-    $ttChiTiet = old('dia_chi_chi_tiet',  count($parts) >= 1 ? implode(', ', array_slice($parts, 0, count($parts)-2)) : $diaChiKH);
-@endphp
 <div class="checkout-page">
-    <div class="checkout-heading">💳 Thanh Toán</div>
 
-    <div class="checkout-steps">
-        <span class="step-done">Chọn bó hoa</span>
-        <span class="sep">›</span>
-        <span class="step-active">💳 Thông tin thanh toán</span>
-        <span class="sep">›</span>
-        <span>📦 Hoàn tất</span>
+    {{-- PROGRESS STEPS HEADER --}}
+    <div class="checkout-stepper-wrap">
+        <div class="stepper-item step-completed">
+            <span class="step-circle">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </span>
+            <span class="step-title">Giỏ hàng</span>
+        </div>
+        <div class="stepper-line completed"></div>
+        <div class="stepper-item step-current">
+            <span class="step-circle">2</span>
+            <span class="step-title">Thanh toán</span>
+        </div>
+        <div class="stepper-line"></div>
+        <div class="stepper-item step-pending">
+            <span class="step-circle">3</span>
+            <span class="step-title">Hoàn tất</span>
+        </div>
     </div>
+
+    {{-- Đã có link "Chỉnh sửa giỏ hàng" ở thẻ Đơn hàng của bạn --}}
 
     @if(session('error'))
         <div class="alert-checkout error">❌ {{ session('error') }}</div>
@@ -34,387 +40,303 @@
 
     <form method="POST" action="{{ route('customer.thanh-toan.store') }}" id="checkoutForm">
         @csrf
-        <input type="hidden" name="loai_checkout" value="{{ $loaiCheckout ?? 'san_pham' }}">
+        <input type="hidden" name="loai_checkout" value="{{ $loaiCheckout ?? (isset($dsBoHoa) && count($dsBoHoa) > 0 ? 'bo_hoa' : 'san_pham') }}">
+
         <div class="checkout-layout">
 
-            {{-- LEFT: Thông tin & Địa chỉ Shopee --}}
-            <div class="checkout-panel">
-                {{-- SHOPEE SHIPPING ADDRESS CARD --}}
-                <div class="shopee-address-card">
-                    <div class="shopee-address-stripe"></div>
-                    <div class="shopee-address-inner">
-                        <div class="shopee-address-header">
-                            <svg class="shopee-pin-icon" viewBox="0 0 24 24">
-                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                            </svg>
-                            <span>Địa Chỉ Nhận Hàng</span>
-                        </div>
+            {{-- CỘT TRÁI: THÔNG TIN NHẬN HÀNG & PHƯƠNG THỨC THANH TOÁN --}}
+            <div class="checkout-left-col">
 
-                        <div id="shopeeAddressPreview" class="shopee-address-content">
-                            @if(isset($diaChiHienTai) && $diaChiHienTai)
-                                <div class="shopee-address-details">
-                                    <div class="shopee-user-info">
-                                        <span id="dispTenNguoiNhan">{{ $diaChiHienTai->ten_nguoi_nhan }}</span>
-                                        <span id="dispSoDienThoai" style="margin-left: 8px;">{{ $diaChiHienTai->so_dien_thoai }}</span>
-                                    </div>
-                                    <div class="shopee-address-text" id="dispDiaChiChiTiet">
-                                        {{ $diaChiHienTai->dia_chi_day_du }}
-                                    </div>
-                                    <span class="badge-shopee-default" id="dispBadgeDefault" style="{{ $diaChiHienTai->la_mac_dinh ? '' : 'display:none;' }}">Mặc định</span>
-                                </div>
-                                <div class="shopee-address-actions">
-                                    <button type="button" class="btn-shopee-change" onclick="openAddressListModal()">Thay Đổi</button>
-                                </div>
-                            @else
-                                <div class="shopee-address-empty">
-                                    <span>Bạn chưa có địa chỉ nhận hàng. Vui lòng thêm địa chỉ nhận hàng để tiếp tục đặt hàng.</span>
-                                </div>
-                                <div class="shopee-address-actions">
-                                    <button type="button" class="btn-shopee-add-new" onclick="openAddressCreateModal()">+ Thêm Địa Chỉ Mới</button>
-                                </div>
-                            @endif
+                {{-- BOX 1: THÔNG TIN NHẬN HÀNG (GIỮ NGUYÊN SỔ ĐỊA CHỈ NHƯ CŨ) --}}
+                <div class="checkout-card address-box-card">
+                    <div class="card-title-row">
+                        <div class="card-title">
+                            <span class="title-icon-pin">📍</span>
+                            <span>Thông tin nhận hàng</span>
                         </div>
-
-                        {{-- Hidden inputs submitted with form --}}
-                        <input type="hidden" name="ten_nguoi_nhan" id="inputTenNguoiNhan" value="{{ old('ten_nguoi_nhan', $diaChiHienTai->ten_nguoi_nhan ?? optional($user->khachHang)->ten_khach_hang) }}">
-                        <input type="hidden" name="so_dien_thoai" id="inputSoDienThoai" value="{{ old('so_dien_thoai', $diaChiHienTai->so_dien_thoai ?? optional($user->khachHang)->so_dien_thoai) }}">
-                        <input type="hidden" name="quan_huyen" id="inputQuanHuyen" value="{{ old('quan_huyen', $diaChiHienTai->quan_huyen ?? 'Cầu Giấy') }}">
-                        <input type="hidden" name="xa_phuong" id="inputXaPhuong" value="{{ old('xa_phuong', $diaChiHienTai->xa_phuong ?? 'Dịch Vọng Hậu') }}">
-                        <input type="hidden" name="dia_chi_chi_tiet" id="inputDiaChiChiTiet" value="{{ old('dia_chi_chi_tiet', $diaChiHienTai->dia_chi_chi_tiet ?? '') }}">
-                        <input type="hidden" name="ma_dia_chi" id="inputMaDiaChi" value="{{ $diaChiHienTai->ma_dia_chi ?? '' }}">
                     </div>
+
+                    <div id="shopeeAddressPreview" class="shopee-address-preview-wrap">
+                        @if(isset($diaChiHienTai) && $diaChiHienTai)
+                            <div class="address-preview-details">
+                                <div class="address-user-line">
+                                    <strong id="dispTenNguoiNhan">{{ $diaChiHienTai->ten_nguoi_nhan }}</strong>
+                                    <span class="phone-sep">|</span>
+                                    <span id="dispSoDienThoai">{{ $diaChiHienTai->so_dien_thoai }}</span>
+                                    <span class="badge-addr-default" id="dispBadgeDefault" style="{{ $diaChiHienTai->la_mac_dinh ? '' : 'display:none;' }}">Mặc định</span>
+                                </div>
+                                <div class="address-text-line" id="dispDiaChiChiTiet">
+                                    {{ $diaChiHienTai->dia_chi_day_du }}
+                                </div>
+                            </div>
+                            <div class="address-action-right">
+                                <button type="button" class="btn-change-addr" onclick="openAddressListModal()">Thay Đổi</button>
+                            </div>
+                        @else
+                            <div class="address-empty-alert">
+                                <span>Bạn chưa có địa chỉ nhận hàng. Vui lòng thêm địa chỉ để tiếp tục đặt hàng.</span>
+                            </div>
+                            <div class="address-action-right">
+                                <button type="button" class="btn-change-addr" onclick="openAddressCreateModal()">+ Thêm Địa Chỉ Mới</button>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- Hidden inputs lưu thông tin gửi form --}}
+                    <input type="hidden" name="ten_nguoi_nhan" id="inputTenNguoiNhan" value="{{ old('ten_nguoi_nhan', $diaChiHienTai->ten_nguoi_nhan ?? optional($user->khachHang)->ten_khach_hang) }}">
+                    <input type="hidden" name="so_dien_thoai" id="inputSoDienThoai" value="{{ old('so_dien_thoai', $diaChiHienTai->so_dien_thoai ?? optional($user->khachHang)->so_dien_thoai) }}">
+                    <input type="hidden" name="quan_huyen" id="inputQuanHuyen" value="{{ old('quan_huyen', $diaChiHienTai->quan_huyen ?? 'Cầu Giấy') }}">
+                    <input type="hidden" name="xa_phuong" id="inputXaPhuong" value="{{ old('xa_phuong', $diaChiHienTai->xa_phuong ?? 'Dịch Vọng Hậu') }}">
+                    <input type="hidden" name="dia_chi_chi_tiet" id="inputDiaChiChiTiet" value="{{ old('dia_chi_chi_tiet', $diaChiHienTai->dia_chi_chi_tiet ?? '') }}">
+                    <input type="hidden" name="ma_dia_chi" id="inputMaDiaChi" value="{{ $diaChiHienTai->ma_dia_chi ?? '' }}">
                 </div>
 
-                {{-- Phương thức thanh toán --}}
-                <div style="margin-top: 8px;">
-                    <h3 style="margin-top: 0;">💳 Phương Thức Thanh Toán</h3>
-                    @error('phuong_thuc_thanh_toan')<div class="error-msg" style="margin-bottom:10px;">{{ $message }}</div>@enderror
+                {{-- BOX 2: PHƯƠNG THỨC THANH TOÁN (VNPAY & COD CHUẨN DESIGN) --}}
+                <div class="checkout-card payment-box-card">
+                    <div class="card-title-row">
+                        <div class="card-title">
+                            <span class="title-icon">💳</span>
+                            <span>Phương thức thanh toán</span>
+                        </div>
+                    </div>
+                    @error('phuong_thuc_thanh_toan')
+                        <div class="error-msg-banner">{{ $message }}</div>
+                    @enderror
 
-                    <div class="payment-option {{ old('phuong_thuc_thanh_toan', 'NGAN_HANG') === 'NGAN_HANG' ? 'selected' : '' }}"
-                         onclick="selectPayment('NGAN_HANG', this)">
-                        <input type="radio" name="phuong_thuc_thanh_toan" value="NGAN_HANG"
-                               id="pay_vnpay" {{ old('phuong_thuc_thanh_toan', 'NGAN_HANG') === 'NGAN_HANG' ? 'checked' : '' }}>
-                        <div class="payment-option-info">
-                            <div class="payment-option-title">💳 Thanh toán qua VNPay</div>
-                            <div class="payment-option-desc">
-                                Bạn sẽ được chuyển tới cổng thanh toán VNPay để hoàn tất giao dịch.
-                                Đơn hàng chỉ được đánh dấu <strong>đã thanh toán</strong> sau khi VNPay xác nhận thành công.
+                    <div class="payment-options-list">
+                        {{-- OPTION 1: VNPAY --}}
+                        <div class="payment-card-option {{ old('phuong_thuc_thanh_toan', 'NGAN_HANG') === 'NGAN_HANG' ? 'selected' : '' }}"
+                             onclick="selectPayment('NGAN_HANG', this)">
+                            <div class="option-radio-col">
+                                <input type="radio" name="phuong_thuc_thanh_toan" value="NGAN_HANG" id="pay_vnpay"
+                                       class="custom-radio"
+                                       {{ old('phuong_thuc_thanh_toan', 'NGAN_HANG') === 'NGAN_HANG' ? 'checked' : '' }}>
+                            </div>
+                            <div class="option-icon-col">
+                                <div class="icon-payment-box">💳</div>
+                            </div>
+                            <div class="option-body-col">
+                                <div class="payment-title-row">
+                                    <strong>Thanh toán qua VNPay</strong>
+                                </div>
+                                <div class="payment-desc-text">
+                                    Thanh toán an toàn qua thẻ nội địa, thẻ quốc tế, ví điện tử...
+                                </div>
+                            </div>
+                            <div class="option-brand-col">
+                                <span class="vnpay-logo-badge">VNPAY</span>
+                            </div>
+                        </div>
+
+                        {{-- HỘP THÔNG TIN BẢO MẬT VNPAY (HIỆN KHI CHỌN VNPAY) --}}
+                        <div class="vnpay-info-detail {{ old('phuong_thuc_thanh_toan', 'NGAN_HANG') === 'NGAN_HANG' ? 'show' : '' }}" id="vnpayInfoBox">
+                            <p>🔒 <strong>Cổng thanh toán:</strong> VNPay bảo mật SSL 256-bit (Hỗ trợ Vietcombank, Techcombank, MB, BIDV, Visa, QR Code...).</p>
+                            <p>⏱️ Bạn có 15 phút để hoàn tất giao dịch trên trang VNPay sau khi bấm Đặt Hàng.</p>
+                        </div>
+
+                        {{-- OPTION 2: COD --}}
+                        <div class="payment-card-option {{ old('phuong_thuc_thanh_toan') === 'COD' ? 'selected' : '' }}"
+                             onclick="selectPayment('COD', this)">
+                            <div class="option-radio-col">
+                                <input type="radio" name="phuong_thuc_thanh_toan" value="COD" id="pay_cod"
+                                       class="custom-radio"
+                                       {{ old('phuong_thuc_thanh_toan') === 'COD' ? 'checked' : '' }}>
+                            </div>
+                            <div class="option-icon-col">
+                                <div class="icon-payment-box">💵</div>
+                            </div>
+                            <div class="option-body-col">
+                                <div class="payment-title-row">
+                                    <strong>Thanh toán khi nhận hàng (COD)</strong>
+                                </div>
+                                <div class="payment-desc-text">
+                                    Thanh toán bằng tiền mặt trực tiếp cho shipper khi nhận hàng
+                                </div>
+                            </div>
+                            <div class="option-brand-col">
+                                <span class="cash-icon-badge">💵</span>
                             </div>
                         </div>
                     </div>
-
-                    <div class="bank-info {{ old('phuong_thuc_thanh_toan', 'NGAN_HANG') === 'NGAN_HANG' ? 'show' : '' }}"
-                         id="vnpayInfoBox">
-                        <p>💳 <strong>Cổng thanh toán:</strong> VNPay (hỗ trợ thẻ ATM nội địa, Internet Banking, quét mã QR, Visa/Master/JCB).</p>
-                        <p>🔒 <strong>Bảo mật:</strong> Bạn nhập thông tin thanh toán trực tiếp trên trang của VNPay, shop không lưu thông tin thẻ/tài khoản của bạn.</p>
-                        <p>⏱️ <strong>Lưu ý:</strong> Sau khi bấm "Đặt hàng", bạn có 15 phút để hoàn tất thanh toán trước khi phiên giao dịch hết hạn.</p>
-                    </div>
-
-                    <div class="payment-option {{ old('phuong_thuc_thanh_toan') === 'COD' ? 'selected' : '' }}"
-                         onclick="selectPayment('COD', this)">
-                        <input type="radio" name="phuong_thuc_thanh_toan" value="COD"
-                               id="pay_cod" {{ old('phuong_thuc_thanh_toan') === 'COD' ? 'checked' : '' }}>
-                        <div class="payment-option-info">
-                            <div class="payment-option-title">💵 Thanh toán khi nhận hàng (COD)</div>
-                            <div class="payment-option-desc">Thanh toán trực tiếp cho shipper khi nhận được hoa.</div>
-                        </div>
-                    </div>
                 </div>
+
             </div>
 
-            {{-- RIGHT: Bó hoa --}}
-                        <div class="order-summary-panel">
-                <h3>💐 Bó Hoa Đã Chọn</h3>
+            {{-- CỘT PHẢI: ĐƠN HÀNG CỦA BẠN & ĐIỂM TÍCH LŨY & TỔNG THANH TOÁN --}}
+            <div class="checkout-right-col">
+                <div class="checkout-card order-summary-card">
 
-                @php
-                    $tongGocBoHoa = 0;
-                    foreach ($dsBoHoa as $bo) $tongGocBoHoa += (float) $bo['quote']['tong_tien'];
-                @endphp
-
-                <div class="order-items">
-                    @foreach($dsBoHoa as $idx => $bo)
-                        <div class="order-item" style="align-items:flex-start;">
-                            <div class="order-item-left" style="flex:1;">
-                                <div class="order-item-placeholder">💐</div>
-                                <div>
-                                    <div class="order-item-name">{{ $bo['ten'] }}</div>
-                                    <div class="order-item-qty">
-                                        × {{ $bo['so_luong'] }} bó ·
-                                        {{ number_format($bo['quote']['gia_moi_bo'], 0, ',', '.') }}₫/bó
-                                    </div>
-                                    @if(!empty($bo['thiep']))
-                                        <div style="font-size:12px;color:#8e3555;margin-top:4px;">
-                                            💌 Kèm thiệp: {{ $bo['thiep']->ten_san_pham }}
-                                        </div>
-                                    @endif
-                                    @if(!empty($bo['key']))
-                                        <a href="javascript:void(0)" onclick="xoaBoHoaTrongThanhToan('{{ $bo['key'] }}')"
-                                           style="font-size:12px;color:#c66;text-decoration:underline;">
-                                            Xóa
-                                        </a>
-                                    @endif
-                                </div>
-                            </div>
-                            <div class="order-item-price" style="margin-left:12px;white-space:nowrap;">
-                                {{ number_format($bo['quote']['tong_tien'], 0, ',', '.') }}₫
-                            </div>
+                    {{-- TIÊU ĐỀ + LINK CHỈNH SỬA GIỎ HÀNG --}}
+                    <div class="order-card-header">
+                        <div class="order-header-title">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                <path d="M16 10a4 4 0 0 1-8 0"></path>
+                            </svg>
+                            <span>Đơn hàng của bạn</span>
                         </div>
-                    @endforeach
-                </div>
-
-                <div class="order-totals">
-                    <div class="total-row">
-                        <span>Tạm tính</span>
-                        <span class="val">{{ number_format($tongGocBoHoa, 0, ',', '.') }}₫</span>
-                    </div>
-                    <div class="total-row">
-                        <span>Vận chuyển</span>
-                        <span class="ship-free">Miễn phí</span>
+                        <a href="{{ route('customer.gio-hang') }}" class="link-edit-cart">Chỉnh sửa giỏ hàng</a>
                     </div>
 
+                    {{-- TÍNH TỔNG TIỀN GỐC GỘP CẢ BÓ HOA VÀ SẢN PHẨM --}}
+                    @php
+                        $tongTienGoc = 0;
+                        if (!empty($dsBoHoa)) {
+                            foreach ($dsBoHoa as $bo) {
+                                $tongTienGoc += (float) ($bo['quote']['tong_tien'] ?? 0);
+                            }
+                        }
+                        if (!empty($gioHang)) {
+                            $tongTienGoc += collect($gioHang)->sum(fn($i) => $i['gia_ban'] * $i['so_luong']);
+                        }
+                    @endphp
+
+                    {{-- DANH SÁCH MÓN HÀNG --}}
+                    <div class="order-items-scroll">
+
+                        {{-- NHÁNH BÓ HOA (NẾU CÓ) --}}
+                        @if(!empty($dsBoHoa))
+                            @foreach($dsBoHoa as $idx => $bo)
+                            @php
+                                $anhBo = asset('img/placeholder-flower.svg');
+                                $sizeText = 'Tiêu chuẩn';
+                                $badgeText = 'Bó hoa';
+                                $src = $bo['source'] ?? ($bo['mau'] ?? null);
+
+                                if ($src) {
+                                    if ($src instanceof \App\Models\MauBoHoa) {
+                                        $anhBo = \App\Http\Controllers\Admin\BoHoaController::anhMau($src);
+                                        $sizeText = $src->size ?? 'Tiêu chuẩn';
+                                        $badgeText = 'Bó hoa';
+                                    } else {
+                                        if (!empty($src->hinh_anh)) {
+                                            $anhBo = asset($src->hinh_anh);
+                                        } elseif (!empty($src->customMixImages) && $src->customMixImages->first()) {
+                                            $anhBo = asset('storage/' . $src->customMixImages->first()->path);
+                                        }
+                                        $sizeText = $src->size ?? 'Tiêu chuẩn';
+                                        if (!empty($src->kieu_bo_hoa)) {
+                                            $sizeText .= ' · Kiểu ' . $src->kieu_bo_hoa;
+                                        }
+                                        $badgeText = 'Tự tạo';
+                                    }
+                                }
+                            @endphp
+                            <div class="order-item-row">
+                                <img src="{{ $anhBo }}"
+                                     alt="{{ $bo['ten'] }}" class="order-item-thumb"
+                                     onerror="this.src='{{ asset('img/placeholder-flower.svg') }}';">
+                                <div class="order-item-info">
+                                    <div class="order-item-title">
+                                        <span class="order-item-type-badge">{{ $badgeText }}</span>
+                                        {{ $bo['ten'] }}
+                                    </div>
+                                    <div class="order-item-sub">
+                                        {{ $bo['so_luong'] }} bó · Size {{ $sizeText }}
+                                        @if(!empty($bo['thiep']))
+                                            <span class="order-thiep-tag">· Thiệp: {{ $bo['thiep']->ten_san_pham }}</span>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="order-item-qty">x{{ $bo['so_luong'] }}</div>
+                                <div class="order-item-amount">{{ number_format($bo['quote']['tong_tien'] ?? 0, 0, ',', '.') }}₫</div>
+                            </div>
+                            @endforeach
+                        @endif
+
+                        {{-- NHÁNH SẢN PHẨM ĐƠN LẺ (NẾU CÓ) --}}
+                        @if(!empty($gioHang))
+                            @foreach($gioHang as $key => $item)
+                            <div class="order-item-row">
+                                @if(!empty($item['hinh_anh']))
+                                    <img src="{{ asset($item['hinh_anh']) }}" alt="{{ $item['ten_san_pham'] }}" class="order-item-thumb"
+                                         onerror="this.src='{{ asset('img/placeholder-flower.svg') }}';">
+                                @else
+                                    <img src="{{ asset('img/placeholder-flower.svg') }}" alt="{{ $item['ten_san_pham'] }}" class="order-item-thumb">
+                                @endif
+                                <div class="order-item-info">
+                                    <div class="order-item-title">{{ $item['ten_san_pham'] }}</div>
+                                    <div class="order-item-sub">Hoa tươi tuyển chọn</div>
+                                </div>
+                                <div class="order-item-qty">x{{ $item['so_luong'] }}</div>
+                                <div class="order-item-amount">{{ number_format($item['gia_ban'] * $item['so_luong'], 0, ',', '.') }}₫</div>
+                            </div>
+                            @endforeach
+                        @endif
+
+                    </div>
+
+                    {{-- KHỐI ĐIỂM TÍCH LŨY (NHƯ GHI CHÚ MÀU VÀNG CỦA BẠN: "NÀY ĐỂ LÀ ĐIỂM TÍCH LŨY") --}}
                     @auth
                     @php $diemHienCo = optional($user->khachHang)->diem_tich_luy ?? 0; @endphp
-                    @if($diemHienCo > 0)
-                    <div class="points-box" id="pointsBox">
-                        <div class="points-box-header">
-                            <span>⭐ Điểm tích lũy của bạn: <strong>{{ number_format($diemHienCo) }} điểm</strong></span>
-                            <span class="points-equiv">(≡ {{ number_format($diemHienCo * 1000, 0, ',', '.') }}₫)</span>
+                    <div class="checkout-points-box">
+                        <div class="points-header-line">
+                            <span class="icon">🏷️</span>
+                            <strong>Điểm tích lũy</strong>
+                            <span class="points-avail-note">(Bạn có {{ number_format($diemHienCo) }} điểm)</span>
                         </div>
-                        <div class="points-input-row">
+                        <div class="points-input-inline">
                             <input type="number" id="diemNhap" min="0" max="{{ $diemHienCo }}"
                                    value="{{ $diemSuDung > 0 ? $diemSuDung : '' }}"
-                                   placeholder="Nhập số điểm muốn dùng">
-                            <button type="button" onclick="apDiemBoHoa()">Áp dụng</button>
+                                   placeholder="Nhập số điểm muốn dùng"
+                                   class="points-input-field">
+                            <button type="button" class="btn-points-submit"
+                                    onclick="{{ isset($dsBoHoa) && count($dsBoHoa) > 0 ? 'apDiemBoHoa()' : 'apDiem()' }}">
+                                Áp dụng
+                            </button>
                         </div>
-                        <div id="pointsMsg" class="points-msg"></div>
+                        <div id="pointsMsg" class="points-msg-alert"></div>
                     </div>
-                    @endif
                     @endauth
 
-                    <div class="total-row" id="rowGiamGia" style="{{ $diemSuDung > 0 ? '' : 'display:none;' }}">
-                        <span id="lblGiamGia">Giảm giá ({{ number_format($diemSuDung) }} điểm)</span>
-                        <span class="discount-val" id="valGiamGia">−{{ number_format($diemSuDung * 1000, 0, ',', '.') }}₫</span>
-                    </div>
-                    <div class="total-row grand">
-                        <span><strong>Tổng</strong></span>
-                        <span class="val" id="valTongCuoi">
-                            {{ number_format(max(0, $tongGocBoHoa - $diemSuDung * 1000), 0, ',', '.') }}₫
-                        </span>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-place-order" id="btnOrder">
-                    {{ old('phuong_thuc_thanh_toan', 'NGAN_HANG') === 'NGAN_HANG' ? '💳 Đặt Hàng & Thanh Toán VNPay' : '🛍️ Đặt Hàng (COD)' }}
-                </button>
-
-                @if(session()->has('gio_bo_hoa'))
-                    <a href="{{ route('customer.bo-hoa.gio.index') }}" class="btn-back-cart">
-                        ← Quay lại giỏ bó hoa
-                    </a>
-                @else
-                    <a href="{{ route('customer.bo-hoa.he-thong') }}" class="btn-back-cart">
-                        ← Quay lại chọn bó hoa
-                    </a>
-                @endif
-            </div>
-
-        </div>
-    </form>
-</div>
-@else
-<div class="checkout-page">
-
-    <div class="checkout-heading">💳 Thanh Toán</div>
-
-    <div class="checkout-steps">
-        <span class="step-done">Giỏ hàng</span>
-        <span class="sep">›</span>
-        <span class="step-active">💳 Thông tin thanh toán</span>
-        <span class="sep">›</span>
-        <span>📦 Hoàn tất</span>
-    </div>
-
-    @if(session('error'))
-        <div class="alert-checkout error">❌ {{ session('error') }}</div>
-    @endif
-
-    <form method="POST" action="{{ route('customer.thanh-toan.store') }}" id="checkoutForm">
-        @csrf
-        <input type="hidden" name="loai_checkout" value="{{ $loaiCheckout ?? 'san_pham' }}">
-        <div class="checkout-layout">
-
-            {{-- LEFT: Thông tin & Địa chỉ Shopee --}}
-            <div class="checkout-panel">
-                {{-- SHOPEE SHIPPING ADDRESS CARD --}}
-                <div class="shopee-address-card">
-                    <div class="shopee-address-stripe"></div>
-                    <div class="shopee-address-inner">
-                        <div class="shopee-address-header">
-                            <svg class="shopee-pin-icon" viewBox="0 0 24 24">
-                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-                            </svg>
-                            <span>Địa Chỉ Nhận Hàng</span>
+                    {{-- CÁC DÒNG TỔNG KẾT TIỀN --}}
+                    @php
+                        $giamGia  = $diemSuDung * 1000;
+                        $tongCuoi = max(0, $tongTienGoc - $giamGia);
+                    @endphp
+                    <div class="order-pricing-summary">
+                        <div class="price-summary-line">
+                            <span class="txt-lbl">Tạm tính</span>
+                            <span class="txt-val">{{ number_format($tongTienGoc, 0, ',', '.') }}₫</span>
+                        </div>
+                        <div class="price-summary-line">
+                            <span class="txt-lbl">Phí vận chuyển</span>
+                            <span class="txt-val ship-tag-free">Miễn phí</span>
+                        </div>
+                        <div class="price-summary-line" id="rowGiamGia" style="{{ $diemSuDung > 0 ? '' : 'display:none;' }}">
+                            <span class="txt-lbl" id="lblGiamGia">Giảm giá ({{ number_format($diemSuDung) }} điểm)</span>
+                            <span class="txt-val discount-number" id="valGiamGia">−{{ number_format($giamGia, 0, ',', '.') }}₫</span>
                         </div>
 
-                        <div id="shopeeAddressPreview" class="shopee-address-content">
-                            @if(isset($diaChiHienTai) && $diaChiHienTai)
-                                <div class="shopee-address-details">
-                                    <div class="shopee-user-info">
-                                        <span id="dispTenNguoiNhan">{{ $diaChiHienTai->ten_nguoi_nhan }}</span>
-                                        <span id="dispSoDienThoai" style="margin-left: 8px;">{{ $diaChiHienTai->so_dien_thoai }}</span>
-                                    </div>
-                                    <div class="shopee-address-text" id="dispDiaChiChiTiet">
-                                        {{ $diaChiHienTai->dia_chi_day_du }}
-                                    </div>
-                                    <span class="badge-shopee-default" id="dispBadgeDefault" style="{{ $diaChiHienTai->la_mac_dinh ? '' : 'display:none;' }}">Mặc định</span>
-                                </div>
-                                <div class="shopee-address-actions">
-                                    <button type="button" class="btn-shopee-change" onclick="openAddressListModal()">Thay Đổi</button>
-                                </div>
-                            @else
-                                <div class="shopee-address-empty">
-                                    <span>Bạn chưa có địa chỉ nhận hàng. Vui lòng thêm địa chỉ nhận hàng để tiếp tục đặt hàng.</span>
-                                </div>
-                                <div class="shopee-address-actions">
-                                    <button type="button" class="btn-shopee-add-new" onclick="openAddressCreateModal()">+ Thêm Địa Chỉ Mới</button>
-                                </div>
-                            @endif
-                        </div>
+                        <div class="summary-line-divider"></div>
 
-                        {{-- Hidden inputs submitted with form --}}
-                        <input type="hidden" name="ten_nguoi_nhan" id="inputTenNguoiNhan" value="{{ old('ten_nguoi_nhan', $diaChiHienTai->ten_nguoi_nhan ?? optional($user->khachHang)->ten_khach_hang) }}">
-                        <input type="hidden" name="so_dien_thoai" id="inputSoDienThoai" value="{{ old('so_dien_thoai', $diaChiHienTai->so_dien_thoai ?? optional($user->khachHang)->so_dien_thoai) }}">
-                        <input type="hidden" name="quan_huyen" id="inputQuanHuyen" value="{{ old('quan_huyen', $diaChiHienTai->quan_huyen ?? 'Cầu Giấy') }}">
-                        <input type="hidden" name="xa_phuong" id="inputXaPhuong" value="{{ old('xa_phuong', $diaChiHienTai->xa_phuong ?? 'Dịch Vọng Hậu') }}">
-                        <input type="hidden" name="dia_chi_chi_tiet" id="inputDiaChiChiTiet" value="{{ old('dia_chi_chi_tiet', $diaChiHienTai->dia_chi_chi_tiet ?? '') }}">
-                        <input type="hidden" name="ma_dia_chi" id="inputMaDiaChi" value="{{ $diaChiHienTai->ma_dia_chi ?? '' }}">
-                    </div>
-                </div>
-
-                {{-- Phương thức thanh toán --}}
-                <div style="margin-top: 8px;">
-                    <h3 style="margin-top: 0;">💳 Phương Thức Thanh Toán</h3>
-                    @error('phuong_thuc_thanh_toan')<div class="error-msg" style="margin-bottom:10px;">{{ $message }}</div>@enderror
-
-                    <div class="payment-option {{ old('phuong_thuc_thanh_toan', 'NGAN_HANG') === 'NGAN_HANG' ? 'selected' : '' }}"
-                         onclick="selectPayment('NGAN_HANG', this)">
-                        <input type="radio" name="phuong_thuc_thanh_toan" value="NGAN_HANG"
-                               id="pay_vnpay" {{ old('phuong_thuc_thanh_toan', 'NGAN_HANG') === 'NGAN_HANG' ? 'checked' : '' }}>
-                        <div class="payment-option-info">
-                            <div class="payment-option-title">💳 Thanh toán qua VNPay</div>
-                            <div class="payment-option-desc">
-                                Bạn sẽ được chuyển tới cổng thanh toán VNPay để hoàn tất giao dịch.
-                                Đơn hàng chỉ được đánh dấu <strong>đã thanh toán</strong> sau khi VNPay xác nhận thành công.
-                            </div>
+                        <div class="price-summary-line total-grand-line">
+                            <span class="total-grand-lbl">Tổng thanh toán</span>
+                            <span class="total-grand-val" id="valTongCuoi">{{ number_format($tongCuoi, 0, ',', '.') }}₫</span>
                         </div>
                     </div>
 
-                    <div class="bank-info {{ old('phuong_thuc_thanh_toan', 'NGAN_HANG') === 'NGAN_HANG' ? 'show' : '' }}"
-                         id="vnpayInfoBox">
-                        <p>💳 <strong>Cổng thanh toán:</strong> VNPay (hỗ trợ thẻ ATM nội địa, Internet Banking, quét mã QR, Visa/Master/JCB).</p>
-                        <p>🔒 <strong>Bảo mật:</strong> Bạn nhập thông tin thanh toán trực tiếp trên trang của VNPay, shop không lưu thông tin thẻ/tài khoản của bạn.</p>
-                        <p>⏱️ <strong>Lưu ý:</strong> Sau khi bấm "Đặt hàng", bạn có 15 phút để hoàn tất thanh toán trước khi phiên giao dịch hết hạn.</p>
+                    {{-- NÚT ĐẶT HÀNG CHÍNH --}}
+                    <button type="submit" class="btn-submit-order" id="btnOrder">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <span>Đặt hàng</span>
+                    </button>
+
+                    <div class="order-terms-notice">
+                        Bằng việc đặt hàng, bạn đồng ý với <a href="javascript:void(0)">Điều khoản mua hàng</a> của RoseShop
                     </div>
 
-                    <div class="payment-option {{ old('phuong_thuc_thanh_toan') === 'COD' ? 'selected' : '' }}"
-                         onclick="selectPayment('COD', this)">
-                        <input type="radio" name="phuong_thuc_thanh_toan" value="COD"
-                               id="pay_cod" {{ old('phuong_thuc_thanh_toan') === 'COD' ? 'checked' : '' }}>
-                        <div class="payment-option-info">
-                            <div class="payment-option-title">💵 Thanh toán khi nhận hàng (COD)</div>
-                            <div class="payment-option-desc">Thanh toán trực tiếp cho shipper khi nhận được hoa.</div>
-                        </div>
-                    </div>
                 </div>
-            </div>
-
-            {{-- RIGHT: Đơn hàng --}}
-            <div class="order-summary-panel">
-                <h3>🛒 Đơn Hàng Của Bạn</h3>
-
-                <div class="order-items">
-                    @foreach($gioHang as $key => $item)
-                    <div class="order-item">
-                        <div class="order-item-left">
-                            @if($item['hinh_anh'])
-                                <img src="{{ asset($item['hinh_anh']) }}" alt="{{ $item['ten_san_pham'] }}"
-                                     class="order-item-img"
-                                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-                                <div class="order-item-placeholder" style="display:none;">🌸</div>
-                            @else
-                                <div class="order-item-placeholder">🌸</div>
-                            @endif
-                            <div>
-                                <div class="order-item-name">{{ $item['ten_san_pham'] }}</div>
-                                <div class="order-item-qty">× {{ $item['so_luong'] }}</div>
-                            </div>
-                        </div>
-                        <div class="order-item-price">
-                            {{ number_format($item['gia_ban'] * $item['so_luong'], 0, ',', '.') }}₫
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-
-                @php
-                    $tongTienGoc = collect($gioHang)->sum(fn($i) => $i['gia_ban'] * $i['so_luong']);
-                    $giamGia     = $diemSuDung * 1000;
-                    $tongCuoi    = max(0, $tongTienGoc - $giamGia);
-                @endphp
-
-                {{-- Áp điểm tích lũy --}}
-                @auth
-                @php $diemHienCo = optional($user->khachHang)->diem_tich_luy ?? 0; @endphp
-                @if($diemHienCo > 0)
-                <div class="points-box" id="pointsBox">
-                    <div class="points-box-header">
-                        <span>⭐ Điểm tích lũy của bạn: <strong>{{ number_format($diemHienCo) }} điểm</strong></span>
-                        <span class="points-equiv">(≡ {{ number_format($diemHienCo * 1000, 0, ',', '.') }}₫)</span>
-                    </div>
-                    <div class="points-input-row">
-                        <input type="number" id="diemNhap" min="0" max="{{ $diemHienCo }}"
-                               value="{{ $diemSuDung > 0 ? $diemSuDung : '' }}"
-                               placeholder="Nhập số điểm muốn dùng">
-                        <button type="button" onclick="apDiem()">Áp dụng</button>
-                    </div>
-                    <div id="pointsMsg" class="points-msg"></div>
-                </div>
-                @endif
-                @endauth
-
-                <div class="order-totals">
-                    <div class="total-row">
-                        <span>Tạm tính</span>
-                        <span class="val">{{ number_format($tongTienGoc, 0, ',', '.') }}₫</span>
-                    </div>
-                    <div class="total-row">
-                        <span>Vận chuyển</span>
-                        <span class="ship-free">Miễn phí</span>
-                    </div>
-                    <div class="total-row" id="rowGiamGia" style="{{ $diemSuDung > 0 ? '' : 'display:none;' }}">
-                        <span id="lblGiamGia">Giảm giá ({{ number_format($diemSuDung) }} điểm)</span>
-                        <span class="discount-val" id="valGiamGia">−{{ number_format($diemSuDung * 1000, 0, ',', '.') }}₫</span>
-                    </div>
-                    <div class="total-row grand">
-                        <span><strong>Tổng</strong></span>
-                        <span class="val" id="valTongCuoi">{{ number_format($tongCuoi, 0, ',', '.') }}₫</span>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-place-order" id="btnOrder">
-                    {{ old('phuong_thuc_thanh_toan', 'NGAN_HANG') === 'NGAN_HANG' ? '💳 Đặt Hàng & Thanh Toán VNPay' : '🛍️ Đặt Hàng (COD)' }}
-                </button>
-
-                <a href="{{ route('customer.gio-hang') }}" class="btn-back-cart">
-                    ← Quay lại giỏ hàng
-                </a>
             </div>
 
         </div>
     </form>
 
 </div>
-@endif
 
 {{-- MODAL 1: SỔ ĐỊA CHỈ (SHOPEE STYLE) --}}
 <div class="shopee-modal-overlay" id="modalAddressList" style="display:none;" onclick="if(event.target===this) closeAddressListModal()">
@@ -508,7 +430,7 @@
 
 @section('scripts')
 <script>
-// ── Quận/Huyện & Xã/Phường (dùng chung cho cả 2 nhánh) ──────────────────────
+// ── Quận/Huyện & Xã/Phường Hà Nội ──────────────────────────────────────────
 const hanoiData = {
     "Ba Đình": ["Phúc Xá","Trúc Bạch","Vĩnh Phúc","Cống Vị","Liễu Giai","Nguyễn Trung Trực","Quán Thánh","Ngọc Hà","Điện Biên","Đội Cấn","Ngọc Khánh","Kim Mã","Giảng Võ","Thành Công"],
     "Hoàn Kiếm": ["Phúc Tân","Đồng Xuân","Hàng Mã","Hàng Buồm","Hàng Đào","Hàng Bồ","Cửa Đông","Lý Thái Tổ","Hàng Bạc","Hàng Gai","Chương Dương","Hàng Trống","Cửa Nam","Hàng Bông","Tràng Tiền","Trần Hưng Đạo","Phan Chu Trinh","Hàng Bài"],
@@ -606,18 +528,19 @@ function updateCheckoutAddressUI(addr) {
     const preview = document.getElementById('shopeeAddressPreview');
     if (preview) {
         preview.innerHTML = `
-            <div class="shopee-address-details">
-                <div class="shopee-user-info">
-                    <span id="dispTenNguoiNhan">${escapeHtml(addr.ten_nguoi_nhan)}</span>
-                    <span id="dispSoDienThoai" style="margin-left: 8px;">${escapeHtml(addr.so_dien_thoai)}</span>
+            <div class="address-preview-details">
+                <div class="address-user-line">
+                    <strong id="dispTenNguoiNhan">${escapeHtml(addr.ten_nguoi_nhan)}</strong>
+                    <span class="phone-sep">|</span>
+                    <span id="dispSoDienThoai">${escapeHtml(addr.so_dien_thoai)}</span>
+                    <span class="badge-addr-default" id="dispBadgeDefault" style="${addr.la_mac_dinh ? '' : 'display:none;'}">Mặc định</span>
                 </div>
-                <div class="shopee-address-text" id="dispDiaChiChiTiet">
+                <div class="address-text-line" id="dispDiaChiChiTiet">
                     ${escapeHtml(addr.dia_chi_day_du)}
                 </div>
-                <span class="badge-shopee-default" id="dispBadgeDefault" style="${addr.la_mac_dinh ? '' : 'display:none;'}">Mặc định</span>
             </div>
-            <div class="shopee-address-actions">
-                <button type="button" class="btn-shopee-change" onclick="openAddressListModal()">Thay Đổi</button>
+            <div class="address-action-right">
+                <button type="button" class="btn-change-addr" onclick="openAddressListModal()">Thay Đổi</button>
             </div>
         `;
     }
@@ -767,7 +690,7 @@ async function submitAddressForm(e) {
 
 // ── Phương thức thanh toán ───────────────────────────────────────────────────
 function selectPayment(value, el) {
-    document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
+    document.querySelectorAll('.payment-card-option').forEach(o => o.classList.remove('selected'));
     el.classList.add('selected');
     el.querySelector('input[type=radio]').checked = true;
 
@@ -776,23 +699,12 @@ function selectPayment(value, el) {
         if (value === 'NGAN_HANG') vnpayBox.classList.add('show');
         else vnpayBox.classList.remove('show');
     }
-
-    updateOrderButtonLabel(value);
 }
 
-function updateOrderButtonLabel(value) {
-    const btn = document.getElementById('btnOrder');
-    if (!btn || btn.disabled) return;
-    btn.textContent = value === 'NGAN_HANG'
-        ? '💳 Đặt Hàng & Thanh Toán VNPay'
-        : '🛍️ Đặt Hàng (COD)';
-}
-
-@if(!isset($dsBoHoa) || count($dsBoHoa) === 0)
-// ── Áp điểm tích lũy (chỉ cho đơn sản phẩm thường) ──────────────────────────
+// ── Áp điểm tích lũy ──────────────────────────────────────────────────────────
 const DIEM_QUY_DOI = 1000;
-const tongTienGoc  = {{ collect($gioHang)->sum(fn($i) => $i['gia_ban'] * $i['so_luong']) }};
-let   diemDangDung = {{ $diemSuDung }};
+const tongTienGoc  = {{ $tongTienGoc ?? 0 }};
+let   diemDangDung = {{ $diemSuDung ?? 0 }};
 
 function formatVND(n) {
     return n.toLocaleString('vi-VN');
@@ -821,7 +733,7 @@ function apDiem() {
     if (diem < 0) diem = 0;
     if (diem > diemMax) {
         msg.textContent = `Bạn chỉ có ${diemMax.toLocaleString('vi')} điểm.`;
-        msg.className   = 'points-msg err';
+        msg.className   = 'points-msg-alert err';
         return;
     }
 
@@ -829,8 +741,7 @@ function apDiem() {
         method:  'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content
-                         || '{{ csrf_token() }}'
+            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content || '{{ csrf_token() }}'
         },
         body: JSON.stringify({ diem })
     })
@@ -841,113 +752,34 @@ function apDiem() {
             renderTotals(diemDangDung);
             input.value     = diemDangDung > 0 ? diemDangDung : '';
             msg.textContent = diemDangDung > 0
-                ? `✓ Đã áp dụng ${diemDangDung.toLocaleString('vi')} điểm – giảm ${formatVND(data.giam_gia)}₫`
+                ? `✓ Đã áp dụng ${diemDangDung.toLocaleString('vi')} điểm (−${formatVND(data.giam_gia)}₫)`
                 : '✓ Đã bỏ áp dụng điểm.';
-            msg.className   = 'points-msg ok';
+            msg.className   = 'points-msg-alert ok';
         } else {
             msg.textContent = data.message || 'Có lỗi xảy ra.';
-            msg.className   = 'points-msg err';
+            msg.className   = 'points-msg-alert err';
         }
     })
     .catch(() => {
         msg.textContent = 'Không thể kết nối. Thử lại sau.';
-        msg.className   = 'points-msg err';
+        msg.className   = 'points-msg-alert err';
     });
 }
 
-renderTotals(diemDangDung);
-@endif
+function apDiemBoHoa() {
+    apDiem();
+}
 
-// ── Prevent double submit ────────────────────────────────────────────────────
+// ── Submit form bảo vệ chống double click ────────────────────────────────────
 const checkoutForm = document.getElementById('checkoutForm');
 if (checkoutForm) {
     checkoutForm.addEventListener('submit', function() {
         const btn = document.getElementById('btnOrder');
         if (btn) {
             btn.disabled    = true;
-            btn.textContent = '⏳ Đang xử lý...';
+            btn.innerHTML = '<span>⏳ Đang xử lý...</span>';
         }
     });
 }
-// ── Áp điểm cho nhánh bó hoa (nhiều bó) ─────────────────────────────────
-@if(isset($dsBoHoa) && count($dsBoHoa) > 0)
-const DIEM_QUY_DOI_BH = 1000;
-const tongGocBH       = {{ collect($dsBoHoa)->sum(fn($b) => (float) $b['quote']['tong_tien']) }};
-let   diemDangDungBH  = {{ $diemSuDung }};
-
-function renderTotalsBH(diem) {
-    const giamGia  = diem * DIEM_QUY_DOI_BH;
-    const tongCuoi = Math.max(0, tongGocBH - giamGia);
-
-    const rowGG = document.getElementById('rowGiamGia');
-    if (rowGG) rowGG.style.display = diem > 0 ? 'flex' : 'none';
-    const valGG = document.getElementById('valGiamGia');
-    if (valGG) valGG.textContent = '−' + giamGia.toLocaleString('vi-VN') + '₫';
-    const lblGG = document.getElementById('lblGiamGia');
-    if (lblGG) lblGG.textContent = 'Giảm giá (' + diem.toLocaleString('vi-VN') + ' điểm)';
-    const valTC = document.getElementById('valTongCuoi');
-    if (valTC) valTC.textContent = tongCuoi.toLocaleString('vi-VN') + '₫';
-}
-
-function apDiemBoHoa() {
-    const input   = document.getElementById('diemNhap');
-    const msg     = document.getElementById('pointsMsg');
-    const diemMax = parseInt(input.max) || 0;
-    let   diem    = parseInt(input.value) || 0;
-
-    if (diem < 0) diem = 0;
-    if (diem > diemMax) {
-        msg.textContent = `Bạn chỉ có ${diemMax.toLocaleString('vi-VN')} điểm.`;
-        msg.className   = 'points-msg err';
-        return;
-    }
-
-    fetch("{{ route('customer.gio-hang.apply-points') }}", {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content
-        },
-        body: JSON.stringify({ diem })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            diemDangDungBH = data.diem_su_dung;
-            renderTotalsBH(diemDangDungBH);
-            input.value     = diemDangDungBH > 0 ? diemDangDungBH : '';
-            msg.textContent = diemDangDungBH > 0
-                ? `✓ Đã áp dụng ${diemDangDungBH.toLocaleString('vi-VN')} điểm – giảm ${data.giam_gia.toLocaleString('vi-VN')}₫`
-                : '✓ Đã bỏ áp dụng điểm.';
-            msg.className   = 'points-msg ok';
-        } else {
-            msg.textContent = data.message || 'Có lỗi xảy ra.';
-            msg.className   = 'points-msg err';
-        }
-    })
-    .catch(() => {
-        msg.textContent = 'Không thể kết nối. Thử lại sau.';
-        msg.className   = 'points-msg err';
-    });
-}
-
-renderTotalsBH(diemDangDungBH);
-
-function xoaBoHoaTrongThanhToan(key) {
-    if (!confirm('Xóa bó hoa này khỏi giỏ?')) return;
-    fetch('{{ route("customer.bo-hoa.gio.remove") }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify({ key })
-    })
-    .then(r => r.json())
-    .then(d => { if (d.success) location.reload(); })
-    .catch(() => alert('Có lỗi xảy ra.'));
-}
-@endif
 </script>
 @endsection

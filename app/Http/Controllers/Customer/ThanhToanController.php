@@ -35,54 +35,21 @@ class ThanhToanController extends Controller
         $diaChiHienTai  = $danhSachDiaChi->firstWhere('la_mac_dinh', true) ?? $danhSachDiaChi->first();
         $type           = request('type');
 
-        // ─── Nhánh 1: Giỏ bó hoa mẫu (nhiều bó) ────────────────────────
-        if (($type === 'bo_hoa' || (!$type && session()->has('gio_bo_hoa') && !session()->has('checkout_items') && !session()->has('mua_ngay'))) && session()->has('gio_bo_hoa') && !empty(session('gio_bo_hoa'))) {
-            $dsCheckout = [];
-            foreach (session('gio_bo_hoa', []) as $key => $item) {
-                try {
-                    $info = \App\Http\Controllers\Customer\BoHoaController::duLieuCheckout([
-                        'loai'          => 'MAU',
-                        'ma_mau_bo_hoa' => $item['ma_mau_bo_hoa'],
-                        'so_luong'      => $item['so_luong'],
-                        'ma_thiep'      => $item['ma_thiep'] ?? null,
-                        'loi_nhan'      => $item['loi_nhan'] ?? null,
-                    ], $khachId);
-                    $info['key'] = $key;
-                    $dsCheckout[] = $info;
-                } catch (\Throwable $e) {
-                    return redirect()->route('customer.gio-hang')
-                        ->with('error', $e->getMessage());
-                }
-            }
-            if (empty($dsCheckout)) {
-                session()->forget('gio_bo_hoa');
-                \App\Services\CartService::syncToDatabase();
-                return redirect()->route('customer.gio-hang')
-                    ->with('error', 'Giỏ bó hoa trống.');
-            }
-            $diemSuDung = session('diem_su_dung', 0);
-            return view('customer.ThanhToan', [
-                'user'           => $user,
-                'dsBoHoa'        => $dsCheckout,
-                'gioHang'        => [],
-                'diemSuDung'     => $diemSuDung,
-                'danhSachDiaChi' => $danhSachDiaChi,
-                'diaChiHienTai'  => $diaChiHienTai,
-                'loaiCheckout'   => 'bo_hoa',         
-            ]);
-        }
-
-        // ─── Nhánh 2: Mua ngay 1 bó (giữ nguyên hành vi cũ) ────────────
-        if (($type === 'mua_ngay_bo_hoa' || (!$type && session()->has('bo_hoa_checkout') && !session()->has('checkout_items') && !session()->has('mua_ngay'))) && session()->has('bo_hoa_checkout')) {
+        // ─── Nhánh: Mua ngay 1 bó hoa đơn lẻ (tự tạo Custom Mix hoặc mẫu mua ngay) ───
+        if (session()->has('bo_hoa_checkout')) {
+            $boHoaCheckoutData = session('bo_hoa_checkout');
             try {
                 $info = \App\Http\Controllers\Customer\BoHoaController::duLieuCheckout(
-                    session('bo_hoa_checkout'), $khachId
+                    $boHoaCheckoutData, $khachId
                 );
                 $info['key'] = 'bo_hoa_checkout';
                 $dsBoHoa = [$info];
             } catch (\Throwable $e) {
                 session()->forget('bo_hoa_checkout');
-                return redirect()->route('customer.bo-hoa.he-thong')->with('error', $e->getMessage());
+                $redirectRoute = ($boHoaCheckoutData['loai'] ?? '') === 'TUY_CHON'
+                    ? route('customer.bo-hoa.tu-tao')
+                    : route('customer.bo-hoa.he-thong');
+                return redirect($redirectRoute)->with('error', $e->getMessage());
             }
             $diemSuDung = session('diem_su_dung', 0);
             return view('customer.ThanhToan', [
@@ -92,33 +59,54 @@ class ThanhToanController extends Controller
                 'diemSuDung'     => $diemSuDung,
                 'danhSachDiaChi' => $danhSachDiaChi,
                 'diaChiHienTai'  => $diaChiHienTai,
-                 'loaiCheckout'   => 'mua_ngay_bo_hoa',
+                'loaiCheckout'   => 'mua_ngay_bo_hoa',
             ]);
         }
 
-        // ─── Nhánh 3: Giỏ sản phẩm đơn lẻ (giữ nguyên) ─────────────────
-        if (session()->has('mua_ngay')) {
-            $gioHang = session('mua_ngay', []);
-        } elseif (session()->has('checkout_items')) {
-            $gioHang = session('checkout_items', []);
-        } else {
-            return redirect()->route('customer.gio-hang')
-                ->with('error', 'Giỏ hàng của bạn đang trống!');
+        // ─── TẬP HỢP TẤT CẢ SẢN PHẨM & BÓ HOA TỪ GIỎ ĐÃ CHỌN ─────────────
+        $gioHang   = session('checkout_items', session('mua_ngay', []));
+        $rawBoHoa  = session('checkout_bo_hoa', ($type === 'bo_hoa' ? session('gio_bo_hoa', []) : []));
+
+        // Nếu cả 2 đều trống và không phải mua ngay: nạp từ giỏ hàng hiện tại
+        if (empty($gioHang) && empty($rawBoHoa) && !session()->has('mua_ngay')) {
+            $gioHang  = session('gio_hang', []);
+            $rawBoHoa = session('gio_bo_hoa', []);
         }
 
-        // ✅ Guard: nếu session có nhưng rỗng → cũng phải chặn
-        if (empty($gioHang)) {
-            session()->forget(['mua_ngay', 'checkout_items', 'diem_su_dung']);
+        $dsBoHoa = [];
+        if (!empty($rawBoHoa)) {
+            foreach ($rawBoHoa as $key => $item) {
+                try {
+                    $info = \App\Http\Controllers\Customer\BoHoaController::duLieuCheckout([
+                        'loai'          => 'MAU',
+                        'ma_mau_bo_hoa' => $item['ma_mau_bo_hoa'],
+                        'so_luong'      => $item['so_luong'],
+                        'ma_thiep'      => $item['ma_thiep'] ?? null,
+                        'loi_nhan'      => $item['loi_nhan'] ?? null,
+                    ], $khachId);
+                    $info['key'] = $key;
+                    $dsBoHoa[] = $info;
+                } catch (\Throwable $e) {}
+            }
+        }
+
+        if (empty($gioHang) && empty($dsBoHoa)) {
+            session()->forget(['mua_ngay', 'checkout_items', 'checkout_bo_hoa', 'diem_su_dung']);
             return redirect()->route('customer.gio-hang')
                 ->with('error', 'Giỏ hàng của bạn đang trống!');
         }
 
         $diemSuDung = session('diem_su_dung', 0);
 
-        return view('customer.ThanhToan', 
-        compact('user', 'gioHang', 'diemSuDung', 'danhSachDiaChi', 'diaChiHienTai')
-        + ['loaiCheckout' => 'san_pham']
-        );
+        return view('customer.ThanhToan', [
+            'user'           => $user,
+            'dsBoHoa'        => $dsBoHoa,
+            'gioHang'        => $gioHang,
+            'diemSuDung'     => $diemSuDung,
+            'danhSachDiaChi' => $danhSachDiaChi,
+            'diaChiHienTai'  => $diaChiHienTai,
+            'loaiCheckout'   => 'gop',
+        ]);
     }
 
     public function store(Request $request)
@@ -173,36 +161,7 @@ class ThanhToanController extends Controller
         $laVnpay = $request->phuong_thuc_thanh_toan === 'NGAN_HANG';
         $loaiCheckout = $request->input('loai_checkout');
 
-        // ─── Nhánh 1: Giỏ bó hoa mẫu ──────────────────────────────────
-        if (($loaiCheckout === 'bo_hoa' || (!$loaiCheckout && session()->has('gio_bo_hoa') && !session()->has('checkout_items') && !session()->has('mua_ngay'))) && session()->has('gio_bo_hoa') && !empty(session('gio_bo_hoa'))) {
-            $dsCheckout = [];
-            foreach (session('gio_bo_hoa', []) as $key => $item) {
-                $dsCheckout[] = [
-                    'loai'          => 'MAU',
-                    'ma_mau_bo_hoa' => $item['ma_mau_bo_hoa'],
-                    'so_luong'      => $item['so_luong'],
-                    'ma_thiep'      => $item['ma_thiep'] ?? null,
-                    'loi_nhan'      => $item['loi_nhan'] ?? null,
-                ];
-            }
-
-            try {
-                $hoaDon = DB::transaction(fn () => \App\Http\Controllers\Customer\BoHoaController::taoDonTuGioBoHoa(
-                    $dsCheckout, $khachHang, $donData, $diemSuDung
-                ), 3);
-            } catch (\Throwable $e) {
-                return redirect()->route('customer.thanh-toan')->with('error', $e->getMessage());
-            }
-
-            session()->forget(['gio_bo_hoa', 'diem_su_dung']);
-            \App\Services\CartService::syncToDatabase();
-
-            if ($laVnpay) return redirect()->route('vnpay.payment', $hoaDon);
-            return redirect()->route('customer.thong-bao', ['tab' => 'don-hien-tai'])
-                ->with('success', 'Đơn bó hoa đã được tạo và đang chờ nhân viên xác nhận.');
-        }
-
-        // ─── Nhánh 2: Mua ngay 1 bó ────────────────────────────────────
+        // ─── Nhánh: Mua ngay 1 bó hoa ──────────────────────────────────
         if (($loaiCheckout === 'mua_ngay_bo_hoa' || (!$loaiCheckout && session()->has('bo_hoa_checkout'))) && session()->has('bo_hoa_checkout')) {
             try {
                 $hoaDon = DB::transaction(fn () => \App\Http\Controllers\Customer\BoHoaController::taoDonTuCheckout(
@@ -218,31 +177,49 @@ class ThanhToanController extends Controller
                 ->with('success', 'Đơn bó hoa đã được tạo và đang chờ nhân viên xác nhận.');
         }
 
-        // ─── Nhánh 3: Giỏ sản phẩm đơn lẻ (giữ nguyên) ─────────────────
-        $isMuaNgay  = session()->has('mua_ngay');
-        $isCheckout = session()->has('checkout_items');
+        // ─── Nhánh: Thanh toán giỏ hàng (Bao gồm Bó hoa + Sản phẩm lẻ) ───
+        $rawBoHoa  = session('checkout_bo_hoa', ($loaiCheckout === 'bo_hoa' ? session('gio_bo_hoa', []) : []));
+        $gioHang   = session('checkout_items', session('mua_ngay', ($loaiCheckout === 'san_pham' ? session('gio_hang', []) : [])));
 
-        if ($isMuaNgay) {
-            $gioHang = session('mua_ngay', []);
-        } elseif ($isCheckout) {
-            $gioHang = session('checkout_items', []);
-        } else {
+        if (empty($rawBoHoa) && empty($gioHang) && !session()->has('mua_ngay')) {
+            $rawBoHoa = session('gio_bo_hoa', []);
+            $gioHang  = session('gio_hang', []);
+        }
+
+        if (empty($rawBoHoa) && empty($gioHang)) {
             return redirect()->route('customer.gio-hang')
                 ->with('error', 'Vui lòng chọn sản phẩm để thanh toán.');
         }
 
-        if (empty($gioHang)) {
-            return redirect()->route('customer.gio-hang')
-                ->with('error', 'Giỏ hàng trống!');
+        $dsCheckoutBoHoa = [];
+        $tongGocBoHoa    = 0;
+        if (!empty($rawBoHoa)) {
+            foreach ($rawBoHoa as $bKey => $bItem) {
+                $itemCheckout = [
+                    'loai'          => 'MAU',
+                    'ma_mau_bo_hoa' => $bItem['ma_mau_bo_hoa'],
+                    'so_luong'      => $bItem['so_luong'],
+                    'ma_thiep'      => $bItem['ma_thiep'] ?? null,
+                    'loi_nhan'      => $bItem['loi_nhan'] ?? null,
+                ];
+                try {
+                    $info = \App\Http\Controllers\Customer\BoHoaController::duLieuCheckout($itemCheckout, $khachHang->getKey());
+                    $tongGocBoHoa += (float) $info['quote']['tong_tien'];
+                    $dsCheckoutBoHoa[$bKey] = $itemCheckout;
+                } catch (\Throwable $e) {
+                    return redirect()->route('customer.thanh-toan')->with('error', 'Mẫu bó hoa không khả dụng: ' . $e->getMessage());
+                }
+            }
         }
 
-        $tongTienGoc = collect($gioHang)->sum(fn($i) => $i['gia_ban'] * $i['so_luong']);
+        $tongGocSP   = collect($gioHang)->sum(fn($i) => $i['gia_ban'] * $i['so_luong']);
+        $tongTienGoc = $tongGocBoHoa + $tongGocSP;
         $giamGia     = min($diemSuDung * self::DIEM_QUY_DOI, $tongTienGoc);
         $tongTien    = max(0, $tongTienGoc - $giamGia);
 
         try {
             $hoaDon = DB::transaction(function () use (
-                $request, $gioHang, $khachHang, $tongTien,
+                $request, $gioHang, $dsCheckoutBoHoa, $khachHang, $tongTien,
                 $diemSuDung, $diaChiGiao, $laVnpay
             ) {
                 $hoaDon = HoaDon::create([
@@ -256,54 +233,66 @@ class ThanhToanController extends Controller
                     'ngay_dat'               => now(),
                 ]);
 
-                // 1. TẠO RESERVATION CHO TỪNG SẢN PHẨM & LÔ (KHÔNG TRỪ ON_HAND)
-                $allocatedRows = \App\Services\InventoryReservationService::reserveSingleItems($hoaDon, $gioHang);
+                // 1. Xử lý các bó hoa (nếu có)
+                if (!empty($dsCheckoutBoHoa)) {
+                    foreach ($dsCheckoutBoHoa as $checkout) {
+                        \App\Http\Controllers\Customer\BoHoaController::hoanTatBoHoa($hoaDon, $checkout, $khachHang, 0, false, false);
+                    }
+                }
 
-                // 2. LƯU CHI TIẾT HÓA ĐƠN
-                // 2. LƯU CHI TIẾT HÓA ĐƠN (hỗ trợ cả sản phẩm lẻ + bó hoa FlashSale)
-$grouped = collect($allocatedRows)->groupBy(function ($r) {
-    // Bó hoa FlashSale → group riêng theo ma_bo_hoa
-    if (!empty($r['ma_bo_hoa'])) {
-        return 'bo_' . $r['ma_bo_hoa'];
-    }
-    return ($r['ma_san_pham'] ?? 0) . '-' . ($r['ma_chi_tiet_nhap'] ?? 0);
-});
+                // 2. Xử lý sản phẩm lẻ (nếu có)
+                if (!empty($gioHang)) {
+                    $allocatedRows = \App\Services\InventoryReservationService::reserveSingleItems($hoaDon, $gioHang);
+                    $grouped = collect($allocatedRows)->groupBy(function ($r) {
+                        if (!empty($r['ma_bo_hoa'])) {
+                            return 'bo_' . $r['ma_bo_hoa'];
+                        }
+                        return ($r['ma_san_pham'] ?? 0) . '-' . ($r['ma_chi_tiet_nhap'] ?? 0);
+                    });
 
-foreach ($grouped as $items) {
-    $first = $items->first();
+                    foreach ($grouped as $items) {
+                        $first = $items->first();
+                        $item = null;
+                        if (!empty($first['ma_bo_hoa'])) {
+                            $item = collect($gioHang)->first(fn ($row) =>
+                                !empty($row['ma_bo_hoa']) && (int) $row['ma_bo_hoa'] === (int) $first['ma_bo_hoa']
+                            );
+                        } else {
+                            $item = collect($gioHang)->first(fn ($row) =>
+                                !empty($row['ma_san_pham']) && (int) $row['ma_san_pham'] === (int) $first['ma_san_pham']
+                            );
+                        }
 
-    // Tìm dòng gốc trong giỏ để lấy giá bán ưu tiên
-    $item = null;
-    if (!empty($first['ma_bo_hoa'])) {
-        $item = collect($gioHang)->first(fn ($row) =>
-            !empty($row['ma_bo_hoa'])
-            && (int) $row['ma_bo_hoa'] === (int) $first['ma_bo_hoa']
-        );
-    } else {
-        $item = collect($gioHang)->first(fn ($row) =>
-            !empty($row['ma_san_pham'])
-            && (int) $row['ma_san_pham'] === (int) $first['ma_san_pham']
-        );
-    }
+                        ChiTietHoaDon::create([
+                            'ma_hoa_don'        => $hoaDon->getKey(),
+                            'ma_san_pham'       => $first['ma_san_pham'] ?? null,
+                            'ma_bo_hoa'         => $first['ma_bo_hoa']   ?? null,
+                            'ma_chi_tiet_nhap'  => $first['ma_chi_tiet_nhap'] ?? null,
+                            'so_luong'          => $items->sum('so_luong'),
+                            'gia_nhap_snapshot' => $first['gia_nhap_snapshot'] ?? 0,
+                            'gia_ban_snapshot'  => $first['gia_ban_snapshot']  ?? ($item['gia_ban'] ?? 0),
+                        ]);
+                    }
+                }
 
-    ChiTietHoaDon::create([
-        'ma_hoa_don'        => $hoaDon->getKey(),
-        'ma_san_pham'       => $first['ma_san_pham'] ?? null,
-        'ma_bo_hoa'         => $first['ma_bo_hoa']   ?? null,   // ← THÊM
-        'ma_chi_tiet_nhap'  => $first['ma_chi_tiet_nhap'] ?? null,
-        'so_luong'          => $items->sum('so_luong'),
-        'gia_nhap_snapshot' => $first['gia_nhap_snapshot'] ?? 0,
-        'gia_ban_snapshot'  => $first['gia_ban_snapshot']  ?? ($item['gia_ban'] ?? 0),
-    ]);
-}
-
+                // 3. Trừ điểm sử dụng & Cộng điểm tích lũy
                 if ($diemSuDung > 0 && $khachHang) {
                     $khachHang->decrement('diem_tich_luy', $diemSuDung);
                 }
-
                 $diemMoi = (int) floor($tongTien / self::TICH_DIEM);
                 if ($diemMoi > 0 && $khachHang) {
                     $khachHang->increment('diem_tich_luy', $diemMoi);
+                }
+
+                // 4. Lưu snapshot VNPay nếu chọn VNPAY
+                if ($laVnpay) {
+                    $hoaDon->vnpay_cart_snapshot = [
+                        'loai_don'        => 'gop',
+                        'ds_checkout'     => $dsCheckoutBoHoa,
+                        'gio_hang'        => $gioHang,
+                        'diem_su_dung'    => $diemSuDung,
+                    ];
+                    $hoaDon->save();
                 }
 
                 return $hoaDon;
@@ -312,19 +301,25 @@ foreach ($grouped as $items) {
             return redirect()->route('customer.thanh-toan')->with('error', $e->getMessage());
         }
 
-        if ($isMuaNgay) {
-            session()->forget(['mua_ngay', 'diem_su_dung']);
-            \App\Services\CartService::syncToDatabase();
-        } elseif ($isCheckout) {
+        // ─── DỌN DẸP SESSION GIỎ HÀNG ───
+        if (!empty($gioHang)) {
             $mainCart = session('gio_hang', []);
-            $paidKeys = array_keys(session('checkout_items', []));
-            foreach ($paidKeys as $k) {
+            foreach (array_keys($gioHang) as $k) {
                 if (isset($mainCart[$k])) unset($mainCart[$k]);
             }
             session(['gio_hang' => $mainCart]);
-            session()->forget(['checkout_items', 'diem_su_dung']);
-            \App\Services\CartService::syncToDatabase();
         }
+
+        if (!empty($rawBoHoa)) {
+            $mainCartBH = session('gio_bo_hoa', []);
+            foreach (array_keys($rawBoHoa) as $bKey) {
+                if (isset($mainCartBH[$bKey])) unset($mainCartBH[$bKey]);
+            }
+            session(['gio_bo_hoa' => $mainCartBH]);
+        }
+
+        session()->forget(['checkout_items', 'checkout_bo_hoa', 'mua_ngay', 'diem_su_dung']);
+        \App\Services\CartService::syncToDatabase();
 
         if ($laVnpay) {
             return redirect()->route('vnpay.payment', $hoaDon)

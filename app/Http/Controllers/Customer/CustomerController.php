@@ -51,33 +51,54 @@ class CustomerController extends Controller
                 self::MA_LOAI_NGUYEN_LIEU,
                 ['PHU_KIEN', 'QUA_TANG']
             ))
+            ->withSum(['chiTietHoaDons as da_ban' => fn($q) => $q->whereHas('hoaDon', fn($h) => $h->whereNotIn('trang_thai', ['CANCELLED', 'DA_HUY']))], 'so_luong')
             ->with(['chiTietNhaps' => function ($q) {
                 $q->where('so_luong_con_lai', '>', 0)
                     ->whereHas('phieuNhap', fn($q2) => $q2->where('trang_thai', 'CONFIRMED'))
                     ->orderBy('gia_ban', 'asc');
             }])
-            ->limit(8)
-            ->get();
+            ->get()
+            ->sortBy([
+                fn ($a, $b) => ($b->chiTietNhaps->sum('so_luong_con_lai') > 0 ? 1 : 0) <=> ($a->chiTietNhaps->sum('so_luong_con_lai') > 0 ? 1 : 0),
+                fn ($a, $b) => ($b->da_ban ?? 0) <=> ($a->da_ban ?? 0),
+                fn ($a, $b) => $b->ma_san_pham <=> $a->ma_san_pham,
+            ])
+            ->take(8)
+            ->values();
 
         $phuKienNoiBat = SanPham::where('trang_thai', 'DANG_BAN')
             ->where('loai_san_pham', 'PHU_KIEN')
+            ->withSum(['chiTietHoaDons as da_ban' => fn($q) => $q->whereHas('hoaDon', fn($h) => $h->whereNotIn('trang_thai', ['CANCELLED', 'DA_HUY']))], 'so_luong')
             ->with(['chiTietNhaps' => function ($q) {
                 $q->where('so_luong_con_lai', '>', 0)
                     ->whereHas('phieuNhap', fn($q2) => $q2->where('trang_thai', 'CONFIRMED'))
                     ->orderBy('gia_ban', 'asc');
             }])
-            ->limit(6)
-            ->get();
+            ->get()
+            ->sortBy([
+                fn ($a, $b) => ($b->chiTietNhaps->sum('so_luong_con_lai') > 0 ? 1 : 0) <=> ($a->chiTietNhaps->sum('so_luong_con_lai') > 0 ? 1 : 0),
+                fn ($a, $b) => ($b->da_ban ?? 0) <=> ($a->da_ban ?? 0),
+                fn ($a, $b) => $b->ma_san_pham <=> $a->ma_san_pham,
+            ])
+            ->take(6)
+            ->values();
 
         $quaTangNoiBat = SanPham::where('trang_thai', 'DANG_BAN')
             ->where('loai_san_pham', 'QUA_TANG')
+            ->withSum(['chiTietHoaDons as da_ban' => fn($q) => $q->whereHas('hoaDon', fn($h) => $h->whereNotIn('trang_thai', ['CANCELLED', 'DA_HUY']))], 'so_luong')
             ->with(['chiTietNhaps' => function ($q) {
                 $q->where('so_luong_con_lai', '>', 0)
                     ->whereHas('phieuNhap', fn($q2) => $q2->where('trang_thai', 'CONFIRMED'))
                     ->orderBy('gia_ban', 'asc');
             }])
-            ->limit(6)
-            ->get();
+            ->get()
+            ->sortBy([
+                fn ($a, $b) => ($b->chiTietNhaps->sum('so_luong_con_lai') > 0 ? 1 : 0) <=> ($a->chiTietNhaps->sum('so_luong_con_lai') > 0 ? 1 : 0),
+                fn ($a, $b) => ($b->da_ban ?? 0) <=> ($a->da_ban ?? 0),
+                fn ($a, $b) => $b->ma_san_pham <=> $a->ma_san_pham,
+            ])
+            ->take(6)
+            ->values();
 
         return view('customer.Dashboard', compact(
             'user',
@@ -100,6 +121,7 @@ class CustomerController extends Controller
 
         $query = SanPham::where('trang_thai', 'DANG_BAN')
             ->whereNotIn('loai_san_pham', $excludedTypes)
+            ->withSum(['chiTietHoaDons as da_ban' => fn($q) => $q->whereHas('hoaDon', fn($h) => $h->whereNotIn('trang_thai', ['CANCELLED', 'DA_HUY']))], 'so_luong')
             ->with(['chiTietNhaps' => function ($q) {
                 $q->where('so_luong_con_lai', '>', 0)
                     ->whereHas('phieuNhap', fn($q2) => $q2->where('trang_thai', 'CONFIRMED'))
@@ -112,7 +134,12 @@ class CustomerController extends Controller
 
         $this->applyPriceFilter($query, $request);
 
-        $hoaTuois = $query->orderBy('ma_san_pham', 'desc')->get();
+        // Sắp xếp: Ưu tiên còn hàng lên đầu -> Bán chạy nhất (da_ban desc) -> Mới nhất
+        $hoaTuois = $query->get()->sortBy([
+            fn ($a, $b) => ($b->chiTietNhaps->sum('so_luong_con_lai') > 0 ? 1 : 0) <=> ($a->chiTietNhaps->sum('so_luong_con_lai') > 0 ? 1 : 0),
+            fn ($a, $b) => ($b->da_ban ?? 0) <=> ($a->da_ban ?? 0),
+            fn ($a, $b) => $b->ma_san_pham <=> $a->ma_san_pham,
+        ])->values();
 
         // Categories cho filter sidebar — cũng phải loại bỏ nguyên vật liệu + phụ kiện + quà tặng.
         $categories = SanPham::where('trang_thai', 'DANG_BAN')
@@ -134,6 +161,7 @@ class CustomerController extends Controller
 
         $query = SanPham::where('trang_thai', 'DANG_BAN')
             ->where('loai_san_pham', 'PHU_KIEN')
+            ->withSum(['chiTietHoaDons as da_ban' => fn($q) => $q->whereHas('hoaDon', fn($h) => $h->whereNotIn('trang_thai', ['CANCELLED', 'DA_HUY']))], 'so_luong')
             ->with(['chiTietNhaps' => function ($q) {
                 $q->where('so_luong_con_lai', '>', 0)
                     ->whereHas('phieuNhap', fn($q2) => $q2->where('trang_thai', 'CONFIRMED'))
@@ -142,7 +170,12 @@ class CustomerController extends Controller
 
         $this->applyPriceFilter($query, $request);
 
-        $phuKiens = $query->orderBy('ma_san_pham', 'desc')->get();
+        // Sắp xếp: Ưu tiên còn hàng lên đầu -> Bán chạy nhất (da_ban desc) -> Mới nhất
+        $phuKiens = $query->get()->sortBy([
+            fn ($a, $b) => ($b->chiTietNhaps->sum('so_luong_con_lai') > 0 ? 1 : 0) <=> ($a->chiTietNhaps->sum('so_luong_con_lai') > 0 ? 1 : 0),
+            fn ($a, $b) => ($b->da_ban ?? 0) <=> ($a->da_ban ?? 0),
+            fn ($a, $b) => $b->ma_san_pham <=> $a->ma_san_pham,
+        ])->values();
 
         return view('customer.PhuKien', compact(
             'user',
@@ -156,6 +189,7 @@ class CustomerController extends Controller
 
         $query = SanPham::where('trang_thai', 'DANG_BAN')
             ->where('loai_san_pham', 'QUA_TANG')
+            ->withSum(['chiTietHoaDons as da_ban' => fn($q) => $q->whereHas('hoaDon', fn($h) => $h->whereNotIn('trang_thai', ['CANCELLED', 'DA_HUY']))], 'so_luong')
             ->with(['chiTietNhaps' => function ($q) {
                 $q->where('so_luong_con_lai', '>', 0)
                     ->whereHas('phieuNhap', fn($q2) => $q2->where('trang_thai', 'CONFIRMED'))
@@ -164,7 +198,12 @@ class CustomerController extends Controller
 
         $this->applyPriceFilter($query, $request);
 
-        $quaTangs = $query->orderBy('ma_san_pham', 'desc')->get();
+        // Sắp xếp: Ưu tiên còn hàng lên đầu -> Bán chạy nhất (da_ban desc) -> Mới nhất
+        $quaTangs = $query->get()->sortBy([
+            fn ($a, $b) => ($b->chiTietNhaps->sum('so_luong_con_lai') > 0 ? 1 : 0) <=> ($a->chiTietNhaps->sum('so_luong_con_lai') > 0 ? 1 : 0),
+            fn ($a, $b) => ($b->da_ban ?? 0) <=> ($a->da_ban ?? 0),
+            fn ($a, $b) => $b->ma_san_pham <=> $a->ma_san_pham,
+        ])->values();
 
         return view('customer.QuaTang', compact(
             'user',
