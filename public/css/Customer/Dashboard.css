@@ -94,21 +94,21 @@ header {
 
 .logo-text span:first-child {
     font-family: 'Be Vietnam Pro', sans-serif;
-    font-size: 1.45rem;
+    font-size: 1.3rem;
     color: var(--primary);
     display: block;
 }
 
 .logo-text span:last-child {
-    font-size: 0.68rem;
+    font-size: 0.64rem;
     color: var(--gray);
-    letter-spacing: .06em;
+    letter-spacing: .05em;
     text-transform: uppercase;
 }
 
 .search-wrap {
     flex: 1;
-    max-width: 520px;
+    max-width: 460px;
     display: flex;
     align-items: center;
     background: #f3f4f6;
@@ -127,8 +127,8 @@ header {
     flex: 1;
     border: none;
     background: transparent;
-    padding: 10px 18px;
-    font-size: 0.9rem;
+    padding: 7px 16px;
+    font-size: 0.86rem;
     font-family: inherit;
     outline: none;
 }
@@ -137,8 +137,8 @@ header {
     background: var(--primary);
     border: none;
     color: #fff;
-    padding: 10px 22px;
-    font-size: 0.88rem;
+    padding: 7px 18px;
+    font-size: 0.84rem;
     font-family: inherit;
     font-weight: 600;
     cursor: pointer;
@@ -918,13 +918,13 @@ footer {
     background: #fdf2f8;
     color: #be185d;
 }.logo-img {
-    width: 46px;
-    height: 46px;
+    width: 40px;
+    height: 40px;
     object-fit: contain;
 }
 
 .customer-header {
-    padding: 18px 48px;
+    padding: 10px 40px;
 }
 
 .cat-nav {
@@ -1743,22 +1743,22 @@ footer {
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .header-action-item {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 44px;
+    height: 38px;
 }
 
 /* Đường phân cách mảnh, căn giữa hoàn hảo */
 .header-action-divider {
     width: 1px;
-    height: 24px;
+    height: 20px;
     background: #e5e7eb;
-    margin: 0 4px;
+    margin: 0 3px;
     flex-shrink: 0;
     align-self: center;
 }
@@ -1768,8 +1768,8 @@ footer {
 .notification-item,
 .cart-icon-btn {
     position: relative;
-    width: 42px;
-    height: 42px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     background: transparent;
     border: none;
@@ -1788,7 +1788,7 @@ footer {
 .header-action-btn i,
 .notification-item i,
 .cart-icon-btn i {
-    font-size: 20px;
+    font-size: 17px;
     line-height: 1;
     color: #374151;
     transition: color 0.2s ease, transform 0.2s ease;
@@ -1897,9 +1897,9 @@ footer {
 .user-profile-link {
     display: flex;
     align-items: center;
-    gap: 10px;
-    height: 42px;
-    padding: 0 10px 0 4px;
+    gap: 8px;
+    height: 36px;
+    padding: 0 8px 0 2px;
     border-radius: 999px;
     text-decoration: none;
     background: transparent;
@@ -1914,8 +1914,8 @@ footer {
 
 .header-user-avatar,
 .user-avatar {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     background: #fdf2f8;
     color: #e8436a;
@@ -1923,7 +1923,7 @@ footer {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 15px;
+    font-size: 13px;
     flex-shrink: 0;
     transition: transform 0.2s ease;
 }
@@ -1939,23 +1939,23 @@ footer {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    line-height: 1.25;
+    line-height: 1.2;
     text-align: left;
 }
 
 .header-user-greeting,
 .user-info span {
-    font-size: 11.5px;
+    font-size: 10.5px;
     color: #6b7280;
     font-weight: 400;
 }
 
 .header-user-name,
 .user-info strong {
-    font-size: 14px;
+    font-size: 13px;
     color: #111827;
     font-weight: 700;
-    max-width: 130px;
+    max-width: 120px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1976,19 +1976,19 @@ footer {
 
 .header-logout-btn,
 .logout-btn {
-    height: 38px;
-    padding: 0 18px;
+    height: 34px;
+    padding: 0 15px;
     border-radius: 999px;
     background: linear-gradient(135deg, #e11d48, #be185d);
     color: #ffffff;
-    font-size: 13.5px;
+    font-size: 12.5px;
     font-weight: 600;
     border: none;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 7px;
+    gap: 6px;
     box-shadow: 0 2px 8px rgba(225, 29, 72, 0.22);
     transition: all 0.2s ease;
     font-family: inherit;

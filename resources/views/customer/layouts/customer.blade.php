@@ -84,6 +84,7 @@
             box-shadow: none;
             outline: none;
             transition: color .2s ease;
+            text-decoration: none;
         }
 
         #catNav .nav-dropdown .dropdown-toggle .nav-chevron {
@@ -325,14 +326,12 @@
     </a>
 
     <div class="nav-dropdown" id="navDropdownBoHoa">
-        <button type="button"
-                id="btnMuaBoHoa"
-                class="cat-link dropdown-toggle {{ request()->routeIs('customer.bo-hoa.*','customer.mau-bo-hoa.*','customer.bo-hoa-tu-tao.*','customer.bo-hoa.gio.*') ? 'active' : '' }}"
-                aria-expanded="false"
-                aria-haspopup="true">
+        <a href="{{ route('customer.bo-hoa.he-thong') }}"
+           id="btnMuaBoHoa"
+           class="cat-link dropdown-toggle {{ request()->routeIs('customer.bo-hoa.*','customer.mau-bo-hoa.*','customer.bo-hoa-tu-tao.*','customer.bo-hoa.gio.*') ? 'active' : '' }}">
             <span>MUA BÓ HOA</span>
             <i class="fa-solid fa-chevron-down nav-chevron"></i>
-        </button>
+        </a>
         <div class="dropdown-menu" id="dropdownMenuBoHoa">
             <a href="{{ route('customer.bo-hoa.he-thong') }}" class="dropdown-cat">💐 Bó hoa đề xuất</a>
             <a href="{{ route('customer.bo-hoa.tu-tao') }}" class="dropdown-cat">✿ Tự tạo bó hoa</a>
@@ -425,11 +424,12 @@
         <div class="rose-footer-col">
             <h4>DANH MỤC</h4>
             <a href="{{ route('customer.dashboard') }}">Trang chủ</a>
+            <a href="{{ route('customer.bo-hoa.he-thong') }}">Mua bó hoa</a>
             <a href="{{ route('customer.hoa-tuoi') }}">Hoa tươi</a>
             <a href="{{ route('customer.phu-kien') }}">Phụ kiện</a>
             <a href="{{ route('customer.tin-tuc') }}">Tin tức</a>
-            <a href="#">Giới thiệu</a>
-            <a href="#">Liên hệ</a>
+            <a href="{{ route('customer.gioi-thieu') }}">Giới thiệu</a>
+            <a href="{{ route('customer.lien-he') }}">Liên hệ</a>
         </div>
 
         <div class="rose-footer-col">
@@ -602,29 +602,12 @@
         .catch(() => {});
     })();
     @endauth
-    // ✅ Menu dropdown "MUA BÓ HOA" - Cố định khi bấm, êm mượt khi rê chuột
+    // ✅ Menu dropdown "MUA BÓ HOA" - Rê chuột hiển thị tùy chọn, bấm trực tiếp trỏ đến trang Bó hoa đề xuất
     (function initNavDropdownBoHoa() {
         const navDropdown = document.getElementById('navDropdownBoHoa');
-        const btnMuaBoHoa = document.getElementById('btnMuaBoHoa');
-        if (!navDropdown || !btnMuaBoHoa) return;
+        if (!navDropdown) return;
 
         let hoverTimer = null;
-
-        // Bấm vào nút: Cố định (pin open) hoặc đóng lại
-        btnMuaBoHoa.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const isPinned = navDropdown.classList.contains('show');
-            if (isPinned) {
-                navDropdown.classList.remove('show');
-                navDropdown.classList.remove('is-open');
-                btnMuaBoHoa.setAttribute('aria-expanded', 'false');
-            } else {
-                navDropdown.classList.add('show');
-                navDropdown.classList.add('is-open');
-                btnMuaBoHoa.setAttribute('aria-expanded', 'true');
-            }
-        });
 
         // Rê chuột vào: hiển thị ngay và hủy hẹn giờ đóng
         navDropdown.addEventListener('mouseenter', function() {
@@ -635,30 +618,17 @@
             navDropdown.classList.add('is-open');
         });
 
-        // Rê chuột ra: nếu chưa bấm cố định thì chờ 250ms mới đóng (tránh nhạy/chớp giật)
+        // Rê chuột ra: chờ 200ms mới đóng (tránh nhạy/chớp giật)
         navDropdown.addEventListener('mouseleave', function() {
-            if (!navDropdown.classList.contains('show')) {
-                hoverTimer = setTimeout(function() {
-                    navDropdown.classList.remove('is-open');
-                }, 250);
-            }
-        });
-
-        // Click ra ngoài bất kỳ đâu: đóng menu đã cố định
-        document.addEventListener('click', function(e) {
-            if (!navDropdown.contains(e.target)) {
-                navDropdown.classList.remove('show');
+            hoverTimer = setTimeout(function() {
                 navDropdown.classList.remove('is-open');
-                btnMuaBoHoa.setAttribute('aria-expanded', 'false');
-            }
+            }, 200);
         });
 
-        // Khi bấm vào 1 trong các mục thì đóng menu và chuyển trang
+        // Khi bấm vào 1 trong các mục dropdown thì đóng menu
         navDropdown.querySelectorAll('.dropdown-menu a').forEach(function(link) {
             link.addEventListener('click', function() {
-                navDropdown.classList.remove('show');
                 navDropdown.classList.remove('is-open');
-                btnMuaBoHoa.setAttribute('aria-expanded', 'false');
             });
         });
     })();
