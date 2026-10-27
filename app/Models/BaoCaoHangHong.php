@@ -22,8 +22,13 @@ class BaoCaoHangHong extends Model
     protected $fillable = [
         'ma_san_pham',
         'ma_chi_tiet_nhap',
+        'ma_bo_hoa',
         'ma_nhan_vien',
         'so_luong_hong',
+        'gia_tri_thiet_hai',
+        'nguon_hong',
+        'ma_flash_sale',
+        'ma_hoa_don',
         'ly_do',
         'ghi_chu',
         'thoi_gian_bao_cao',
@@ -32,6 +37,7 @@ class BaoCaoHangHong extends Model
     protected $casts = [
         'thoi_gian_bao_cao' => 'datetime',
         'so_luong_hong'     => 'integer',
+        'gia_tri_thiet_hai' => 'decimal:2',
     ];
 
     public function sanPham()
@@ -40,6 +46,15 @@ class BaoCaoHangHong extends Model
             SanPham::class,
             'ma_san_pham',
             'ma_san_pham'
+        );
+    }
+
+    public function boHoa()
+    {
+        return $this->belongsTo(
+            BoHoa::class,
+            'ma_bo_hoa',
+            'ma_bo_hoa'
         );
     }
 
@@ -58,6 +73,24 @@ class BaoCaoHangHong extends Model
             ChiTietNhap::class,
             'ma_chi_tiet_nhap',
             'ma_chi_tiet_nhap'
+        );
+    }
+
+    public function flashSale()
+    {
+        return $this->belongsTo(
+            FlashSale::class,
+            'ma_flash_sale',
+            'ma_flash_sale'
+        );
+    }
+
+    public function hoaDon()
+    {
+        return $this->belongsTo(
+            HoaDon::class,
+            'ma_hoa_don',
+            'ma_hoa_don'
         );
     }
 }

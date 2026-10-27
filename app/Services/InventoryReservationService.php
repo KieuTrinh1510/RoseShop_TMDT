@@ -208,47 +208,149 @@ class InventoryReservationService
 
         $allocatedRows = [];
 
-        // Hàng Flash Sale đã tách khỏi tồn lô thường từ lúc hàng hoàn được kiểm tra.
-        // Chỉ giữ/ghi nhận số lượng Flash Sale, tuyệt đối không trừ tồn lô thêm lần nữa.
-        // Hỗ trợ CẢ 2 loại: sản phẩm lẻ (có ma_san_pham) và bó hoa (có ma_bo_hoa).
+        // Hàng Flash Sale: KHÔNG phải kho vật lý riêng mà là chương trình giá/quota gắn lên tồn kho vật lý.
+        // Tuyệt đối KHÔNG trừ on-hand khi tạo flash sale.
+        // Khi đặt hàng: kiểm tra quota khả dụng và giữ tồn kho vật lý (RESERVED).
         foreach (collect($gioHang)->filter(fn ($row) => !empty($row['ma_flash_sale'])) as $row) {
             $fs = FlashSale::whereKey($row['ma_flash_sale'])->lockForUpdate()->firstOrFail();
 
-            $qty    = (int) $row['so_luong'];
-            $conLai = (int) $fs->so_luong - (int) $fs->so_luong_da_ban;
-
-            if ($fs->trang_thai !== 'DANG_BAN' || $qty < 1 || $qty > $conLai) {
-                self::loi('Flash Sale không còn đủ số lượng để đặt hàng.');
+            $qty = (int) $row['so_luong'];
+            if (!$fs->isCurrentlyActive()) {
+                self::loi('Chương trình Flash Sale đã kết thúc hoặc không còn khả dụng.');
             }
 
-            $fs->increment('so_luong_da_ban', $qty);
-            if ((int) $fs->fresh()->so_luong_da_ban >= (int) $fs->so_luong) {
-                $fs->update(['trang_thai' => 'HET_HANG']);
+            // Quota khả dụng = quota - đã bán (CONSUMED) - đang giữ (RESERVED)
+            $reservedFs = (int) InventoryReservation::where('ma_flash_sale', $fs->ma_flash_sale)
+                ->where('trang_thai', InventoryReservation::STATUS_RESERVED)
+                ->lockForUpdate()
+                ->sum('so_luong');
+            $conLaiQuota = max(0, (int) $fs->so_luong - (int) $fs->so_luong_da_ban - $reservedFs);
+
+            if ($qty < 1 || $qty > $conLaiQuota) {
+                self::loi("Flash Sale không còn đủ quota khả dụng (cần {$qty}, còn {$conLaiQuota}).");
             }
 
-            // Phân biệt bó hoa / sản phẩm lẻ để ghi đúng cột
+            // Phân biệt bó hoa / sản phẩm lẻ để kiểm tra và giữ tồn kho vật lý
             $laBoHoa = !empty($fs->ma_bo_hoa);
-            $maSP    = $laBoHoa ? null : (int) $fs->ma_san_pham;
-            $maBo    = $laBoHoa ? $fs->ma_bo_hoa : null;
+            if ($laBoHoa) {
+                $bo = BoHoa::whereKey($fs->ma_bo_hoa)->lockForUpdate()->firstOrFail();
+                $availBo = self::getAvailableForBouquet($bo);
+                if ($availBo < $qty) {
+                    self::loi("Bó hoa Flash Sale không đủ tồn kho vật lý khả dụng.");
+                }
 
-            InventoryReservation::create([
-                'ma_hoa_don'       => $hoaDon->ma_hoa_don,
-                'ma_san_pham'      => $maSP,
-                'ma_chi_tiet_nhap' => null,
-                'ma_bo_hoa'        => $maBo,
-                'ma_flash_sale'    => $fs->ma_flash_sale,
-                'so_luong'         => $qty,
-                'trang_thai'       => InventoryReservation::STATUS_RESERVED,
-            ]);
+                InventoryReservation::create([
+                    'ma_hoa_don'       => $hoaDon->ma_hoa_don,
+                    'ma_san_pham'      => null,
+                    'ma_chi_tiet_nhap' => null,
+                    'ma_bo_hoa'        => $bo->ma_bo_hoa,
+                    'ma_flash_sale'    => $fs->ma_flash_sale,
+                    'so_luong'         => $qty,
+                    'trang_thai'       => InventoryReservation::STATUS_RESERVED,
+                ]);
 
-            $allocatedRows[] = [
-                'ma_san_pham'       => $maSP,
-                'ma_bo_hoa'         => $maBo,           // ← THÊM vào output
-                'ma_chi_tiet_nhap'  => null,
-                'so_luong'          => $qty,
-                'gia_nhap_snapshot' => (float) ($row['gia_nhap'] ?? 0),
-                'gia_ban_snapshot'  => (float) $fs->gia_flash_sale,
-            ];
+                $allocatedRows[] = [
+                    'ma_san_pham'       => null,
+                    'ma_bo_hoa'         => $bo->ma_bo_hoa,
+                    'ma_chi_tiet_nhap'  => null,
+                    'so_luong'          => $qty,
+                    'gia_nhap_snapshot' => (float) ($bo->gia_von ?? 0),
+                    'gia_ban_snapshot'  => (float) $fs->gia_flash_sale,
+                ];
+            } else {
+                $sp = SanPham::whereKey($fs->ma_san_pham)->lockForUpdate()->firstOrFail();
+                $availSp = self::getAvailableForIngredient($sp->ma_san_pham);
+                if ($availSp < $qty) {
+                    self::loi("Sản phẩm Flash Sale \"{$sp->ten_san_pham}\" không đủ tồn kho vật lý (cần {$qty}, còn {$availSp}).");
+                }
+
+                // Nếu Flash Sale gắn với lô cụ thể
+                $targetLot = null;
+                if (!empty($fs->ma_chi_tiet_nhap)) {
+                    $lotCandidate = ChiTietNhap::whereKey($fs->ma_chi_tiet_nhap)->lockForUpdate()->first();
+                    if ($lotCandidate) {
+                        $resLot = (int) InventoryReservation::where('ma_chi_tiet_nhap', $lotCandidate->ma_chi_tiet_nhap)
+                            ->where('trang_thai', InventoryReservation::STATUS_RESERVED)
+                            ->lockForUpdate()
+                            ->sum('so_luong');
+                        if ((int) $lotCandidate->so_luong_con_lai - $resLot >= $qty) {
+                            $targetLot = $lotCandidate;
+                        }
+                    }
+                }
+
+                if ($targetLot) {
+                    InventoryReservation::create([
+                        'ma_hoa_don'       => $hoaDon->ma_hoa_don,
+                        'ma_san_pham'      => $sp->ma_san_pham,
+                        'ma_chi_tiet_nhap' => $targetLot->ma_chi_tiet_nhap,
+                        'ma_bo_hoa'        => null,
+                        'ma_flash_sale'    => $fs->ma_flash_sale,
+                        'so_luong'         => $qty,
+                        'trang_thai'       => InventoryReservation::STATUS_RESERVED,
+                    ]);
+
+                    $allocatedRows[] = [
+                        'ma_san_pham'       => $sp->ma_san_pham,
+                        'ma_bo_hoa'         => null,
+                        'ma_chi_tiet_nhap'  => $targetLot->ma_chi_tiet_nhap,
+                        'so_luong'          => $qty,
+                        'gia_nhap_snapshot' => (float) $targetLot->gia_nhap,
+                        'gia_ban_snapshot'  => (float) $fs->gia_flash_sale,
+                    ];
+                } else {
+                    // Phân bổ qua các lô khả dụng theo FIFO
+                    $lotsQuery = ChiTietNhap::with('phieuNhap')
+                        ->where('ma_san_pham', $sp->ma_san_pham)
+                        ->where('so_luong_con_lai', '>', 0)
+                        ->whereHas('phieuNhap', fn ($q) => $q->where('trang_thai', 'CONFIRMED'));
+                    if (\Illuminate\Support\Facades\Schema::hasColumn('chi_tiet_nhap', 'ngay_het_han')) {
+                        $lotsQuery->where(function ($q) {
+                            $q->whereNull('ngay_het_han')
+                              ->orWhere('ngay_het_han', '>=', now()->toDateString());
+                        });
+                    }
+                    $lots = $lotsQuery->orderBy('ma_chi_tiet_nhap')->lockForUpdate()->get()
+                        ->sortBy(fn ($l) => [$l->phieuNhap->ngay_nhap?->timestamp ?? 0, $l->ma_chi_tiet_nhap]);
+
+                    $remain = $qty;
+                    foreach ($lots as $lot) {
+                        $resLot = (int) InventoryReservation::where('ma_chi_tiet_nhap', $lot->ma_chi_tiet_nhap)
+                            ->where('trang_thai', InventoryReservation::STATUS_RESERVED)
+                            ->lockForUpdate()
+                            ->sum('so_luong');
+                        $availInLot = max(0, (int) $lot->so_luong_con_lai - $resLot);
+                        if ($availInLot <= 0) continue;
+
+                        $take = min($remain, $availInLot);
+                        InventoryReservation::create([
+                            'ma_hoa_don'       => $hoaDon->ma_hoa_don,
+                            'ma_san_pham'      => $sp->ma_san_pham,
+                            'ma_chi_tiet_nhap' => $lot->ma_chi_tiet_nhap,
+                            'ma_bo_hoa'        => null,
+                            'ma_flash_sale'    => $fs->ma_flash_sale,
+                            'so_luong'         => $take,
+                            'trang_thai'       => InventoryReservation::STATUS_RESERVED,
+                        ]);
+
+                        $allocatedRows[] = [
+                            'ma_san_pham'       => $sp->ma_san_pham,
+                            'ma_bo_hoa'         => null,
+                            'ma_chi_tiet_nhap'  => $lot->ma_chi_tiet_nhap,
+                            'so_luong'          => $take,
+                            'gia_nhap_snapshot' => (float) $lot->gia_nhap,
+                            'gia_ban_snapshot'  => (float) $fs->gia_flash_sale,
+                        ];
+
+                        $remain -= $take;
+                        if ($remain <= 0) break;
+                    }
+
+                    if ($remain > 0) {
+                        self::loi("Các lô hàng của \"{$sp->ten_san_pham}\" không đủ tồn kho khả dụng để giữ chỗ Flash Sale.");
+                    }
+                }
+            }
         }
 
         foreach (collect($gioHang)->reject(fn ($row) => !empty($row['ma_flash_sale']))->sortBy('ma_san_pham')->groupBy('ma_san_pham') as $spId => $items) {
@@ -360,7 +462,7 @@ class InventoryReservationService
      * Giữ tồn kho cho BÓ HOA THÀNH PHẨM ĐÃ CẮM SẴN (BoHoa HE_THONG có sẵn).
      * Tuyệt đối KHÔNG reserve hay trừ BOM nguyên vật liệu lần nữa!
      */
-    public static function reserveReadyBouquet(HoaDon $hoaDon, BoHoa $boHoa): InventoryReservation
+    public static function reserveReadyBouquet(HoaDon $hoaDon, BoHoa $boHoa, ?int $maFlashSale = null): InventoryReservation
     {
         if (DB::transactionLevel() === 0) {
             throw new \LogicException('Giữ tồn kho phải chạy trong DB Transaction.');
@@ -378,12 +480,18 @@ class InventoryReservationService
             self::loi("Bó hoa \"{$locked->ten_bo_hoa}\" (#{$locked->ma_bo_hoa}) đã được giữ cho một đơn hàng khác.");
         }
 
+        // Tự động tìm Flash Sale nếu có và hợp lệ
+        if (!$maFlashSale && $locked->active_flash_sale && $locked->active_flash_sale->available_quota > 0) {
+            $maFlashSale = $locked->active_flash_sale->ma_flash_sale;
+        }
+
         // Tạo reservation cho chính bó hoa thành phẩm
         $res = InventoryReservation::create([
             'ma_hoa_don'       => $hoaDon->ma_hoa_don,
             'ma_san_pham'      => null,
             'ma_chi_tiet_nhap' => null,
             'ma_bo_hoa'        => $locked->ma_bo_hoa,
+            'ma_flash_sale'    => $maFlashSale,
             'so_luong'         => 1,
             'trang_thai'       => InventoryReservation::STATUS_RESERVED,
         ]);
@@ -566,7 +674,18 @@ class InventoryReservationService
                 }
             }
 
-            // 4. Chuyển trạng thái reservation sang CONSUMED
+            // 4. Nếu là đơn Flash Sale: ghi nhận số lượng đã bán (CONSUMED) vào chương trình sale
+            if ($res->ma_flash_sale) {
+                $fs = FlashSale::whereKey($res->ma_flash_sale)->lockForUpdate()->first();
+                if ($fs) {
+                    $fs->increment('so_luong_da_ban', $res->so_luong);
+                    if ((int) $fs->fresh()->so_luong_da_ban >= (int) $fs->so_luong) {
+                        $fs->update(['trang_thai' => 'HET_HANG']);
+                    }
+                }
+            }
+
+            // 5. Chuyển trạng thái reservation sang CONSUMED
             $res->update(['trang_thai' => InventoryReservation::STATUS_CONSUMED]);
         }
     }
@@ -594,14 +713,12 @@ class InventoryReservationService
         }
 
         foreach ($reservations as $res) {
-            // Trả lại lượng Flash Sale đã giữ khi đơn bị hủy trước khi giao.
+            // Flash Sale: Quota khả dụng tự động hồi phục khi reservation chuyển sang RELEASED.
+            // Nếu chương trình trước đó bị HET_HANG mà đã_bán < tổng quota, mở lại DANG_BAN.
             if ($res->ma_flash_sale) {
                 $fs = FlashSale::whereKey($res->ma_flash_sale)->lockForUpdate()->first();
-                if ($fs) {
-                    $fs->decrement('so_luong_da_ban', $res->so_luong);
-                    if ($fs->trang_thai === 'HET_HANG' && (int) $fs->fresh()->so_luong_da_ban < (int) $fs->so_luong) {
-                        $fs->update(['trang_thai' => 'DANG_BAN']);
-                    }
+                if ($fs && $fs->trang_thai === 'HET_HANG' && (int) $fs->so_luong_da_ban < (int) $fs->so_luong) {
+                    $fs->update(['trang_thai' => 'DANG_BAN']);
                 }
             }
             // Nếu là bó hoa có sẵn: trả bó hoa về trạng thái sẵn sàng trong kho

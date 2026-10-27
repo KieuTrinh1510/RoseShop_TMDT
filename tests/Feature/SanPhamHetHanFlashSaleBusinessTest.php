@@ -175,7 +175,6 @@ class SanPhamHetHanFlashSaleBusinessTest extends TestCase
             'ti_le_giam' => 30,
             'bat_dau' => now()->format('Y-m-d H:i'),
             'ket_thuc' => now()->addHours(6)->format('Y-m-d H:i'),
-            
             'ghi_chu' => 'Đưa Flash Sale 30%',
         ]);
 

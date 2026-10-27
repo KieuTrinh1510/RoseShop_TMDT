@@ -72,10 +72,28 @@
                             {{ $sp->mo_ta ?? 'Chưa có mô tả' }}
                         </p>
 
-                        <p class="flower-price">
-                            {{ $gia ? number_format($gia, 0, ',', '.') . 'đ' : 'Liên hệ' }}
-                            <span>/ sản phẩm</span>
-                        </p>
+                        <div class="flower-price">
+                            @php $fs = $sp->active_flash_sale; @endphp
+                            @if($fs && $fs->available_quota > 0)
+                                <div style="display:flex; flex-direction:column; gap:2px;">
+                                    <div style="display:flex; align-items:center; gap:6px;">
+                                        <span style="text-decoration:line-through; color:#98A2B3; font-size:12px;">
+                                            {{ number_format($gia, 0, ',', '.') }}đ
+                                        </span>
+                                        <span style="background:#FEE4E2; color:#D92D20; font-size:10.5px; font-weight:700; padding:1px 5px; border-radius:999px;">
+                                            -{{ $fs->phan_tram_giam }}%
+                                        </span>
+                                    </div>
+                                    <div style="color:#EC3D8F; font-weight:700; font-size:15px;">
+                                        {{ number_format($fs->gia_flash_sale, 0, ',', '.') }}đ
+                                        <span style="font-size:12px; font-weight:normal; color:#6b7280;">/ sản phẩm</span>
+                                    </div>
+                                </div>
+                            @else
+                                {{ $gia ? number_format($gia, 0, ',', '.') . 'đ' : 'Liên hệ' }}
+                                <span>/ sản phẩm</span>
+                            @endif
+                        </div>
 
                         <div class="home-card-bottom">
                             <span>Sản phẩm: {{ $tonKho }}</span>

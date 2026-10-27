@@ -100,12 +100,44 @@ class CustomerController extends Controller
             ->take(6)
             ->values();
 
+        // Section Flash Sale trang chủ:
+        // Lấy các flash sale đang active, thời gian hiện tại nằm trong bat_dau -> ket_thuc,
+        // chưa hết quota và sản phẩm / bó hoa có tồn kho vật lý khả dụng > 0.
+        $activeFlashSales = \App\Models\FlashSale::with(['sanPham.chiTietNhaps.phieuNhap', 'boHoa.mauBoHoa'])
+            ->where('trang_thai', 'DANG_BAN')
+            ->where(function ($q) {
+                $q->whereNull('bat_dau')->orWhere('bat_dau', '<=', now());
+            })
+            ->where(function ($q) {
+                $q->whereNull('ket_thuc')->orWhere('ket_thuc', '>=', now());
+            })
+            ->whereColumn('so_luong', '>', 'so_luong_da_ban')
+            ->orderBy('ket_thuc', 'asc')
+            ->get()
+            ->filter(function ($fs) {
+                if ($fs->available_quota <= 0) {
+                    return false;
+                }
+                if ($fs->ma_bo_hoa && $fs->boHoa) {
+                    return \App\Services\InventoryReservationService::getAvailableForBouquet($fs->boHoa) > 0;
+                }
+                if ($fs->ma_san_pham && $fs->sanPham) {
+                    return \App\Services\InventoryReservationService::getAvailableForIngredient($fs->ma_san_pham) > 0;
+                }
+                return false;
+            })
+            ->values();
+
+        $nearestFlashSaleEnd = $activeFlashSales->min('ket_thuc');
+
         return view('customer.Dashboard', compact(
             'user',
             'sanPhams',
             'hoaTuoiBanChay',
             'phuKienNoiBat',
-            'quaTangNoiBat'
+            'quaTangNoiBat',
+            'activeFlashSales',
+            'nearestFlashSaleEnd'
         ));
     }
 

@@ -33,11 +33,17 @@ class ChiTietSanPhamController extends Controller
             ->limit(6)
             ->get();
 
+        $activeFlashSale = $sanPham->active_flash_sale;
+        if ($activeFlashSale && $activeFlashSale->available_quota <= 0) {
+            $activeFlashSale = null;
+        }
+
         return view('customer.ChiTietSanPham', [
             'type' => 'san-pham',
             'sanPham' => $sanPham,
             'user' => $user,
             'sanPhamLienQuan' => $sanPhamLienQuan,
+            'activeFlashSale' => $activeFlashSale,
         ]);
     }
 
@@ -61,8 +67,16 @@ class ChiTietSanPhamController extends Controller
             ->orderBy('ma_bo_hoa')
             ->first();
 
+        $activeFlashSale = null;
         if ($readyBo) {
-            $giaMoiBo = (float) $readyBo->gia_ban;
+            $fs = $readyBo->active_flash_sale;
+            if ($fs && $fs->available_quota > 0) {
+                $activeFlashSale = $fs;
+            }
+        }
+
+        if ($readyBo) {
+            $giaMoiBo = $activeFlashSale ? (float) $activeFlashSale->gia_flash_sale : (float) $readyBo->gia_ban;
             $quote = [
                 'tien_nguyen_lieu' => (float) ($readyBo->gia_von ?? round($giaMoiBo / 1.5, 2)),
                 'phu_phi'          => ['size' => 0, 'kieu_dang' => 0, 'tong' => 0],
@@ -94,6 +108,8 @@ class ChiTietSanPhamController extends Controller
             'boHoaMau' => $boHoaMau,
             'quote' => $quote,
             'dsThiep' => $this->danhSachThiep(),
+            'activeFlashSale' => $activeFlashSale,
+            'readyBo' => $readyBo,
         ]);
     }
 

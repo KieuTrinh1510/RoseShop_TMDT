@@ -44,7 +44,29 @@
         <p class="pd-subtitle">{{ $moTaNgan !== '' ? $moTaNgan : ($style . ' · Size ' . $boHoaMau->size) }}</p>
 
         <div class="pd-price-row">
-            <p class="pd-price price-val">{{ number_format($quote['gia_moi_bo'], 0, ',', '.') }}₫ / bó</p>
+            @if(isset($activeFlashSale) && $activeFlashSale)
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                        <span style="text-decoration:line-through; color:#98A2B3; font-size:16px;">
+                            {{ number_format($readyBo->gia_ban ?? $quote['gia_moi_bo'], 0, ',', '.') }}₫
+                        </span>
+                        <p class="pd-price price-val" style="color:#EC3D8F; font-size:24px; font-weight:700; margin:0;">
+                            {{ number_format($activeFlashSale->gia_flash_sale, 0, ',', '.') }}₫
+                            <span style="font-size:14px; font-weight:normal; color:#667085;">/ bó</span>
+                        </p>
+                        <span style="background:#FEE4E2; color:#D92D20; font-size:12px; font-weight:700; padding:2px 8px; border-radius:999px;">
+                            -{{ $activeFlashSale->phan_tram_giam }}%
+                        </span>
+                    </div>
+                    <div style="font-size:13px; color:#BE185D; display:flex; align-items:center; gap:6px;">
+                        <i class="fa-solid fa-bolt" style="color:#EC3D8F;"></i>
+                        <span>Flash Sale kết thúc sau: <strong class="fs-countdown" data-end="{{ $activeFlashSale->ket_thuc ? $activeFlashSale->ket_thuc->toISOString() : '' }}">--:--:--</strong></span>
+                        <span style="color:#667085;">· Còn {{ $activeFlashSale->available_quota }} suất sale</span>
+                    </div>
+                </div>
+            @else
+                <p class="pd-price price-val">{{ number_format($quote['gia_moi_bo'], 0, ',', '.') }}₫ / bó</p>
+            @endif
             <span class="pd-badge pd-badge--ok"><i class="fa-solid fa-leaf"></i> Đang bán</span>
         </div>
 
@@ -403,7 +425,8 @@
     // Dữ liệu giá / lô đại diện (giữ nguyên cách tính cũ)
     $loGia        = $sanPham->chiTietNhaps ?? collect();
     $loGiaConHang = $loGia->where('so_luong_con_lai', '>', 0);
-    $giaApDung    = $sanPham->gia_ban_hien_tai;
+    $giaGoc       = $sanPham->gia_ban_hien_tai;
+    $giaApDung    = (isset($activeFlashSale) && $activeFlashSale) ? (float) $activeFlashSale->gia_flash_sale : $giaGoc;
     $tongTon      = $loGiaConHang->sum('so_luong_con_lai');
     $loDaiDien    = $loGiaConHang->sortBy('ma_chi_tiet_nhap')->first();
     $sanSangMua   = $loDaiDien && $tongTon > 0;
@@ -470,10 +493,32 @@
         {{-- Giá + tình trạng kho --}}
         <div class="pd-price-row">
             @if($sanSangMua)
-                <p class="pd-price">
-                    {{ $giaApDung ? number_format($giaApDung, 0, ',', '.') . '₫' : 'Liên hệ' }}
-                    <span>/ {{ $donVi }}</span>
-                </p>
+                @if(isset($activeFlashSale) && $activeFlashSale)
+                    <div style="display:flex; flex-direction:column; gap:4px;">
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <span style="text-decoration:line-through; color:#98A2B3; font-size:16px;">
+                                {{ number_format($giaGoc, 0, ',', '.') }}₫
+                            </span>
+                            <p class="pd-price" style="color:#EC3D8F; font-size:24px; font-weight:700; margin:0;">
+                                {{ number_format($activeFlashSale->gia_flash_sale, 0, ',', '.') }}₫
+                                <span style="font-size:14px; font-weight:normal; color:#667085;">/ {{ $donVi }}</span>
+                            </p>
+                            <span style="background:#FEE4E2; color:#D92D20; font-size:12px; font-weight:700; padding:2px 8px; border-radius:999px;">
+                                -{{ $activeFlashSale->phan_tram_giam }}%
+                            </span>
+                        </div>
+                        <div style="font-size:13px; color:#BE185D; display:flex; align-items:center; gap:6px;">
+                            <i class="fa-solid fa-bolt" style="color:#EC3D8F;"></i>
+                            <span>Flash Sale kết thúc sau: <strong class="fs-countdown" data-end="{{ $activeFlashSale->ket_thuc ? $activeFlashSale->ket_thuc->toISOString() : '' }}">--:--:--</strong></span>
+                            <span style="color:#667085;">· Còn {{ $activeFlashSale->available_quota }} suất sale</span>
+                        </div>
+                    </div>
+                @else
+                    <p class="pd-price">
+                        {{ $giaApDung ? number_format($giaApDung, 0, ',', '.') . '₫' : 'Liên hệ' }}
+                        <span>/ {{ $donVi }}</span>
+                    </p>
+                @endif
             @else
                 <p class="pd-price pd-price--empty">Liên hệ để biết giá</p>
             @endif
@@ -941,5 +986,22 @@ function toggleHeart(btn) {
         }
     }
 }
+
+// Flash Sale Countdown Timer
+(function() {
+    function updateFsCountdowns() {
+        document.querySelectorAll('.fs-countdown').forEach(el => {
+            const end = new Date(el.getAttribute('data-end')).getTime();
+            const now = new Date().getTime();
+            const diff = Math.max(0, end - now);
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            el.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        });
+    }
+    updateFsCountdowns();
+    setInterval(updateFsCountdowns, 1000);
+})();
 </script>
 @endsection

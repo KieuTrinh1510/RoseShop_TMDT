@@ -103,6 +103,25 @@ class SanPham extends Model
         );
     }
 
+    public function getActiveFlashSaleAttribute(): ?FlashSale
+    {
+        $now = now();
+        $sales = $this->relationLoaded('flashSales')
+            ? $this->flashSales
+            : FlashSale::where('ma_san_pham', $this->ma_san_pham)
+                ->where('trang_thai', 'DANG_BAN')
+                ->where(function ($q) use ($now) {
+                    $q->whereNull('bat_dau')->orWhere('bat_dau', '<=', $now);
+                })
+                ->where(function ($q) use ($now) {
+                    $q->whereNull('ket_thuc')->orWhere('ket_thuc', '>=', $now);
+                })
+                ->orderByDesc('ti_le_giam')
+                ->get();
+
+        return $sales->first(fn ($fs) => $fs instanceof FlashSale && $fs->isCurrentlyActive());
+    }
+
     public function getAnhAttribute(): string
     {
         return asset(

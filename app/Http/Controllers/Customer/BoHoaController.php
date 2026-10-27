@@ -749,7 +749,8 @@ class BoHoaController extends Controller
                 ->first() : null;
 
             if ($readyBo && (float) $readyBo->gia_ban > 0) {
-                $giaMoiBo = (float) $readyBo->gia_ban;
+                $fsBo = $readyBo->active_flash_sale;
+                $giaMoiBo = ($fsBo && $fsBo->available_quota > 0) ? (float) $fsBo->gia_flash_sale : (float) $readyBo->gia_ban;
                 $tienThiep = $thiep ? ((float) ($thiep->gia_ban_hien_tai ?? 0)) * $soLuong : 0;
                 $quote = [
                     'gia_moi_bo'       => $giaMoiBo + ($thiep ? (float) ($thiep->gia_ban_hien_tai ?? 0) : 0),
@@ -913,7 +914,9 @@ class BoHoaController extends Controller
             foreach ($ready as $bo) {
                 if ($need < 1) break;
 
-                $giaMoiBo = (float) $bo->gia_ban;
+                $fsBo = $bo->active_flash_sale;
+                $maFs = ($fsBo && $fsBo->available_quota > 0) ? $fsBo->ma_flash_sale : null;
+                $giaMoiBo = $maFs ? (float) $fsBo->gia_flash_sale : (float) $bo->gia_ban;
 
                 $bo->update([
                     'ma_hoa_don'    => $hoaDon->getKey(),
@@ -922,7 +925,7 @@ class BoHoaController extends Controller
                 ]);
 
                 // 1. BÓ HOA THÀNH PHẨM CẮM SẴN: reserve bó hoa, KHÔNG reserve BOM
-                \App\Services\InventoryReservationService::reserveReadyBouquet($hoaDon, $bo);
+                \App\Services\InventoryReservationService::reserveReadyBouquet($hoaDon, $bo, $maFs);
 
                 // ── [MỚI] Dòng đại diện bó trong chi_tiet_hoa_don ──
                 ChiTietHoaDon::create([
@@ -932,7 +935,7 @@ class BoHoaController extends Controller
                     'ma_chi_tiet_nhap'  => null,
                     'so_luong'          => 1,
                     'gia_nhap_snapshot' => (float) ($bo->gia_von ?? 0),
-                    'gia_ban_snapshot'  => (float) $bo->gia_ban,
+                    'gia_ban_snapshot'  => $giaMoiBo,
                 ]);
 
                 $tong += $giaMoiBo;
