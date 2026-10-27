@@ -13,6 +13,12 @@ class ProfileController extends ChangeNotifier {
 
   bool _disposed = false;
 
+  /// Mỗi lần load tăng 1 → response cũ (đến muộn) bị bỏ qua.
+  int _loadSeq = 0;
+
+  /// Thông điệp khi có request khác đang chạy.
+  static const String _busyMsg = 'Đang xử lý yêu cầu khác, vui lòng đợi.';
+
   @override
   void dispose() {
     _disposed = true;
@@ -39,21 +45,27 @@ class ProfileController extends ChangeNotifier {
   String get trangThaiHoatDong => _str(data?['trang_thai_hoat_dong']);
 
   Future<void> load({bool refresh = false}) async {
+    final seq = ++_loadSeq;
     if (!refresh) loading = true;
     error = null;
     notifyListeners();
 
     try {
       final res = await ApiService.get('/profile');
+      if (seq != _loadSeq) return;
       data = Map<String, dynamic>.from(res as Map);
       error = null;
     } on ApiException catch (e) {
+      if (seq != _loadSeq) return;
       error = e.message;
     } catch (e) {
+      if (seq != _loadSeq) return;
       error = 'Lỗi kết nối: $e';
     } finally {
-      loading = false;
-      notifyListeners();
+      if (seq == _loadSeq) {
+        loading = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -64,7 +76,7 @@ class ProfileController extends ChangeNotifier {
     String? soDienThoai,
     String? email,
   }) async {
-    if (saving) return null;
+    if (saving) return _busyMsg;
     saving = true;
     notifyListeners();
     try {
@@ -87,7 +99,7 @@ class ProfileController extends ChangeNotifier {
   }
 
   Future<String?> changeUsername(String tenDangNhapMoi) async {
-    if (saving) return null;
+    if (saving) return _busyMsg;
     saving = true;
     notifyListeners();
     try {
@@ -110,7 +122,7 @@ class ProfileController extends ChangeNotifier {
   }
 
   Future<String?> changePassword(String matKhauCu, String matKhauMoi) async {
-    if (saving) return null;
+    if (saving) return _busyMsg;
     saving = true;
     notifyListeners();
     try {
@@ -130,7 +142,7 @@ class ProfileController extends ChangeNotifier {
   }
 
   Future<String?> logout() async {
-    if (saving) return null;
+    if (saving) return _busyMsg;
     saving = true;
     notifyListeners();
     try {

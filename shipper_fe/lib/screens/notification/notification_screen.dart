@@ -39,6 +39,19 @@ class _ThongBaoScreenState extends State<ThongBaoScreen> {
     super.dispose();
   }
 
+  void _snack(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Pink.plum,
+        ),
+      );
+  }
+
   // ── Xử lý khi tap item ────────────────────────────────────────
   Future<void> _onTapItem(Map<String, dynamic> tb) async {
     await _c.markRead(tb);
@@ -56,6 +69,22 @@ class _ThongBaoScreenState extends State<ThongBaoScreen> {
       return;
     }
     // penalty và loại khác → không làm gì thêm
+  }
+
+  // ── Xử lý khi bấm nút X (thu nhỏ + fade + gọi API) ────────────
+  /// Gọi từ `_NotifItem._remove` sau khi animation thu nhỏ xong.
+  /// Chỉ remove khỏi list khi API thành công; nếu fail → hiện snack để
+  /// `_NotifItem._remove` biết mà khôi phục (forward animation).
+  Future<bool> _onXDelete(Map<String, dynamic> tb) async {
+    final id = _int(tb['ma_thong_bao']);
+    final ok = await _c.xoa(tb);
+    if (!mounted) return ok;
+    if (ok) {
+      _c.removeById(id);
+    } else {
+      _snack(tr('notif_delete_failed'));
+    }
+    return ok;
   }
 
   // ── Bottom sheet chi tiết khoản đã nộp ────────────────────────
@@ -276,7 +305,7 @@ class _ThongBaoScreenState extends State<ThongBaoScreen> {
                               index: i,
                               child: _NotifItem(
                                 key: ValueKey('item_$id'),
-                                onDeleted: () => _c.xoa(tb),
+                                onDeleted: () => _onXDelete(tb),
                                 builder: (remove) => _buildCard(tb, remove),
                               ),
                             );
@@ -292,12 +321,14 @@ class _ThongBaoScreenState extends State<ThongBaoScreen> {
   }
 
   Widget _buildCard(Map<String, dynamic> tb, VoidCallback remove) {
+    final id = _int(tb['ma_thong_bao']);
     final loai = tb['loai']?.toString() ?? 'info';
     final daDoc = tb['da_doc'] == true;
     final cfg = _cfgFor(loai);
+    final dangXoa = _c.dangXoa(id);
 
     return Dismissible(
-      key: ValueKey(_int(tb['ma_thong_bao'])),
+      key: ValueKey('dismiss_$id'),
       direction: DismissDirection.endToStart,
       background: Container(
         alignment: Alignment.centerRight,
@@ -308,7 +339,18 @@ class _ThongBaoScreenState extends State<ThongBaoScreen> {
         ),
         child: const Icon(Icons.delete_outline, color: Colors.white),
       ),
-      onDismissed: (_) => _c.xoa(tb),
+      // CHỈ gọi API, KHÔNG remove khỏi list — Dismissible tự chạy slide-out
+      // xong mới bắn onDismissed; ở đó mới xóa khỏi list.
+      confirmDismiss: (_) async {
+        final ok = await _c.xoa(tb);
+        if (!mounted) return false;
+        if (!ok) {
+          _snack(tr('notif_delete_failed'));
+          return false;
+        }
+        return true;
+      },
+      onDismissed: (_) => _c.removeById(id),
       child: Material(
         color: daDoc ? Colors.white.withOpacity(0.7) : Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -379,17 +421,26 @@ class _ThongBaoScreenState extends State<ThongBaoScreen> {
                   ),
                 const SizedBox(width: 4),
                 InkResponse(
-                  onTap: remove,
+                  onTap: dangXoa ? null : remove,
                   radius: 18,
                   child: Tooltip(
                     message: tr('delete'),
                     child: Padding(
                       padding: const EdgeInsets.all(4),
-                      child: Icon(
-                        Icons.close_rounded,
-                        size: 18,
-                        color: Pink.plum.withOpacity(0.45),
-                      ),
+                      child: dangXoa
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Pink.rose,
+                              ),
+                            )
+                          : Icon(
+                              Icons.close_rounded,
+                              size: 18,
+                              color: Pink.plum.withOpacity(0.45),
+                            ),
                     ),
                   ),
                 ),
@@ -507,8 +558,12 @@ class _Cfg {
 }
 
 /// Bọc 1 thẻ thông báo: khi bấm X thì thu nhỏ + mờ dần rồi mới xoá thật.
+/// Nếu API fail (`onDeleted` trả false) thì tự chạy ngược animation để
+/// khôi phục item (không bị "chết" không xóa được lần 2).
 class _NotifItem extends StatefulWidget {
-  final VoidCallback onDeleted;
+  /// Gọi API xóa. Trả true = đã xóa khỏi backend (controller sẽ removeById);
+  /// false = thất bại, giữ item.
+  final Future<bool> Function() onDeleted;
   final Widget Function(VoidCallback remove) builder;
   const _NotifItem({super.key, required this.onDeleted, required this.builder});
 
@@ -535,7 +590,13 @@ class _NotifItemState extends State<_NotifItem>
     if (_removing) return;
     _removing = true;
     await _ctl.reverse();
-    if (mounted) widget.onDeleted();
+    if (!mounted) return;
+    final ok = await widget.onDeleted();
+    // Nếu thành công, `_onXDelete` đã gọi `removeById` → widget bị dispose
+    // khi parent rebuild; không cần khôi phục animation.
+    if (!mounted) return;
+    _removing = false;
+    if (!ok) _ctl.forward(); // API fail → khôi phục item
   }
 
   @override

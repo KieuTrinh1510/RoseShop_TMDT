@@ -14,4 +14,5 @@ exports.getHistory = (req, res) =>
         den_ngay: req.query.den_ngay,
         thang: req.query.thang,
         ma: req.query.ma,
+        loai: req.query.loai,
     }));

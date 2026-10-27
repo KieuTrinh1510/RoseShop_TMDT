@@ -87,13 +87,14 @@ class _HistoryFilterBarState extends State<HistoryFilterBar> {
       denNgay: c.denNgay,
       thang: c.thang,
       ma: (ma?.isEmpty ?? true) ? null : ma,
+      loai: c.loai,
     );
   }
 
   /// Ngày / khoảng / tháng loại trừ nhau; riêng `ma` luôn được giữ.
   void _setDate({String? ngay, String? tu, String? den, String? thang}) {
     final c = widget.controller;
-    c.setFilter(ngay: ngay, tuNgay: tu, denNgay: den, thang: thang, ma: c.ma);
+    c.setFilter(ngay: ngay, tuNgay: tu, denNgay: den, thang: thang, ma: c.ma, loai: c.loai);
   }
 
   void _submitMa(String raw) {
@@ -429,6 +430,9 @@ class _HistoryFilterBarState extends State<HistoryFilterBar> {
           runSpacing: 8,
           children: [
             _Chip(label: tr('f_all'), active: !c.coLoc, onTap: _clearAll),
+            _Chip(label: tr('hist_delivered'), active: c.loai == 'DELIVERED', onTap: () => c.setFilter(ngay: c.ngay, tuNgay: c.tuNgay, denNgay: c.denNgay, thang: c.thang, ma: c.ma, loai: 'DELIVERED')),
+            _Chip(label: tr('hist_cancel_shipper'), active: c.loai == 'CANCELLED_SHIPPER', onTap: () => c.setFilter(ngay: c.ngay, tuNgay: c.tuNgay, denNgay: c.denNgay, thang: c.thang, ma: c.ma, loai: 'CANCELLED_SHIPPER')),
+            _Chip(label: tr('hist_cancel_customer'), active: c.loai == 'CANCELLED_CUSTOMER', onTap: () => c.setFilter(ngay: c.ngay, tuNgay: c.tuNgay, denNgay: c.denNgay, thang: c.thang, ma: c.ma, loai: 'CANCELLED_CUSTOMER')),
             _Chip(
               label: tr('chip_today'),
               active: isToday,
