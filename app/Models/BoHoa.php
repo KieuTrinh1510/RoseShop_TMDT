@@ -136,6 +136,35 @@ class BoHoa extends Model
         return $this->hasMany(FlashSale::class, 'ma_bo_hoa', 'ma_bo_hoa');
     }
 
+    public function getActiveFlashSaleAttribute(): ?FlashSale
+    {
+        $now = now();
+        $sales = $this->relationLoaded('flashSales')
+            ? $this->flashSales
+            : FlashSale::where('ma_bo_hoa', $this->ma_bo_hoa)
+                ->where('trang_thai', 'DANG_BAN')
+                ->where(function ($q) use ($now) {
+                    $q->whereNull('bat_dau')->orWhere('bat_dau', '<=', $now);
+                })
+                ->where(function ($q) use ($now) {
+                    $q->whereNull('ket_thuc')->orWhere('ket_thuc', '>=', $now);
+                })
+                ->orderByDesc('ti_le_giam')
+                ->get();
+
+        return $sales->first(fn ($fs) => $fs instanceof FlashSale && $fs->isCurrentlyActive());
+    }
+
+    public function baoCaoHangHongs()
+    {
+        return $this->hasMany(BaoCaoHangHong::class, 'ma_bo_hoa', 'ma_bo_hoa');
+    }
+
+    public function kiemTraChatLuongs()
+    {
+        return $this->hasMany(KiemTraChatLuong::class, 'ma_bo_hoa', 'ma_bo_hoa');
+    }
+
     public function getTonThucTeAttribute(): int
     {
         return ($this->trang_thai === 'ACTIVE' && is_null($this->ma_hoa_don)) ? (int) $this->so_luong : 0;

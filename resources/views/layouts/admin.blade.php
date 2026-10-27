@@ -456,14 +456,18 @@
                                 || request()->routeIs('hoa-don.*') 
                                 || request()->routeIs('admin.thanh-toan*');
 
-                // Sản phẩm & Kho: san-pham, phieu-nhap, and placeholders
-                $isSanPhamKhoActive = request()->routeIs('san-pham.*') 
-                                   || request()->routeIs('phieu-nhap.*') 
-                                   || request()->routeIs('admin.mau-bo-hoa*') 
-                                   || request()->routeIs('admin.nguyen-vat-lieu*') 
-                                   || request()->routeIs('admin.nha-cung-cap*') 
-                                   || request()->routeIs('admin.lo-hang*') 
-                                   || request()->routeIs('admin.ton-kho*');
+                // Sản phẩm: san-pham, mau-bo-hoa, nguyen-vat-lieu, san-pham-het-han, flash-sale
+                $isSanPhamActive = request()->routeIs('san-pham.*') 
+                                || request()->routeIs('admin.mau-bo-hoa*') 
+                                || request()->routeIs('admin.nguyen-vat-lieu*') 
+                                || request()->routeIs('admin.san-pham-het-han*') 
+                                || request()->routeIs('admin.hoan-hang.flash-sale.*');
+
+                // Quản lý kho: phieu-nhap, nha-cung-cap, lo-hang, ton-kho
+                $isQuanLyKhoActive = request()->routeIs('phieu-nhap.*') 
+                                  || request()->routeIs('admin.nha-cung-cap*') 
+                                  || request()->routeIs('admin.lo-hang*') 
+                                  || request()->routeIs('admin.ton-kho*');
 
                 // Người dùng: nguoi-dung, khach-hang, nhan-vien, admin.shipper
                 $isNguoiDungActive = request()->routeIs('nguoi-dung.*') 
@@ -472,19 +476,19 @@
                                   || request()->routeIs('admin.shipper*');
 
                 // Giao hàng: admin.giao-hang.*
-                // Giao hàng: admin.giao-hang.* + admin.hoan-hang.* (Flash Sale hàng hoàn)
                 $isGiaoHangActive = request()->routeIs('admin.giao-hang.*')
-                                 || request()->routeIs('admin.hoan-hang.*');
+                                 || request()->routeIs('admin.hoa-don.kiem-tra-hang*');
 
-                // Báo cáo & Thống kê: bao-cao.*, admin.bao-cao.*
+                // Báo cáo & Thống kê: bao-cao.*, admin.bao-cao.*, admin.bao-cao-hang-hong.*
                 $isBaoCaoActive = request()->routeIs('bao-cao.*') 
-                               || request()->routeIs('admin.bao-cao.*');
+                               || request()->routeIs('admin.bao-cao.*')
+                               || request()->routeIs('admin.bao-cao-hang-hong.*');
 
                 // Hệ thống: admin.he-thong.*
                 $isHeThongActive = request()->routeIs('admin.he-thong.*');
 
                 // Kiểm tra xem có bất kỳ menu con/nhóm nào đang active không
-                $hasAnyGroupActive = $isBanHangActive || $isSanPhamKhoActive || $isNguoiDungActive 
+                $hasAnyGroupActive = $isBanHangActive || $isSanPhamActive || $isQuanLyKhoActive || $isNguoiDungActive 
                                   || $isGiaoHangActive || $isBaoCaoActive || $isHeThongActive;
 
                 // "Tổng quan" CHỈ active khi ở route admin.dashboard VÀ không có menu cha nào khác active
@@ -533,9 +537,9 @@
                     </div>
                 </div>
 
-                {{-- Sản phẩm & Kho --}}
-                <div class="menu-group {{ $isSanPhamKhoActive ? 'open' : '' }}" id="group-san-pham-kho">
-                    <button type="button" class="menu-parent {{ $isSanPhamKhoActive ? 'active' : '' }}" onclick="toggleSubmenu(this)">
+                {{-- SẢN PHẨM (Cả ADMIN và NHÂN VIÊN) --}}
+                <div class="menu-group {{ $isSanPhamActive ? 'open' : '' }}" id="group-san-pham">
+                    <button type="button" class="menu-parent {{ $isSanPhamActive ? 'active' : '' }}" onclick="toggleSubmenu(this)">
                         <div class="menu-parent-left">
                             <svg class="menu-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="m7.5 4.27 9 5.15"/>
@@ -543,33 +547,65 @@
                                 <path d="m3.3 7 8.7 5 8.7-5"/>
                                 <path d="M12 22V12"/>
                             </svg>
-                            <span>Sản phẩm & Kho</span>
+                            <span>Sản phẩm</span>
                         </div>
                         <svg class="menu-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="m9 18 6-6-6-6"/>
                         </svg>
                     </button>
-                    <div class="submenu-list" style="{{ $isSanPhamKhoActive ? 'display: block;' : 'display: none;' }}">
-                        <a href="{{ route('san-pham.index') }}" class="submenu-item {{ request()->routeIs('san-pham.*') ? 'active' : '' }}">
+                    <div class="submenu-list" style="{{ $isSanPhamActive ? 'display: block;' : 'display: none;' }}">
+                        {{-- 1. Sản phẩm --}}
+                        <a href="{{ route('san-pham.index') }}" class="submenu-item {{ request()->routeIs('san-pham.index') || request()->routeIs('san-pham.show') || request()->routeIs('san-pham.create') || request()->routeIs('san-pham.edit') ? 'active' : '' }}">
                             Sản phẩm
                         </a>
-                        @if($isAdmin)
-                            <a href="{{ route('admin.nguyen-vat-lieu') }}" class="submenu-item {{ request()->routeIs('admin.nguyen-vat-lieu*') ? 'active' : '' }}">
-                                Nguyên vật liệu
-                            </a>
-                            <a href="{{ route('admin.mau-bo-hoa') }}" class="submenu-item {{ request()->routeIs('admin.mau-bo-hoa*') ? 'active' : '' }}">
-                                Mẫu bó hoa
-                            </a>
-                        @endif
+                        {{-- 2. Mẫu bó hoa --}}
+                        <a href="{{ route('admin.mau-bo-hoa') }}" class="submenu-item {{ request()->routeIs('admin.mau-bo-hoa*') ? 'active' : '' }}">
+                            Mẫu bó hoa
+                        </a>
+                        {{-- 3. Nguyên vật liệu --}}
+                        <a href="{{ route('admin.nguyen-vat-lieu') }}" class="submenu-item {{ request()->routeIs('admin.nguyen-vat-lieu*') ? 'active' : '' }}">
+                            Nguyên vật liệu
+                        </a>
+                        {{-- 4. Sản phẩm cận hạn / hết hạn --}}
+                        <a href="{{ route('admin.san-pham-het-han') }}" class="submenu-item {{ request()->routeIs('admin.san-pham-het-han*') ? 'active' : '' }}">
+                            Sản phẩm cận hạn / hết hạn
+                        </a>
+                        {{-- 5. Flash Sale --}}
+                        <a href="{{ route('admin.hoan-hang.flash-sale.index') }}" class="submenu-item {{ request()->routeIs('admin.hoan-hang.flash-sale.*') ? 'active' : '' }}">
+                            Flash Sale
+                        </a>
+                    </div>
+                </div>
+
+                {{-- QUẢN LÝ KHO (Cả ADMIN và NHÂN VIÊN) --}}
+                <div class="menu-group {{ $isQuanLyKhoActive ? 'open' : '' }}" id="group-quan-ly-kho">
+                    <button type="button" class="menu-parent {{ $isQuanLyKhoActive ? 'active' : '' }}" onclick="toggleSubmenu(this)">
+                        <div class="menu-parent-left">
+                            <svg class="menu-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 21V10l9-6 9 6v11H3Z"/>
+                                <path d="M9 21v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v6"/>
+                                <path d="M7 10h10"/>
+                            </svg>
+                            <span>Quản lý kho</span>
+                        </div>
+                        <svg class="menu-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m9 18 6-6-6-6"/>
+                        </svg>
+                    </button>
+                    <div class="submenu-list" style="{{ $isQuanLyKhoActive ? 'display: block;' : 'display: none;' }}">
+                        {{-- 1. Phiếu nhập hàng --}}
                         <a href="{{ route('phieu-nhap.index') }}" class="submenu-item {{ request()->routeIs('phieu-nhap.*') ? 'active' : '' }}">
                             Phiếu nhập hàng
                         </a>
+                        {{-- 2. Nhà cung cấp --}}
                         <a href="{{ route('admin.nha-cung-cap') }}" class="submenu-item {{ request()->routeIs('admin.nha-cung-cap*') ? 'active' : '' }}">
                             Nhà cung cấp
                         </a>
+                        {{-- 3. Lô hàng --}}
                         <a href="{{ route('admin.lo-hang') }}" class="submenu-item {{ request()->routeIs('admin.lo-hang*') ? 'active' : '' }}">
                             Lô hàng
                         </a>
+                        {{-- 4. Tồn kho --}}
                         @if($isAdmin)
                             <a href="{{ route('admin.ton-kho') }}" class="submenu-item {{ request()->routeIs('admin.ton-kho*') ? 'active' : '' }}">
                                 Tồn kho
@@ -638,9 +674,6 @@
                                                         <a href="{{ route('admin.giao-hang.that-bai') }}" class="submenu-item {{ request()->routeIs('admin.giao-hang.that-bai*') ? 'active' : '' }}">
                                 Đơn giao thất bại
                             </a>
-                            <a href="{{ route('admin.hoan-hang.flash-sale.index') }}" class="submenu-item {{ request()->routeIs('admin.hoan-hang.flash-sale*') ? 'active' : '' }}">
-                                Flash Sale hàng hoàn
-                            </a>
                             <a href="{{ route('admin.giao-hang.doi-soat-cod') }}" class="submenu-item {{ request()->routeIs('admin.giao-hang.doi-soat-cod*') ? 'active' : '' }}">
                                 Đối soát COD
                             </a>
@@ -667,6 +700,9 @@
                             </a>
                             <a href="{{ route('bao-cao.san-pham') }}" class="submenu-item {{ request()->routeIs('bao-cao.san-pham*') ? 'active' : '' }}">
                                 Sản phẩm
+                            </a>
+                            <a href="{{ route('admin.bao-cao-hang-hong.index') }}" class="submenu-item {{ request()->routeIs('admin.bao-cao-hang-hong*') ? 'active' : '' }}">
+                                Báo cáo hàng hỏng
                             </a>
                             <!-- <a href="{{ route('admin.bao-cao.kho') }}" class="submenu-item {{ request()->routeIs('admin.bao-cao.kho*') ? 'active' : '' }}">
                                 Kho
@@ -720,6 +756,9 @@
     <main class="content admin-page-content">
         @yield('content')
     </main>
+
+    <!-- Bootstrap 5.3 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     @stack('scripts')
 

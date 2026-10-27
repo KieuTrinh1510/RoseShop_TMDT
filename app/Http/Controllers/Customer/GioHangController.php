@@ -55,15 +55,25 @@ class GioHangController extends Controller
             $soLuongMoi = ($gioHang[$key]['so_luong'] ?? 0) + (int) $item['so_luong'];
             $soLuongMoi = min($soLuongMoi, $chiTiet->so_luong_con_lai);
 
+            $sp = $chiTiet->sanPham;
+            $fs = $sp->active_flash_sale;
+            $giaBan = (float) ($sp->gia_ban_hien_tai ?? $chiTiet->gia_ban);
+            $maFlashSale = null;
+            if ($fs && $fs->available_quota > 0) {
+                $giaBan = (float) $fs->gia_flash_sale;
+                $maFlashSale = $fs->ma_flash_sale;
+            }
+
             $gioHang[$key] = [
                 'ma_chi_tiet_nhap' => $chiTiet->ma_chi_tiet_nhap,
                 'ma_san_pham'      => $chiTiet->ma_san_pham,
                 'ten_san_pham'     => $chiTiet->sanPham->ten_san_pham,
                 'hinh_anh'         => $chiTiet->sanPham->hinh_anh,
-                'gia_ban'          => (float) ($chiTiet->sanPham->gia_ban_hien_tai ?? $chiTiet->gia_ban),
+                'gia_ban'          => $giaBan,
                 'gia_nhap'         => (float) $chiTiet->gia_nhap,
                 'so_luong'         => $soLuongMoi,
                 'so_luong_con_lai' => $chiTiet->so_luong_con_lai,
+                'ma_flash_sale'    => $maFlashSale,
             ];
         }
 
@@ -103,15 +113,25 @@ class GioHangController extends Controller
 
             $key = 'lo_' . $chiTiet->ma_chi_tiet_nhap;
 
+            $sp = $chiTiet->sanPham;
+            $fs = $sp->active_flash_sale;
+            $giaBan = (float) ($sp->gia_ban_hien_tai ?? $chiTiet->gia_ban);
+            $maFlashSale = null;
+            if ($fs && $fs->available_quota > 0) {
+                $giaBan = (float) $fs->gia_flash_sale;
+                $maFlashSale = $fs->ma_flash_sale;
+            }
+
             $muaNgay[$key] = [
                 'ma_chi_tiet_nhap' => $chiTiet->ma_chi_tiet_nhap,
                 'ma_san_pham'      => $chiTiet->ma_san_pham,
                 'ten_san_pham'     => $chiTiet->sanPham->ten_san_pham,
                 'hinh_anh'         => $chiTiet->sanPham->hinh_anh,
-                'gia_ban' => (float) ($chiTiet->sanPham->gia_ban_hien_tai ?? $chiTiet->gia_ban),
+                'gia_ban'          => $giaBan,
                 'gia_nhap'         => (float) $chiTiet->gia_nhap,
                 'so_luong'         => min((int) $item['so_luong'], $chiTiet->so_luong_con_lai),
                 'so_luong_con_lai' => $chiTiet->so_luong_con_lai,
+                'ma_flash_sale'    => $maFlashSale,
             ];
         }
 

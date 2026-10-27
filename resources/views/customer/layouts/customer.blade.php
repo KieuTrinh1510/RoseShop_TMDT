@@ -343,11 +343,6 @@
         HOA TƯƠI
     </a>
 
-    <a href="{{ route('customer.flash-sale') }}"
-       class="cat-link {{ request()->routeIs('customer.flash-sale*') ? 'active' : '' }}">
-        ⚡ FLASH SALE
-    </a>
-
     <a href="{{ route('customer.phu-kien') }}"
        class="cat-link {{ request()->routeIs('customer.phu-kien') ? 'active' : '' }}">
         PHỤ KIỆN

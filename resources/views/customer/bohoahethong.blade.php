@@ -200,10 +200,27 @@
                         $kieuDangText = \App\Http\Controllers\Admin\BoHoaController::KIEU_DANG[$mau->kieu_bo_hoa] ?? $mau->kieu_bo_hoa;
                         // Không có giá hợp lệ (null) ⇒ coi như hết hàng, TUYỆT ĐỐI không in 0đ.
                         $hetHang = ($mau->het_hang ?? false) || $mau->gia_hien_thi === null;
+                        $fsBo = null;
+                        if (!$hetHang) {
+                            $sampleBo = \App\Models\BoHoa::where('ma_mau_bo_hoa', $mau->ma_mau_bo_hoa)
+                                ->where('loai_bo_hoa', 'HE_THONG')
+                                ->where('trang_thai', 'ACTIVE')
+                                ->whereNull('ma_hoa_don')
+                                ->where('so_luong', '>', 0)
+                                ->first();
+                            if ($sampleBo && $sampleBo->active_flash_sale && $sampleBo->active_flash_sale->available_quota > 0) {
+                                $fsBo = $sampleBo->active_flash_sale;
+                            }
+                        }
                     @endphp
 
                     <div class="flower-card {{ $hetHang ? 'flower-card--het-hang' : '' }}" onclick="if (!event.target.closest('a')) { window.location.href = '{{ route('customer.mau-bo-hoa.chi-tiet', $mau->ma_mau_bo_hoa) }}'; }">
-                        <div class="flower-card-img">
+                        <div class="flower-card-img" style="position:relative;">
+                            @if($fsBo)
+                                <div style="position:absolute; top:8px; left:8px; z-index:2; background:#F04438; color:#fff; font-size:11px; font-weight:700; padding:2px 6px; border-radius:4px; box-shadow:0 2px 4px rgba(0,0,0,0.15);">
+                                    -{{ $fsBo->phan_tram_giam }}%
+                                </div>
+                            @endif
                             <a href="{{ route('customer.mau-bo-hoa.chi-tiet', $mau->ma_mau_bo_hoa) }}" class="flower-card-img-link">
                                 <img src="{{ $anh }}" alt="{{ $mau->ten_mau }}" loading="lazy" onerror="this.onerror=null; this.src='{{ asset('img/placeholder-flower.svg') }}';">
                             </a>
@@ -222,6 +239,21 @@
 
                             @if($hetHang)
                                 <p class="flower-price flower-price--het-hang">Hết hàng</p>
+                            @elseif($fsBo)
+                                <div class="flower-price" style="display:flex; flex-direction:column; gap:2px;">
+                                    <div style="display:flex; align-items:center; gap:6px;">
+                                        <span style="text-decoration:line-through; color:#98A2B3; font-size:12px;">
+                                            {{ number_format($mau->gia_hien_thi, 0, ',', '.') }}đ
+                                        </span>
+                                        <span style="background:#FEE4E2; color:#D92D20; font-size:10.5px; font-weight:700; padding:1px 5px; border-radius:999px;">
+                                            -{{ $fsBo->phan_tram_giam }}%
+                                        </span>
+                                    </div>
+                                    <div style="color:#EC3D8F; font-weight:700; font-size:15px;">
+                                        {{ number_format($fsBo->gia_flash_sale, 0, ',', '.') }}đ
+                                        <span style="font-size:12px; font-weight:normal; color:#6b7280;">/ bó</span>
+                                    </div>
+                                </div>
                             @else
                                 <p class="flower-price">
                                     {{ number_format($mau->gia_hien_thi, 0, ',', '.') }}đ

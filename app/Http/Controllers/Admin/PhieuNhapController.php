@@ -312,6 +312,12 @@ class PhieuNhapController extends Controller
                     $sanPham->gia_ban_hien_tai = (float) $chiTiet->gia_ban;
                 }
                 $sanPham->save();
+
+                // Lưu HSD mặc định = ngày nhập + 7 ngày vào DB nếu chưa có
+                if (empty($chiTiet->ngay_het_han) && in_array($sanPham->loai_san_pham, [SanPham::LOAI_HOA_TUOI, SanPham::LOAI_CHAU_HOA_TUOI])) {
+                    $chiTiet->ngay_het_han = \Carbon\Carbon::parse($phieuNhap->ngay_nhap ?? now())->addDays(7)->toDateString();
+                    $chiTiet->save();
+                }
             }
 
             $phieuNhap->trang_thai = PhieuNhap::TRANG_THAI_CONFIRMED;

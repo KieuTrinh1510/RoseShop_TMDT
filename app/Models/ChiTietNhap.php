@@ -76,6 +76,16 @@ class ChiTietNhap extends Model
         return $this->hasMany(ChiTietBoHoa::class, 'ma_chi_tiet_nhap', 'ma_chi_tiet_nhap');
     }
 
+    public function flashSales()
+    {
+        return $this->hasMany(FlashSale::class, 'ma_chi_tiet_nhap', 'ma_chi_tiet_nhap');
+    }
+
+    public function kiemTraChatLuongs()
+    {
+        return $this->hasMany(KiemTraChatLuong::class, 'ma_chi_tiet_nhap', 'ma_chi_tiet_nhap');
+    }
+
     public function getTonThucTeAttribute(): int
     {
         return (int) $this->so_luong_con_lai;

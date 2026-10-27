@@ -21,6 +21,7 @@ use App\Http\Controllers\Shipper\ShipperProfileController;
 use App\Http\Controllers\Shipper\ShipperThongBaoController;
 use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Admin\SanPhamHetHanController;
+use App\Http\Controllers\Admin\BaoCaoHangHongController;
 use App\Http\Controllers\Customer\ThongBaoController as CustomerThongBaoController;
 use App\Http\Controllers\Customer\CustomerController;
 use App\Http\Controllers\Customer\CustomerProfileController;
@@ -324,44 +325,45 @@ Route::middleware(['auth', 'role:ADMIN,NHAN_VIEN'])->group(function () {
     Route::get('/admin/lo-hang/{id}', [LoHangController::class, 'show'])->name('admin.lo-hang.show')->whereNumber('id');
     Route::post('/admin/lo-hang/{id}/danh-gia', [LoHangController::class, 'danhGia'])->name('admin.lo-hang.danh-gia')->whereNumber('id');
 
-    // Cảnh báo & Xử lý sản phẩm hết hạn (Lô hoa + Bó hoa)
+    // Cảnh báo & Xử lý sản phẩm hết hạn (Lô hoa + Bó hoa thành phẩm)
     Route::get('/admin/san-pham-het-han', [SanPhamHetHanController::class, 'index'])->name('admin.san-pham-het-han');
+    Route::post('/admin/san-pham-het-han/ban-tiep', [SanPhamHetHanController::class, 'banTiep'])->name('admin.san-pham-het-han.ban-tiep');
+    Route::post('/admin/san-pham-het-han/flash-sale', [SanPhamHetHanController::class, 'taoFlashSale'])->name('admin.san-pham-het-han.flash-sale');
+    Route::post('/admin/san-pham-het-han/bao-hong', [SanPhamHetHanController::class, 'baoHong'])->name('admin.san-pham-het-han.bao-hong');
+
+    // Báo cáo hàng hỏng tập trung
+    Route::get('/admin/bao-cao-hang-hong', [BaoCaoHangHongController::class, 'index'])->name('admin.bao-cao-hang-hong.index');
+    Route::get('/admin/bao-cao-hang-hong/{id}', [BaoCaoHangHongController::class, 'show'])->name('admin.bao-cao-hang-hong.show');
 });
+
 Route::get('/bao-cao',               [BaoCaoController::class, 'index'])->name('bao-cao.index');
 Route::get('/bao-cao/doanh-thu',     [BaoCaoController::class, 'doanhThu'])->name('bao-cao.doanh-thu');
 Route::get('/bao-cao/doanh-thu/export', [BaoCaoController::class, 'exportDoanhThu'])->name('bao-cao.doanh-thu.export');
 Route::get('/bao-cao/loi-nhuan',     [BaoCaoController::class, 'index'])->name('bao-cao.loi-nhuan');
-Route::get('/bao-cao/san-pham',              [BaoCaoController::class, 'baoCaoSanPham'])->name('bao-cao.san-pham');
-Route::get('/bao-cao/san-pham/export',         [BaoCaoController::class, 'exportBaoCaoSanPham'])->name('bao-cao.san-pham.export');
+Route::get('/bao-cao/san-pham',      [BaoCaoController::class, 'baoCaoSanPham'])->name('bao-cao.san-pham');
+Route::get('/bao-cao/san-pham/export', [BaoCaoController::class, 'exportBaoCaoSanPham'])->name('bao-cao.san-pham.export');
 Route::get('/bao-cao/san-pham/{id}/hang-hong', [BaoCaoController::class, 'chiTietHangHong'])->name('bao-cao.san-pham.hang-hong');
 Route::get('/bao-cao/san-pham/{id}/chi-tiet',  [BaoCaoController::class, 'chiTietSanPham'])->name('bao-cao.san-pham.chi-tiet');
 Route::get('/bao-cao/ton-kho',       [BaoCaoController::class, 'index'])->name('bao-cao.ton-kho');
 Route::get('/bao-cao/khach-hang',    [BaoCaoController::class, 'index'])->name('bao-cao.khach-hang');
 
-
-
 });
-Route::middleware(['auth', 'role:SHIPPER'])->group(function () {
-    Route::get('/shipper/dashboard', [ShipperController::class, 'dashboard'])->name('shipper.dashboard');
-    Route::patch('/shipper/don-hang/{id}/cap-nhat', [ShipperController::class, 'updateStatus'])->name('shipper.update-status');
-    Route::get('/shipper/don-hang/{id}/chi-tiet', [NhanDonController::class, 'show'])->name('shipper.don-hang.chi-tiet');
-    Route::get('/shipper/profile',[ShipperProfileController::class, 'edit'])->name('shipper.profile.edit');
-    Route::patch('/shipper/profile',[ShipperProfileController::class, 'update'])->name('shipper.profile.update');
-    Route::patch('/shipper/profile/password', [ShipperProfileController::class, 'updatePassword']) ->name('shipper.profile.password');
-    Route::post('/shipper/don-hang/{id}/da-den-noi',[ShipperThongBaoController::class, 'guiThongBao'])->name('shipper.don-hang.da-den-noi');
-    Route::get('/shipper/thong-bao', [ShipperThongBaoController::class, 'index'])
-    ->name('shipper.thong-bao');
- 
-    Route::get('/shipper/thong-bao/so-chua-doc', [ShipperThongBaoController::class, 'soChuaDoc'])
-    ->name('shipper.thong-bao.so-chua-doc');
- 
-    Route::patch('/shipper/thong-bao/{id}/xoa', [ShipperThongBaoController::class, 'xoa'])
-    ->name('shipper.thong-bao.xoa');
- 
 
-    Route::post('/shipper/don-hang/{maHoaDon}/check-timeout', [ShipperThongBaoController::class, 'checkTimeout'])
-    ->name('shipper.don-hang.check-timeout');
-});
+if (class_exists(\App\Http\Controllers\Shipper\ShipperController::class)) {
+    Route::middleware(['auth', 'role:SHIPPER'])->group(function () {
+        Route::get('/shipper/dashboard', [ShipperController::class, 'dashboard'])->name('shipper.dashboard');
+        Route::patch('/shipper/don-hang/{id}/cap-nhat', [ShipperController::class, 'updateStatus'])->name('shipper.update-status');
+        Route::get('/shipper/don-hang/{id}/chi-tiet', [NhanDonController::class, 'show'])->name('shipper.don-hang.chi-tiet');
+        Route::get('/shipper/profile',[ShipperProfileController::class, 'edit'])->name('shipper.profile.edit');
+        Route::patch('/shipper/profile',[ShipperProfileController::class, 'update'])->name('shipper.profile.update');
+        Route::patch('/shipper/profile/password', [ShipperProfileController::class, 'updatePassword'])->name('shipper.profile.password');
+        Route::post('/shipper/don-hang/{id}/da-den-noi',[ShipperThongBaoController::class, 'guiThongBao'])->name('shipper.don-hang.da-den-noi');
+        Route::get('/shipper/thong-bao', [ShipperThongBaoController::class, 'index'])->name('shipper.thong-bao');
+        Route::get('/shipper/thong-bao/so-chua-doc', [ShipperThongBaoController::class, 'soChuaDoc'])->name('shipper.thong-bao.so-chua-doc');
+        Route::patch('/shipper/thong-bao/{id}/xoa', [ShipperThongBaoController::class, 'xoa'])->name('shipper.thong-bao.xoa');
+        Route::post('/shipper/don-hang/{maHoaDon}/check-timeout', [ShipperThongBaoController::class, 'checkTimeout'])->name('shipper.don-hang.check-timeout');
+    });
+}
 
 
 
@@ -391,6 +393,10 @@ Route::middleware(['auth', 'role:ADMIN,NHAN_VIEN'])->group(function () {
         ->name('admin.hoan-hang.flash-sale.update');
     Route::post('/admin/hoan-hang/flash-sale/{id}/ket-thuc', [AdminHoanHangFlashSaleController::class, 'close'])
         ->name('admin.hoan-hang.flash-sale.close');
+    Route::post('/admin/hoan-hang/flash-sale/{id}/gia-han', [AdminHoanHangFlashSaleController::class, 'extend'])
+        ->name('admin.hoan-hang.flash-sale.extend');
+    Route::post('/admin/hoan-hang/flash-sale/{id}/hoan-ton', [AdminHoanHangFlashSaleController::class, 'returnStock'])
+        ->name('admin.hoan-hang.flash-sale.return-stock');
     Route::post('/admin/hoan-hang/flash-sale/{id}/bao-hong', [AdminHoanHangFlashSaleController::class, 'reportDamage'])
         ->name('admin.hoan-hang.flash-sale.report-damage');
 });

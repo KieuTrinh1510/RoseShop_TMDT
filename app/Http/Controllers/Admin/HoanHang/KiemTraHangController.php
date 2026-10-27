@@ -470,10 +470,16 @@ class KiemTraHangController extends Controller
      */
     private function ghiNhanBaoCaoHangHong(ChiTietHangHoan $ct, int $soLuongHong, array $in, string $maHD): void
     {
+        $giaGoc = (float) $ct->gia_ban_snapshot;
+        $maHoaDon = $ct->hangHoan?->ma_hoa_don;
+
         $duLieuChung = [
             'ma_nhan_vien'      => (int) $in['ma_nhan_vien'],
             'ly_do'             => trim((string) $in['ly_do_hong']),
             'thoi_gian_bao_cao' => now(),
+            'nguon_hong'        => 'HANG_HOAN',
+            'ma_hoa_don'        => $maHoaDon,
+            'gia_tri_thiet_hai' => round($soLuongHong * $giaGoc, 2),
         ];
 
         // ── Sản phẩm lẻ ──
@@ -503,26 +509,20 @@ class KiemTraHangController extends Controller
             return;
         }
 
-        // ── Bó hoa: ghi từng cấu phần theo lô của chi_tiet_bo_hoa ──
-        $daGhiNhan = false;
-        foreach ($ct->boHoa?->chiTietBoHoa ?? [] as $thanhPhan) {
-            if (! $thanhPhan->ma_san_pham || ! $thanhPhan->ma_chi_tiet_nhap) {
-                continue;
-            }
+        // ── Bó hoa: ghi trực tiếp bó hoa thành phẩm hỏng ──
+        if ($ct->ma_bo_hoa) {
             BaoCaoHangHong::create($duLieuChung + [
-                'ma_san_pham'      => $thanhPhan->ma_san_pham,
-                'ma_chi_tiet_nhap' => $thanhPhan->ma_chi_tiet_nhap,
-                'so_luong_hong'    => (int) $thanhPhan->so_luong * $soLuongHong,
-                'ghi_chu'          => "Hàng hoàn {$maHD}; bó hoa #{$ct->ma_bo_hoa}, dòng #{$ct->ma_chi_tiet_hang_hoan}.",
+                'ma_san_pham'      => null,
+                'ma_bo_hoa'        => $ct->ma_bo_hoa,
+                'so_luong_hong'    => $soLuongHong,
+                'ghi_chu'          => "Hàng hoàn {$maHD}; bó hoa thành phẩm #{$ct->ma_bo_hoa}, dòng #{$ct->ma_chi_tiet_hang_hoan}.",
             ]);
-            $daGhiNhan = true;
+            return;
         }
 
-        if (! $daGhiNhan) {
-            $this->nem('items.' . $ct->ma_chi_tiet_hang_hoan,
-                'Không truy được cấu phần/lô gốc của bó hoa hàng hoàn.');
-        }
+        $this->nem('items.' . $ct->ma_chi_tiet_hang_hoan, 'Không xác định được loại mặt hàng hoàn để báo hỏng.');
     }
+
 
     private function moTaDong(ChiTietHangHoan $ct): array
     {
