@@ -26,10 +26,14 @@ class HoaDon extends Model
         'thoi_diem_huy',
         'co_hang_hoan',
         'trang_thai_thanh_toan',
+        'da_thu_tien_mat',
         'phuong_thuc_thanh_toan',
         'dia_chi_giao',
         'so_dien_thoai',
         'ngay_giao',
+        'ngay_bat_giao',
+        'ngay_den_noi',
+        'da_phat_tre',
         'ma_nhan_vien_giao',
         'vnpay_transaction_no',
         'vnpay_bank_code',
@@ -42,6 +46,8 @@ class HoaDon extends Model
         'tong_tien' => 'decimal:2',
         'ngay_dat' => 'datetime',
         'ngay_giao' => 'datetime',
+        'ngay_bat_giao' => 'datetime',
+        'ngay_den_noi' => 'datetime',
         'thoi_diem_huy' => 'datetime',
         'co_hang_hoan' => 'boolean',
         'vnpay_cart_snapshot' => 'array',
@@ -104,5 +110,10 @@ public function getCoBoHoaAttribute(): bool
     public function phatShipper()
     {
         return $this->hasMany(PhatShipper::class, 'ma_hoa_don', 'ma_hoa_don');
+    }
+
+    public function boHoas()
+    {
+        return $this->hasMany(BoHoa::class, 'ma_hoa_don', 'ma_hoa_don');
     }
 }

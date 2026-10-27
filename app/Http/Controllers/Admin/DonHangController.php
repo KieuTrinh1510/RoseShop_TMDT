@@ -21,11 +21,78 @@ class DonHangController extends Controller
     
     public function index(Request $request)
     {
-        $query = HoaDon::with(['khachHang', 'chiTietHoaDon.sanPham'])
-            ->where('trang_thai', 'PENDING');
+        $tab = $request->get('tab', 'all');
+        if (!in_array($tab, ['all', 'pending', 'confirmed', 'shipping', 'delivered', 'failed', 'cancelled'])) {
+            $tab = 'all';
+        }
 
+        $query = HoaDon::with([
+            'khachHang.viPhamGiaoHang' => fn($q) => $q->where('da_go', false),
+            'shipper',
+            'chiTietHoaDon.sanPham',
+            'giaoHangThatBai.shipper',
+            'hangHoan.nguoiKiemTra',
+            'hangHoan.chiTiet.sanPham',
+            'hangHoan.chiTiet.boHoa',
+            'phatShipper',
+            'boHoas',
+        ]);
+
+        // 1. Áp dụng filter theo Tab
+        switch ($tab) {
+            case 'pending':
+                $query->where('trang_thai', 'PENDING');
+                break;
+            case 'confirmed':
+                $query->where('trang_thai', 'CONFIRMED');
+                break;
+            case 'shipping':
+                $query->where('trang_thai', 'SHIPPING');
+                break;
+            case 'delivered':
+                $query->where('trang_thai', 'DELIVERED');
+                break;
+            case 'failed':
+                $query->where(function ($q) {
+                    $q->where('co_hang_hoan', 1)
+                      ->orWhereHas('giaoHangThatBai');
+                });
+                break;
+            case 'cancelled':
+                $query->where('trang_thai', 'CANCELLED')
+                      ->where(function ($q) {
+                          $q->where('co_hang_hoan', 0)->orWhereNull('co_hang_hoan');
+                      })
+                      ->whereDoesntHave('giaoHangThatBai');
+                break;
+            case 'all':
+            default:
+                // Hiển thị toàn bộ
+                break;
+        }
+
+        // 2. Tìm kiếm chung: mã đơn, tên khách, số điện thoại
+        if ($request->filled('q')) {
+            $q = trim($request->q);
+            $cleanId = preg_replace('/\D/', '', $q);
+
+            $query->where(function ($sq) use ($q, $cleanId) {
+                if ($cleanId !== '') {
+                    $sq->where('ma_hoa_don', (int) $cleanId);
+                }
+                $sq->orWhereHas('khachHang', function ($kq) use ($q) {
+                    $kq->where('ten_khach_hang', 'like', "%{$q}%")
+                       ->orWhere('so_dien_thoai', 'like', "%{$q}%");
+                })->orWhere('so_dien_thoai', 'like', "%{$q}%");
+            });
+        }
+
+        // 3. Các bộ lọc bổ sung
         if ($request->filled('trang_thai_thanh_toan')) {
             $query->where('trang_thai_thanh_toan', $request->trang_thai_thanh_toan);
+        }
+        if ($request->filled('phuong_thuc_thanh_toan')) {
+            $query->where('phuong_thuc_thanh_toan', $request->phuong_thuc_thanh_toan);
         }
         if ($request->filled('tu_tien')) {
             $query->where('tong_tien', '>=', (float) $request->tu_tien);
@@ -40,26 +107,47 @@ class DonHangController extends Controller
             $query->where('ngay_dat', '<=', Carbon::parse($request->den_ngay)->endOfDay());
         }
 
-        $perPage  = in_array((int)$request->get('per_page'), [10, 15, 20, 50, 100]) ? (int)$request->get('per_page') : 10;
+        // 4. Tab counts: tính một query aggregate duy nhất tránh N+1
+        $countsRaw = HoaDon::selectRaw("
+            COUNT(*) as count_all,
+            SUM(CASE WHEN trang_thai = 'PENDING' THEN 1 ELSE 0 END) as count_pending,
+            SUM(CASE WHEN trang_thai = 'CONFIRMED' THEN 1 ELSE 0 END) as count_confirmed,
+            SUM(CASE WHEN trang_thai = 'SHIPPING' THEN 1 ELSE 0 END) as count_shipping,
+            SUM(CASE WHEN trang_thai = 'DELIVERED' THEN 1 ELSE 0 END) as count_delivered,
+            SUM(CASE WHEN (co_hang_hoan = 1 OR EXISTS (SELECT 1 FROM giao_hang_that_bai WHERE giao_hang_that_bai.ma_hoa_don = hoa_don.ma_hoa_don)) THEN 1 ELSE 0 END) as count_failed,
+            SUM(CASE WHEN (trang_thai = 'CANCELLED' AND (co_hang_hoan = 0 OR co_hang_hoan IS NULL) AND NOT EXISTS (SELECT 1 FROM giao_hang_that_bai WHERE giao_hang_that_bai.ma_hoa_don = hoa_don.ma_hoa_don)) THEN 1 ELSE 0 END) as count_cancelled
+        ")->first();
+
+        $tabCounts = [
+            'all'       => (int) ($countsRaw->count_all ?? 0),
+            'pending'   => (int) ($countsRaw->count_pending ?? 0),
+            'confirmed' => (int) ($countsRaw->count_confirmed ?? 0),
+            'shipping'  => (int) ($countsRaw->count_shipping ?? 0),
+            'delivered' => (int) ($countsRaw->count_delivered ?? 0),
+            'failed'    => (int) ($countsRaw->count_failed ?? 0),
+            'cancelled' => (int) ($countsRaw->count_cancelled ?? 0),
+        ];
+
+        // 5. Phân trang
+        $perPage  = in_array((int)$request->get('per_page'), [10, 15, 20, 50, 100]) ? (int)$request->get('per_page') : 15;
         $donHangs = $query->orderByDesc('ngay_dat')->paginate($perPage)->withQueryString();
-        $shippers = NhanVien::where('chuc_vu', 'SHIPPER')->get();
-        $donHangs = $query->orderByDesc('ngay_dat')->paginate(15)->withQueryString();
+
+        // 6. Shipper khả dụng phục vụ duyệt đơn
         $shippers = NhanVien::where('chuc_vu', 'SHIPPER')
-    ->where('trang_thai_hoat_dong', 'ONLINE')
-    ->get()
-    ->map(function ($nv) {
-        // Đếm live từ hoa_don — không tin cột so_don_hien_tai
-        // (Node không còn ghi cột, và PHP cũng sẽ bỏ ghi)
-        $nv->so_don_live = HoaDon::where('ma_nhan_vien_giao', $nv->ma_nhan_vien)
-            ->whereIn('trang_thai', ['CONFIRMED', 'SHIPPING'])
-            ->count();
-        return $nv;
-    })
-    ->filter(fn ($nv) => $nv->so_don_live < 10)
-    ->values();
+            ->where('trang_thai_hoat_dong', 'ONLINE')
+            ->get()
+            ->map(function ($nv) {
+                $nv->so_don_live = HoaDon::where('ma_nhan_vien_giao', $nv->ma_nhan_vien)
+                    ->whereIn('trang_thai', ['CONFIRMED', 'SHIPPING'])
+                    ->count();
+                return $nv;
+            })
+            ->filter(fn ($nv) => $nv->so_don_live < 10)
+            ->values();
 
         $boTheoDon = \App\Models\BoHoa::whereIn('ma_hoa_don', $donHangs->pluck('ma_hoa_don'))->get()->groupBy('ma_hoa_don');
-        return view('admin.DonHang', compact('donHangs', 'shippers', 'boTheoDon'));
+
+        return view('admin.DonHang', compact('donHangs', 'shippers', 'boTheoDon', 'tab', 'tabCounts'));
     }
 
     public function confirm(Request $request, $id)

@@ -215,11 +215,12 @@ Route::middleware(['auth', 'role:ADMIN'])->group(function () {
     Route::get('/admin/giao-hang/hang-hoan',    fn() => view('admin.placeholder', ['title' => 'Hàng hoàn']))->name('admin.giao-hang.hang-hoan');
         // ─── Đơn giao thất bại (hoàn hàng) ───
     Route::prefix('admin/giao-hang/that-bai')->name('admin.giao-hang.that-bai')->group(function () {
-        Route::get('/',      [GiaoHangThatBaiController::class, 'index'])->name(''); // → admin.giao-hang.that-bai
+        Route::get('/',      fn() => redirect()->route('don-hang.index', ['tab' => 'failed']))->name(''); // → admin.giao-hang.that-bai
         Route::get('/{id}',  [GiaoHangThatBaiController::class, 'show'])
             ->whereNumber('id')
             ->name('.chi-tiet'); // → admin.giao-hang.that-bai.chi-tiet
     });
+    Route::get('/admin/don-hang', fn() => redirect()->route('don-hang.index'))->name('admin.don-hang');
     Route::get('/admin/giao-hang/doi-soat-cod', fn() => view('admin.placeholder', ['title' => 'Đối soát COD']))->name('admin.giao-hang.doi-soat-cod');
     Route::get('/admin/bao-cao/kho',            fn() => view('admin.placeholder', ['title' => 'Báo cáo kho']))->name('admin.bao-cao.kho');
     Route::get('/admin/bao-cao/giao-hang',      fn() => view('admin.placeholder', ['title' => 'Báo cáo hoạt động giao hàng']))->name('admin.bao-cao.giao-hang');
