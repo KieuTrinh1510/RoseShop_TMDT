@@ -194,13 +194,13 @@ class VnPayViPhamController extends Controller
         if ($viPham && !$viPham->da_go) {
             $viPham->update([
                 'da_go'        => true,
-                'ly_do_go'     => 'Khách đã thanh toán khoản vi phạm qua VNPay.',
+                'ly_do_go'     => 'Thanh toán qua VNPay',
                 'nguoi_go'     => 'Hệ thống (VNPay)',
                 'thoi_diem_go' => now(),
             ]);
         }
 
-        // Cập nhật quyền COD + gửi thông báo mỗi lần gỡ vi phạm
+        // Cập nhật lại quyền COD / quyền mua hàng + gửi thông báo
         if ($viPham) {
             $conLai = \App\Models\ViPhamKhachHang::where('ma_khach_hang', $viPham->ma_khach_hang)
                 ->where('da_go', false)
@@ -208,25 +208,47 @@ class VnPayViPhamController extends Controller
 
             $maHD = '#HD-' . str_pad((string) $viPham->ma_hoa_don, 4, '0', STR_PAD_LEFT);
 
-            if ($conLai > 0) {
-                \App\Models\ThongBao::gui(
-                    (int) $viPham->ma_khach_hang,
-                    'info',
-                    "✅ Bạn đã thanh toán khoản vi phạm của đơn {$maHD} và được gỡ bỏ 1 vi phạm. "
-                        . "Bạn còn {$conLai} vi phạm chưa gỡ, cần thanh toán nốt để khôi phục quyền COD. Hãy mua sắm trung thực nhé! 💐",
-                    $viPham->ma_hoa_don ? (int) $viPham->ma_hoa_don : null
-                );
-            }
-
-            if ($conLai === 0) {
+            // Quy tắc cập nhật quyền:
+            // conLai = 0 → COD CHO_PHEP
+            // conLai = 1 → COD CHO_PHEP (CANH_BAO - 2 -> 1 mở lại COD)
+            // conLai = 2 → COD GIOI_HAN (CAM_COD - 3 -> 2 cho mua hàng lại, COD vẫn khóa)
+            // conLai >= 3 → TAM_KHOA_MUA_HANG (vẫn GIOI_HAN)
+            if ($conLai <= 1) {
                 \App\Models\KhachHang::whereKey($viPham->ma_khach_hang)
                     ->update(['quyen_cod' => 'CHO_PHEP']);
+            } else {
+                \App\Models\KhachHang::whereKey($viPham->ma_khach_hang)
+                    ->update(['quyen_cod' => 'GIOI_HAN']);
+            }
 
+            // Gửi thông báo tương ứng
+            if ($conLai === 0) {
                 \App\Models\ThongBao::gui(
                     (int) $viPham->ma_khach_hang,
                     'info',
-                    '🎉 Bạn đã thanh toán đầy đủ khoản vi phạm. Quyền đặt hàng COD đã được khôi phục. Hãy mua sắm trung thực nhé! 💐',
+                    "🎉 Bạn đã thanh toán thành công khoản vi phạm của đơn {$maHD}. Tất cả vi phạm đã được giải quyết, quyền đặt hàng COD đã được khôi phục toàn diện. Cảm ơn bạn đã đồng hành cùng RoseShop! 💐",
                     null
+                );
+            } elseif ($conLai === 1) {
+                \App\Models\ThongBao::gui(
+                    (int) $viPham->ma_khach_hang,
+                    'info',
+                    "✅ Bạn đã thanh toán khoản vi phạm của đơn {$maHD} và được gỡ bỏ 1 vi phạm. Bạn còn 1 vi phạm chưa xử lý. Quyền COD đã được khôi phục.",
+                    $viPham->ma_hoa_don ? (int) $viPham->ma_hoa_don : null
+                );
+            } elseif ($conLai === 2) {
+                \App\Models\ThongBao::gui(
+                    (int) $viPham->ma_khach_hang,
+                    'info',
+                    "✅ Bạn đã thanh toán khoản vi phạm của đơn {$maHD}. Quyền mua hàng của bạn đã được mở lại. Bạn còn 2 vi phạm chưa xử lý (hình thức thanh toán COD vẫn tạm khóa).",
+                    $viPham->ma_hoa_don ? (int) $viPham->ma_hoa_don : null
+                );
+            } else {
+                \App\Models\ThongBao::gui(
+                    (int) $viPham->ma_khach_hang,
+                    'info',
+                    "✅ Bạn đã thanh toán khoản vi phạm của đơn {$maHD}. Bạn còn {$conLai} vi phạm chưa xử lý. Vui lòng thanh toán thêm để mở lại quyền mua hàng.",
+                    $viPham->ma_hoa_don ? (int) $viPham->ma_hoa_don : null
                 );
             }
         }

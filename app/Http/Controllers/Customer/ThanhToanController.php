@@ -136,14 +136,19 @@ class ThanhToanController extends Controller
         $viPhamChuaGo = \App\Models\ViPhamKhachHang::where('ma_khach_hang', $khachHang->ma_khach_hang)
             ->where('da_go', false);
 
-        if ((clone $viPhamChuaGo)->where('han_che_ap_dung', 'TAM_KHOA_MUA_HANG')->exists()) {
+        $soViPhamChuaGo = (clone $viPhamChuaGo)->count();
+
+        // >= 3 vi phạm: Tạm khóa mua hàng (không được tạo đơn mới, 3 -> 2 cho mua lại)
+        if ($soViPhamChuaGo >= 3) {
             return redirect()->route('customer.vi-pham.index')
-                ->with('error', 'Tài khoản đang bị tạm khóa mua hàng do vi phạm. Vui lòng thanh toán các khoản vi phạm để được mở lại.');
+                ->with('error', 'Tài khoản đang bị tạm khóa mua hàng do có từ 3 vi phạm chưa xử lý. Vui lòng thanh toán các khoản vi phạm để được mở lại quyền mua hàng.');
         }
+
+        // 2 vi phạm hoặc COD bị giới hạn: Cấm COD (chỉ thanh toán online, 2 -> 1 mở lại COD)
         if ($request->phuong_thuc_thanh_toan === 'COD'
-            && ($khachHang->quyen_cod === 'GIOI_HAN' || (clone $viPhamChuaGo)->count() >= 2)) {
+            && ($khachHang->quyen_cod === 'GIOI_HAN' || $soViPhamChuaGo >= 2)) {
             return redirect()->route('customer.thanh-toan')
-                ->with('error', 'Tài khoản của bạn đang bị hạn chế COD do vi phạm. Vui lòng thanh toán trước (VNPay) hoặc thanh toán khoản vi phạm tại mục "Vi phạm & Thanh toán".');
+                ->with('error', 'Tài khoản của bạn đang bị hạn chế COD do vi phạm. Vui lòng thanh toán trước (VNPay) hoặc thanh toán khoản vi phạm tại mục "Xử lý vi phạm".');
         }
 
         $diemSuDung = (int) session('diem_su_dung', 0);
