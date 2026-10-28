@@ -28,7 +28,8 @@ async function confirmDelivery(maNhanVien, id) {
     }
 
     // CHUA_THANH_TOAN → shipper vừa thu tiền mặt; DA_THANH_TOAN → không giữ tiền
-    const thuTienMat = hoaDon.trang_thai_thanh_toan === 'CHUA_THANH_TOAN';
+    const thuTienMat = hoaDon.phuong_thuc_thanh_toan === 'COD'
+        && hoaDon.trang_thai_thanh_toan === 'CHUA_THANH_TOAN';
     const ngayGiao = new Date();
 
     await sequelize.transaction(async (t) => {

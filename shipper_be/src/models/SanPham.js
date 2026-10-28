@@ -22,7 +22,12 @@ class SanPham extends Model {
      */
     get laHoaTuoi() {
         if (this.loai_san_pham) {
-            return ['HOA_TUOI', 'HOA_SAP', 'HOA_GIAY_NHUN'].includes(this.loai_san_pham);
+            return [
+                'HOA_TUOI',
+                'SAN_PHAM_PREMIUM',
+                'CHAU_HOA_TUOI',
+                'CAY_CANH',
+            ].includes(this.loai_san_pham);
         }
         const ten = (this.ten_san_pham || '').toLowerCase();
         return ten.includes('hoa') || ten.includes('flower') || ten.includes('bó');

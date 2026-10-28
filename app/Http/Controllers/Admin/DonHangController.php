@@ -235,44 +235,97 @@ class DonHangController extends Controller
 }
 
     private function xuLyDon(int $id, bool $xacNhan, ?int $shipperId, int &$diemDaDungOut = 0, int &$diemDaCongOut = 0): HoaDon
-    {
-        return DB::transaction(function () use ($id, $xacNhan, $shipperId, &$diemDaDungOut, &$diemDaCongOut) {
-            $hd = HoaDon::whereKey($id)->lockForUpdate()->firstOrFail();
-            if ($hd->trang_thai !== 'PENDING') BoHoaController::loi('Chỉ xử lý đơn PENDING. Đơn này đã được xử lý.');
-            if ($xacNhan) {
-                if (!NhanVien::whereKey($shipperId)->where('chuc_vu', 'SHIPPER')->exists()) BoHoaController::loi('Vui lòng chọn nhân viên có chức vụ SHIPPER.');
-                if (!$hd->dia_chi_giao || !$hd->so_dien_thoai || !$hd->phuong_thuc_thanh_toan) BoHoaController::loi('Khách chưa hoàn tất thông tin giao hàng và phương thức thanh toán.');
-                // Lock reserved bouquets. Both types already left available stock at checkout.
-                \App\Models\BoHoa::where('ma_hoa_don', $id)->orderBy('ma_bo_hoa')->lockForUpdate()->get();
-                \App\Services\InventoryReservationService::confirmOrder($hd);
-            } else {
-                $laBo = BoHoaController::huyBoTrongDon($hd);
-                $hasReservations = \App\Models\InventoryReservation::where('ma_hoa_don', $hd->ma_hoa_don)->exists();
-                $items = $hd->chiTietHoaDon()->get();
-                if (!$laBo && !$hasReservations) {
-                    BoHoaController::hoanKho($items->toArray());
-                }
-                if (!$laBo && $items->isNotEmpty()) {
-                    $khach = KhachHang::whereKey($hd->ma_khach_hang)->lockForUpdate()->first();
-                    if ($khach) {
-                        // ===== Logic điểm tích lũy (tính ngược từ dữ liệu có sẵn, từ bản 1) =====
-                        //  goc     = sum(gia_ban_snapshot × so_luong) từ chi tiết hóa đơn
-                        //  daDung  = (goc - tong_tien) / DIEM_QUY_DOI
-                        //            → nếu > 0 tức khách có dùng điểm khi đặt → hoàn lại khi hủy
-                        //  daCong  = floor(tong_tien / TICH_DIEM)
-                        //            → điểm đã cộng khi đặt đơn → thu hồi khi hủy
-                        $goc = $items->sum(fn ($ct) => $ct->gia_ban_snapshot * $ct->so_luong);
-                        $daDung = max(0, (int) round(($goc - $hd->tong_tien) / self::DIEM_QUY_DOI));
-                        $daCong = (int) floor($hd->tong_tien / self::TICH_DIEM);
-                        $khach->update(['diem_tich_luy' => max(0, $khach->diem_tich_luy + $daDung - $daCong)]);
+{
+    return DB::transaction(function () use ($id, $xacNhan, $shipperId, &$diemDaDungOut, &$diemDaCongOut) {
+        $hd = HoaDon::whereKey($id)->lockForUpdate()->firstOrFail();
+
+        if ($hd->trang_thai !== 'PENDING') {
+            BoHoaController::loi('Chỉ xử lý đơn PENDING. Đơn này đã được xử lý.');
+        }
+
+        if ($xacNhan) {
+            // ── XÁC NHẬN: giữ nguyên hành vi cũ ──
+            if (!NhanVien::whereKey($shipperId)->where('chuc_vu', 'SHIPPER')->exists()) {
+                BoHoaController::loi('Vui lòng chọn nhân viên có chức vụ SHIPPER.');
+            }
+            if (!$hd->dia_chi_giao || !$hd->so_dien_thoai || !$hd->phuong_thuc_thanh_toan) {
+                BoHoaController::loi('Khách chưa hoàn tất thông tin giao hàng và phương thức thanh toán.');
+            }
+
+            \App\Models\BoHoa::where('ma_hoa_don', $id)
+                ->orderBy('ma_bo_hoa')->lockForUpdate()->get();
+            \App\Services\InventoryReservationService::confirmOrder($hd);
+
+        } else {
+            // ── HỦY: hoàn kho + hoàn điểm ──
+            $laBo = BoHoaController::huyBoTrongDon($hd);
+            $hasReservations = \App\Models\InventoryReservation::where('ma_hoa_don', $hd->ma_hoa_don)->exists();
+            $items = $hd->chiTietHoaDon()->get();
+
+            // Hoàn kho legacy: chỉ khi KHÔNG có bó + KHÔNG có reservation
+            // (bó / reservation xử lý qua releaseOrder ở huyBoTrongDon)
+            if (!$laBo && !$hasReservations) {
+                BoHoaController::hoanKho($items->toArray());
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // HOÀN ĐIỂM — luôn chạy bất kể đơn có bó hoa hay không.
+            // Có 2 nhánh:
+            //   (A) Có ChiTietHoaDon → tính từ dữ liệu chi tiết.
+            //   (B) Thiếu ChiTietHoaDon → FALLBACK đọc snapshot VNPAY.
+            // ─────────────────────────────────────────────────────────────
+            $khach = KhachHang::whereKey($hd->ma_khach_hang)->lockForUpdate()->first();
+
+            if ($khach) {
+                if ($items->isNotEmpty()) {
+                    // ── NHÁNH A ──
+                    $coBo      = $items->whereNotNull('ma_bo_hoa')->isNotEmpty();
+                    $dongsTinh = $coBo ? $items->whereNotNull('ma_bo_hoa') : $items;
+
+                    $goc    = $dongsTinh->sum(fn ($ct) => $ct->gia_ban_snapshot * $ct->so_luong);
+                    $daDung = max(0, (int) round(($goc - $hd->tong_tien) / self::DIEM_QUY_DOI));
+                    $daCong = (int) floor($hd->tong_tien / self::TICH_DIEM);
+
+                    $khach->update([
+                        'diem_tich_luy' => max(0, $khach->diem_tich_luy + $daDung - $daCong),
+                    ]);
+                    $diemDaDungOut = $daDung;
+                    $diemDaCongOut = $daCong;
+
+                    \Log::info("[HuyDon] HD#{$hd->ma_hoa_don} hoàn điểm từ ChiTietHoaDon", [
+                        'goc' => $goc, 'tong' => $hd->tong_tien,
+                        'da_dung' => $daDung, 'da_cong' => $daCong, 'co_bo' => $coBo,
+                    ]);
+                } else {
+                    // ── NHÁNH B: FALLBACK snapshot VNPAY ──
+                    $snapshot = $hd->vnpay_cart_snapshot;
+
+                    if (is_array($snapshot)) {
+                        $daDung = (int) ($snapshot['diem_su_dung'] ?? 0);
+                        $daCong = (int) floor((float) $hd->tong_tien / self::TICH_DIEM);
+
+                        $khach->update([
+                            'diem_tich_luy' => max(0, $khach->diem_tich_luy + $daDung - $daCong),
+                        ]);
                         $diemDaDungOut = $daDung;
                         $diemDaCongOut = $daCong;
+
+                        \Log::info("[HuyDon] HD#{$hd->ma_hoa_don} hoàn điểm từ SNAPSHOT VNPAY (thiếu chi tiết)", [
+                            'da_dung' => $daDung, 'da_cong' => $daCong,
+                        ]);
+                    } else {
+                        \Log::warning("[HuyDon] HD#{$hd->ma_hoa_don} KHÔNG có ChiTietHoaDon và KHÔNG có snapshot → không hoàn điểm được");
                     }
                 }
             }
-            $hd->update($xacNhan ? ['trang_thai' => 'CONFIRMED', 'ma_nhan_vien_giao' => $shipperId] : ['trang_thai' => 'CANCELLED']);
-            return $hd->load('chiTietHoaDon.sanPham');
-        }, 3);
-    }
+        }
+
+        $hd->update($xacNhan
+            ? ['trang_thai' => 'CONFIRMED', 'ma_nhan_vien_giao' => $shipperId]
+            : ['trang_thai' => 'CANCELLED']);
+
+        return $hd->load('chiTietHoaDon.sanPham');
+    }, 3);
+}
 
 }

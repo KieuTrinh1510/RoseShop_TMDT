@@ -227,6 +227,18 @@
         {{-- BẢNG DỮ LIỆU SHIPPER --}}
         <div class="rs-table-container">
             <table class="rs-table">
+                <colgroup>
+                    <col style="width: 105px;">
+                    <col style="width: 220px;">
+                    <col style="width: 230px;">
+                    <col style="width: 130px;">
+                    <col style="width: 150px;">
+                    <col style="width: 100px;">
+                    <col style="width: 110px;">
+                    <col style="width: 145px;">
+                    <col style="width: 120px;">
+                    <col style="width: 160px;">
+                </colgroup>
                 <thead>
                     <tr>
                         <th style="width: 100px; text-align: center;">Mã Shipper</th>
@@ -236,8 +248,9 @@
                         <th style="width: 160px; text-align: center;">Trạng thái làm việc</th>
                         <th style="width: 100px; text-align: center;">Nhận đơn</th>
                         <th style="width: 110px; text-align: center;">Đang giao</th>
-                        <th style="width: 130px; text-align: center;">Tài khoản</th>
-                        <th style="width: 130px; text-align: center;">Thao tác</th>
+                        <th style="width: 145px; text-align: center;">Tiền COD đã thu</th>
+                        <th style="width: 120px; text-align: center;">Tài khoản</th>
+                        <th style="width: 160px; text-align: center;">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -247,6 +260,8 @@
                             $isLocked = ($user && $user->trang_thai === \App\Models\NguoiDung::TRANG_THAI_BI_KHOA);
                             $isOnline = ($sp->trang_thai_hoat_dong === 'ONLINE');
                             $isReceiving = ($sp->nhan_don == 1);
+                            $debt     = $shipperDebts[$sp->ma_nhan_vien] ?? 0;
+                            $tienPhat = (float) ($sp->tien_phat ?? 0);
                         @endphp
                         <tr>
                             {{-- Mã Shipper: Đồng bộ theo mã nhân viên toàn hệ thống NV-xxxx --}}
@@ -308,6 +323,11 @@
                                 @endif
                             </td>
 
+                            {{-- Tiền COD đã thu, đồng bộ công thức với Node shipper --}}
+                            <td style="text-align: right; white-space: nowrap; font-weight: 600; color: {{ (float) $debt > 0 ? '#ea580c' : '#16a34a' }};">
+                                {{ number_format((float) $debt, 0, ',', '.') }} đ
+                            </td>
+
                             {{-- Trạng thái tài khoản --}}
                             <td style="text-align: center;">
                                 @if($isLocked)
@@ -324,6 +344,21 @@
                             {{-- Thao tác --}}
                             <td style="text-align: center;">
                                 <div class="rs-action-group">
+                                    {{-- Nút Nộp tiền COD + Phạt (chỉ hiện khi có nợ hoặc có phạt) --}}
+                                    @if($debt > 0 || $tienPhat > 0)
+                                        <button type="button"
+                                                class="rs-action-btn payback"
+                                                style="background:#e0f2fe; color:#0369a1;"
+                                                title="Xác nhận đã nộp tiền COD & phạt"
+                                                onclick="openPaybackModal({{ $sp->ma_nhan_vien }}, '{{ addslashes($sp->ten_nhan_vien) }}', {{ (float) $debt }}, {{ $tienPhat }})">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="2" y="5" width="20" height="14" rx="2"/>
+                                                <line x1="2" y1="10" x2="22" y2="10"/>
+                                                <circle cx="8" cy="15" r="1.5"/>
+                                            </svg>
+                                        </button>
+                                    @endif
+
                                     {{-- Nút Xem chi tiết --}}
                                     <button type="button" class="rs-action-btn detail" title="Xem chi tiết Shipper" onclick="openShipperDetail({{ $sp->ma_nhan_vien }})">
                                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -606,6 +641,58 @@
     </div>
 </div>
 
+{{-- MODAL 4: XÁC NHẬN NỘP TIỀN COD + PHẠT --}}
+<div class="rs-modal" id="paybackModal">
+    <div class="rs-modal-dialog" style="max-width: 540px;">
+        <form method="POST" action="" id="paybackForm" onsubmit="submitPayback(event)">
+            @csrf
+            <div class="rs-modal-header">
+                <h3 class="rs-modal-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="5" width="20" height="14" rx="2"/>
+                        <line x1="2" y1="10" x2="22" y2="10"/>
+                        <circle cx="8" cy="15" r="1.5"/>
+                    </svg>
+                    Xác nhận nộp tiền COD + Phạt
+                </h3>
+                <button type="button" class="rs-modal-close" onclick="closePaybackModal()">&times;</button>
+            </div>
+
+            <div class="rs-modal-body">
+                <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:12px; padding:16px 18px; margin-bottom:16px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:14px;">
+                        <span style="color:#0369a1;">Shipper:</span>
+                        <strong id="pb_name" style="color:#0c4a6e;">—</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:14px;">
+                        <span style="color:#0369a1;">Tổng COD cần nộp:</span>
+                        <strong id="pb_cod" style="color:#0c4a6e;">0 đ</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:14px;">
+                        <span style="color:#b45309;">Tiền phạt:</span>
+                        <strong id="pb_fine" style="color:#b45309;">0 đ</strong>
+                    </div>
+                    <div style="border-top:1px dashed #7dd3fc; padding-top:10px; margin-top:10px; display:flex; justify-content:space-between; font-size:15px;">
+                        <span style="font-weight:700; color:#0c4a6e;">TỔNG CẦN NỘP:</span>
+                        <strong id="pb_total" style="color:#dc2626; font-size:16px;">0 đ</strong>
+                    </div>
+                </div>
+
+                <div style="background:#fef3c7; border:1px solid #fde68a; border-radius:8px; padding:12px 14px; font-size:13px; color:#92400e; line-height:1.5;">
+                    <strong>⚠️ Lưu ý:</strong> Sau khi xác nhận, tất cả đơn COD <em>đã thu tiền mặt</em> sẽ chuyển sang trạng thái <strong>"Đã nộp"</strong> và tiền phạt của shipper sẽ được <strong>xóa về 0</strong>. Thao tác này <u>không thể hoàn tác</u>.
+                </div>
+            </div>
+
+            <div class="rs-modal-footer">
+                <button type="button" class="rs-btn-cancel" onclick="closePaybackModal()">Hủy</button>
+                <button type="submit" class="rs-btn-submit" id="pb_submit_btn" style="background:#0ea5e9;">
+                    Xác nhận đã nộp
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @push('scripts')
 <script>
     // 1. Thay đổi số hàng mỗi trang
@@ -645,7 +732,7 @@
                     document.getElementById('dt_ca_lam_viec').textContent = d.cong_viec;
                     document.getElementById('dt_luong').textContent = new Intl.NumberFormat('vi-VN').format(d.luong) + ' đ';
                     document.getElementById('dt_trang_thai_lam_viec').textContent = d.trang_thai_hoat_dong === 'ONLINE' ? '🟢 Đang Online' : '⚪ Offline';
-                    
+
                     document.getElementById('dt_tong_don').textContent = d.thong_ke.tong_don + ' đơn';
                     document.getElementById('dt_so_don_dang_giao').textContent = d.thong_ke.so_don_dang_giao + ' đơn';
                     document.getElementById('dt_so_don_da_giao').textContent = d.thong_ke.so_don_da_giao + ' đơn';
@@ -744,6 +831,59 @@
         }
 
         openModal('modalConfirmToggle');
+    }
+
+    // 6. Xác nhận nộp tiền COD + Phạt
+    function openPaybackModal(id, name, cod, fine) {
+        document.getElementById('paybackForm').action = `/nhan-vien/${id}/tra-tien`;
+        document.getElementById('pb_name').textContent  = name;
+        document.getElementById('pb_cod').textContent   = new Intl.NumberFormat('vi-VN').format(cod)  + ' đ';
+        document.getElementById('pb_fine').textContent  = new Intl.NumberFormat('vi-VN').format(fine) + ' đ';
+        document.getElementById('pb_total').textContent = new Intl.NumberFormat('vi-VN').format(cod + fine) + ' đ';
+
+        const btn = document.getElementById('pb_submit_btn');
+        btn.disabled = false;
+        btn.textContent = 'Xác nhận đã nộp';
+
+        openModal('paybackModal');
+    }
+
+    function closePaybackModal() {
+        closeModal('paybackModal');
+    }
+
+    function submitPayback(e) {
+        e.preventDefault();
+        const form = document.getElementById('paybackForm');
+        const btn  = document.getElementById('pb_submit_btn');
+        btn.disabled = true;
+        btn.textContent = 'Đang xử lý...';
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                closePaybackModal();
+                alert('✓ ' + data.message);
+                location.reload();
+            } else {
+                alert('✕ ' + (data.message || 'Có lỗi xảy ra.'));
+                btn.disabled = false;
+                btn.textContent = 'Xác nhận đã nộp';
+            }
+        })
+        .catch(() => {
+            alert('✕ Lỗi kết nối. Vui lòng thử lại.');
+            btn.disabled = false;
+            btn.textContent = 'Xác nhận đã nộp';
+        });
     }
 </script>
 @endpush
