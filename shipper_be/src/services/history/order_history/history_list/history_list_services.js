@@ -66,21 +66,33 @@ async function demTongDaHuy(maNhanVien) {
 // được áp sang thoi_diem_huy cho nhánh CANCELLED.
 function buildWhereLichSu(maNhanVien, boLoc) {
     const { ngay_giao: locNgay, ...locKhac } = buildFilter(boLoc) || {};
+    const loai = boLoc?.loai || 'ALL';
+    const allowed = ['ALL', 'DELIVERED', 'CANCELLED_SHIPPER', 'CANCELLED_CUSTOMER'];
+    if (!allowed.includes(loai)) {
+        const err = new Error('loai không hợp lệ.');
+        err.status = 400;
+        err.code = 'INVALID_HISTORY_TYPE';
+        throw err;
+    }
+    const delivered = { trang_thai: 'DELIVERED', ...(locNgay ? { ngay_giao: locNgay } : {}) };
+    const cancelled = {
+        trang_thai: 'CANCELLED',
+        nguon_huy: loai === 'CANCELLED_SHIPPER'
+            ? 'SHIPPER'
+            : loai === 'CANCELLED_CUSTOMER' ? 'CUSTOMER' : { [Op.in]: NGUON_HUY_HIEN_TRONG_LICH_SU },
+        ...(locNgay ? { thoi_diem_huy: locNgay } : {}),
+    };
+    const trangThaiFilter = loai === 'DELIVERED'
+        ? delivered
+        : (loai === 'CANCELLED_SHIPPER' || loai === 'CANCELLED_CUSTOMER')
+            ? cancelled
+            : { [Op.or]: [delivered, cancelled] };
 
     return {
         [Op.and]: [
             { ma_nhan_vien_giao: maNhanVien },
             locKhac,
-            {
-                [Op.or]: [
-                    { trang_thai: 'DELIVERED', ...(locNgay ? { ngay_giao: locNgay } : {}) },
-                    {
-                        trang_thai: 'CANCELLED',
-                        nguon_huy: { [Op.in]: NGUON_HUY_HIEN_TRONG_LICH_SU },
-                        ...(locNgay ? { thoi_diem_huy: locNgay } : {}),
-                    },
-                ],
-            },
+            trangThaiFilter,
         ],
     };
 }

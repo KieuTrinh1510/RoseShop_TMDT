@@ -50,10 +50,12 @@ async function danhDauTatCaDaDoc(maNguoiDung) {
 }
 
 async function xoa(maThongBao, maNguoiDung) {
-    const soDong = await ThongBao.destroy({
+    // Idempotent: xóa lặp lại (đã xóa / không tồn tại / không thuộc user) vẫn trả thành công.
+    // Tránh FE swipe + nút X gửi 2 request → request 2 fail.
+    await ThongBao.destroy({
         where: { ma_thong_bao: maThongBao, ma_nguoi_dung: maNguoiDung },
     });
-    return soDong > 0;
+    return true;
 }
 
 // ── Ghi (cho shipper) ──

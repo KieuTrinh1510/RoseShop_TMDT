@@ -1,7 +1,6 @@
-// lib/controllers/history/history_controller.dart
-// Lịch sử: đơn DELIVERED + đơn CANCELLED do SHIPPER/CUSTOMER — phân trang 10/trang chung
-// + filter ngày/khoảng/tháng/mã. total / total_pages lấy đúng từ backend.
+// (giữ nguyên import + class header)
 
+import 'dart:async'; // THÊM import Timer
 import 'package:flutter/foundation.dart';
 import '../../services/api_service.dart';
 import '../../utils/app_strings.dart';
@@ -11,13 +10,8 @@ class HistoryController extends ChangeNotifier {
   static const Duration minSkeleton = Duration(milliseconds: 350);
 
   bool loading = true;
-
-  /// true sau lần tải THÀNH CÔNG đầu tiên.
   bool hasLoaded = false;
-
   String? error;
-
-  /// Mã lỗi backend (INVALID_ORDER_CODE, INVALID_DATE, ...). null nếu lỗi mạng.
   String? errorCode;
 
   List<Map<String, dynamic>> items = [];
@@ -26,21 +20,25 @@ class HistoryController extends ChangeNotifier {
   int total = 0;
   int totalPages = 1;
 
-  // Bộ lọc (null = không lọc)
   String? ngay;
   String? tuNgay;
   String? denNgay;
   String? thang;
   String? ma;
+  String loai = 'ALL';
 
   bool _disposed = false;
 
   /// Mỗi lần load tăng 1; response của lần load cũ (đến muộn) sẽ bị bỏ qua.
   int _reqId = 0;
 
+  /// Debounce filter + pagination để tránh spam request.
+  Timer? _loadDebounce;
+
   @override
   void dispose() {
     _disposed = true;
+    _loadDebounce?.cancel();
     super.dispose();
   }
 
@@ -54,7 +52,8 @@ class HistoryController extends ChangeNotifier {
       (tuNgay?.isNotEmpty ?? false) ||
       (denNgay?.isNotEmpty ?? false) ||
       (thang?.isNotEmpty ?? false) ||
-      (ma?.isNotEmpty ?? false);
+      (ma?.isNotEmpty ?? false) ||
+      loai != 'ALL';
 
   Future<void> load({int? toPage, bool refresh = false}) async {
     final reqId = ++_reqId;
@@ -71,14 +70,14 @@ class HistoryController extends ChangeNotifier {
       if (denNgay?.isNotEmpty ?? false) query['den_ngay'] = denNgay;
       if (thang?.isNotEmpty ?? false) query['thang'] = thang;
       if (ma?.isNotEmpty ?? false) query['ma'] = ma;
+      if (loai != 'ALL') query['loai'] = loai;
 
-      // Pull-to-refresh không cần giữ skeleton.
       final minDelay = Future<void>.delayed(
         refresh ? Duration.zero : minSkeleton,
       );
       final res = await ApiService.get('/history', query: query);
       await minDelay;
-      if (reqId != _reqId) return; // đã có request mới hơn
+      if (reqId != _reqId) return;
 
       if (res is Map) {
         items = _asListMap(res['items']).where(_hienTrongLichSu).toList();
@@ -98,7 +97,6 @@ class HistoryController extends ChangeNotifier {
       if (reqId != _reqId) return;
       error = e.message;
       errorCode = '${e.code}';
-      // Filter sai (INVALID_*) → bỏ list cũ để không nhầm với kết quả mới.
       if (errorCode!.startsWith('INVALID_')) {
         items = [];
         total = 0;
@@ -120,33 +118,39 @@ class HistoryController extends ChangeNotifier {
   Future<void> refresh() => load(refresh: true);
 
   void nextPage() {
-    if (page < totalPages) load(toPage: page + 1);
+    if (page < totalPages) _scheduleLoad(toPage: page + 1);
   }
 
   void prevPage() {
-    if (page > 1) load(toPage: page - 1);
+    if (page > 1) _scheduleLoad(toPage: page - 1);
   }
 
-  /// Ghi đè TOÀN BỘ filter (field không truyền = null) rồi load lại trang 1.
+  void _scheduleLoad({int? toPage}) {
+    _loadDebounce?.cancel();
+    _loadDebounce = Timer(const Duration(milliseconds: 300), () {
+      load(toPage: toPage);
+    });
+  }
+
   void setFilter({
     String? ngay,
     String? tuNgay,
     String? denNgay,
     String? thang,
     String? ma,
+    String? loai,
   }) {
     this.ngay = ngay;
     this.tuNgay = tuNgay;
     this.denNgay = denNgay;
     this.thang = thang;
     this.ma = ma;
-    load(toPage: 1);
+    this.loai = loai ?? 'ALL';
+    _scheduleLoad(toPage: 1);
   }
 
   void clearFilter() => setFilter();
 
-  /// Phòng thủ phía client (backend đã lọc sẵn): chỉ DELIVERED hoặc
-  /// CANCELLED có nguon_huy = SHIPPER / CUSTOMER. Backend cũ không trả trang_thai → coi như DELIVERED.
   static bool _hienTrongLichSu(Map<String, dynamic> it) {
     final tt = it['trang_thai']?.toString() ?? '';
     if (tt.isEmpty || tt == 'DELIVERED') return true;

@@ -98,6 +98,9 @@ const Map<String, String> _vi = {
   'clear_filter': 'Xoá bộ lọc',
   'hist_no_match': 'Không có đơn nào khớp bộ lọc.',
   'hist_empty': 'Chưa có đơn đã giao hoặc đã hủy.',
+  'hist_delivered': 'Đã giao',
+  'hist_cancel_shipper': 'Hủy do shipper',
+  'hist_cancel_customer': 'Hủy do khách',
   'cust_prefix': 'KH: {name}',
   'delivered_at': 'Giao: {t}',
   'search_hint': 'Tìm mã đơn (VD: 90 hoặc #90)',
@@ -269,6 +272,7 @@ const Map<String, String> _vi = {
   'h_cancel_customer': 'Hủy do khách hàng không nhận hàng',
   'h_cancelled': 'Đã hủy',
   'h_cancelled_at': 'Hủy: {t}',
+  'notif_delete_failed': 'Xóa thông báo thất bại, vui lòng thử lại.',
 };
 
 const Map<String, String> _en = {
@@ -353,6 +357,9 @@ const Map<String, String> _en = {
   'clear_filter': 'Clear filters',
   'hist_no_match': 'No orders match the filters.',
   'hist_empty': 'No delivered or cancelled orders yet.',
+  'hist_delivered': 'Delivered',
+  'hist_cancel_shipper': 'Cancelled by shipper',
+  'hist_cancel_customer': 'Cancelled by customer',
   'cust_prefix': 'Customer: {name}',
   'delivered_at': 'Delivered: {t}',
   'search_hint': 'Search order ID (e.g. 90 or #90)',
@@ -527,4 +534,5 @@ const Map<String, String> _en = {
   'h_cancel_customer': 'Cancelled: customer did not collect',
   'h_cancelled': 'Cancelled',
   'h_cancelled_at': 'Cancelled: {t}',
+  'notif_delete_failed': 'Failed to delete notification, please try again.',
 };

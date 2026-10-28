@@ -47,40 +47,64 @@ async function updateInfo(maNhanVien, { ten_nhan_vien, so_dien_thoai, email } = 
         throw taoLoi(404, 'SHIPPER_NOT_FOUND', 'Không tìm thấy shipper.');
     }
 
+    // Mặc định giữ nguyên giá trị cũ; chỉ ghi đè khi client GỬI field đó.
+    let tenMoi = nv.ten_nhan_vien;
+    let sdtMoi = nv.so_dien_thoai;
+    let emailMoi = nv.email;
+
+    // ── ten_nhan_vien: bắt buộc, 1–50, chỉ chữ cái + khoảng trắng ──
     if (ten_nhan_vien !== undefined) {
-        if (!String(ten_nhan_vien).trim()) {
+        const s = String(ten_nhan_vien ?? '').trim();
+        if (!s) {
             throw taoLoi(400, 'INVALID_NAME', 'Tên không được để trống.');
         }
-        if (String(ten_nhan_vien).trim().length > 50) {
+        if (s.length > 50) {
             throw taoLoi(400, 'INVALID_NAME', 'Tên tối đa 50 ký tự.');
         }
-        if (!/^[\p{L} ]+$/u.test(String(ten_nhan_vien).trim())) {
+        if (!/^[\p{L} ]+$/u.test(s)) {
             throw taoLoi(400, 'INVALID_NAME', 'Tên chỉ gồm chữ cái và khoảng trắng.');
         }
+        tenMoi = s;
     }
 
-    if (so_dien_thoai !== undefined && so_dien_thoai !== null && so_dien_thoai !== '') {
-        if (!/^\d{10}$/.test(String(so_dien_thoai))) {
+    // ── so_dien_thoai: nếu GỬI thì không được rỗng + đúng 10 chữ số ──
+    if (so_dien_thoai !== undefined) {
+        const s = String(so_dien_thoai ?? '').trim();
+        if (!s) {
+            throw taoLoi(400, 'INVALID_PHONE', 'Số điện thoại không được để trống.');
+        }
+        if (!/^\d{10}$/.test(s)) {
             throw taoLoi(400, 'INVALID_PHONE', 'Số điện thoại phải đủ 10 chữ số.');
         }
+        sdtMoi = s;
     }
 
-    if (email !== undefined && email !== null && email !== '') {
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email))) {
+    // ── email: nếu GỬI thì không được rỗng + ≤ 100 + đúng format + không trùng ──
+    if (email !== undefined) {
+        const s = String(email ?? '').trim();
+        if (!s) {
+            throw taoLoi(400, 'INVALID_EMAIL', 'Email không được để trống.');
+        }
+        if (s.length > 100) {
+            throw taoLoi(400, 'INVALID_EMAIL', 'Email tối đa 100 ký tự.');
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) {
             throw taoLoi(400, 'INVALID_EMAIL', 'Email không hợp lệ.');
         }
-        const emailMoi = String(email).trim();
-        const doi = emailMoi.toLowerCase() !== String(nv.email || '').trim().toLowerCase();
-        if (doi && await emailDaDuocDung(maNhanVien, emailMoi)) {
-            throw taoLoi(409, 'EMAIL_ALREADY_USED',
-                'Email này đã được sử dụng cho tài khoản khác.');
+        const emailCu = String(nv.email || '').trim();
+        if (s.toLowerCase() !== emailCu.toLowerCase()) {
+            if (await emailDaDuocDung(maNhanVien, s)) {
+                throw taoLoi(409, 'EMAIL_ALREADY_USED',
+                    'Email này đã được sử dụng cho tài khoản khác.');
+            }
         }
+        emailMoi = s;
     }
 
     await nv.updateProfile({
-        ten_nhan_vien: ten_nhan_vien ?? nv.ten_nhan_vien,
-        so_dien_thoai: so_dien_thoai ?? nv.so_dien_thoai,
-        email: email ?? nv.email,
+        ten_nhan_vien: tenMoi,
+        so_dien_thoai: sdtMoi,
+        email: emailMoi,
     });
 
     return getThongTin(maNhanVien);

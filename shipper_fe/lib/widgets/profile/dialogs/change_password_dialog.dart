@@ -2,6 +2,7 @@
 // Dialog đổi mật khẩu. Trả null nếu huỷ, ngược lại trả Map {cu, moi}.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../theme/pink_theme.dart';
 
 Future<Map<String, String>?> showChangePasswordDialog(BuildContext context) {
@@ -54,6 +55,10 @@ Future<Map<String, String>?> showChangePasswordDialog(BuildContext context) {
               TextFormField(
                 controller: moiCtrl,
                 obscureText: hide2,
+                maxLength: 100, // THÊM
+                inputFormatters: [
+                  LengthLimitingTextInputFormatter(100),
+                ], // THÊM
                 style: const TextStyle(color: Pink.plum, fontSize: 14),
                 validator: (v) {
                   final s = v ?? '';

@@ -7,13 +7,21 @@ const shipperRoutes = require("./routes/shipperRoutes");
 const shipperAuthRoutes = require("./routes/shipperAuthRoutes");
 // Auth thật: JWT Bearer, yêu cầu vai_tro === 'SHIPPER' (fakeAuthMiddleware không còn được mount)
 const authMiddleware = require("./middleware/authMiddleware");
+const rateLimiter = require("./middleware/rate_limit_middleware");
 
 app.use(cors());
 app.use(express.json());
 
 // Login: công khai, phải mount TRƯỚC route yêu cầu token
 app.use("/api/shipper/auth", shipperAuthRoutes);
-app.use("/api/shipper", authMiddleware, shipperRoutes);
+
+// Rate limit đặt SAU authMiddleware (cần req.user.ma_nhan_vien)
+app.use(
+    "/api/shipper",
+    authMiddleware,
+    rateLimiter.createRateLimiter(),
+    shipperRoutes
+);
 
 // Route không tồn tại
 app.use((req, res) => {
