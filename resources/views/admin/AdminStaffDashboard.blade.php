@@ -742,10 +742,15 @@
         <div class="home-main">
 
             <div class="home-panel chart-panel">
-                <div class="panel-title">
-                    <h3>Doanh thu</h3>
+                <div class="panel-title d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                    <div>
+                        <h3 class="m-0" style="font-size: 16px; font-weight: 700; color: #1f2937;">Doanh thu</h3>
+                        <p class="m-0 mt-1" style="font-size: 13px; color: #64748b;">
+                            Tổng kỳ: <strong id="revenueTotalDisplay" style="color: #EC3D8F; font-size: 14px; font-weight: 700;">{{ number_format($tongDoanhThuKy ?? 0, 0, ',', '.') }}đ</strong>
+                        </p>
+                    </div>
 
-                    <select id="revenueRange" class="dashboard-select">
+                    <select id="revenueRange" class="dashboard-select" style="padding: 6px 12px; font-size: 13px; border-radius: 8px; border: 1px solid #D0D5DD; background-color: #fff; cursor: pointer; color: #344054; font-weight: 500; outline: none;">
                         <option value="today" {{ ($range ?? '7days') == 'today' ? 'selected' : '' }}>Hôm nay</option>
                         <option value="7days" {{ ($range ?? '7days') == '7days' ? 'selected' : '' }}>7 ngày qua</option>
                         <option value="30days" {{ ($range ?? '7days') == '30days' ? 'selected' : '' }}>30 ngày qua</option>
@@ -754,26 +759,8 @@
                     </select>
                 </div>
 
-                @php
-                    $chartData = $doanhThuTheoNgay ?? collect();
-                    $maxRevenue = max($chartData->max('doanh_thu') ?? 1, 1);
-                @endphp
-
-                <div class="dashboard-chart">
-                    @forelse($chartData as $item)
-                        <div class="chart-bar-item">
-                            <div class="bar" style="height: {{ max(25, ($item->doanh_thu / $maxRevenue) * 180) }}px;">
-                            </div>
-
-                            <strong>{{ number_format($item->doanh_thu, 0, ',', '.') }}</strong>
-
-                            <span>{{ \Carbon\Carbon::parse($item->ngay)->format('d/m') }}</span>
-                        </div>
-                    @empty
-                        <div class="empty-chart">
-                            Chưa có dữ liệu doanh thu.
-                        </div>
-                    @endforelse
+                <div class="revenue-chart-container" style="position: relative; height: 230px; width: 100%;">
+                    <canvas id="revenueChartCanvas"></canvas>
                 </div>
             </div>
 
@@ -1079,3 +1066,147 @@
     </script>
 
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const canvas = document.getElementById('revenueChartCanvas');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        const initialLabels = @json($chartLabels ?? []);
+        const initialValues = @json($chartValues ?? []);
+
+        // Gradient nền vùng bên dưới đường biểu đồ
+        let gradient = null;
+        try {
+            gradient = ctx.createLinearGradient(0, 0, 0, 230);
+            gradient.addColorStop(0, 'rgba(236, 61, 143, 0.22)');
+            gradient.addColorStop(1, 'rgba(236, 61, 143, 0.01)');
+        } catch (e) {
+            gradient = 'rgba(236, 61, 143, 0.08)';
+        }
+
+        const revenueChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: initialLabels,
+                datasets: [{
+                    label: 'Doanh thu',
+                    data: initialValues,
+                    borderColor: '#EC3D8F',
+                    backgroundColor: gradient,
+                    borderWidth: 2.5,
+                    tension: 0.35,
+                    fill: true,
+                    pointBackgroundColor: '#EC3D8F',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: initialLabels.length > 15 ? 2.5 : 4,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: '#be185d',
+                    pointHoverBorderColor: '#ffffff',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1f2937',
+                        titleColor: '#f9fafb',
+                        bodyColor: '#f9fafb',
+                        padding: 10,
+                        borderRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            title: function(items) {
+                                return items.length ? 'Thời gian: ' + items[0].label : '';
+                            },
+                            label: function (context) {
+                                const val = context.parsed.y !== null ? context.parsed.y : 0;
+                                return 'Doanh thu: ' + new Intl.NumberFormat('vi-VN').format(val) + ' đ';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            color: '#64748b',
+                            font: { size: 11, weight: '500' },
+                            maxRotation: 0,
+                            autoSkip: true,
+                            maxTicksLimit: 12
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function (val) {
+                                if (val >= 1000000) return (val / 1000000).toFixed(1) + 'M';
+                                if (val >= 1000) return (val / 1000).toFixed(0) + 'k';
+                                return val + 'đ';
+                            },
+                            color: '#64748b',
+                            font: { size: 11 }
+                        },
+                        grid: {
+                            color: '#f1f5f9'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Xử lý sự kiện khi thay đổi bộ lọc thời gian
+        const selectRevenueRange = document.getElementById('revenueRange');
+        const totalDisplay = document.getElementById('revenueTotalDisplay');
+
+        if (selectRevenueRange) {
+            selectRevenueRange.addEventListener('change', function () {
+                const selectedRange = this.value;
+                const targetUrl = new URL(window.location.href);
+                targetUrl.searchParams.set('range', selectedRange);
+
+                // Fetch AJAX mượt mà
+                fetch(targetUrl.toString(), {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('Network error');
+                    return res.json();
+                })
+                .then(data => {
+                    if (data && data.labels && data.values) {
+                        revenueChart.data.labels = data.labels;
+                        revenueChart.data.datasets[0].data = data.values;
+                        revenueChart.data.datasets[0].pointRadius = data.labels.length > 15 ? 2.5 : 4;
+                        revenueChart.update();
+
+                        if (totalDisplay && data.total_formatted) {
+                            totalDisplay.textContent = data.total_formatted;
+                        }
+                        window.history.pushState({ range: selectedRange }, '', targetUrl.toString());
+                    } else {
+                        window.location.href = targetUrl.toString();
+                    }
+                })
+                .catch(err => {
+                    console.warn('AJAX fetch failed, reloading:', err);
+                    window.location.href = targetUrl.toString();
+                });
+            });
+        }
+    });
+</script>
+@endpush

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\AdminNotificationService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -11,8 +12,9 @@ use Carbon\Carbon;
 
 class AdminController extends Controller
 {
-    public function dashboard()
+    public function dashboard(?Request $request = null)
     {
+        $req = $request ?? request();
         $user = Auth::user();
         $today = Carbon::today();
 
@@ -149,30 +151,108 @@ class AdminController extends Controller
             ->orderBy('sp.so_luong')
             ->limit(5)
             ->get();
-        $doanhThu7Ngay = DB::table('hoa_don')
-            ->where('trang_thai', 'DELIVERED')
-            ->whereDate('ngay_dat', '>=', now()->subDays(6)->toDateString())
-            ->selectRaw('DATE(ngay_dat) as ngay, SUM(tong_tien) as doanh_thu')
-            ->groupByRaw('DATE(ngay_dat)')
-            ->orderBy('ngay')
-            ->get();
-        $range = request('range', '7days');
+        $range = $req->input('range', '7days');
+        $chartLabels = [];
+        $chartValues = [];
 
-        $startDate = match ($range) {
-            'today' => now()->startOfDay(),
-            '30days' => now()->subDays(29)->startOfDay(),
-            'month' => now()->startOfMonth(),
-            'year' => now()->startOfYear(),
-            default => now()->subDays(6)->startOfDay(),
-        };
+        if ($range === 'today') {
+            $raw = DB::table('hoa_don')
+                ->where('trang_thai', 'DELIVERED')
+                ->whereDate('ngay_dat', now()->toDateString())
+                ->selectRaw('HOUR(ngay_dat) as h, SUM(tong_tien) as doanh_thu')
+                ->groupByRaw('HOUR(ngay_dat)')
+                ->pluck('doanh_thu', 'h');
 
-        $doanhThuTheoNgay = DB::table('hoa_don')
-            ->where('trang_thai', 'DELIVERED')
-            ->whereDate('ngay_dat', '>=', $startDate)
-            ->selectRaw('DATE(ngay_dat) as ngay, SUM(tong_tien) as doanh_thu')
-            ->groupByRaw('DATE(ngay_dat)')
-            ->orderBy('ngay')
-            ->get();
+            // 12 mốc 2 giờ (00:00, 02:00, ..., 22:00)
+            for ($h = 0; $h < 24; $h += 2) {
+                $chartLabels[] = sprintf('%02d:00', $h);
+                $val = (float)($raw[$h] ?? 0) + (float)($raw[$h + 1] ?? 0);
+                $chartValues[] = $val;
+            }
+        } elseif ($range === '30days') {
+            $raw = DB::table('hoa_don')
+                ->where('trang_thai', 'DELIVERED')
+                ->whereDate('ngay_dat', '>=', now()->subDays(29)->toDateString())
+                ->selectRaw('DATE(ngay_dat) as ngay, SUM(tong_tien) as doanh_thu')
+                ->groupByRaw('DATE(ngay_dat)')
+                ->pluck('doanh_thu', 'ngay');
+
+            for ($i = 29; $i >= 0; $i--) {
+                $d = now()->subDays($i);
+                $dateKey = $d->toDateString();
+                $chartLabels[] = $d->format('d/m');
+                $chartValues[] = (float)($raw[$dateKey] ?? 0);
+            }
+        } elseif ($range === 'month') {
+            $raw = DB::table('hoa_don')
+                ->where('trang_thai', 'DELIVERED')
+                ->whereDate('ngay_dat', '>=', now()->startOfMonth()->toDateString())
+                ->whereDate('ngay_dat', '<=', now()->endOfMonth()->toDateString())
+                ->selectRaw('DATE(ngay_dat) as ngay, SUM(tong_tien) as doanh_thu')
+                ->groupByRaw('DATE(ngay_dat)')
+                ->pluck('doanh_thu', 'ngay');
+
+            $daysInMonth = now()->daysInMonth;
+            for ($day = 1; $day <= $daysInMonth; $day++) {
+                $d = now()->copy()->day($day);
+                $dateKey = $d->toDateString();
+                $chartLabels[] = $d->format('d/m');
+                $chartValues[] = (float)($raw[$dateKey] ?? 0);
+            }
+        } elseif ($range === 'year') {
+            $raw = DB::table('hoa_don')
+                ->where('trang_thai', 'DELIVERED')
+                ->whereYear('ngay_dat', now()->year)
+                ->selectRaw('MONTH(ngay_dat) as m, SUM(tong_tien) as doanh_thu')
+                ->groupByRaw('MONTH(ngay_dat)')
+                ->pluck('doanh_thu', 'm');
+
+            for ($m = 1; $m <= 12; $m++) {
+                $chartLabels[] = 'Thg ' . $m;
+                $chartValues[] = (float)($raw[$m] ?? 0);
+            }
+        } else {
+            // default: 7days
+            $range = '7days';
+            $raw = DB::table('hoa_don')
+                ->where('trang_thai', 'DELIVERED')
+                ->whereDate('ngay_dat', '>=', now()->subDays(6)->toDateString())
+                ->selectRaw('DATE(ngay_dat) as ngay, SUM(tong_tien) as doanh_thu')
+                ->groupByRaw('DATE(ngay_dat)')
+                ->pluck('doanh_thu', 'ngay');
+
+            for ($i = 6; $i >= 0; $i--) {
+                $d = now()->subDays($i);
+                $dateKey = $d->toDateString();
+                $chartLabels[] = $d->format('d/m');
+                $chartValues[] = (float)($raw[$dateKey] ?? 0);
+            }
+        }
+
+        $tongDoanhThuKy = array_sum($chartValues);
+
+        // Chuẩn bị dữ liệu tương thích ngược
+        $doanhThuTheoNgay = collect();
+        foreach ($chartLabels as $idx => $lbl) {
+            $doanhThuTheoNgay->push((object)[
+                'ngay' => $lbl,
+                'doanh_thu' => $chartValues[$idx],
+            ]);
+        }
+        $doanhThu7Ngay = $doanhThuTheoNgay;
+
+        // Hỗ trợ AJAX request để update biểu đồ mượt mà không cần reload trang
+        if ($req->ajax() || $req->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'labels' => $chartLabels,
+                'values' => $chartValues,
+                'total' => $tongDoanhThuKy,
+                'total_formatted' => number_format($tongDoanhThuKy, 0, ',', '.') . 'đ',
+                'range' => $range,
+            ]);
+        }
+
         $thongBaoCuaHang = AdminNotificationService::getNotifications();
 
         return view('admin.AdminStaffDashboard', compact(
@@ -195,6 +275,9 @@ class AdminController extends Controller
             'sanPhamSapHet',
             'doanhThu7Ngay',
             'doanhThuTheoNgay',
+            'chartLabels',
+            'chartValues',
+            'tongDoanhThuKy',
             'range'
         ));
     }
