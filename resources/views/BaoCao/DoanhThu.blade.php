@@ -74,10 +74,10 @@
 
                 <div class="filter-col">
                     <label class="filter-label">Nhóm dữ liệu theo</label>
-                    <select name="kieu_hien_thi" class="form-select">
+                    <select name="kieu_hien_thi" id="filter_kieu_hien_thi" class="form-select">
                         <option value="" disabled {{ empty($kieuHienThi) ? 'selected' : '' }}>-- Chọn chu kỳ --</option>
                         <option value="ngay" {{ ($kieuHienThi ?? '') === 'ngay' ? 'selected' : '' }}>Theo ngày</option>
-                        <option value="thang" {{ ($kieuHienThi ?? 'thang') === 'thang' ? 'selected' : '' }}>Theo tháng</option>
+                        <option value="thang" {{ ($kieuHienThi ?? '') === 'thang' ? 'selected' : '' }}>Theo tháng</option>
                         <option value="quy" {{ ($kieuHienThi ?? '') === 'quy' ? 'selected' : '' }}>Theo quý</option>
                         <option value="nam" {{ ($kieuHienThi ?? '') === 'nam' ? 'selected' : '' }}>Theo năm</option>
                     </select>
@@ -249,28 +249,28 @@
                                 <span class="donut-legend-dot" style="background: #ec4899;"></span>
                                 <span>Bó hoa có sẵn</span>
                             </div>
-                            <span class="donut-legend-pct">0%</span>
+                            <span class="donut-legend-pct">{{ $dataNhomSanPham['bo_hoa_co_san']['pct'] ?? 0 }}%</span>
                         </div>
                         <div class="donut-legend-item">
                             <div class="donut-legend-left">
                                 <span class="donut-legend-dot" style="background: #8b5cf6;"></span>
                                 <span>Custom Mix</span>
                             </div>
-                            <span class="donut-legend-pct">0%</span>
+                            <span class="donut-legend-pct">{{ $dataNhomSanPham['custom_mix']['pct'] ?? 0 }}%</span>
                         </div>
                         <div class="donut-legend-item">
                             <div class="donut-legend-left">
                                 <span class="donut-legend-dot" style="background: #3b82f6;"></span>
                                 <span>Hoa lẻ</span>
                             </div>
-                            <span class="donut-legend-pct">0%</span>
+                            <span class="donut-legend-pct">{{ $dataNhomSanPham['hoa_le']['pct'] ?? 0 }}%</span>
                         </div>
                         <div class="donut-legend-item">
                             <div class="donut-legend-left">
                                 <span class="donut-legend-dot" style="background: #f59e0b;"></span>
                                 <span>Flash Sale</span>
                             </div>
-                            <span class="donut-legend-pct">0%</span>
+                            <span class="donut-legend-pct">{{ $dataNhomSanPham['flash_sale']['pct'] ?? 0 }}%</span>
                         </div>
                     </div>
                 </div>
@@ -294,14 +294,14 @@
                                 <span class="donut-legend-dot" style="background: #10b981;"></span>
                                 <span>COD</span>
                             </div>
-                            <span class="donut-legend-pct">0%</span>
+                            <span class="donut-legend-pct">{{ $dataPttt['cod']['pct'] ?? 0 }}%</span>
                         </div>
                         <div class="donut-legend-item">
                             <div class="donut-legend-left">
                                 <span class="donut-legend-dot" style="background: #3b82f6;"></span>
                                 <span>VNPay / Ngân hàng</span>
                             </div>
-                            <span class="donut-legend-pct">0%</span>
+                            <span class="donut-legend-pct">{{ $dataPttt['vnpay']['pct'] ?? 0 }}%</span>
                         </div>
                     </div>
                 </div>
@@ -510,6 +510,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const quickButtons = document.querySelectorAll('.btn-quick-filter');
     const tuNgayInput = document.getElementById('filter_tu_ngay');
     const denNgayInput = document.getElementById('filter_den_ngay');
+    const kieuHienThiSelect = document.getElementById('filter_kieu_hien_thi');
+    const formFilter = document.getElementById('formFilterDoanhThu');
 
     const formatDate = (date) => {
         const y = date.getFullYear();
@@ -529,24 +531,33 @@ document.addEventListener('DOMContentLoaded', function () {
             if (range === 'today') {
                 tuNgayInput.value = formatDate(now);
                 denNgayInput.value = formatDate(now);
+                if (kieuHienThiSelect) kieuHienThiSelect.value = 'ngay';
             } else if (range === '7days') {
                 const start = new Date(now);
                 start.setDate(now.getDate() - 6);
                 tuNgayInput.value = formatDate(start);
                 denNgayInput.value = formatDate(now);
+                if (kieuHienThiSelect) kieuHienThiSelect.value = 'ngay';
             } else if (range === 'this_month') {
                 const start = new Date(now.getFullYear(), now.getMonth(), 1);
                 tuNgayInput.value = formatDate(start);
                 denNgayInput.value = formatDate(now);
+                if (kieuHienThiSelect) kieuHienThiSelect.value = 'ngay';
             } else if (range === 'last_month') {
                 const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
                 const end = new Date(now.getFullYear(), now.getMonth(), 0);
                 tuNgayInput.value = formatDate(start);
                 denNgayInput.value = formatDate(end);
+                if (kieuHienThiSelect) kieuHienThiSelect.value = 'ngay';
             } else if (range === 'this_year') {
                 const start = new Date(now.getFullYear(), 0, 1);
                 tuNgayInput.value = formatDate(start);
                 denNgayInput.value = formatDate(now);
+                if (kieuHienThiSelect) kieuHienThiSelect.value = 'thang';
+            }
+
+            if (formFilter) {
+                formFilter.submit();
             }
         });
     });
@@ -572,8 +583,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         borderWidth: 2.5,
                         tension: 0.35,
                         fill: true,
-                        pointRadius: 3,
-                        pointHoverRadius: 5
+                        pointRadius: labels.length > 20 ? 2 : 3,
+                        pointHoverRadius: 6
                     },
                     {
                         label: 'Giá vốn',
@@ -583,8 +594,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         borderWidth: 2,
                         tension: 0.35,
                         fill: false,
-                        pointRadius: 3,
-                        pointHoverRadius: 5
+                        pointRadius: labels.length > 20 ? 2 : 3,
+                        pointHoverRadius: 6
                     },
                     {
                         label: 'Lợi nhuận',
@@ -594,8 +605,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         borderWidth: 2,
                         tension: 0.35,
                         fill: false,
-                        pointRadius: 3,
-                        pointHoverRadius: 5
+                        pointRadius: labels.length > 20 ? 2 : 3,
+                        pointHoverRadius: 6
                     }
                 ]
             },
@@ -622,7 +633,14 @@ document.addEventListener('DOMContentLoaded', function () {
                         grid: { display: false },
                         ticks: {
                             color: '#64748b',
-                            font: { size: 12 }
+                            font: { size: 12 },
+                            maxTicksLimit: 14,
+                            autoSkip: true,
+                            maxRotation: 0,
+                            callback: function(val, index) {
+                                const lbl = this.getLabelForValue(val);
+                                return (typeof lbl === 'string' && lbl.length === 10) ? lbl.substring(0, 5) : lbl;
+                            }
                         }
                     },
                     y: {
@@ -631,8 +649,8 @@ document.addEventListener('DOMContentLoaded', function () {
                             color: '#64748b',
                             font: { size: 12 },
                             callback: function (val) {
-                                if (val >= 1000000) return (val / 1000000) + ' tr';
-                                if (val >= 1000) return (val / 1000) + ' k';
+                                if (val >= 1000000) return (val / 1000000).toFixed(1) + ' tr';
+                                if (val >= 1000) return (val / 1000).toFixed(0) + ' k';
                                 return val;
                             }
                         },
@@ -648,14 +666,17 @@ document.addEventListener('DOMContentLoaded', function () {
     // ═══════════════════════ 3. CHART DOANH THU THEO NHÓM SP ═══════════════════════
     const ctxNhomSP = document.getElementById('chartNhomSanPham');
     if (ctxNhomSP) {
+        const nhomSPData = {!! json_encode($dataNhomSanPham['chart_data'] ?? [0, 0, 0, 0]) !!};
+        const totalNhomSP = nhomSPData.reduce((a, b) => a + b, 0);
+
         new Chart(ctxNhomSP, {
             type: 'doughnut',
             data: {
                 labels: ['Bó hoa có sẵn', 'Custom Mix', 'Hoa lẻ', 'Flash Sale'],
                 datasets: [{
-                    data: [1], // placeholder ring khi chưa có data
-                    backgroundColor: ['#f1f5f9'],
-                    hoverBackgroundColor: ['#e2e8f0'],
+                    data: totalNhomSP > 0 ? nhomSPData : [1],
+                    backgroundColor: totalNhomSP > 0 ? ['#ec4899', '#8b5cf6', '#3b82f6', '#f59e0b'] : ['#f1f5f9'],
+                    hoverBackgroundColor: totalNhomSP > 0 ? ['#db2777', '#7c3aed', '#2563eb', '#d97706'] : ['#e2e8f0'],
                     borderWidth: 2,
                     borderColor: '#ffffff'
                 }]
@@ -666,7 +687,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 cutout: '72%',
                 plugins: {
                     legend: { display: false },
-                    tooltip: { enabled: false }
+                    tooltip: {
+                        enabled: totalNhomSP > 0,
+                        callbacks: {
+                            label: function(context) {
+                                const val = context.raw || 0;
+                                const pct = totalNhomSP > 0 ? ((val / totalNhomSP) * 100).toFixed(1) : 0;
+                                return ' ' + context.label + ': ' + new Intl.NumberFormat('vi-VN').format(val) + ' đ (' + pct + '%)';
+                            }
+                        }
+                    }
                 }
             }
         });
@@ -675,14 +705,17 @@ document.addEventListener('DOMContentLoaded', function () {
     // ═══════════════════════ 4. CHART DOANH THU THEO PT THANH TOÁN ═══════════════════════
     const ctxPTTT = document.getElementById('chartPhuongThucThanhToan');
     if (ctxPTTT) {
+        const ptttData = {!! json_encode($dataPttt['chart_data'] ?? [0, 0]) !!};
+        const totalPttt = ptttData.reduce((a, b) => a + b, 0);
+
         new Chart(ctxPTTT, {
             type: 'doughnut',
             data: {
                 labels: ['COD', 'VNPay / Ngân hàng'],
                 datasets: [{
-                    data: [1], // placeholder ring khi chưa có data
-                    backgroundColor: ['#f1f5f9'],
-                    hoverBackgroundColor: ['#e2e8f0'],
+                    data: totalPttt > 0 ? ptttData : [1],
+                    backgroundColor: totalPttt > 0 ? ['#10b981', '#3b82f6'] : ['#f1f5f9'],
+                    hoverBackgroundColor: totalPttt > 0 ? ['#059669', '#2563eb'] : ['#e2e8f0'],
                     borderWidth: 2,
                     borderColor: '#ffffff'
                 }]
@@ -693,7 +726,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 cutout: '72%',
                 plugins: {
                     legend: { display: false },
-                    tooltip: { enabled: false }
+                    tooltip: {
+                        enabled: totalPttt > 0,
+                        callbacks: {
+                            label: function(context) {
+                                const val = context.raw || 0;
+                                const pct = totalPttt > 0 ? ((val / totalPttt) * 100).toFixed(1) : 0;
+                                return ' ' + context.label + ': ' + new Intl.NumberFormat('vi-VN').format(val) + ' đ (' + pct + '%)';
+                            }
+                        }
+                    }
                 }
             }
         });

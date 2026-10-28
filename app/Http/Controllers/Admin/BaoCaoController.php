@@ -701,12 +701,22 @@ foreach ($sanPhams as $sp) {
     {
         $tuNgay = $request->input('tu_ngay', Carbon::now()->startOfMonth()->format('Y-m-d'));
         $denNgay = $request->input('den_ngay', Carbon::now()->format('Y-m-d'));
-        $kieuHienThi = $request->input('kieu_hien_thi', 'thang');
-        $nhomKinhDoanh = $request->input('nhom_kinh_doanh');
-        $pttt = $request->input('phuong_thuc_thanh_toan');
-
         $start = Carbon::parse($tuNgay)->startOfDay();
         $end = Carbon::parse($denNgay)->endOfDay();
+
+        $kieuHienThi = $request->input('kieu_hien_thi');
+        if (empty($kieuHienThi)) {
+            $diffDays = $start->diffInDays($end);
+            if ($diffDays <= 62) {
+                $kieuHienThi = 'ngay';
+            } elseif ($diffDays <= 366) {
+                $kieuHienThi = 'thang';
+            } else {
+                $kieuHienThi = 'nam';
+            }
+        }
+        $nhomKinhDoanh = $request->input('nhom_kinh_doanh');
+        $pttt = $request->input('phuong_thuc_thanh_toan');
 
         // Nguồn 1: Sản phẩm bán lẻ (chi_tiet_hoa_don)
         $spRows = collect();
@@ -810,7 +820,7 @@ foreach ($sanPhams as $sp) {
         $grouped = $allItems->groupBy(function ($it) use ($kieuHienThi) {
             $d = Carbon::parse($it->ngay_dat);
             if ($kieuHienThi === 'ngay') {
-                return $d->format('Y-m-d');
+                return $d->format('d/m/Y');
             }
             if ($kieuHienThi === 'quy') {
                 return 'Quý ' . $d->quarter . '/' . $d->year;
@@ -838,7 +848,7 @@ foreach ($sanPhams as $sp) {
         $current = $start->copy();
         while ($current <= $end) {
             if ($kieuHienThi === 'ngay') {
-                $key = $current->format('Y-m-d');
+                $key = $current->format('d/m/Y');
                 $current->addDay();
             } elseif ($kieuHienThi === 'quy') {
                 $key = 'Quý ' . $current->quarter . '/' . $current->year;
@@ -864,6 +874,71 @@ foreach ($sanPhams as $sp) {
                 'loi_nhuan' => (float) ($row->loi_nhuan ?? 0),
             ];
         });
+
+        // Tính doanh thu theo nhóm sản phẩm
+        $flashSaleHdIds = DB::table('inventory_reservations')
+            ->whereNotNull('ma_flash_sale')
+            ->pluck('ma_hoa_don')
+            ->unique()
+            ->toArray();
+
+        $dtBoHoa = 0;
+        $dtCustomMix = 0;
+        $dtHoaLe = 0;
+        $dtFlashSale = 0;
+
+        foreach ($allItems as $item) {
+            $amount = (float) $item->doanh_thu;
+            if (in_array($item->ma_hoa_don, $flashSaleHdIds)) {
+                $dtFlashSale += $amount;
+            } elseif ($item->nhom_hang === 'bo_hoa_co_san') {
+                $dtBoHoa += $amount;
+            } elseif ($item->nhom_hang === 'custom_mix') {
+                $dtCustomMix += $amount;
+            } else {
+                $dtHoaLe += $amount;
+            }
+        }
+
+        $totalNhom = $dtBoHoa + $dtCustomMix + $dtHoaLe + $dtFlashSale;
+
+        $pctBoHoa = $totalNhom > 0 ? round(($dtBoHoa / $totalNhom) * 100, 1) : 0;
+        $pctCustomMix = $totalNhom > 0 ? round(($dtCustomMix / $totalNhom) * 100, 1) : 0;
+        $pctHoaLe = $totalNhom > 0 ? round(($dtHoaLe / $totalNhom) * 100, 1) : 0;
+        $pctFlashSale = $totalNhom > 0 ? round(($dtFlashSale / $totalNhom) * 100, 1) : 0;
+
+        $dataNhomSanPham = [
+            'bo_hoa_co_san' => ['doanh_thu' => $dtBoHoa, 'pct' => $pctBoHoa],
+            'custom_mix' => ['doanh_thu' => $dtCustomMix, 'pct' => $pctCustomMix],
+            'hoa_le' => ['doanh_thu' => $dtHoaLe, 'pct' => $pctHoaLe],
+            'flash_sale' => ['doanh_thu' => $dtFlashSale, 'pct' => $pctFlashSale],
+            'chart_data' => [$dtBoHoa, $dtCustomMix, $dtHoaLe, $dtFlashSale],
+            'total' => $totalNhom,
+        ];
+
+        // Tính doanh thu theo phương thức thanh toán
+        $hdPttt = DB::table('hoa_don')
+            ->where('trang_thai', 'DELIVERED')
+            ->whereBetween('ngay_dat', [$start, $end])
+            ->selectRaw("
+                SUM(CASE WHEN phuong_thuc_thanh_toan = 'COD' THEN tong_tien ELSE 0 END) as cod,
+                SUM(CASE WHEN phuong_thuc_thanh_toan != 'COD' THEN tong_tien ELSE 0 END) as vnpay
+            ")
+            ->first();
+
+        $dtCod = (float) ($hdPttt->cod ?? 0);
+        $dtVnPay = (float) ($hdPttt->vnpay ?? 0);
+        $totalPttt = $dtCod + $dtVnPay;
+
+        $pctCod = $totalPttt > 0 ? round(($dtCod / $totalPttt) * 100, 1) : 0;
+        $pctVnPay = $totalPttt > 0 ? round(($dtVnPay / $totalPttt) * 100, 1) : 0;
+
+        $dataPttt = [
+            'cod' => ['doanh_thu' => $dtCod, 'pct' => $pctCod],
+            'vnpay' => ['doanh_thu' => $dtVnPay, 'pct' => $pctVnPay],
+            'chart_data' => [$dtCod, $dtVnPay],
+            'total' => $totalPttt,
+        ];
 
         // Top 5 mặt hàng theo doanh thu
         $topSanPham = $allItems->groupBy('item_name')->map(function ($items, $name) {
@@ -900,6 +975,8 @@ foreach ($sanPhams as $sp) {
         })->sortByDesc('loi_nhuan')->values()->take(5);
 
         return [
+            'tuNgay' => $tuNgay,
+            'denNgay' => $denNgay,
             'kieuHienThi' => $kieuHienThi,
             'tongDonHang' => $tongDonHang,
             'tongSanPhamBan' => $tongSanPhamBan,
@@ -910,6 +987,8 @@ foreach ($sanPhams as $sp) {
             'chiTietDoanhThu' => $chiTietDoanhThu,
             'topSanPham' => $topSanPham,
             'topLoiNhuan' => $topLoiNhuan,
+            'dataNhomSanPham' => $dataNhomSanPham,
+            'dataPttt' => $dataPttt,
         ];
     }
 
