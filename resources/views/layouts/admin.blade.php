@@ -529,11 +529,11 @@
                         <a href="{{ route('hoa-don.index') }}" class="submenu-item {{ request()->routeIs('hoa-don.*') ? 'active' : '' }}">
                             Quản lý hóa đơn
                         </a>
-                        @if($isAdmin)
+                        <!-- @if($isAdmin)
                             <a href="{{ route('admin.thanh-toan') }}" class="submenu-item {{ request()->routeIs('admin.thanh-toan*') ? 'active' : '' }}">
                                 Thanh toán
                             </a>
-                        @endif
+                        @endif -->
                     </div>
                 </div>
 
@@ -759,6 +759,9 @@
 
     <!-- Bootstrap 5.3 Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Chart.js for Admin Analytics & Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     @stack('scripts')
 
