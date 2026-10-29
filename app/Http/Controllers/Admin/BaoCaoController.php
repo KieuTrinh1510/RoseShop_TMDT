@@ -7,9 +7,13 @@ use App\Models\HoaDon;
 use App\Models\SanPham;
 use App\Models\KhachHang;
 use App\Models\BaoCaoHangHong;
+use App\Models\NhanVien;
+use App\Models\GiaoHangThatBai;
+use App\Models\HangHoan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BaoCaoController extends Controller
 
@@ -1487,6 +1491,585 @@ public function exportDoanhThu(Request $request)
             ->orderBy('tong_ban', 'desc')
             ->limit($top)
             ->get();
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // THỐNG KÊ GIAO HÀNG (UC10.4 - ADMIN ONLY)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Hiển thị page Thống kê giao hàng (Read-only)
+     */
+    public function baoCaoGiaoHang(Request $request)
+    {
+        $data = $this->getBaoCaoGiaoHangData($request);
+
+        return view('BaoCao.GiaoHang', $data);
+    }
+
+    /**
+     * Xuất báo cáo giao hàng dạng CSV UTF-8 BOM
+     */
+    public function exportBaoCaoGiaoHang(Request $request): StreamedResponse
+    {
+        $data = $this->getBaoCaoGiaoHangData($request);
+        $orders = $data['allOrders'];
+        $kpis = $data['kpis'];
+
+        $fileName = 'Bao_Cao_Giao_Hang_' . $data['ngayBatDau']->format('Ymd') . '_' . $data['ngayKetThuc']->format('Ymd') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function () use ($orders, $kpis) {
+            $file = fopen('php://output', 'w');
+            // Ghi UTF-8 BOM để Excel hiển thị đúng dấu tiếng Việt
+            fputs($file, "\xEF\xBB\xBF");
+
+            // Header columns
+            fputcsv($file, [
+                'STT',
+                'Mã đơn hàng',
+                'Khách hàng',
+                'Số điện thoại',
+                'Địa chỉ nhận hàng',
+                'Shipper phụ trách',
+                'Bắt đầu giao',
+                'Hoàn thành',
+                'Thời gian giao',
+                'Trạng thái giao hàng',
+                'Nguồn lỗi thất bại',
+                'Lý do thất bại',
+                'Phương thức thanh toán',
+                'Tổng tiền đơn (VNĐ)',
+                'COD đã thu (VNĐ)',
+            ]);
+
+            $stt = 1;
+            $tongTienAll = 0;
+            $tongCodAll = 0;
+
+            foreach ($orders as $hd) {
+                $isFailed = $hd->co_hang_hoan == 1
+                    || $hd->giaoHangThatBai->isNotEmpty()
+                    || ($hd->trang_thai === 'CANCELLED' && in_array($hd->nguon_huy, ['CUSTOMER', 'SHIPPER']));
+
+                $trangThaiText = $hd->trang_thai === 'DELIVERED'
+                    ? 'Đã giao'
+                    : ($isFailed ? 'Giao thất bại' : ($hd->trang_thai === 'SHIPPING' ? 'Đang giao' : 'Chờ lấy hàng'));
+
+                $durationSeconds = null;
+                if ($hd->trang_thai === 'DELIVERED' && $hd->ngay_bat_giao && ($hd->ngay_den_noi || $hd->ngay_giao)) {
+                    $end = $hd->ngay_den_noi ?: $hd->ngay_giao;
+                    $durationSeconds = abs(Carbon::parse($hd->ngay_bat_giao)->diffInSeconds(Carbon::parse($end), false));
+                }
+
+                $ghtb = $hd->giaoHangThatBai->first();
+                $loaiLoi = $ghtb ? ($ghtb->loai_loi === 'CUSTOMER' ? 'Lỗi khách hàng' : ($ghtb->loai_loi === 'SHIPPER' ? 'Lỗi Shipper' : $ghtb->loai_loi)) : ($hd->nguon_huy === 'CUSTOMER' ? 'Lỗi khách hàng' : ($hd->nguon_huy === 'SHIPPER' ? 'Lỗi Shipper' : '—'));
+                $lyDoLoi = $ghtb ? ($ghtb->ly_do ?: $ghtb->ghi_chu) : ($hd->ly_do_huy ?: '—');
+
+                $codThu = ($hd->trang_thai === 'DELIVERED' && $hd->phuong_thuc_thanh_toan === 'COD' && ($hd->da_thu_tien_mat == 1 || $hd->trang_thai_thanh_toan === 'DA_THANH_TOAN'))
+                    ? (float)$hd->tong_tien
+                    : 0;
+
+                $tongTienAll += (float)$hd->tong_tien;
+                $tongCodAll += $codThu;
+
+                fputcsv($file, [
+                    $stt++,
+                    '#HD-' . str_pad($hd->ma_hoa_don, 4, '0', STR_PAD_LEFT),
+                    $hd->khachHang ? $hd->khachHang->ho_ten : 'Khách vãng lai',
+                    $hd->so_dien_thoai ?: ($hd->khachHang ? $hd->khachHang->so_dien_thoai : ''),
+                    $hd->dia_chi_giao ?: '',
+                    $hd->shipper ? $hd->shipper->ten_nhan_vien : 'Chưa phân công',
+                    $hd->ngay_bat_giao ? $hd->ngay_bat_giao->format('d/m/Y H:i') : '—',
+                    $hd->ngay_giao ? $hd->ngay_giao->format('d/m/Y H:i') : ($hd->ngay_den_noi ? $hd->ngay_den_noi->format('d/m/Y H:i') : '—'),
+                    $this->formatDeliveryDuration($durationSeconds),
+                    $trangThaiText,
+                    $loaiLoi,
+                    $lyDoLoi,
+                    $hd->phuong_thuc_thanh_toan,
+                    number_format((float)$hd->tong_tien, 0, '', ''),
+                    number_format($codThu, 0, '', ''),
+                ]);
+            }
+
+            // Dòng tổng cộng
+            fputcsv($file, [
+                'TỔNG CỘNG',
+                count($orders) . ' đơn',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                'Thành công: ' . $kpis['giao_thanh_cong'] . ' | Thất bại: ' . $kpis['giao_that_bai'],
+                '',
+                '',
+                '',
+                number_format($tongTienAll, 0, '', ''),
+                number_format($tongCodAll, 0, '', ''),
+            ]);
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * API xem chi tiết 1 lần giao hàng (Drawer / Modal read-only)
+     */
+    public function chiTietGiaoHang($id, Request $request)
+    {
+        $hd = HoaDon::with([
+            'khachHang',
+            'shipper',
+            'giaoHangThatBai.hangHoan',
+            'hangHoan.chiTiet',
+            'chiTietHoaDon.sanPham',
+            'chiTietHoaDon.boHoa',
+        ])->findOrFail($id);
+
+        $isFailed = $hd->co_hang_hoan == 1
+            || $hd->giaoHangThatBai->isNotEmpty()
+            || ($hd->trang_thai === 'CANCELLED' && in_array($hd->nguon_huy, ['CUSTOMER', 'SHIPPER']));
+
+        if ($hd->trang_thai === 'DELIVERED') {
+            $trangThaiText = 'Giao thành công';
+            $badgeClass = 'badge-delivered';
+        } elseif ($isFailed) {
+            $trangThaiText = 'Giao thất bại';
+            $badgeClass = 'badge-failed';
+        } elseif ($hd->trang_thai === 'SHIPPING') {
+            $trangThaiText = 'Đang giao hàng';
+            $badgeClass = 'badge-shipping';
+        } else {
+            $trangThaiText = 'Chờ lấy hàng';
+            $badgeClass = 'badge-assigned';
+        }
+
+        $durationSeconds = null;
+        if ($hd->trang_thai === 'DELIVERED' && $hd->ngay_bat_giao && ($hd->ngay_den_noi || $hd->ngay_giao)) {
+            $end = $hd->ngay_den_noi ?: $hd->ngay_giao;
+            $durationSeconds = abs(Carbon::parse($hd->ngay_bat_giao)->diffInSeconds(Carbon::parse($end), false));
+        }
+
+        $ghtb = $hd->giaoHangThatBai->first();
+        $thatBaiData = null;
+        if ($isFailed) {
+            $hh = $ghtb ? $ghtb->hangHoan : $hd->hangHoan;
+            $thatBaiData = [
+                'loai_loi' => $ghtb ? $ghtb->loai_loi : ($hd->nguon_huy ?: 'KHONG_XAC_DINH'),
+                'loai_loi_text' => ($ghtb && $ghtb->loai_loi === 'CUSTOMER') || $hd->nguon_huy === 'CUSTOMER' ? 'Lỗi phía khách hàng' : (($ghtb && $ghtb->loai_loi === 'SHIPPER') || $hd->nguon_huy === 'SHIPPER' ? 'Lỗi phía Shipper' : 'Không xác định'),
+                'ly_do' => $ghtb ? ($ghtb->ly_do ?: $ghtb->ghi_chu) : ($hd->ly_do_huy ?: 'Không có thông tin lý do'),
+                'ghi_chu' => $ghtb ? $ghtb->ghi_chu : null,
+                'thoi_diem' => $ghtb && $ghtb->thoi_diem_bao ? $ghtb->thoi_diem_bao->format('d/m/Y H:i') : ($hd->thoi_diem_huy ? $hd->thoi_diem_huy->format('d/m/Y H:i') : '—'),
+                'hang_hoan' => $hh ? [
+                    'ma_hang_hoan' => $hh->ma_hang_hoan,
+                    'trang_thai' => $hh->trang_thai,
+                    'trang_thai_text' => $hh->trang_thai === 'CHO_MANG_VE_KHO' ? 'Chờ mang về kho' : ($hh->trang_thai === 'DA_NHAN_TAI_KHO' ? 'Đã nhận tại kho' : ($hh->trang_thai === 'DANG_KIEM_TRA' ? 'Đang kiểm tra' : ($hh->trang_thai === 'DA_KIEM_TRA' ? 'Đã kiểm tra' : $hh->trang_thai))),
+                ] : null,
+            ];
+        }
+
+        // Danh sách mặt hàng hiển thị
+        $items = [];
+        foreach ($hd->chi_tiet_hien_thi as $ct) {
+            $ten = $ct->ma_bo_hoa && $ct->boHoa ? $ct->boHoa->ten_bo_hoa : ($ct->sanPham ? $ct->sanPham->ten_san_pham : 'Sản phẩm #' . $ct->ma_san_pham);
+            $items[] = [
+                'ten' => $ten,
+                'so_luong' => (int)$ct->so_luong,
+                'don_gia' => (float)$ct->gia_ban_snapshot,
+                'thanh_tien' => (float)($ct->so_luong * $ct->gia_ban_snapshot),
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'ma_hoa_don' => $hd->ma_hoa_don,
+                'ma_hien_thi' => '#HD-' . str_pad($hd->ma_hoa_don, 4, '0', STR_PAD_LEFT),
+                'trang_thai' => $hd->trang_thai,
+                'trang_thai_text' => $trangThaiText,
+                'trang_thai_badge' => $badgeClass,
+                'ngay_dat' => $hd->ngay_dat ? $hd->ngay_dat->format('d/m/Y H:i') : '—',
+                'ngay_bat_giao' => $hd->ngay_bat_giao ? $hd->ngay_bat_giao->format('d/m/Y H:i') : '—',
+                'ngay_den_noi' => $hd->ngay_den_noi ? $hd->ngay_den_noi->format('d/m/Y H:i') : '—',
+                'ngay_giao' => $hd->ngay_giao ? $hd->ngay_giao->format('d/m/Y H:i') : '—',
+                'thoi_diem_huy' => $hd->thoi_diem_huy ? $hd->thoi_diem_huy->format('d/m/Y H:i') : null,
+                'thoi_gian_giao' => $this->formatDeliveryDuration($durationSeconds),
+                'khach_hang' => [
+                    'ho_ten' => $hd->khachHang ? $hd->khachHang->ho_ten : 'Khách vãng lai',
+                    'so_dien_thoai' => $hd->so_dien_thoai ?: ($hd->khachHang ? $hd->khachHang->so_dien_thoai : '—'),
+                    'dia_chi_giao' => $hd->dia_chi_giao ?: '—',
+                ],
+                'shipper' => $hd->shipper ? [
+                    'ma_nhan_vien' => $hd->shipper->ma_nhan_vien,
+                    'ten_nhan_vien' => $hd->shipper->ten_nhan_vien,
+                    'so_dien_thoai' => $hd->shipper->so_dien_thoai ?: '—',
+                    'chuc_vu' => $hd->shipper->chuc_vu ?: 'SHIPPER',
+                ] : null,
+                'thanh_toan' => [
+                    'phuong_thuc' => $hd->phuong_thuc_thanh_toan,
+                    'tong_tien' => (float)$hd->tong_tien,
+                    'trang_thai_thanh_toan' => $hd->trang_thai_thanh_toan,
+                    'da_thu_tien_mat' => (bool)$hd->da_thu_tien_mat,
+                ],
+                'that_bai' => $thatBaiData,
+                'san_pham' => $items,
+            ],
+        ]);
+    }
+
+    /**
+     * Helper xử lý dữ liệu và tính toán chỉ số thống kê giao hàng
+     */
+    private function getBaoCaoGiaoHangData(Request $request): array
+    {
+        $rawBatDau = $request->ngay_bat_dau;
+        $rawKetThuc = $request->ngay_ket_thuc;
+        $dateWarning = null;
+
+        if ($rawBatDau && $rawKetThuc && $rawBatDau > $rawKetThuc) {
+            $temp = $rawBatDau;
+            $rawBatDau = $rawKetThuc;
+            $rawKetThuc = $temp;
+            $dateWarning = 'Ngày bắt đầu lớn hơn ngày kết thúc, hệ thống đã tự động đảo lại khoảng thời gian.';
+        }
+
+        $ngayBatDau = $rawBatDau
+            ? Carbon::parse($rawBatDau)->startOfDay()
+            : Carbon::now()->startOfMonth()->startOfDay();
+
+        $ngayKetThuc = $rawKetThuc
+            ? Carbon::parse($rawKetThuc)->endOfDay()
+            : Carbon::now()->endOfDay();
+
+        $shipperId = $request->filled('shipper_id') ? (int)$request->shipper_id : null;
+        $trangThaiFilter = $request->get('trang_thai', 'all');
+        $keyword = trim((string)$request->get('q', ''));
+
+        // Query cơ sở: chỉ các đơn đã thực sự đi vào luồng giao hàng
+        $baseQuery = HoaDon::query()
+            ->with([
+                'khachHang',
+                'shipper',
+                'giaoHangThatBai',
+                'hangHoan',
+                'chiTietHoaDon.sanPham',
+                'chiTietHoaDon.boHoa',
+            ])
+            ->where(function ($q) {
+                $q->whereNotNull('hoa_don.ma_nhan_vien_giao')
+                  ->orWhereNotNull('hoa_don.ngay_bat_giao')
+                  ->orWhereIn('hoa_don.trang_thai', ['SHIPPING', 'DELIVERED'])
+                  ->orWhere('hoa_don.co_hang_hoan', 1)
+                  ->orWhereHas('giaoHangThatBai');
+            });
+
+        // Lọc theo timestamp giao hàng thực tế trong kỳ
+        $baseQuery->where(function ($q) use ($ngayBatDau, $ngayKetThuc) {
+            $q->whereRaw("COALESCE(hoa_don.ngay_giao, hoa_don.ngay_den_noi, (SELECT thoi_diem_bao FROM giao_hang_that_bai WHERE giao_hang_that_bai.ma_hoa_don = hoa_don.ma_hoa_don ORDER BY thoi_diem_bao DESC LIMIT 1), hoa_don.thoi_diem_huy, hoa_don.ngay_bat_giao, hoa_don.ngay_dat) >= ?", [$ngayBatDau])
+              ->whereRaw("COALESCE(hoa_don.ngay_giao, hoa_don.ngay_den_noi, (SELECT thoi_diem_bao FROM giao_hang_that_bai WHERE giao_hang_that_bai.ma_hoa_don = hoa_don.ma_hoa_don ORDER BY thoi_diem_bao DESC LIMIT 1), hoa_don.thoi_diem_huy, hoa_don.ngay_bat_giao, hoa_don.ngay_dat) <= ?", [$ngayKetThuc]);
+        });
+
+        // Lọc Shipper nếu có
+        if ($shipperId) {
+            $baseQuery->where('hoa_don.ma_nhan_vien_giao', $shipperId);
+        }
+
+        // Lọc trạng thái giao hàng
+        if ($trangThaiFilter === 'DELIVERED') {
+            $baseQuery->where('hoa_don.trang_thai', 'DELIVERED');
+        } elseif ($trangThaiFilter === 'FAILED') {
+            $baseQuery->where(function ($q) {
+                $q->where('hoa_don.co_hang_hoan', 1)
+                  ->orWhereHas('giaoHangThatBai')
+                  ->orWhere(function ($sub) {
+                      $sub->where('hoa_don.trang_thai', 'CANCELLED')
+                          ->whereIn('hoa_don.nguon_huy', ['CUSTOMER', 'SHIPPER']);
+                  });
+            });
+        } elseif ($trangThaiFilter === 'SHIPPING') {
+            $baseQuery->where('hoa_don.trang_thai', 'SHIPPING');
+        } elseif ($trangThaiFilter === 'CONFIRMED') {
+            $baseQuery->where('hoa_don.trang_thai', 'CONFIRMED');
+        } elseif ($trangThaiFilter === 'REJECTED') {
+            $baseQuery->whereRaw('1 = 0');
+        }
+
+        // Tìm kiếm theo từ khóa (Mã đơn, SĐT, Khách hàng, Shipper, Địa chỉ)
+        if (!empty($keyword)) {
+            $cleanCode = preg_replace('/[^0-9]/', '', $keyword);
+            $baseQuery->where(function ($q) use ($keyword, $cleanCode) {
+                if (!empty($cleanCode)) {
+                    $q->orWhere('hoa_don.ma_hoa_don', (int)$cleanCode);
+                }
+                $q->orWhere('hoa_don.dia_chi_giao', 'LIKE', "%{$keyword}%")
+                  ->orWhere('hoa_don.so_dien_thoai', 'LIKE', "%{$keyword}%")
+                  ->orWhereHas('khachHang', function ($khQ) use ($keyword) {
+                      $khQ->where('ho_ten', 'LIKE', "%{$keyword}%")
+                          ->orWhere('so_dien_thoai', 'LIKE', "%{$keyword}%");
+                  })
+                  ->orWhereHas('shipper', function ($nvQ) use ($keyword) {
+                      $nvQ->where('ten_nhan_vien', 'LIKE', "%{$keyword}%")
+                          ->orWhere('so_dien_thoai', 'LIKE', "%{$keyword}%");
+                  });
+            });
+        }
+
+        // Lấy toàn bộ đơn khớp điều kiện lọc để tính KPIs, Biểu đồ và Top Shipper
+        $allOrders = (clone $baseQuery)->orderBy('hoa_don.ma_hoa_don', 'desc')->get();
+
+        $tongDonGiao = $allOrders->count();
+        $donThanhCong = $allOrders->where('trang_thai', 'DELIVERED');
+        $soDonThanhCong = $donThanhCong->count();
+
+        $donThatBai = $allOrders->filter(function ($hd) {
+            return $hd->co_hang_hoan == 1
+                || $hd->giaoHangThatBai->isNotEmpty()
+                || ($hd->trang_thai === 'CANCELLED' && in_array($hd->nguon_huy, ['CUSTOMER', 'SHIPPER']));
+        });
+        $soDonThatBai = $donThatBai->count();
+
+        $donDangGiao = $allOrders->where('trang_thai', 'SHIPPING');
+        $soDonDangGiao = $donDangGiao->count();
+
+        $donChoLay = $allOrders->where('trang_thai', 'CONFIRMED');
+        $soDonChoLay = $donChoLay->count();
+
+        $soDonShipperTuChoi = 0; // Hệ thống hiện chưa có bảng/sự kiện lưu Shipper từ chối
+
+        // KPI: Tỷ lệ giao thành công
+        $tyLeThanhCong = $tongDonGiao > 0 ? round(($soDonThanhCong / $tongDonGiao) * 100, 2) : 0;
+
+        // KPI: Tổng COD đã thu (chỉ các đơn DELIVERED thanh toán COD và đã xác nhận thu tiền mặt)
+        $tongCodDaThu = $donThanhCong
+            ->filter(function ($hd) {
+                return $hd->phuong_thuc_thanh_toan === 'COD' && ($hd->da_thu_tien_mat == 1 || $hd->trang_thai_thanh_toan === 'DA_THANH_TOAN');
+            })
+            ->sum('tong_tien');
+
+        // KPI: Thời gian giao hàng trung bình (chỉ tính đơn DELIVERED có cả ngay_bat_giao và ngay_den_noi / ngay_giao)
+        $durations = [];
+        foreach ($donThanhCong as $hd) {
+            $startTime = $hd->ngay_bat_giao;
+            $endTime = $hd->ngay_den_noi ?: $hd->ngay_giao;
+            if ($startTime && $endTime) {
+                $diffInSeconds = abs(Carbon::parse($startTime)->diffInSeconds(Carbon::parse($endTime), false));
+                if ($diffInSeconds > 0) {
+                    $durations[] = $diffInSeconds;
+                }
+            }
+        }
+        $avgDurationSeconds = count($durations) > 0 ? round(array_sum($durations) / count($durations)) : null;
+
+        $kpis = [
+            'tong_don_giao'       => $tongDonGiao,
+            'giao_thanh_cong'     => $soDonThanhCong,
+            'giao_that_bai'       => $soDonThatBai,
+            'shipper_tu_choi'     => 'Chưa có dữ liệu', // UC10.4 yêu cầu nhưng DB chưa persist
+            'ty_le_thanh_cong'    => $tyLeThanhCong,
+            'tong_cod_da_thu'     => (float)$tongCodDaThu,
+            'cod_chua_nop'        => 'Chưa có nguồn đối soát', // Nghiệp vụ đối soát nộp tiền chưa persist trong DB
+            'thoi_gian_giao_tb'   => $this->formatDeliveryDuration($avgDurationSeconds),
+            'dang_giao'           => $soDonDangGiao,
+            'cho_lay'             => $soDonChoLay,
+        ];
+
+        // Biểu đồ 1: Kết quả giao hàng (Doughnut Chart)
+        $chartKetQua = [
+            'labels' => ['Thành công', 'Thất bại', 'Đang giao', 'Chờ lấy hàng'],
+            'data'   => [$soDonThanhCong, $soDonThatBai, $soDonDangGiao, $soDonChoLay],
+            'colors' => ['#10b981', '#ef4444', '#3b82f6', '#f59e0b'],
+        ];
+
+        // Biểu đồ 2: Xu hướng giao hàng theo ngày trong kỳ
+        $curr = $ngayBatDau->copy()->startOfDay();
+        $endDay = $ngayKetThuc->copy()->startOfDay();
+        $datesMap = [];
+        while ($curr->lte($endDay)) {
+            $datesMap[$curr->format('Y-m-d')] = [
+                'label'      => $curr->format('d/m'),
+                'thanh_cong' => 0,
+                'that_bai'   => 0,
+            ];
+            $curr->addDay();
+        }
+
+        foreach ($allOrders as $hd) {
+            $time = $hd->ngay_giao ?: ($hd->ngay_den_noi ?: ($hd->thoi_diem_huy ?: ($hd->ngay_bat_giao ?: $hd->ngay_dat)));
+            if ($time) {
+                $dayKey = Carbon::parse($time)->format('Y-m-d');
+                if (isset($datesMap[$dayKey])) {
+                    if ($hd->trang_thai === 'DELIVERED') {
+                        $datesMap[$dayKey]['thanh_cong']++;
+                    } elseif ($hd->co_hang_hoan == 1 || $hd->giaoHangThatBai->isNotEmpty() || ($hd->trang_thai === 'CANCELLED' && in_array($hd->nguon_huy, ['CUSTOMER', 'SHIPPER']))) {
+                        $datesMap[$dayKey]['that_bai']++;
+                    }
+                }
+            }
+        }
+
+        $chartXuHuong = [
+            'labels'    => array_column($datesMap, 'label'),
+            'thanhCong' => array_column($datesMap, 'thanh_cong'),
+            'thatBai'   => array_column($datesMap, 'that_bai'),
+        ];
+
+        // Bảng Top Shipper
+        $shippersGrouped = $allOrders->whereNotNull('ma_nhan_vien_giao')->groupBy('ma_nhan_vien_giao');
+        $topShippers = collect();
+
+        foreach ($shippersGrouped as $sId => $sOrders) {
+            $firstOrder = $sOrders->first();
+            $sModel = $firstOrder->shipper ?: NhanVien::find($sId);
+
+            $sTotal = $sOrders->count();
+            $sDelivered = $sOrders->where('trang_thai', 'DELIVERED');
+            $sSuccessCount = $sDelivered->count();
+            $sFailedCount = $sOrders->filter(function ($hd) {
+                return $hd->co_hang_hoan == 1
+                    || $hd->giaoHangThatBai->isNotEmpty()
+                    || ($hd->trang_thai === 'CANCELLED' && in_array($hd->nguon_huy, ['CUSTOMER', 'SHIPPER']));
+            })->count();
+
+            $sRate = $sTotal > 0 ? round(($sSuccessCount / $sTotal) * 100, 1) : 0;
+            $sCod = $sDelivered
+                ->filter(function ($hd) {
+                    return $hd->phuong_thuc_thanh_toan === 'COD' && ($hd->da_thu_tien_mat == 1 || $hd->trang_thai_thanh_toan === 'DA_THANH_TOAN');
+                })
+                ->sum('tong_tien');
+
+            $sDurations = [];
+            foreach ($sDelivered as $hd) {
+                if ($hd->ngay_bat_giao && ($hd->ngay_den_noi || $hd->ngay_giao)) {
+                    $end = $hd->ngay_den_noi ?: $hd->ngay_giao;
+                    $diff = abs(Carbon::parse($hd->ngay_bat_giao)->diffInSeconds(Carbon::parse($end), false));
+                    if ($diff > 0) {
+                        $sDurations[] = $diff;
+                    }
+                }
+            }
+            $sAvgSec = count($sDurations) > 0 ? round(array_sum($sDurations) / count($sDurations)) : null;
+
+            $topShippers->push((object)[
+                'ma_nhan_vien'  => $sId,
+                'ten_nhan_vien' => $sModel ? $sModel->ten_nhan_vien : "Shipper #{$sId}",
+                'so_dien_thoai' => $sModel ? $sModel->so_dien_thoai : '—',
+                'chuc_vu'       => $sModel ? ($sModel->chuc_vu ?: 'SHIPPER') : 'SHIPPER',
+                'tong_giao'     => $sTotal,
+                'thanh_cong'    => $sSuccessCount,
+                'that_bai'      => $sFailedCount,
+                'dang_giao'     => $sOrders->where('trang_thai', 'SHIPPING')->count(),
+                'ty_le'         => $sRate,
+                'cod_da_thu'    => (float)$sCod,
+                'tg_giao_tb'    => $this->formatDeliveryDuration($sAvgSec),
+            ]);
+        }
+
+        $topShippers = $topShippers->sortByDesc('tong_giao')->values();
+
+        // Danh sách Shipper phục vụ filter dropdown
+        $dsShipper = NhanVien::where('chuc_vu', 'SHIPPER')
+            ->orWhereIn('ma_nhan_vien', HoaDon::whereNotNull('ma_nhan_vien_giao')->select('ma_nhan_vien_giao'))
+            ->orderBy('ten_nhan_vien')
+            ->get(['ma_nhan_vien', 'ten_nhan_vien', 'so_dien_thoai']);
+
+        // Phân trang danh sách đơn giao
+        $perPage = (int)$request->get('per_page', 20);
+        if ($perPage < 5 || $perPage > 100) {
+            $perPage = 20;
+        }
+
+        $danhSachDonHang = (clone $baseQuery)
+            ->orderBy('hoa_don.ma_hoa_don', 'desc')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        foreach ($danhSachDonHang as $hd) {
+            $isFailed = $hd->co_hang_hoan == 1
+                || $hd->giaoHangThatBai->isNotEmpty()
+                || ($hd->trang_thai === 'CANCELLED' && in_array($hd->nguon_huy, ['CUSTOMER', 'SHIPPER']));
+
+            if ($hd->trang_thai === 'DELIVERED') {
+                $trangThaiGiao = 'DELIVERED';
+                $trangThaiText = 'ĐÃ GIAO';
+                $trangThaiBadge = 'badge-delivered';
+            } elseif ($isFailed) {
+                $trangThaiGiao = 'FAILED';
+                $trangThaiText = 'GIAO THẤT BẠI';
+                $trangThaiBadge = 'badge-failed';
+            } elseif ($hd->trang_thai === 'SHIPPING') {
+                $trangThaiGiao = 'SHIPPING';
+                $trangThaiText = 'ĐANG GIAO';
+                $trangThaiBadge = 'badge-shipping';
+            } else {
+                $trangThaiGiao = 'CONFIRMED';
+                $trangThaiText = 'CHỜ LẤY HÀNG';
+                $trangThaiBadge = 'badge-assigned';
+            }
+
+            $durationSeconds = null;
+            if ($hd->trang_thai === 'DELIVERED' && $hd->ngay_bat_giao && ($hd->ngay_den_noi || $hd->ngay_giao)) {
+                $end = $hd->ngay_den_noi ?: $hd->ngay_giao;
+                $durationSeconds = abs(Carbon::parse($hd->ngay_bat_giao)->diffInSeconds(Carbon::parse($end), false));
+            }
+
+            $ghtb = $hd->giaoHangThatBai->first();
+            $hd->ma_hien_thi = '#HD-' . str_pad($hd->ma_hoa_don, 4, '0', STR_PAD_LEFT);
+            $hd->trang_thai_giao = $trangThaiGiao;
+            $hd->trang_thai_text = $trangThaiText;
+            $hd->trang_thai_badge = $trangThaiBadge;
+            $hd->thoi_gian_giao_text = $this->formatDeliveryDuration($durationSeconds);
+            $hd->loai_loi = $ghtb ? ($ghtb->loai_loi === 'CUSTOMER' ? 'Khách hàng' : ($ghtb->loai_loi === 'SHIPPER' ? 'Shipper' : $ghtb->loai_loi)) : ($hd->nguon_huy === 'CUSTOMER' ? 'Khách hàng' : ($hd->nguon_huy === 'SHIPPER' ? 'Shipper' : null));
+            $hd->ly_do_that_bai = $ghtb ? ($ghtb->ly_do ?: $ghtb->ghi_chu) : ($hd->ly_do_huy ?: null);
+            $hd->tien_cod = ($hd->phuong_thuc_thanh_toan === 'COD' && $hd->trang_thai === 'DELIVERED') ? (float)$hd->tong_tien : 0;
+        }
+
+        return [
+            'ngayBatDau'       => $ngayBatDau,
+            'ngayKetThuc'      => $ngayKetThuc,
+            'dateWarning'      => $dateWarning,
+            'shipperId'        => $shipperId,
+            'trangThaiFilter'  => $trangThaiFilter,
+            'keyword'          => $keyword,
+            'dsShipper'        => $dsShipper,
+            'kpis'             => $kpis,
+            'chartKetQua'      => $chartKetQua,
+            'chartXuHuong'     => $chartXuHuong,
+            'topShippers'      => $topShippers,
+            'danhSachDonHang'  => $danhSachDonHang,
+            'allOrders'        => $allOrders,
+        ];
+    }
+
+    /**
+     * Format số giây thành chuỗi thời gian thân thiện (ví dụ: "42 phút", "1 giờ 12 phút")
+     */
+    private function formatDeliveryDuration(?int $seconds): string
+    {
+        if ($seconds === null || $seconds <= 0) {
+            return '—';
+        }
+        if ($seconds < 60) {
+            return $seconds . ' giây';
+        }
+        $minutes = (int)round($seconds / 60);
+        if ($minutes < 60) {
+            return $minutes . ' phút';
+        }
+        $hours = (int)floor($minutes / 60);
+        $remMinutes = $minutes % 60;
+        return $remMinutes > 0 ? "{$hours} giờ {$remMinutes} phút" : "{$hours} giờ";
     }
 
 }

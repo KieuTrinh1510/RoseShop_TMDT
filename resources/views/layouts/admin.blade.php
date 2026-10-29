@@ -734,6 +734,7 @@
                         {{-- 2. Nhà cung cấp --}}
                         <a href="{{ route('admin.nha-cung-cap') }}" class="submenu-item {{ request()->routeIs('admin.nha-cung-cap*') ? 'active' : '' }}">
                             Nhà cung cấp
+                            
                         </a>
                         {{-- 3. Lô hàng --}}
                         <a href="{{ route('admin.lo-hang') }}" class="submenu-item {{ request()->routeIs('admin.lo-hang*') ? 'active' : '' }}">
@@ -842,7 +843,7 @@
                                 Kho
                             </a> -->
                             <a href="{{ route('admin.bao-cao.giao-hang') }}" class="submenu-item {{ request()->routeIs('admin.bao-cao.giao-hang*') ? 'active' : '' }}">
-                                Hoạt động giao hàng
+                                Thống kê giao hàng
                             </a>
                         </div>
                     </div>
