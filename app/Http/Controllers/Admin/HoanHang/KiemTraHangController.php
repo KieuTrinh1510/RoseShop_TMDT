@@ -336,11 +336,13 @@ class KiemTraHangController extends Controller
                 ->exists();
 
             if (!$daCoBoiThuong) {
-                // Cộng 20 điểm cho khách
+                $diemBoiThuong = \App\Services\SystemConfigService::getInt('compensation_points', self::DIEM_BOI_THUONG_KHACH);
+
+                // Cộng điểm bồi thường cho khách
                 if ($hoaDon->ma_khach_hang) {
                     $khach = KhachHang::whereKey($hoaDon->ma_khach_hang)->lockForUpdate()->first();
                     if ($khach) {
-                        $khach->increment('diem_tich_luy', self::DIEM_BOI_THUONG_KHACH);
+                        $khach->increment('diem_tich_luy', $diemBoiThuong);
                     }
                 }
 
@@ -352,7 +354,7 @@ class KiemTraHangController extends Controller
                     'so_tien'                 => self::TIEN_PHAT_BOI_THUONG,
                     'tien_hang_hong'          => 0,
                     'tien_hao_hut_flash_sale' => 0,
-                    'ly_do'                   => "Hủy đơn do lỗi shipper - bồi thường 20 điểm cho khách (đơn {$maHD}).",
+                    'ly_do'                   => "Hủy đơn do lỗi shipper - bồi thường {$diemBoiThuong} điểm cho khách (đơn {$maHD}).",
                     'trang_thai'              => 'CHUA_THU',
                 ]);
 
@@ -368,7 +370,7 @@ class KiemTraHangController extends Controller
                         (int) $hoaDon->ma_khach_hang,
                         'apology',
                         "🌸 Xin lỗi vì sự bất tiện! Đơn hàng {$maHD} bị hủy do sự cố phía shipper. "
-                            . "Chúng tôi đã cộng " . self::DIEM_BOI_THUONG_KHACH . " điểm bồi thường vào tài khoản của bạn."
+                            . "Chúng tôi đã cộng " . $diemBoiThuong . " điểm bồi thường vào tài khoản của bạn."
                             . $hoanTienText,
                         (int) $hoaDon->ma_hoa_don
                     );
