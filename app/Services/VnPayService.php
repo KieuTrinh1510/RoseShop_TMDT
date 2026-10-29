@@ -121,8 +121,8 @@ class VnPayService
             // KHÔNG dùng now() trần vì nó phụ thuộc config('app.timezone') của app,
             // có thể khác múi giờ VNPay yêu cầu.
             'vnp_CreateDate' => now(self::VNPAY_TIMEZONE)->format('YmdHis'),
-            // Hết hạn sau 15 phút nếu khách không thanh toán — tránh đơn PENDING treo mãi.
-            'vnp_ExpireDate' => now(self::VNPAY_TIMEZONE)->addMinutes(15)->format('YmdHis'),
+            // Hết hạn theo cấu hình hệ thống (mặc định 15 phút) — tránh đơn PENDING treo mãi.
+            'vnp_ExpireDate' => now(self::VNPAY_TIMEZONE)->addMinutes(\App\Services\SystemConfigService::getInt('vnpay_timeout_minutes', 15))->format('YmdHis'),
         ];
 
         return $this->buildSignedUrl($params);

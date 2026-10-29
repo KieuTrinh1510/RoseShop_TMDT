@@ -187,11 +187,43 @@ body {
     color: var(--text-muted);
 }
 
-.empty-state i {
+.empty-state > i {
     font-size: 52px;
     color: #e2e8f0;
     display: block;
     margin-bottom: 18px;
+}
+
+.btn-empty-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: var(--brand);
+    color: #fff !important;
+    font-size: .82rem;
+    font-weight: 600;
+    padding: 7px 16px;
+    border-radius: 8px;
+    text-decoration: none !important;
+    transition: all .15s ease;
+    box-shadow: 0 2px 6px rgba(231, 84, 128, .2);
+    border: none;
+    line-height: 1.4;
+    cursor: pointer;
+}
+
+.btn-empty-action i {
+    font-size: .82rem !important;
+    display: inline !important;
+    margin-bottom: 0 !important;
+    color: inherit !important;
+}
+
+.btn-empty-action:hover {
+    background: #d8297b;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(231, 84, 128, .3);
 }
 
 .empty-state p {
@@ -241,11 +273,20 @@ body {
     padding: 5px;
     margin: 20px 0 24px;
     box-shadow: 0 2px 8px rgba(233, 79, 139, .06);
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tab-bar::-webkit-scrollbar {
+    display: none;
 }
 
 .tab-btn {
-    flex: 1;
-    padding: 9px 10px;
+    flex: 1 0 auto;
+    min-width: fit-content;
+    padding: 9px 12px;
     border: none;
     background: transparent;
     border-radius: 8px;
@@ -260,6 +301,8 @@ body {
     justify-content: center;
     gap: 6px;
     white-space: nowrap;
+    text-decoration: none;
+    flex-shrink: 0;
 }
 
 .tab-btn.active {
@@ -611,4 +654,304 @@ body {
 
 #toast.success {
     background: var(--green);
+}
+
+/* ══════════════════════════════════════════════════
+   PHẦN XỬ LÝ VI PHẠM KHÁCH HÀNG (ĐỒNG BỘ ACCOUNT PAGE)
+   ══════════════════════════════════════════════════ */
+.vp-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 22px;
+}
+@media (max-width: 600px) {
+    .vp-kpi-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+}
+.vp-kpi-card {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.02);
+    min-height: 74px;
+}
+.vp-kpi-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    flex-shrink: 0;
+}
+.vp-kpi-icon.red { background: #fef2f2; color: #ef4444; }
+.vp-kpi-icon.green { background: #f0fdf4; color: #16a34a; }
+.vp-kpi-icon.amber { background: #fffbeb; color: #d97706; }
+
+.vp-kpi-content {
+    flex: 1;
+    min-width: 0;
+}
+.vp-kpi-label {
+    font-size: .68rem;
+    font-weight: 600;
+    color: var(--gray);
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.vp-kpi-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-main);
+    line-height: 1.2;
+}
+.vp-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 99px;
+    font-size: .72rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.vp-status-badge.active { background: #dcfce7; color: #15803d; }
+.vp-status-badge.warning { background: #fef3c7; color: #b45309; }
+.vp-status-badge.danger { background: #fee2e2; color: #b91c1c; }
+
+/* Subtabs: [Chưa xử lý] [Đã xử lý] */
+.vp-subtabs {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+    border-bottom: 1.5px solid var(--border);
+    margin-bottom: 18px;
+}
+.vp-subtab-btn {
+    padding: 9px 16px;
+    font-family: inherit;
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--gray);
+    background: transparent;
+    border: none;
+    border-bottom: 2.5px solid transparent;
+    margin-bottom: -1.5px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none !important;
+    transition: all .15s;
+}
+.vp-subtab-btn:hover {
+    color: var(--brand);
+}
+.vp-subtab-btn.active {
+    color: var(--brand);
+    border-bottom-color: var(--brand);
+}
+.vp-subtab-badge {
+    font-size: .68rem;
+    padding: 1px 7px;
+    border-radius: 99px;
+    font-weight: 700;
+}
+.vp-subtab-btn.active .vp-subtab-badge.red {
+    background: var(--red);
+    color: #fff;
+}
+.vp-subtab-btn:not(.active) .vp-subtab-badge.red {
+    background: #fee2e2;
+    color: var(--red);
+}
+.vp-subtab-btn.active .vp-subtab-badge.green {
+    background: var(--green);
+    color: #fff;
+}
+.vp-subtab-btn:not(.active) .vp-subtab-badge.green {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+/* Violation card inner styles */
+.vp-item-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--border);
+}
+.vp-item-row:last-child {
+    border-bottom: none;
+}
+.vp-item-thumb {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+}
+.vp-item-thumb-placeholder {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    background: var(--bg);
+    border: 1px solid #fce7f3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+.vp-item-info {
+    flex: 1;
+    min-width: 0;
+}
+.vp-item-name {
+    font-size: .88rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 2px;
+    line-height: 1.3;
+}
+.vp-item-meta {
+    font-size: .78rem;
+    color: var(--gray);
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.vp-item-price-snapshot {
+    font-weight: 600;
+    color: var(--brand);
+}
+.vp-item-subtotal {
+    font-size: .88rem;
+    font-weight: 700;
+    color: var(--text-main);
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.vp-meta-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 14px;
+}
+.vp-failure-box {
+    background: #fff;
+    border: 1px solid #fee2e2;
+    border-left: 3px solid var(--red);
+    border-radius: 8px;
+    padding: 10px 12px;
+}
+.vp-failure-title {
+    font-size: .74rem;
+    font-weight: 700;
+    color: var(--red);
+    text-transform: uppercase;
+    letter-spacing: .02em;
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.vp-failure-reason {
+    font-size: .84rem;
+    color: var(--text-main);
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+.vp-failure-time {
+    font-size: .75rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.vp-resolved-box {
+    background: #fff;
+    border: 1px solid #dcfce7;
+    border-left: 3px solid var(--green);
+    border-radius: 8px;
+    padding: 10px 12px;
+}
+.vp-resolved-title {
+    font-size: .74rem;
+    font-weight: 700;
+    color: #15803d;
+    text-transform: uppercase;
+    letter-spacing: .02em;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.vp-payment-summary {
+    background: var(--bg);
+    border: 1px solid #fce7f3;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-top: 12px;
+}
+.vp-price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    font-size: .82rem;
+    color: var(--gray);
+}
+.vp-price-row.highlight {
+    font-size: .95rem;
+    font-weight: 700;
+    color: var(--red);
+    padding-top: 6px;
+    border-top: 1px dashed #f9a8d4;
+    margin-bottom: 10px;
+}
+
+.btn-pay-vnpay {
+    width: 100%;
+    background: var(--brand);
+    color: #fff;
+    font-weight: 600;
+    font-size: .85rem;
+    padding: 9px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all .15s;
+    box-shadow: 0 2px 8px rgba(231, 84, 128, .28);
+    text-decoration: none !important;
+}
+.btn-pay-vnpay:hover {
+    background: #d8297b;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(231, 84, 128, .38);
+}
+.btn-pay-vnpay:active {
+    transform: translateY(0);
 }

@@ -1,813 +1,930 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="{{ asset('css/Customer/ThongBao.css') }}?v={{ file_exists(public_path('css/Customer/ThongBao.css')) ? filemtime(public_path('css/Customer/ThongBao.css')) : time() }}">
+    <link rel="stylesheet"
+        href="{{ asset('css/Customer/ThongBao.css') }}?v={{ file_exists(public_path('css/Customer/ThongBao.css')) ? filemtime(public_path('css/Customer/ThongBao.css')) : time() }}">
     <style>
         :root {
             --rs-font: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
-        html, body, button, input, select, textarea {
+
+        html,
+        body,
+        button,
+        input,
+        select,
+        textarea {
             font-family: var(--rs-font) !important;
         }
-        h1, h2, h3, h4, h5, h6, p, label {
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        p,
+        label {
             font-family: var(--rs-font);
         }
-        .fa, .fas, .far, .fal, .fad, .fab,
-        .fa-solid, .fa-regular, .fa-brands,
-        [class*="fa-"], [class^="fa-"] {
+
+        .fa,
+        .fas,
+        .far,
+        .fal,
+        .fad,
+        .fab,
+        .fa-solid,
+        .fa-regular,
+        .fa-brands,
+        [class*="fa-"],
+        [class^="fa-"] {
             font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands", "FontAwesome" !important;
         }
-        .fa::before, .fas::before, .far::before, .fal::before, .fad::before, .fab::before,
-        .fa-solid::before, .fa-regular::before, .fa-brands::before,
-        [class*="fa-"]::before, [class^="fa-"]::before {
+
+        .fa::before,
+        .fas::before,
+        .far::before,
+        .fal::before,
+        .fad::before,
+        .fab::before,
+        .fa-solid::before,
+        .fa-regular::before,
+        .fa-brands::before,
+        [class*="fa-"]::before,
+        [class^="fa-"]::before {
             font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands", "FontAwesome" !important;
         }
     </style>
 </head>
+
 <body>
 
-<header class="topbar">
-   <a href="{{ route('customer.dashboard') }}" style="text-decoration: none; "><span class="topbar-brand">🌸 RoseShop</span></a> 
-    <a href="{{ route('customer.dashboard') }}" class="back-link">
-        <i class="fas fa-arrow-left"></i> Quay lại cửa hàng
-    </a>
-</header>
+    <header class="topbar">
+        <a href="{{ route('customer.dashboard') }}" style="text-decoration: none; "><span class="topbar-brand">🌸
+                RoseShop</span></a>
+        <a href="{{ route('customer.dashboard') }}" class="back-link">
+            <i class="fas fa-arrow-left"></i> Quay lại cửa hàng
+        </a>
+    </header>
 
-<div class="page-wrap">
+    <div class="page-wrap">
 
-    <div class="page-title">
-        <i class="fas fa-bell" style="color:var(--brand)"></i>
-        Thông báo & Đơn hàng
-    </div>
+        <div class="page-title">
+            <i class="fas fa-bell" style="color:var(--brand)"></i>
+            Thông báo & Đơn hàng
+        </div>
 
-    {{-- TAB BAR --}}
-    <div class="tab-bar">
-        <button class="tab-btn {{ $activeTab === 'thong-bao' ? 'active' : '' }}"
-                id="tab-thong-bao-btn" onclick="switchTab('thong-bao')">
-            <i class="fas fa-bell"></i> Thông báo
-            @if($soThongBao > 0)
-                <span class="tab-badge">{{ $soThongBao }}</span>
-            @endif
-        </button>
-        <button class="tab-btn {{ $activeTab === 'don-hien-tai' ? 'active' : '' }}"
-                id="tab-don-hien-tai-btn" onclick="switchTab('don-hien-tai')">
-            <i class="fas fa-truck"></i> Đơn hiện tại
-            @if($soDonHienTai > 0)
-                <span class="tab-badge">{{ $soDonHienTai }}</span>
-            @endif
-        </button>
-        <button class="tab-btn {{ $activeTab === 'lich-su' ? 'active' : '' }}"
-                id="tab-lich-su-btn" onclick="switchTab('lich-su')">
-            <i class="fas fa-history"></i> Lịch sử
-        </button>
-        <button class="tab-btn {{ $activeTab === 'bo-hoa-da-luu' ? 'active' : '' }}"
-                id="tab-bo-hoa-da-luu-btn" onclick="switchTab('bo-hoa-da-luu')">
-            <i class="fas fa-heart"></i> Bó hoa đã lưu
-        </button>
-    </div>
+        {{-- TAB BAR --}}
+        <div class="tab-bar">
+            <button class="tab-btn {{ $activeTab === 'thong-bao' ? 'active' : '' }}" id="tab-thong-bao-btn"
+                onclick="switchTab('thong-bao')">
+                <i class="fas fa-bell"></i> Thông báo
+                @if($soThongBao > 0)
+                    <span class="tab-badge">{{ $soThongBao }}</span>
+                @endif
+            </button>
+            <button class="tab-btn {{ $activeTab === 'don-hien-tai' ? 'active' : '' }}" id="tab-don-hien-tai-btn"
+                onclick="switchTab('don-hien-tai')">
+                <i class="fas fa-truck"></i> Đơn hiện tại
+                @if($soDonHienTai > 0)
+                    <span class="tab-badge">{{ $soDonHienTai }}</span>
+                @endif
+            </button>
+            <button class="tab-btn {{ $activeTab === 'lich-su' ? 'active' : '' }}" id="tab-lich-su-btn"
+                onclick="switchTab('lich-su')">
+                <i class="fas fa-history"></i> Lịch sử
+            </button>
+            <button class="tab-btn {{ $activeTab === 'bo-hoa-da-luu' ? 'active' : '' }}" id="tab-bo-hoa-da-luu-btn"
+                onclick="switchTab('bo-hoa-da-luu')">
+                <i class="fas fa-heart"></i> Bó hoa đã lưu
+            </button>
+            <a href="{{ route('customer.vi-pham.index') }}"
+                class="tab-btn {{ $activeTab === 'vi-pham' ? 'active' : '' }}" id="tab-vi-pham-btn">
+                <i class="fas fa-shield-alt"></i> Xử lý vi phạm
+                @if(($soViPhamChuaGo ?? 0) > 0)
+                    <span class="tab-badge">{{ $soViPhamChuaGo }}</span>
+                @endif
+            </a>
+        </div>
 
-    {{-- ════════════════════════════════════
-         TAB 1: THÔNG BÁO
-    ════════════════════════════════════ --}}
-    <div class="tab-pane {{ $activeTab === 'thong-bao' ? 'active' : '' }}" id="tab-thong-bao">
-        <p style="font-size:.82rem; color:var(--muted); margin-bottom:16px;">
-            Ấn <strong>×</strong> để xóa thông báo sau khi đã nhận hàng.
-        </p>
+        {{-- ════════════════════════════════════
+        TAB 1: THÔNG BÁO
+        ════════════════════════════════════ --}}
+        <div class="tab-pane {{ $activeTab === 'thong-bao' ? 'active' : '' }}" id="tab-thong-bao">
+            <p style="font-size:.82rem; color:var(--muted); margin-bottom:16px;">
+                Ấn <strong>×</strong> để xóa thông báo sau khi đã nhận hàng.
+            </p>
 
-        <div id="notif-list">
-            @forelse($thongBaos as $tb)
-                @php
-                    $loai = $tb['loai'] ?? '';
-                    $notifConfig = match($loai) {
-                        'shipping' => [
-                            'label'      => 'Đơn hàng bắt đầu giao',
-                            'icon'       => 'fa-motorcycle',
-                            'border'     => '#3b82f6',
-                            'icon_bg'    => '#eff6ff',
-                            'icon_color' => '#3b82f6',
-                        ],
-                        'confirmed' => [
-                            'label'      => 'Đơn hàng đã được xác nhận',
-                            'icon'       => 'fa-check-circle',
-                            'border'     => '#22c55e',
-                            'icon_bg'    => '#f0fdf4',
-                            'icon_color' => '#16a34a',
-                        ],
-                        'cancelled' => [
-                            'label'      => 'Đơn hàng bị từ chối',
-                            'icon'       => 'fa-times-circle',
-                            'border'     => '#ef4444',
-                            'icon_bg'    => '#fef2f2',
-                            'icon_color' => '#dc2626',
-                        ],
-                        'apology' => [
-                            'label'      => 'Xin lỗi về sự chậm trễ',
-                            'icon'       => 'fa-heart',
-                            'border'     => '#f59e0b',
-                            'icon_bg'    => '#fffbeb',
-                            'icon_color' => '#f59e0b',
-                        ],
-                        'vi_pham_thanh_toan' => [
-                            'label'      => 'Yêu cầu thanh toán khoản vi phạm',
-                            'icon'       => 'fa-exclamation-triangle',
-                            'border'     => '#dc2626',
-                            'icon_bg'    => '#fef2f2',
-                            'icon_color' => '#dc2626',
-                        ],
-                        default => [
-                            'label'      => 'Shipper đã đến nơi',
-                            'icon'       => 'fa-map-marker-alt',
-                            'border'     => '#e75480',
-                            'icon_bg'    => '#fce8ef',
-                            'icon_color' => '#e75480',
-                        ],
-                        'delivered' => [
-                            'label'      => 'Giao hàng thành công',
-                            'icon'       => 'fa-check-double',
-                            'border'     => '#10b981',
-                            'icon_bg'    => '#ecfdf5',
-                            'icon_color' => '#059669',
-                        ],
-                    };
-                @endphp
-                <div class="notif-card" id="notif-{{ $tb['id'] }}"
-                     style="border-left: 3px solid {{ $notifConfig['border'] }};">
-                    <div class="notif-icon"
-                         style="background:{{ $notifConfig['icon_bg'] }}; color:{{ $notifConfig['icon_color'] }};">
-                        <i class="fas {{ $notifConfig['icon'] }}"></i>
-                    </div>
-                    <div class="notif-body">
-                        <div class="notif-title" style="color:{{ $notifConfig['icon_color'] }};">
-                            <i class="fas {{ $notifConfig['icon'] }}"></i> {{ $notifConfig['label'] }}
+            <div id="notif-list">
+                @if(($soViPhamChuaGo ?? 0) > 0)
+                    <div class="notif-card notif-card-warning" id="notif-vi-pham-warning"
+                        style="border-left: 3px solid #ef4444; background: #ffffff; border-top: 1px solid #fecaca; border-right: 1px solid #fecaca; border-bottom: 1px solid #fecaca; border-radius: 12px; margin-bottom: 14px; padding: 14px 16px; display: flex; gap: 14px; align-items: flex-start; box-shadow: 0 2px 10px rgba(239, 68, 68, .08);">
+                        <div class="notif-icon"
+                            style="background: #fef2f2; color: #dc2626; width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+                            <i class="fas fa-exclamation-triangle"></i>
                         </div>
-                        <div class="notif-content">{{ $tb['noi_dung'] }}</div>
-                        @if(($tb['loai'] ?? '') === 'vi_pham_thanh_toan')
-                            <div style="margin-top:8px;">
+                        <div class="notif-body" style="flex: 1;">
+                            <div class="notif-title"
+                                style="color: #dc2626; font-weight: 700; font-size: .95rem; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                                <i class="fas fa-exclamation-triangle"></i> Vi phạm giao hàng cần xử lý
+                            </div>
+                            <div class="notif-content" style="font-size: .88rem; color: #374151; line-height: 1.5;">
+                                @if($soViPhamChuaGo >= 2)
+                                    Tài khoản của bạn hiện có <strong>{{ $soViPhamChuaGo }}</strong> vi phạm chưa xử lý.
+                                    <strong>Phương thức thanh toán COD đang bị tạm khóa.</strong>
+                                    Vui lòng xử lý vi phạm để khôi phục quyền sử dụng COD.
+                                @else
+                                    Tài khoản của bạn hiện có <strong>{{ $soViPhamChuaGo }}/2</strong> vi phạm chưa được xử lý.
+                                    Vui lòng kiểm tra và thanh toán phí liên quan để gỡ vi phạm.
+                                @endif
+                            </div>
+                            <div style="margin-top: 10px;">
                                 <a href="{{ route('customer.vi-pham.index') }}"
-                                   style="display:inline-block;background:#dc2626;color:#fff;
-                                          padding:6px 14px;border-radius:6px;font-size:.8rem;
-                                          font-weight:600;text-decoration:none;">
-                                    <i class="fas fa-credit-card"></i> Thanh toán ngay
+                                    style="display: inline-flex; align-items: center; gap: 6px; background: #EC3D8F; color: #fff;
+                                          padding: 7px 16px; border-radius: 8px; font-size: .85rem;
+                                          font-weight: 600; text-decoration: none; transition: background .2s; box-shadow: 0 2px 6px rgba(236, 61, 143, .3);"
+                                    onmouseover="this.style.background='#d8297b'"
+                                    onmouseout="this.style.background='#EC3D8F'">
+                                    <i class="fas fa-shield-alt"></i> Xử lý vi phạm
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+                @forelse($thongBaos as $tb)
+                    @php
+                        $loai = $tb['loai'] ?? '';
+                        $notifConfig = match ($loai) {
+                            'shipping' => [
+                                'label' => 'Đơn hàng bắt đầu giao',
+                                'icon' => 'fa-motorcycle',
+                                'border' => '#3b82f6',
+                                'icon_bg' => '#eff6ff',
+                                'icon_color' => '#3b82f6',
+                            ],
+                            'confirmed' => [
+                                'label' => 'Đơn hàng đã được xác nhận',
+                                'icon' => 'fa-check-circle',
+                                'border' => '#22c55e',
+                                'icon_bg' => '#f0fdf4',
+                                'icon_color' => '#16a34a',
+                            ],
+                            'cancelled' => [
+                                'label' => 'Đơn hàng bị từ chối',
+                                'icon' => 'fa-times-circle',
+                                'border' => '#ef4444',
+                                'icon_bg' => '#fef2f2',
+                                'icon_color' => '#dc2626',
+                            ],
+                            'apology' => [
+                                'label' => 'Xin lỗi về sự chậm trễ',
+                                'icon' => 'fa-heart',
+                                'border' => '#f59e0b',
+                                'icon_bg' => '#fffbeb',
+                                'icon_color' => '#f59e0b',
+                            ],
+                            'vi_pham_thanh_toan' => [
+                                'label' => 'Yêu cầu thanh toán khoản vi phạm',
+                                'icon' => 'fa-exclamation-triangle',
+                                'border' => '#dc2626',
+                                'icon_bg' => '#fef2f2',
+                                'icon_color' => '#dc2626',
+                            ],
+                            default => [
+                                'label' => 'Shipper đã đến nơi',
+                                'icon' => 'fa-map-marker-alt',
+                                'border' => '#e75480',
+                                'icon_bg' => '#fce8ef',
+                                'icon_color' => '#e75480',
+                            ],
+                            'delivered' => [
+                                'label' => 'Giao hàng thành công',
+                                'icon' => 'fa-check-double',
+                                'border' => '#10b981',
+                                'icon_bg' => '#ecfdf5',
+                                'icon_color' => '#059669',
+                            ],
+                        };
+                    @endphp
+                    <div class="notif-card" id="notif-{{ $tb['id'] }}"
+                        style="border-left: 3px solid {{ $notifConfig['border'] }};">
+                        <div class="notif-icon"
+                            style="background:{{ $notifConfig['icon_bg'] }}; color:{{ $notifConfig['icon_color'] }};">
+                            <i class="fas {{ $notifConfig['icon'] }}"></i>
+                        </div>
+                        <div class="notif-body">
+                            <div class="notif-title" style="color:{{ $notifConfig['icon_color'] }};">
+                                <i class="fas {{ $notifConfig['icon'] }}"></i> {{ $notifConfig['label'] }}
+                            </div>
+                            <div class="notif-content">{{ $tb['noi_dung'] }}</div>
+                            @if(($tb['loai'] ?? '') === 'vi_pham_thanh_toan')
+                                <div style="margin-top:8px;">
+                                    <a href="{{ route('customer.vi-pham.index') }}" style="display:inline-block;background:#dc2626;color:#fff;
+                                                  padding:6px 14px;border-radius:6px;font-size:.8rem;
+                                                  font-weight:600;text-decoration:none;">
+                                        <i class="fas fa-credit-card"></i> Thanh toán ngay
+                                    </a>
+                                </div>
+                            @endif
+                            <div class="notif-time">
+                                <i class="fas fa-clock"></i> {{ $tb['thoi_gian'] }}
+                            </div>
+                        </div>
+                        <button class="btn-close-notif" onclick="xoaThongBao('{{ $tb['id'] }}')" title="Đóng thông báo">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                @empty
+                    @if(($soViPhamChuaGo ?? 0) === 0)
+                        <div class="empty-state" id="empty-notif">
+                            <i class="fas fa-bell-slash"></i>
+                            <p>Không có thông báo nào</p>
+                            <small>Khi shipper đến nơi giao, bạn sẽ thấy thông báo ở đây.</small>
+                        </div>
+                    @else
+                        <div class="empty-state" id="empty-notif"
+                            style="padding: 24px 16px; background: #fff; border: 1.5px dashed var(--border); border-radius: 12px; text-align: center; color: var(--muted); margin-top: 12px;">
+                            <i class="fas fa-bell-slash" style="font-size: 1.5rem; margin-bottom: 6px;"></i>
+                            <p style="margin: 0; font-size: .85rem;">Không có thông báo mới nào khác.</p>
+                        </div>
+                    @endif
+                @endforelse
+            </div>
+        </div>
+
+        {{-- ════════════════════════════════════
+        TAB 2: ĐƠN HÀNG HIỆN TẠI
+        ════════════════════════════════════ --}}
+        <div class="tab-pane {{ $activeTab === 'don-hien-tai' ? 'active' : '' }}" id="tab-don-hien-tai">
+
+            <div class="filter-bar">
+                <button class="filter-chip active" data-filter="all" onclick="filterDon(this, 'all')">
+                    Tất cả
+                </button>
+                <button class="filter-chip" data-filter="PENDING" onclick="filterDon(this, 'PENDING')">
+                    <i class="fas fa-clock"></i> Chờ xử lý
+                </button>
+                <button class="filter-chip" data-filter="CONFIRMED" onclick="filterDon(this, 'CONFIRMED')">
+                    <i class="fas fa-check"></i> Đã xác nhận
+                </button>
+                <button class="filter-chip" data-filter="SHIPPING" onclick="filterDon(this, 'SHIPPING')">
+                    <i class="fas fa-motorcycle"></i> Đang giao
+                </button>
+            </div>
+
+            <div id="don-hien-tai-list">
+                @forelse($donHienTai as $hd)
+                    @php
+                        $stMap = [
+                            'PENDING' => ['Chờ xử lý', 'pill-pending', 'fa-clock'],
+                            'CONFIRMED' => ['Đã xác nhận', 'pill-confirmed', 'fa-check-circle'],
+                            'SHIPPING' => ['Đang giao', 'pill-shipping', 'fa-motorcycle'],
+                        ];
+                        $st = $stMap[$hd->trang_thai] ?? [$hd->trang_thai, 'pill-pending', 'fa-circle'];
+                        $coBoHoaTrongDon = $hd->chiTietHoaDon->whereNotNull('ma_bo_hoa')->isNotEmpty()
+                            || !is_null($hd->__fallbackBoHoa ?? null);
+                    @endphp
+                    <div class="order-card" id="don-{{ $hd->ma_hoa_don }}" data-status="{{ $hd->trang_thai }}">
+                        <div class="order-card-header" onclick="toggleOrder('don-{{ $hd->ma_hoa_don }}')">
+                            <div>
+                                <div class="order-id">
+                                    <i class="fas fa-receipt" style="font-size:.8rem"></i>
+                                    #HD-{{ str_pad($hd->ma_hoa_don, 4, '0', STR_PAD_LEFT) }}
+                                    @if($coBoHoaTrongDon) <span class="pill pill-confirmed">Bó hoa</span> @endif
+                                    <span class="pill {{ $st[1] }}">
+                                        <i class="fas {{ $st[2] }}"></i> {{ $st[0] }}
+                                    </span>
+                                </div>
+                                <div class="order-date">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    {{ optional($hd->ngay_dat)->format('d/m/Y H:i') ?? '—' }}
+                                </div>
+                            </div>
+                            <div class="order-header-right">
+                                <span class="order-total" style="color:var(--brand)">
+                                    {{ number_format($hd->tong_tien, 0, ',', '.') }} đ
+                                </span>
+                                <i class="fas fa-chevron-down chevron"></i>
+                            </div>
+                        </div>
+
+                        @if($hd->phuong_thuc_thanh_toan === 'NGAN_HANG' && $hd->trang_thai_thanh_toan !== 'DA_THANH_TOAN')
+                            <div style="padding:10px 16px; border-top:1px dashed #eee; background:#fffbeb;
+                                        display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                                <span style="font-size:.82rem; color:#b45309;">
+                                    <i class="fas fa-exclamation-circle"></i> Đơn hàng chưa thanh toán
+                                </span>
+                                <a href="{{ route('vnpay.payment', $hd->ma_hoa_don) }}"
+                                    style="background:var(--brand,#e75480); color:#fff; padding:6px 16px;
+                                          border-radius:6px; font-size:.85rem; text-decoration:none; font-weight:600; white-space:nowrap;" onclick="event.stopPropagation();
+                                            if (this.dataset.clicked) { event.preventDefault(); return; }
+                                            this.dataset.clicked = '1';
+                                            this.style.opacity = '.6';
+                                            this.innerHTML = '<i class=\'fas fa-spinner fa-spin\'></i> Đang chuyển...';">
+                                    <i class="fas fa-credit-card"></i> Thanh toán
                                 </a>
                             </div>
                         @endif
-                        <div class="notif-time">
-                            <i class="fas fa-clock"></i> {{ $tb['thoi_gian'] }}
+
+                        <div class="order-detail">
+                            <div class="order-detail-inner">
+
+                                <div class="detail-section">
+                                    <div class="detail-section-title">
+                                        <i class="fas fa-route"></i> Tiến trình đơn hàng
+                                    </div>
+                                    <div class="progress-steps">
+                                        <div class="step">
+                                            <div class="step-dot done"><i class="fas fa-check"></i></div>
+                                            <div class="step-lbl done">Đặt<br>hàng</div>
+                                        </div>
+                                        <div
+                                            class="step-line {{ in_array($hd->trang_thai, ['CONFIRMED', 'SHIPPING', 'DELIVERED']) ? 'done' : '' }}">
+                                        </div>
+
+                                        <div class="step">
+                                            @php $confirmed = in_array($hd->trang_thai, ['CONFIRMED', 'SHIPPING', 'DELIVERED']); @endphp
+                                            <div
+                                                class="step-dot {{ $confirmed ? 'done' : ($hd->trang_thai === 'PENDING' ? 'active' : '') }}">
+                                                @if($confirmed)
+                                                    <i class="fas fa-check"></i>
+                                                @else
+                                                    <i class="fas fa-clipboard-check"></i>
+                                                @endif
+                                            </div>
+                                            <div
+                                                class="step-lbl {{ $confirmed ? 'done' : ($hd->trang_thai === 'PENDING' ? 'active' : '') }}">
+                                                Xác<br>nhận
+                                            </div>
+                                        </div>
+                                        <div
+                                            class="step-line {{ in_array($hd->trang_thai, ['SHIPPING', 'DELIVERED']) ? 'done' : '' }}">
+                                        </div>
+
+                                        <div class="step">
+                                            @php $shipping = in_array($hd->trang_thai, ['SHIPPING', 'DELIVERED']); @endphp
+                                            <div
+                                                class="step-dot {{ $shipping ? ($hd->trang_thai === 'SHIPPING' ? 'active' : 'done') : '' }}">
+                                                @if($hd->trang_thai === 'DELIVERED')
+                                                    <i class="fas fa-check"></i>
+                                                @else
+                                                    <i class="fas fa-motorcycle"></i>
+                                                @endif
+                                            </div>
+                                            <div
+                                                class="step-lbl {{ $shipping ? ($hd->trang_thai === 'SHIPPING' ? 'active' : 'done') : '' }}">
+                                                Đang<br>giao
+                                            </div>
+                                        </div>
+                                        <div class="step-line {{ $hd->trang_thai === 'DELIVERED' ? 'done' : '' }}"></div>
+
+                                        <div class="step">
+                                            <div class="step-dot {{ $hd->trang_thai === 'DELIVERED' ? 'done' : '' }}">
+                                                @if($hd->trang_thai === 'DELIVERED')
+                                                    <i class="fas fa-check"></i>
+                                                @else
+                                                    <i class="fas fa-flag-checkered"></i>
+                                                @endif
+                                            </div>
+                                            <div class="step-lbl {{ $hd->trang_thai === 'DELIVERED' ? 'done' : '' }}">
+                                                Hoàn<br>thành
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="detail-section">
+                                    <div class="detail-section-title">
+                                        <i class="fas fa-map-marker-alt"></i> Thông tin giao hàng
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-lbl">Địa chỉ</span>
+                                        <span class="info-val">{{ $hd->dia_chi_giao ?: '—' }}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-lbl">Số điện thoại</span>
+                                        <span class="info-val">{{ $hd->so_dien_thoai ?: '—' }}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-lbl">Ngày đặt</span>
+                                        <span
+                                            class="info-val">{{ optional($hd->ngay_dat)->format('d/m/Y H:i') ?? '—' }}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-lbl">Phương thức TT</span>
+                                        <span class="info-val">
+                                            @if($hd->phuong_thuc_thanh_toan === 'COD')
+                                                <i class="fas fa-money-bill-wave" style="color:var(--green)"></i> Tiền mặt (COD)
+                                            @else
+                                                <i class="fas fa-university" style="color:var(--blue)"></i> Chuyển khoản
+                                            @endif
+                                        </span>
+                                    </div>
+                                    @if($hd->shipper)
+                                        <div class="info-row">
+                                            <span class="info-lbl">Shipper</span>
+                                            <span class="info-val">
+                                                <i class="fas fa-user-tie" style="color:var(--purple)"></i>
+                                                {{ $hd->shipper->ten_nhan_vien }}
+                                            </span>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <div class="detail-section">
+                                    <div class="detail-section-title">
+                                        <i class="fas fa-box-open"></i> Sản phẩm đặt
+                                    </div>
+                                    <table class="product-list">
+                                        <thead>
+                                            <tr>
+                                                <th>Tên sản phẩm</th>
+                                                <th class="text-center">SL</th>
+                                                <th class="text-right">Đơn giá</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @php
+                                                $chiTietHienThi = $hd->chi_tiet_hien_thi;
+                                                $fallbackBo = $hd->__fallbackBoHoa ?? null;
+                                            @endphp
+
+                                            @if($chiTietHienThi->isNotEmpty())
+                                                @foreach($chiTietHienThi as $ct)
+                                                    <tr>
+                                                        <td>
+                                                            <strong>{{ $ct->ten_hien_thi }}</strong>
+                                                            @if($ct->ma_bo_hoa && $ct->boHoa?->size)
+                                                                · <span style="color:#888">{{ $ct->boHoa->size }}</span>
+                                                            @endif
+                                                            @if($ct->ma_bo_hoa && $ct->boHoa?->loi_nhan)
+                                                                <div style="font-size:.8rem;color:#888;margin-top:4px;">
+                                                                    <i class="fas fa-comment"></i> Lời nhắn: {{ $ct->boHoa->loi_nhan }}
+                                                                </div>
+                                                            @endif
+                                                        </td>
+                                                        <td class="text-center">×{{ $ct->so_luong }}</td>
+                                                        <td class="text-right">
+                                                            {{ number_format($ct->gia_ban_snapshot, 0, ',', '.') }} đ</td>
+                                                    </tr>
+                                                @endforeach
+                                            @elseif($fallbackBo)
+                                                <tr>
+                                                    <td>
+                                                        <strong>{{ $fallbackBo->ten_bo_hoa }}</strong>
+                                                        @if($fallbackBo->size)
+                                                            · <span style="color:#888">{{ $fallbackBo->size }}</span>
+                                                        @endif
+                                                    </td>
+                                                    <td class="text-center">×{{ $fallbackBo->so_luong }}</td>
+                                                    <td class="text-right">
+                                                        {{ number_format($fallbackBo->gia_ban, 0, ',', '.') }} đ</td>
+                                                </tr>
+                                            @else
+                                                <tr>
+                                                    <td colspan="3" style="text-align:center;color:#888">Không có sản phẩm</td>
+                                                </tr>
+                                            @endif
+                                        </tbody>
+                                    </table>
+                                    <div style="margin-top:10px">
+                                        <div class="total-row">
+                                            <span style="color:var(--gray)">Phí vận chuyển</span>
+                                            <span style="color:var(--green)">Miễn phí</span>
+                                        </div>
+                                        <div class="total-row main">
+                                            <span>Tổng cộng</span>
+                                            <span>{{ number_format($hd->tong_tien, 0, ',', '.') }} đ</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
                         </div>
                     </div>
-                    <button class="btn-close-notif"
-                            onclick="xoaThongBao('{{ $tb['id'] }}')"
-                            title="Đóng thông báo">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            @empty
-                <div class="empty-state" id="empty-notif">
-                    <i class="fas fa-bell-slash"></i>
-                    <p>Không có thông báo nào</p>
-                    <small>Khi shipper đến nơi giao, bạn sẽ thấy thông báo ở đây.</small>
-                </div>
-            @endforelse
-        </div>
-    </div>
-
-    {{-- ════════════════════════════════════
-         TAB 2: ĐƠN HÀNG HIỆN TẠI
-    ════════════════════════════════════ --}}
-    <div class="tab-pane {{ $activeTab === 'don-hien-tai' ? 'active' : '' }}" id="tab-don-hien-tai">
-
-        <div class="filter-bar">
-            <button class="filter-chip active" data-filter="all" onclick="filterDon(this, 'all')">
-                Tất cả
-            </button>
-            <button class="filter-chip" data-filter="PENDING" onclick="filterDon(this, 'PENDING')">
-                <i class="fas fa-clock"></i> Chờ xử lý
-            </button>
-            <button class="filter-chip" data-filter="CONFIRMED" onclick="filterDon(this, 'CONFIRMED')">
-                <i class="fas fa-check"></i> Đã xác nhận
-            </button>
-            <button class="filter-chip" data-filter="SHIPPING" onclick="filterDon(this, 'SHIPPING')">
-                <i class="fas fa-motorcycle"></i> Đang giao
-            </button>
+                @empty
+                    <div class="empty-state">
+                        <i class="fas fa-truck" style="color:var(--muted)"></i>
+                        <p>Không có đơn hàng nào đang xử lý</p>
+                        <small>Các đơn hàng chưa giao sẽ hiển thị tại đây.</small>
+                    </div>
+                @endforelse
+            </div>
         </div>
 
-        <div id="don-hien-tai-list">
-            @forelse($donHienTai as $hd)
+        {{-- ════════════════════════════════════
+        TAB 3: LỊCH SỬ ĐƠN HÀNG
+        ════════════════════════════════════ --}}
+        <div class="tab-pane {{ $activeTab === 'lich-su' ? 'active' : '' }}" id="tab-lich-su">
+
+            <div class="filter-bar">
+                <button class="filter-chip active" data-filter="all" onclick="filterLichSu(this, 'all')">
+                    Tất cả
+                </button>
+                <button class="filter-chip" data-filter="DELIVERED" onclick="filterLichSu(this, 'DELIVERED')">
+                    <i class="fas fa-check-circle"></i> Đã giao
+                </button>
+                <button class="filter-chip" data-filter="CANCELLED" onclick="filterLichSu(this, 'CANCELLED')">
+                    <i class="fas fa-times-circle"></i> Đã hủy
+                </button>
+            </div>
+
+            <div id="lich-su-list">
+                @forelse($lichSuDonHang as $hd)
+                    @php
+                        $stMap2 = [
+                            'DELIVERED' => ['Đã giao', 'pill-delivered', 'fa-check-circle'],
+                            'CANCELLED' => ['Đã hủy', 'pill-cancelled', 'fa-times-circle'],
+                        ];
+                        $st2 = $stMap2[$hd->trang_thai] ?? [$hd->trang_thai, 'pill-pending', 'fa-circle'];
+                    @endphp
+                    <div class="order-card" id="ls-{{ $hd->ma_hoa_don }}" data-status="{{ $hd->trang_thai }}">
+                        <div class="order-card-header" onclick="toggleOrder('ls-{{ $hd->ma_hoa_don }}')">
+                            <div>
+                                <div class="order-id">
+                                    <i class="fas fa-receipt" style="font-size:.8rem"></i>
+                                    #HD-{{ str_pad($hd->ma_hoa_don, 4, '0', STR_PAD_LEFT) }}
+                                    <span class="pill {{ $st2[1] }}">
+                                        <i class="fas {{ $st2[2] }}"></i> {{ $st2[0] }}
+                                    </span>
+                                </div>
+                                <div class="order-date">
+                                    @if($hd->trang_thai === 'DELIVERED')
+                                        <i class="fas fa-shipping-fast" style="color:var(--green)"></i>
+                                        Giao lúc {{ optional($hd->ngay_giao)->format('d/m/Y H:i') ?? '—' }}
+                                    @else
+                                        <i class="fas fa-calendar-alt"></i>
+                                        Đặt lúc {{ optional($hd->ngay_dat)->format('d/m/Y H:i') ?? '—' }}
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="order-header-right">
+                                <span class="order-total"
+                                    style="{{ $hd->trang_thai === 'CANCELLED' ? 'color:var(--muted);text-decoration:line-through' : 'color:var(--brand)' }}">
+                                    {{ number_format($hd->tong_tien, 0, ',', '.') }} đ
+                                </span>
+                                <i class="fas fa-chevron-down chevron"></i>
+                            </div>
+                        </div>
+
+                        <div class="order-detail">
+                            <div class="order-detail-inner">
+
+                                <div class="detail-section">
+                                    <div class="detail-section-title">
+                                        <i class="fas fa-info-circle"></i> Thông tin đơn hàng
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-lbl">Ngày đặt</span>
+                                        <span
+                                            class="info-val">{{ optional($hd->ngay_dat)->format('d/m/Y H:i') ?? '—' }}</span>
+                                    </div>
+                                    @if($hd->trang_thai === 'DELIVERED')
+                                        <div class="info-row">
+                                            <span class="info-lbl">Ngày giao</span>
+                                            <span class="info-val" style="color:var(--green)">
+                                                {{ optional($hd->ngay_giao)->format('d/m/Y H:i') ?? '—' }}
+                                            </span>
+                                        </div>
+                                    @endif
+                                    <div class="info-row">
+                                        <span class="info-lbl">Địa chỉ giao</span>
+                                        <span class="info-val">{{ $hd->dia_chi_giao ?: '—' }}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-lbl">Phương thức TT</span>
+                                        <span class="info-val">
+                                            @if($hd->phuong_thuc_thanh_toan === 'COD')
+                                                <i class="fas fa-money-bill-wave" style="color:var(--green)"></i> Tiền mặt (COD)
+                                            @else
+                                                <i class="fas fa-university" style="color:var(--blue)"></i> Chuyển khoản
+                                            @endif
+                                        </span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-lbl">Trạng thái TT</span>
+                                        <span class="info-val">
+                                            @if($hd->trang_thai_thanh_toan === 'DA_THANH_TOAN')
+                                                <span style="color:var(--green)"><i class="fas fa-check-circle"></i> Đã thanh
+                                                    toán</span>
+                                            @else
+                                                <span style="color:var(--yellow)"><i class="fas fa-exclamation-circle"></i> Chưa
+                                                    thanh toán</span>
+                                            @endif
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="detail-section">
+                                    <div class="detail-section-title">
+                                        <i class="fas fa-box-open"></i> Chi tiết sản phẩm
+                                    </div>
+                                    <table class="product-list">
+                                        <thead>
+                                            <tr>
+                                                <th>Tên sản phẩm</th>
+                                                <th class="text-center">SL</th>
+                                                <th class="text-right">Đơn giá</th>
+                                                <th class="text-right">T.tiền</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @php
+                                                $chiTietHienThiLs = $hd->chi_tiet_hien_thi;
+                                                $fallbackBoLs = $hd->__fallbackBoHoa ?? null;
+                                            @endphp
+
+                                            @if($chiTietHienThiLs->isNotEmpty())
+                                                @foreach($chiTietHienThiLs as $ct)
+                                                    <tr>
+                                                        <td>
+                                                            <strong>{{ $ct->ten_hien_thi }}</strong>
+                                                            @if($ct->ma_bo_hoa && $ct->boHoa?->size)
+                                                                · <span style="color:#888">{{ $ct->boHoa->size }}</span>
+                                                            @endif
+                                                        </td>
+                                                        <td class="text-center">×{{ $ct->so_luong }}</td>
+                                                        <td class="text-right">
+                                                            {{ number_format($ct->gia_ban_snapshot, 0, ',', '.') }} đ</td>
+                                                        <td class="text-right">
+                                                            {{ number_format($ct->gia_ban_snapshot * $ct->so_luong, 0, ',', '.') }}
+                                                            đ</td>
+                                                    </tr>
+                                                @endforeach
+                                            @elseif($fallbackBoLs)
+                                                <tr>
+                                                    <td><strong>{{ $fallbackBoLs->ten_bo_hoa }}</strong> ·
+                                                        {{ $fallbackBoLs->size }}</td>
+                                                    <td class="text-center">×{{ $fallbackBoLs->so_luong }}</td>
+                                                    <td class="text-right">
+                                                        {{ number_format($fallbackBoLs->gia_ban, 0, ',', '.') }} đ</td>
+                                                    <td class="text-right">
+                                                        {{ number_format($fallbackBoLs->gia_ban * $fallbackBoLs->so_luong, 0, ',', '.') }}
+                                                        đ</td>
+                                                </tr>
+                                            @else
+                                                <tr>
+                                                    <td colspan="4" style="text-align:center;color:#888">Không có sản phẩm</td>
+                                                </tr>
+                                            @endif
+                                        </tbody>
+                                    </table>
+                                    <div style="margin-top:10px">
+                                        <div class="total-row main">
+                                            <span>Tổng cộng</span>
+                                            <span>{{ number_format($hd->tong_tien, 0, ',', '.') }} đ</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="empty-state">
+                        <i class="fas fa-history" style="color:var(--muted)"></i>
+                        <p>Chưa có đơn hàng nào trong lịch sử</p>
+                        <small>Các đơn đã giao hoặc đã hủy sẽ hiển thị tại đây.</small>
+                    </div>
+                @endforelse
+            </div>
+        </div>
+
+        {{-- ════════════════════════════════════
+        TAB 4: BÓ HOA ĐÃ LƯU (bản nháp tự tạo)
+        ════════════════════════════════════ --}}
+        <div class="tab-pane {{ $activeTab === 'bo-hoa-da-luu' ? 'active' : '' }}" id="tab-bo-hoa-da-luu">
+            <div class="detail-section-title">
+                <i class="fas fa-heart"></i> Các thiết kế bó hoa đã lưu
+            </div>
+            <p style="font-size:.82rem; color:var(--muted); margin:8px 0 16px;">
+                Ấn vào thẻ để xem chi tiết. Bấm <strong>"Tiếp tục thiết kế này"</strong> để mở lại form với dữ liệu đã
+                điền sẵn.
+            </p>
+
+            @forelse($boHoaDaLuu as $bo)
                 @php
-                    $stMap = [
-                        'PENDING'   => ['Chờ xử lý',    'pill-pending',   'fa-clock'],
-                        'CONFIRMED' => ['Đã xác nhận',   'pill-confirmed', 'fa-check-circle'],
-                        'SHIPPING'  => ['Đang giao',     'pill-shipping',  'fa-motorcycle'],
-                    ];
-                    $st = $stMap[$hd->trang_thai] ?? [$hd->trang_thai, 'pill-pending', 'fa-circle'];
-                    $coBoHoaTrongDon = $hd->chiTietHoaDon->whereNotNull('ma_bo_hoa')->isNotEmpty()
-                        || !is_null($hd->__fallbackBoHoa ?? null);
+                    $sizeBong = \App\Http\Controllers\Admin\BoHoaController::SO_BONG[$bo->size] ?? null;
+                    $kieuText = \App\Http\Controllers\Admin\BoHoaController::KIEU_DANG[$bo->kieu_bo_hoa] ?? $bo->kieu_bo_hoa;
+                    $conceptText = \App\Http\Controllers\Admin\BoHoaController::CONCEPT[$bo->concept] ?? $bo->concept;
                 @endphp
-                <div class="order-card" id="don-{{ $hd->ma_hoa_don }}" data-status="{{ $hd->trang_thai }}">
-                    <div class="order-card-header" onclick="toggleOrder('don-{{ $hd->ma_hoa_don }}')">
+                <div class="order-card" id="draft-{{ $bo->ma_bo_hoa }}" style="margin-top:12px">
+                    <div class="order-card-header" onclick="toggleOrder('draft-{{ $bo->ma_bo_hoa }}')">
                         <div>
                             <div class="order-id">
-                                <i class="fas fa-receipt" style="font-size:.8rem"></i>
-                                #HD-{{ str_pad($hd->ma_hoa_don, 4, '0', STR_PAD_LEFT) }}
-                                @if($coBoHoaTrongDon) <span class="pill pill-confirmed">Bó hoa</span> @endif
-                                <span class="pill {{ $st[1] }}">
-                                    <i class="fas {{ $st[2] }}"></i> {{ $st[0] }}
-                                </span>
+                                <i class="fas fa-seedling" style="font-size:.8rem"></i>
+                                {{ $bo->ten_bo_hoa }}
+                                <span class="pill pill-pending">Bản nháp</span>
                             </div>
                             <div class="order-date">
-                                <i class="fas fa-calendar-alt"></i>
-                                {{ optional($hd->ngay_dat)->format('d/m/Y H:i') ?? '—' }}
+                                <i class="fas fa-tag"></i>
+                                {{ $bo->size }} · {{ $kieuText }} · {{ $bo->so_luong }} bó
                             </div>
                         </div>
                         <div class="order-header-right">
-                            <span class="order-total" style="color:var(--brand)">
-                                {{ number_format($hd->tong_tien, 0, ',', '.') }} đ
-                            </span>
                             <i class="fas fa-chevron-down chevron"></i>
                         </div>
                     </div>
-
-                    @if($hd->phuong_thuc_thanh_toan === 'NGAN_HANG' && $hd->trang_thai_thanh_toan !== 'DA_THANH_TOAN')
-                    <div style="padding:10px 16px; border-top:1px dashed #eee; background:#fffbeb;
-                                display:flex; align-items:center; justify-content:space-between; gap:12px;">
-                        <span style="font-size:.82rem; color:#b45309;">
-                            <i class="fas fa-exclamation-circle"></i> Đơn hàng chưa thanh toán
-                        </span>
-                        <a href="{{ route('vnpay.payment', $hd->ma_hoa_don) }}"
-                           style="background:var(--brand,#e75480); color:#fff; padding:6px 16px;
-                                  border-radius:6px; font-size:.85rem; text-decoration:none; font-weight:600; white-space:nowrap;"
-                           onclick="event.stopPropagation();
-                                    if (this.dataset.clicked) { event.preventDefault(); return; }
-                                    this.dataset.clicked = '1';
-                                    this.style.opacity = '.6';
-                                    this.innerHTML = '<i class=\'fas fa-spinner fa-spin\'></i> Đang chuyển...';">
-                            <i class="fas fa-credit-card"></i> Thanh toán
-                        </a>
-                    </div>
-                    @endif
 
                     <div class="order-detail">
                         <div class="order-detail-inner">
 
                             <div class="detail-section">
                                 <div class="detail-section-title">
-                                    <i class="fas fa-route"></i> Tiến trình đơn hàng
+                                    <i class="fas fa-info-circle"></i> Thông tin thiết kế
                                 </div>
-                                <div class="progress-steps">
-                                    <div class="step">
-                                        <div class="step-dot done"><i class="fas fa-check"></i></div>
-                                        <div class="step-lbl done">Đặt<br>hàng</div>
-                                    </div>
-                                    <div class="step-line {{ in_array($hd->trang_thai, ['CONFIRMED','SHIPPING','DELIVERED']) ? 'done' : '' }}"></div>
-
-                                    <div class="step">
-                                        @php $confirmed = in_array($hd->trang_thai, ['CONFIRMED','SHIPPING','DELIVERED']); @endphp
-                                        <div class="step-dot {{ $confirmed ? 'done' : ($hd->trang_thai === 'PENDING' ? 'active' : '') }}">
-                                            @if($confirmed)
-                                                <i class="fas fa-check"></i>
-                                            @else
-                                                <i class="fas fa-clipboard-check"></i>
-                                            @endif
-                                        </div>
-                                        <div class="step-lbl {{ $confirmed ? 'done' : ($hd->trang_thai === 'PENDING' ? 'active' : '') }}">
-                                            Xác<br>nhận
-                                        </div>
-                                    </div>
-                                    <div class="step-line {{ in_array($hd->trang_thai, ['SHIPPING','DELIVERED']) ? 'done' : '' }}"></div>
-
-                                    <div class="step">
-                                        @php $shipping = in_array($hd->trang_thai, ['SHIPPING','DELIVERED']); @endphp
-                                        <div class="step-dot {{ $shipping ? ($hd->trang_thai === 'SHIPPING' ? 'active' : 'done') : '' }}">
-                                            @if($hd->trang_thai === 'DELIVERED')
-                                                <i class="fas fa-check"></i>
-                                            @else
-                                                <i class="fas fa-motorcycle"></i>
-                                            @endif
-                                        </div>
-                                        <div class="step-lbl {{ $shipping ? ($hd->trang_thai === 'SHIPPING' ? 'active' : 'done') : '' }}">
-                                            Đang<br>giao
-                                        </div>
-                                    </div>
-                                    <div class="step-line {{ $hd->trang_thai === 'DELIVERED' ? 'done' : '' }}"></div>
-
-                                    <div class="step">
-                                        <div class="step-dot {{ $hd->trang_thai === 'DELIVERED' ? 'done' : '' }}">
-                                            @if($hd->trang_thai === 'DELIVERED')
-                                                <i class="fas fa-check"></i>
-                                            @else
-                                                <i class="fas fa-flag-checkered"></i>
-                                            @endif
-                                        </div>
-                                        <div class="step-lbl {{ $hd->trang_thai === 'DELIVERED' ? 'done' : '' }}">
-                                            Hoàn<br>thành
-                                        </div>
-                                    </div>
+                                <div class="info-row">
+                                    <span class="info-lbl">Tên bó hoa</span>
+                                    <span class="info-val">{{ $bo->ten_bo_hoa }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-lbl">Size</span>
+                                    <span class="info-val">
+                                        {{ $bo->size }}@if($sizeBong) ({{ $sizeBong }} bông)@endif
+                                    </span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-lbl">Kiểu dáng</span>
+                                    <span class="info-val">{{ $kieuText }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-lbl">Concept</span>
+                                    <span class="info-val">{{ $conceptText }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-lbl">Số bó</span>
+                                    <span class="info-val">{{ $bo->so_luong }}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="info-lbl">Lưu lúc</span>
+                                    <span class="info-val">
+                                        {{ optional($bo->created_at)->format('d/m/Y H:i') ?? '—' }}
+                                    </span>
                                 </div>
                             </div>
 
                             <div class="detail-section">
                                 <div class="detail-section-title">
-                                    <i class="fas fa-map-marker-alt"></i> Thông tin giao hàng
+                                    <i class="fas fa-box-open"></i> Thành phần bó hoa
                                 </div>
-                                <div class="info-row">
-                                    <span class="info-lbl">Địa chỉ</span>
-                                    <span class="info-val">{{ $hd->dia_chi_giao ?: '—' }}</span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-lbl">Số điện thoại</span>
-                                    <span class="info-val">{{ $hd->so_dien_thoai ?: '—' }}</span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-lbl">Ngày đặt</span>
-                                    <span class="info-val">{{ optional($hd->ngay_dat)->format('d/m/Y H:i') ?? '—' }}</span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-lbl">Phương thức TT</span>
-                                    <span class="info-val">
-                                        @if($hd->phuong_thuc_thanh_toan === 'COD')
-                                            <i class="fas fa-money-bill-wave" style="color:var(--green)"></i> Tiền mặt (COD)
-                                        @else
-                                            <i class="fas fa-university" style="color:var(--blue)"></i> Chuyển khoản
-                                        @endif
-                                    </span>
-                                </div>
-                                @if($hd->shipper)
-                                <div class="info-row">
-                                    <span class="info-lbl">Shipper</span>
-                                    <span class="info-val">
-                                        <i class="fas fa-user-tie" style="color:var(--purple)"></i>
-                                        {{ $hd->shipper->ten_nhan_vien }}
-                                    </span>
-                                </div>
-                                @endif
-                            </div>
-
-                            <div class="detail-section">
-                                <div class="detail-section-title">
-                                    <i class="fas fa-box-open"></i> Sản phẩm đặt
-                                </div>
+                                @php $theoVaiTro = $bo->chiTietBoHoa->groupBy('vai_tro'); @endphp
                                 <table class="product-list">
                                     <thead>
                                         <tr>
-                                            <th>Tên sản phẩm</th>
+                                            <th>Vai trò / Nguyên liệu</th>
                                             <th class="text-center">SL</th>
-                                            <th class="text-right">Đơn giá</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @php
-                                            $chiTietHienThi = $hd->chi_tiet_hien_thi;
-                                            $fallbackBo = $hd->__fallbackBoHoa ?? null;
-                                        @endphp
-
-                                        @if($chiTietHienThi->isNotEmpty())
-                                            @foreach($chiTietHienThi as $ct)
-                                                <tr>
-                                                    <td>
-                                                        <strong>{{ $ct->ten_hien_thi }}</strong>
-                                                        @if($ct->ma_bo_hoa && $ct->boHoa?->size)
-                                                            · <span style="color:#888">{{ $ct->boHoa->size }}</span>
-                                                        @endif
-                                                        @if($ct->ma_bo_hoa && $ct->boHoa?->loi_nhan)
-                                                            <div style="font-size:.8rem;color:#888;margin-top:4px;">
-                                                                <i class="fas fa-comment"></i> Lời nhắn: {{ $ct->boHoa->loi_nhan }}
-                                                            </div>
-                                                        @endif
-                                                    </td>
-                                                    <td class="text-center">×{{ $ct->so_luong }}</td>
-                                                    <td class="text-right">{{ number_format($ct->gia_ban_snapshot, 0, ',', '.') }} đ</td>
-                                                </tr>
-                                            @endforeach
-                                        @elseif($fallbackBo)
+                                        @foreach($theoVaiTro as $vaiTro => $items)
                                             <tr>
                                                 <td>
-                                                    <strong>{{ $fallbackBo->ten_bo_hoa }}</strong>
-                                                    @if($fallbackBo->size)
-                                                        · <span style="color:#888">{{ $fallbackBo->size }}</span>
-                                                    @endif
-                                                </td>
-                                                <td class="text-center">×{{ $fallbackBo->so_luong }}</td>
-                                                <td class="text-right">{{ number_format($fallbackBo->gia_ban, 0, ',', '.') }} đ</td>
-                                            </tr>
-                                        @else
-                                            <tr><td colspan="3" style="text-align:center;color:#888">Không có sản phẩm</td></tr>
-                                        @endif
-                                    </tbody>
-                                </table>
-                                <div style="margin-top:10px">
-                                    <div class="total-row">
-                                        <span style="color:var(--gray)">Phí vận chuyển</span>
-                                        <span style="color:var(--green)">Miễn phí</span>
-                                    </div>
-                                    <div class="total-row main">
-                                        <span>Tổng cộng</span>
-                                        <span>{{ number_format($hd->tong_tien, 0, ',', '.') }} đ</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-            @empty
-                <div class="empty-state">
-                    <i class="fas fa-truck" style="color:var(--muted)"></i>
-                    <p>Không có đơn hàng nào đang xử lý</p>
-                    <small>Các đơn hàng chưa giao sẽ hiển thị tại đây.</small>
-                </div>
-            @endforelse
-        </div>
-    </div>
-
-    {{-- ════════════════════════════════════
-         TAB 3: LỊCH SỬ ĐƠN HÀNG
-    ════════════════════════════════════ --}}
-    <div class="tab-pane {{ $activeTab === 'lich-su' ? 'active' : '' }}" id="tab-lich-su">
-
-        <div class="filter-bar">
-            <button class="filter-chip active" data-filter="all" onclick="filterLichSu(this, 'all')">
-                Tất cả
-            </button>
-            <button class="filter-chip" data-filter="DELIVERED" onclick="filterLichSu(this, 'DELIVERED')">
-                <i class="fas fa-check-circle"></i> Đã giao
-            </button>
-            <button class="filter-chip" data-filter="CANCELLED" onclick="filterLichSu(this, 'CANCELLED')">
-                <i class="fas fa-times-circle"></i> Đã hủy
-            </button>
-        </div>
-
-        <div id="lich-su-list">
-            @forelse($lichSuDonHang as $hd)
-                @php
-                    $stMap2 = [
-                        'DELIVERED' => ['Đã giao',  'pill-delivered', 'fa-check-circle'],
-                        'CANCELLED' => ['Đã hủy',   'pill-cancelled', 'fa-times-circle'],
-                    ];
-                    $st2 = $stMap2[$hd->trang_thai] ?? [$hd->trang_thai, 'pill-pending', 'fa-circle'];
-                @endphp
-                <div class="order-card" id="ls-{{ $hd->ma_hoa_don }}" data-status="{{ $hd->trang_thai }}">
-                    <div class="order-card-header" onclick="toggleOrder('ls-{{ $hd->ma_hoa_don }}')">
-                        <div>
-                            <div class="order-id">
-                                <i class="fas fa-receipt" style="font-size:.8rem"></i>
-                                #HD-{{ str_pad($hd->ma_hoa_don, 4, '0', STR_PAD_LEFT) }}
-                                <span class="pill {{ $st2[1] }}">
-                                    <i class="fas {{ $st2[2] }}"></i> {{ $st2[0] }}
-                                </span>
-                            </div>
-                            <div class="order-date">
-                                @if($hd->trang_thai === 'DELIVERED')
-                                    <i class="fas fa-shipping-fast" style="color:var(--green)"></i>
-                                    Giao lúc {{ optional($hd->ngay_giao)->format('d/m/Y H:i') ?? '—' }}
-                                @else
-                                    <i class="fas fa-calendar-alt"></i>
-                                    Đặt lúc {{ optional($hd->ngay_dat)->format('d/m/Y H:i') ?? '—' }}
-                                @endif
-                            </div>
-                        </div>
-                        <div class="order-header-right">
-                            <span class="order-total" style="{{ $hd->trang_thai === 'CANCELLED' ? 'color:var(--muted);text-decoration:line-through' : 'color:var(--brand)' }}">
-                                {{ number_format($hd->tong_tien, 0, ',', '.') }} đ
-                            </span>
-                            <i class="fas fa-chevron-down chevron"></i>
-                        </div>
-                    </div>
-
-                    <div class="order-detail">
-                        <div class="order-detail-inner">
-
-                            <div class="detail-section">
-                                <div class="detail-section-title">
-                                    <i class="fas fa-info-circle"></i> Thông tin đơn hàng
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-lbl">Ngày đặt</span>
-                                    <span class="info-val">{{ optional($hd->ngay_dat)->format('d/m/Y H:i') ?? '—' }}</span>
-                                </div>
-                                @if($hd->trang_thai === 'DELIVERED')
-                                <div class="info-row">
-                                    <span class="info-lbl">Ngày giao</span>
-                                    <span class="info-val" style="color:var(--green)">
-                                        {{ optional($hd->ngay_giao)->format('d/m/Y H:i') ?? '—' }}
-                                    </span>
-                                </div>
-                                @endif
-                                <div class="info-row">
-                                    <span class="info-lbl">Địa chỉ giao</span>
-                                    <span class="info-val">{{ $hd->dia_chi_giao ?: '—' }}</span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-lbl">Phương thức TT</span>
-                                    <span class="info-val">
-                                        @if($hd->phuong_thuc_thanh_toan === 'COD')
-                                            <i class="fas fa-money-bill-wave" style="color:var(--green)"></i> Tiền mặt (COD)
-                                        @else
-                                            <i class="fas fa-university" style="color:var(--blue)"></i> Chuyển khoản
-                                        @endif
-                                    </span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-lbl">Trạng thái TT</span>
-                                    <span class="info-val">
-                                        @if($hd->trang_thai_thanh_toan === 'DA_THANH_TOAN')
-                                            <span style="color:var(--green)"><i class="fas fa-check-circle"></i> Đã thanh toán</span>
-                                        @else
-                                            <span style="color:var(--yellow)"><i class="fas fa-exclamation-circle"></i> Chưa thanh toán</span>
-                                        @endif
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div class="detail-section">
-                                <div class="detail-section-title">
-                                    <i class="fas fa-box-open"></i> Chi tiết sản phẩm
-                                </div>
-                                <table class="product-list">
-                                    <thead>
-                                        <tr>
-                                            <th>Tên sản phẩm</th>
-                                            <th class="text-center">SL</th>
-                                            <th class="text-right">Đơn giá</th>
-                                            <th class="text-right">T.tiền</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @php
-                                            $chiTietHienThiLs = $hd->chi_tiet_hien_thi;
-                                            $fallbackBoLs = $hd->__fallbackBoHoa ?? null;
-                                        @endphp
-
-                                        @if($chiTietHienThiLs->isNotEmpty())
-                                            @foreach($chiTietHienThiLs as $ct)
-                                                <tr>
-                                                    <td>
-                                                        <strong>{{ $ct->ten_hien_thi }}</strong>
-                                                        @if($ct->ma_bo_hoa && $ct->boHoa?->size)
-                                                            · <span style="color:#888">{{ $ct->boHoa->size }}</span>
-                                                        @endif
-                                                    </td>
-                                                    <td class="text-center">×{{ $ct->so_luong }}</td>
-                                                    <td class="text-right">{{ number_format($ct->gia_ban_snapshot, 0, ',', '.') }} đ</td>
-                                                    <td class="text-right">{{ number_format($ct->gia_ban_snapshot * $ct->so_luong, 0, ',', '.') }} đ</td>
-                                                </tr>
-                                            @endforeach
-                                        @elseif($fallbackBoLs)
-                                            <tr>
-                                                <td><strong>{{ $fallbackBoLs->ten_bo_hoa }}</strong> · {{ $fallbackBoLs->size }}</td>
-                                                <td class="text-center">×{{ $fallbackBoLs->so_luong }}</td>
-                                                <td class="text-right">{{ number_format($fallbackBoLs->gia_ban, 0, ',', '.') }} đ</td>
-                                                <td class="text-right">{{ number_format($fallbackBoLs->gia_ban * $fallbackBoLs->so_luong, 0, ',', '.') }} đ</td>
-                                            </tr>
-                                        @else
-                                            <tr><td colspan="4" style="text-align:center;color:#888">Không có sản phẩm</td></tr>
-                                        @endif
-                                    </tbody>
-                                </table>
-                                <div style="margin-top:10px">
-                                    <div class="total-row main">
-                                        <span>Tổng cộng</span>
-                                        <span>{{ number_format($hd->tong_tien, 0, ',', '.') }} đ</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-            @empty
-                <div class="empty-state">
-                    <i class="fas fa-history" style="color:var(--muted)"></i>
-                    <p>Chưa có đơn hàng nào trong lịch sử</p>
-                    <small>Các đơn đã giao hoặc đã hủy sẽ hiển thị tại đây.</small>
-                </div>
-            @endforelse
-        </div>
-    </div>
-
-    {{-- ════════════════════════════════════
-         TAB 4: BÓ HOA ĐÃ LƯU (bản nháp tự tạo)
-    ════════════════════════════════════ --}}
-    <div class="tab-pane {{ $activeTab === 'bo-hoa-da-luu' ? 'active' : '' }}" id="tab-bo-hoa-da-luu">
-        <div class="detail-section-title">
-            <i class="fas fa-heart"></i> Các thiết kế bó hoa đã lưu
-        </div>
-        <p style="font-size:.82rem; color:var(--muted); margin:8px 0 16px;">
-            Ấn vào thẻ để xem chi tiết. Bấm <strong>"Tiếp tục thiết kế này"</strong> để mở lại form với dữ liệu đã điền sẵn.
-        </p>
-
-        @forelse($boHoaDaLuu as $bo)
-            @php
-                $sizeBong = \App\Http\Controllers\Admin\BoHoaController::SO_BONG[$bo->size] ?? null;
-                $kieuText = \App\Http\Controllers\Admin\BoHoaController::KIEU_DANG[$bo->kieu_bo_hoa] ?? $bo->kieu_bo_hoa;
-                $conceptText = \App\Http\Controllers\Admin\BoHoaController::CONCEPT[$bo->concept] ?? $bo->concept;
-            @endphp
-            <div class="order-card" id="draft-{{ $bo->ma_bo_hoa }}" style="margin-top:12px">
-                <div class="order-card-header" onclick="toggleOrder('draft-{{ $bo->ma_bo_hoa }}')">
-                    <div>
-                        <div class="order-id">
-                            <i class="fas fa-seedling" style="font-size:.8rem"></i>
-                            {{ $bo->ten_bo_hoa }}
-                            <span class="pill pill-pending">Bản nháp</span>
-                        </div>
-                        <div class="order-date">
-                            <i class="fas fa-tag"></i>
-                            {{ $bo->size }} · {{ $kieuText }} · {{ $bo->so_luong }} bó
-                        </div>
-                    </div>
-                    <div class="order-header-right">
-                        <i class="fas fa-chevron-down chevron"></i>
-                    </div>
-                </div>
-
-                <div class="order-detail">
-                    <div class="order-detail-inner">
-
-                        <div class="detail-section">
-                            <div class="detail-section-title">
-                                <i class="fas fa-info-circle"></i> Thông tin thiết kế
-                            </div>
-                            <div class="info-row">
-                                <span class="info-lbl">Tên bó hoa</span>
-                                <span class="info-val">{{ $bo->ten_bo_hoa }}</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-lbl">Size</span>
-                                <span class="info-val">
-                                    {{ $bo->size }}@if($sizeBong) ({{ $sizeBong }} bông)@endif
-                                </span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-lbl">Kiểu dáng</span>
-                                <span class="info-val">{{ $kieuText }}</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-lbl">Concept</span>
-                                <span class="info-val">{{ $conceptText }}</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-lbl">Số bó</span>
-                                <span class="info-val">{{ $bo->so_luong }}</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-lbl">Lưu lúc</span>
-                                <span class="info-val">
-                                    {{ optional($bo->created_at)->format('d/m/Y H:i') ?? '—' }}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div class="detail-section">
-                            <div class="detail-section-title">
-                                <i class="fas fa-box-open"></i> Thành phần bó hoa
-                            </div>
-                            @php $theoVaiTro = $bo->chiTietBoHoa->groupBy('vai_tro'); @endphp
-                            <table class="product-list">
-                                <thead>
-                                    <tr>
-                                        <th>Vai trò / Nguyên liệu</th>
-                                        <th class="text-center">SL</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($theoVaiTro as $vaiTro => $items)
-                                        <tr>
-                                            <td>
-                                                <div style="font-weight:600; color:var(--brand); margin-bottom:2px;">
-                                                    {{ \App\Http\Controllers\Admin\BoHoaController::VAI_TRO[$vaiTro] ?? $vaiTro }}
-                                                </div>
-                                                @foreach($items as $i)
-                                                    <div style="font-size:.85rem; color:#555;">
-                                                        • {{ $i->sanPham->ten_san_pham ?? 'Nguyên liệu #'.$i->ma_san_pham }}
-                                                        @if($i->sanPham?->don_vi_tinh_text)
-                                                            <span style="color:#999;">({{ $i->sanPham->don_vi_tinh_text }})</span>
-                                                        @endif
+                                                    <div style="font-weight:600; color:var(--brand); margin-bottom:2px;">
+                                                        {{ \App\Http\Controllers\Admin\BoHoaController::VAI_TRO[$vaiTro] ?? $vaiTro }}
                                                     </div>
-                                                @endforeach
-                                            </td>
-                                            <td class="text-center" style="vertical-align:top;">
-                                                {{ $items->sum('so_luong') }}
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                            <p class="order-date" style="margin-top:10px;">
-                                <i class="fas fa-info-circle"></i>
-                                Bản nháp chỉ để xem lại / đặt lại thiết kế, <strong>không giữ tồn kho</strong>.
-                            </p>
-                        </div>
+                                                    @foreach($items as $i)
+                                                        <div style="font-size:.85rem; color:#555;">
+                                                            • {{ $i->sanPham->ten_san_pham ?? 'Nguyên liệu #' . $i->ma_san_pham }}
+                                                            @if($i->sanPham?->don_vi_tinh_text)
+                                                                <span style="color:#999;">({{ $i->sanPham->don_vi_tinh_text }})</span>
+                                                            @endif
+                                                        </div>
+                                                    @endforeach
+                                                </td>
+                                                <td class="text-center" style="vertical-align:top;">
+                                                    {{ $items->sum('so_luong') }}
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                                <p class="order-date" style="margin-top:10px;">
+                                    <i class="fas fa-info-circle"></i>
+                                    Bản nháp chỉ để xem lại / đặt lại thiết kế, <strong>không giữ tồn kho</strong>.
+                                </p>
+                            </div>
 
-                        <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
-                            <a href="{{ route('customer.bo-hoa.tu-tao.tiep-tuc', $bo->ma_bo_hoa) }}"
-                               style="background:var(--brand,#e75480); color:#fff; padding:11px 22px;
-                                      border-radius:8px; text-decoration:none; font-weight:600;
-                                      display:inline-flex; align-items:center; gap:8px;
-                                      box-shadow:0 2px 8px rgba(231,84,128,.25);"
-                               onclick="event.stopPropagation();">
-                                <i class="fas fa-redo"></i> Tiếp tục thiết kế này
-                            </a>
-                        </div>
+                            <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+                                <a href="{{ route('customer.bo-hoa.tu-tao.tiep-tuc', $bo->ma_bo_hoa) }}" style="background:var(--brand,#e75480); color:#fff; padding:11px 22px;
+                                          border-radius:8px; text-decoration:none; font-weight:600;
+                                          display:inline-flex; align-items:center; gap:8px;
+                                          box-shadow:0 2px 8px rgba(231,84,128,.25);" onclick="event.stopPropagation();">
+                                    <i class="fas fa-redo"></i> Tiếp tục thiết kế này
+                                </a>
+                            </div>
 
+                        </div>
                     </div>
                 </div>
-            </div>
-        @empty
-            <div class="empty-state">
-                <i class="fas fa-heart-broken"></i>
-                <p>Chưa có bó hoa tự tạo nào được lưu.</p>
-                <small>Hãy vào <a href="{{ route('customer.bo-hoa.tu-tao') }}">Tự tạo bó hoa</a> để bắt đầu thiết kế.</small>
-            </div>
-        @endforelse
+            @empty
+                <div class="empty-state">
+                    <i class="fas fa-heart-broken"></i>
+                    <p>Chưa có bó hoa tự tạo nào được lưu.</p>
+                    <small>Hãy vào <a href="{{ route('customer.bo-hoa.tu-tao') }}">Tự tạo bó hoa</a> để bắt đầu thiết
+                        kế.</small>
+                </div>
+            @endforelse
+        </div>
     </div>
-</div>
 
-<div id="toast"></div>
+    <div id="toast"></div>
 
-<script>
-const _csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    <script>
+        const _csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
-function showToast(msg, type = '') {
-    const el = document.getElementById('toast');
-    el.textContent = msg;
-    el.className = 'show ' + type;
-    setTimeout(() => { el.className = ''; }, 3000);
-}
-
-function switchTab(tab) {
-    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + tab).classList.add('active');
-    document.getElementById('tab-' + tab + '-btn').classList.add('active');
-    history.replaceState(null, '', '?tab=' + tab);
-}
-
-function toggleOrder(id) {
-    const card = document.getElementById(id);
-    if (!card) return;
-    card.classList.toggle('open');
-}
-
-function filterDon(btn, status) {
-    document.querySelectorAll('#tab-don-hien-tai .filter-chip').forEach(c => c.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('#don-hien-tai-list .order-card').forEach(card => {
-        if (status === 'all' || card.dataset.status === status) {
-            card.style.display = '';
-        } else {
-            card.style.display = 'none';
+        function showToast(msg, type = '') {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.className = 'show ' + type;
+            setTimeout(() => { el.className = ''; }, 3000);
         }
-    });
-}
 
-function filterLichSu(btn, status) {
-    document.querySelectorAll('#tab-lich-su .filter-chip').forEach(c => c.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('#lich-su-list .order-card').forEach(card => {
-        if (status === 'all' || card.dataset.status === status) {
-            card.style.display = '';
-        } else {
-            card.style.display = 'none';
+        function switchTab(tab) {
+            if (tab === 'vi-pham') {
+                window.location.href = "{{ route('customer.vi-pham.index') }}";
+                return;
+            }
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            const pane = document.getElementById('tab-' + tab);
+            const btn = document.getElementById('tab-' + tab + '-btn');
+            if (pane) pane.classList.add('active');
+            if (btn) btn.classList.add('active');
+            history.replaceState(null, '', '?tab=' + tab);
         }
-    });
-}
 
-function xoaThongBao(id) {
-    const card = document.getElementById('notif-' + id);
-    if (!card) return;
+        function toggleOrder(id) {
+            const card = document.getElementById(id);
+            if (!card) return;
+            card.classList.toggle('open');
+        }
 
-    fetch(`/customer/thong-bao/${id}/xoa`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _csrf },
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            card.classList.add('removing');
-            setTimeout(() => {
-                card.remove();
-                const list = document.getElementById('notif-list');
-                if (list && list.querySelectorAll('.notif-card').length === 0) {
-                    list.innerHTML = `
+        function filterDon(btn, status) {
+            document.querySelectorAll('#tab-don-hien-tai .filter-chip').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('#don-hien-tai-list .order-card').forEach(card => {
+                if (status === 'all' || card.dataset.status === status) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function filterLichSu(btn, status) {
+            document.querySelectorAll('#tab-lich-su .filter-chip').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('#lich-su-list .order-card').forEach(card => {
+                if (status === 'all' || card.dataset.status === status) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function xoaThongBao(id) {
+            const card = document.getElementById('notif-' + id);
+            if (!card) return;
+
+            fetch(`/customer/thong-bao/${id}/xoa`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _csrf },
+            })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        card.classList.add('removing');
+                        setTimeout(() => {
+                            card.remove();
+                            const list = document.getElementById('notif-list');
+                            if (list && list.querySelectorAll('.notif-card').length === 0) {
+                                list.innerHTML = `
                         <div class="empty-state" id="empty-notif">
                             <i class="fas fa-bell-slash"></i>
                             <p>Không có thông báo nào</p>
                             <small>Khi shipper đến nơi giao, bạn sẽ thấy thông báo ở đây.</small>
                         </div>`;
-                }
-            }, 300);
-        } else {
-            showToast('Không thể xóa thông báo.', 'error');
+                            }
+                        }, 300);
+                    } else {
+                        showToast('Không thể xóa thông báo.', 'error');
+                    }
+                })
+                .catch(() => showToast('Có lỗi xảy ra.', 'error'));
         }
-    })
-    .catch(() => showToast('Có lỗi xảy ra.', 'error'));
-}
-</script>
+    </script>
 </body>
+
 </html>

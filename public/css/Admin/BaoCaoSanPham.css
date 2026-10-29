@@ -189,7 +189,7 @@
     text-align: center;
 }.bao-cao-san-pham-container .report-table tbody tr:hover{ background: #fff5f9; }.bao-cao-san-pham-container /* Column widths */
 .col-stt{ width: 42px; }.bao-cao-san-pham-container .col-sp{ min-width: 170px; text-align: left !important; }.bao-cao-san-pham-container .col-loai{ min-width: 110px; }.bao-cao-san-pham-container .col-num{ min-width: 90px; }.bao-cao-san-pham-container .col-tt{ min-width: 100px; }.bao-cao-san-pham-container .col-action{ width: 70px; }.bao-cao-san-pham-container /* ── NUMBER COLORS ──────────────────────────── */
-.num-green{ color: #28a745; font-weight: 600; }.bao-cao-san-pham-container .num-purple{ color: #6f42c1; font-weight: 600; }.bao-cao-san-pham-container .num-red{ color: #dc3545; font-weight: 600; }.bao-cao-san-pham-container .num-orange{ color: #fd7e14; font-weight: 600; }.bao-cao-san-pham-container /* ── PRODUCT CELL ───────────────────────────── */
+.num-green{ color: #28a745; font-weight: 600; }.bao-cao-san-pham-container .num-purple{ color: #6f42c1; font-weight: 600; }.bao-cao-san-pham-container .num-blue{ color: #0284c7; font-weight: 600; }.bao-cao-san-pham-container .num-red{ color: #dc3545; font-weight: 600; }.bao-cao-san-pham-container .num-orange{ color: #fd7e14; font-weight: 600; }.bao-cao-san-pham-container /* ── PRODUCT CELL ───────────────────────────── */
 .sp-cell{
     display: flex;
     align-items: center;
@@ -327,9 +327,18 @@
     padding: 10px 14px;
     font-size: 0.88rem;
     color: #212529;
-}.bao-cao-san-pham-container /* ── RESPONSIVE ─────────────────────────────── */
-@media (max-width: 768px){.bao-cao-san-pham-container .page-container{ padding: 1rem; }.bao-cao-san-pham-container .page-header-section{ flex-direction: column; align-items: flex-start; }.bao-cao-san-pham-container .filter-card{ padding: 1rem; }.bao-cao-san-pham-container .nav-phieu-nhap{ flex-direction: column; align-items: flex-start; }.bao-cao-san-pham-container .search-input-wrap{ max-width: 100%; }
-}.bao-cao-san-pham-container .drawer-chi-tiet{
+}
+
+/* ── RESPONSIVE ─────────────────────────────── */
+@media (max-width: 768px) {
+    .bao-cao-san-pham-container .page-container { padding: 1rem; }
+    .bao-cao-san-pham-container .page-header-section { flex-direction: column; align-items: flex-start; }
+    .bao-cao-san-pham-container .filter-card { padding: 1rem; }
+    .bao-cao-san-pham-container .nav-phieu-nhap { flex-direction: column; align-items: flex-start; }
+    .bao-cao-san-pham-container .search-input-wrap { max-width: 100%; }
+}
+
+.bao-cao-san-pham-container .drawer-chi-tiet {
     position: fixed;
     inset: 0;
     z-index: 3000;
@@ -355,12 +364,15 @@
     box-shadow: -10px 0 30px rgba(0,0,0,.12);
 }
 
-@keyframes drawerOpen {.bao-cao-san-pham-container from{
+@keyframes drawerOpen {
+    from {
         transform: translateX(100%);
-    }.bao-cao-san-pham-container to{
+    }
+    to {
         transform: translateX(0);
     }
-}.bao-cao-san-pham-container .drawer-header{
+}
+.bao-cao-san-pham-container .drawer-header{
     height: 70px;
     padding: 0 24px;
     border-bottom: 1px solid #eee;

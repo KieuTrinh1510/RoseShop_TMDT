@@ -15,20 +15,66 @@ class ThanhToanViPhamController extends Controller
     private const PHUT_HET_HAN_VNPAY = 15;
 
     /**
-     * Danh sách vi phạm CHƯA THANH TOÁN của khách đang đăng nhập.
+     * Danh sách vi phạm (Chưa xử lý & Đã xử lý) của khách đang đăng nhập.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $khach = Auth::user()->khachHang;
+        $user = Auth::user();
+        $khach = $user->khachHang;
         abort_unless($khach, 403, 'Tài khoản chưa có hồ sơ khách hàng.');
 
-        $viPhams = ViPhamKhachHang::where('ma_khach_hang', $khach->ma_khach_hang)
-            ->where('da_go', false)
-            ->with(['hoaDon', 'thanhToanViPham'])
+        // Eager load toàn bộ đơn, chi tiết hóa đơn (kèm snapshot), bó hoa, giao hàng thất bại, và thanh toán
+        $tatCaViPham = ViPhamKhachHang::where('ma_khach_hang', $khach->ma_khach_hang)
+            ->with([
+                'hoaDon.chiTietHoaDon.sanPham',
+                'hoaDon.chiTietHoaDon.boHoa.mauBoHoa',
+                'hoaDon.boHoas.mauBoHoa',
+                'hoaDon.giaoHangThatBai',
+                'giaoHangThatBai',
+                'thanhToanViPham'
+            ])
             ->orderByDesc('ma_vi_pham')
             ->get();
 
-        return view('customer.DanhSachViPham', compact('viPhams'));
+        $viPhamsChuaXuLy = $tatCaViPham->where('da_go', false)->values();
+        $viPhamsDaXuLy   = $tatCaViPham->where('da_go', true)->values();
+
+        $soViPhamChuaGo = $viPhamsChuaXuLy->count();
+        $soViPhamDaGo   = $viPhamsDaXuLy->count();
+
+        // Trạng thái COD / Quyền mua hàng theo đúng thang vi phạm
+        if ($soViPhamChuaGo >= 3) {
+            $trangThaiMuaHang = 'TAM_KHOA';
+            $trangThaiCod     = 'TAM_KHOA';
+        } elseif ($soViPhamChuaGo === 2 || $khach->quyen_cod === 'GIOI_HAN') {
+            $trangThaiMuaHang = 'HOAT_DONG';
+            $trangThaiCod     = 'TAM_KHOA';
+        } else {
+            $trangThaiMuaHang = 'HOAT_DONG';
+            $trangThaiCod     = 'HOAT_DONG';
+        }
+
+        $maKhachHang = (int) $user->ma_nguoi_dung;
+        $soThongBao = \App\Models\ThongBao::where('ma_nguoi_dung', $maKhachHang)->where('da_doc', false)->count();
+        $soDonHienTai = \App\Models\HoaDon::where('ma_khach_hang', $maKhachHang)
+            ->whereIn('trang_thai', ['PENDING', 'CONFIRMED', 'SHIPPING'])
+            ->count();
+
+        $subTab = $request->get('tab') === 'da-xu-ly' ? 'da-xu-ly' : 'chua-xu-ly';
+        $viPhams = $viPhamsChuaXuLy; // Tương thích ngược
+
+        return view('customer.DanhSachViPham', compact(
+            'viPhams',
+            'viPhamsChuaXuLy',
+            'viPhamsDaXuLy',
+            'soViPhamChuaGo',
+            'soViPhamDaGo',
+            'trangThaiMuaHang',
+            'trangThaiCod',
+            'soThongBao',
+            'soDonHienTai',
+            'subTab'
+        ));
     }
 
     /**

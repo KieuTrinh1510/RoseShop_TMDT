@@ -313,9 +313,10 @@ class PhieuNhapController extends Controller
                 }
                 $sanPham->save();
 
-                // Lưu HSD mặc định = ngày nhập + 7 ngày vào DB nếu chưa có
+                // Lưu HSD mặc định = ngày nhập + fresh_flower_expiry_days vào DB nếu chưa có
                 if (empty($chiTiet->ngay_het_han) && in_array($sanPham->loai_san_pham, [SanPham::LOAI_HOA_TUOI, SanPham::LOAI_CHAU_HOA_TUOI])) {
-                    $chiTiet->ngay_het_han = \Carbon\Carbon::parse($phieuNhap->ngay_nhap ?? now())->addDays(7)->toDateString();
+                    $flowerDays = \App\Services\SystemConfigService::getInt('fresh_flower_expiry_days', 7);
+                    $chiTiet->ngay_het_han = \Carbon\Carbon::parse($phieuNhap->ngay_nhap ?? now())->addDays($flowerDays)->toDateString();
                     $chiTiet->save();
                 }
             }

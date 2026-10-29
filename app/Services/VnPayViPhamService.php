@@ -42,7 +42,7 @@ class VnPayViPhamService extends VnPayService
             'vnp_ReturnUrl'  => route('vnpay.return'),
             'vnp_IpAddr'     => $ip,
             'vnp_CreateDate' => now(self::VNPAY_TIMEZONE)->format('YmdHis'),
-            'vnp_ExpireDate' => now(self::VNPAY_TIMEZONE)->addMinutes(15)->format('YmdHis'),
+            'vnp_ExpireDate' => now(self::VNPAY_TIMEZONE)->addMinutes(\App\Services\SystemConfigService::getInt('vnpay_timeout_minutes', 15))->format('YmdHis'),
         ];
 
         return $this->buildSignedUrl($params);

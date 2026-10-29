@@ -18,6 +18,26 @@
             white-space: nowrap !important;
             padding: 12px 14px !important;
         }
+        .rs-col-name-td, .rs-col-phone-td {
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+        }
+        .rs-col-name-box, .rs-col-phone-box {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 2px !important;
+            overflow: hidden !important;
+            max-width: 100% !important;
+            width: 100% !important;
+        }
+        .rs-name-text, .rs-sub-account, .rs-phone-text, .rs-email-text {
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            max-width: 100% !important;
+            display: block !important;
+        }
         .rs-code-shipper {
             font-family: monospace;
             font-size: 11.5px;
@@ -241,11 +261,11 @@
                 </colgroup>
                 <thead>
                     <tr>
-                        <th style="width: 100px; text-align: center;">Mã Shipper</th>
-                        <th style="min-width: 160px; text-align: center;">Tên Shipper</th>
-                        <th style="min-width: 220px; text-align: center;">Số điện thoại & Email</th>
-                        <th style="min-width: 130px; text-align: center;">Ca làm việc</th>
-                        <th style="width: 160px; text-align: center;">Trạng thái làm việc</th>
+                        <th style="width: 105px; text-align: center;">Mã Shipper</th>
+                        <th style="width: 220px; text-align: center;">Tên Shipper</th>
+                        <th style="width: 230px; text-align: center;">Số điện thoại & Email</th>
+                        <th style="width: 130px; text-align: center;">Ca làm việc</th>
+                        <th style="width: 150px; text-align: center;">Trạng thái làm việc</th>
                         <th style="width: 100px; text-align: center;">Nhận đơn</th>
                         <th style="width: 110px; text-align: center;">Đang giao</th>
                         <th style="width: 145px; text-align: center;">Tiền COD đã thu</th>
@@ -270,15 +290,19 @@
                             </td>
 
                             {{-- Tên Shipper --}}
-                            <td style="white-space: nowrap;">
-                                <div class="rs-text-bold">{{ $sp->ten_nhan_vien }}</div>
-                                <div style="font-size: 12px; color: #64748b;">TK: {{ $user->ten_dang_nhap ?? 'N/A' }}</div>
+                            <td class="rs-col-name-td">
+                                <div class="rs-col-name-box">
+                                    <div class="rs-text-bold rs-name-text" title="{{ $sp->ten_nhan_vien }}">{{ $sp->ten_nhan_vien }}</div>
+                                    <div class="rs-sub-account" title="TK: {{ $user->ten_dang_nhap ?? 'N/A' }}" style="font-size: 12px; color: #64748b;">TK: {{ $user->ten_dang_nhap ?? 'N/A' }}</div>
+                                </div>
                             </td>
 
                             {{-- SĐT & Email --}}
-                            <td style="min-width: 220px; max-width: 260px;">
-                                <div style="color: #0f172a; font-weight: 500; font-family: monospace; font-size: 13px; white-space: nowrap;">{{ $sp->so_dien_thoai }}</div>
-                                <div title="{{ $sp->email }}" style="font-size: 12px; color: #64748b; white-space: normal !important; overflow-wrap: anywhere; word-break: break-word; line-height: 1.4;">{{ $sp->email ?: '—' }}</div>
+                            <td class="rs-col-phone-td">
+                                <div class="rs-col-phone-box">
+                                    <div class="rs-phone-text" style="color: #0f172a; font-weight: 500; font-family: monospace; font-size: 13px;">{{ $sp->so_dien_thoai ?: '—' }}</div>
+                                    <div class="rs-email-text" title="{{ $sp->email }}" style="font-size: 12px; color: #64748b; line-height: 1.4;">{{ $sp->email ?: '—' }}</div>
+                                </div>
                             </td>
 
                             {{-- Ca làm việc --}}

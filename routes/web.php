@@ -43,6 +43,7 @@ use App\Http\Controllers\Admin\HoanHang\GiaoHangThatBaiController;
 use App\Http\Controllers\VnPayController;
 use App\Http\Controllers\Customer\ThanhToanViPhamController;
 use App\Http\Controllers\VnPayViPhamController;
+use App\Http\Controllers\Admin\CauHinhController;
 use App\Http\Controllers\Customer\ChatbotController;
 
 Route::middleware(['auth', 'role:ADMIN,NHAN_VIEN'])->prefix('admin/bo-hoa')->name('admin.bo-hoa.')->group(function () {
@@ -229,9 +230,13 @@ Route::middleware(['auth', 'role:ADMIN'])->group(function () {
     Route::get('/admin/don-hang', fn() => redirect()->route('don-hang.index'))->name('admin.don-hang');
     Route::get('/admin/giao-hang/doi-soat-cod', fn() => view('admin.placeholder', ['title' => 'Đối soát COD']))->name('admin.giao-hang.doi-soat-cod');
     Route::get('/admin/bao-cao/kho',            fn() => view('admin.placeholder', ['title' => 'Báo cáo kho']))->name('admin.bao-cao.kho');
-    Route::get('/admin/bao-cao/giao-hang',      fn() => view('admin.placeholder', ['title' => 'Báo cáo hoạt động giao hàng']))->name('admin.bao-cao.giao-hang');
-    Route::get('/admin/he-thong/thong-bao',     fn() => view('admin.placeholder', ['title' => 'Thông báo']))->name('admin.he-thong.thong-bao');
-    Route::get('/admin/he-thong/cau-hinh',      fn() => view('admin.placeholder', ['title' => 'Cấu hình hệ thống']))->name('admin.he-thong.cau-hinh');
+    // ─── Thống kê giao hàng (ADMIN only) ───
+    Route::get('/admin/bao-cao/giao-hang',              [BaoCaoController::class, 'baoCaoGiaoHang'])->name('admin.bao-cao.giao-hang');
+    Route::get('/admin/bao-cao/giao-hang/export',       [BaoCaoController::class, 'exportBaoCaoGiaoHang'])->name('admin.bao-cao.giao-hang.export');
+    Route::get('/admin/bao-cao/giao-hang/{id}/chi-tiet', [BaoCaoController::class, 'chiTietGiaoHang'])->whereNumber('id')->name('admin.bao-cao.giao-hang.chi-tiet');
+    // ─── Cấu hình hệ thống (ADMIN only) ───
+    Route::get('/admin/he-thong/cau-hinh',  [CauHinhController::class, 'index'])->name('admin.he-thong.cau-hinh');
+    Route::post('/admin/he-thong/cau-hinh', [CauHinhController::class, 'update'])->name('admin.he-thong.cau-hinh.update');
 });
 
 // ─── ADMIN + NHÂN VIÊN ────────────────────────────────────────────────────────

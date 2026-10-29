@@ -230,8 +230,11 @@ class AdminNotificationService
         try {
             $today = Carbon::today();
             $todayStr = $today->toDateString();
-            $thresholdStr = $today->copy()->addDays(3)->toDateString();
+            $warningDays = \App\Services\SystemConfigService::getInt('expiry_warning_days', 2);
+            $thresholdStr = $today->copy()->addDays($warningDays)->toDateString();
             $expiryDt = $today->copy()->startOfDay(); // Rà soát hạn dùng đầu ngày hôm nay
+            $bouquetDays = \App\Services\SystemConfigService::getInt('finished_bouquet_expiry_days', 5);
+            $freshFlowerDays = \App\Services\SystemConfigService::getInt('fresh_flower_expiry_days', 7);
 
             // Bó hoa
             $hasNgayHetHanBH = Schema::hasColumn('bo_hoa', 'ngay_het_han');
@@ -240,8 +243,8 @@ class AdminNotificationService
                 ->where('bh.so_luong', '>', 0)
                 ->whereNull('bh.ma_hoa_don')
                 ->select(DB::raw($hasNgayHetHanBH
-                    ? 'COALESCE(bh.ngay_het_han, DATE(DATE_ADD(bh.created_at, INTERVAL 5 DAY))) as hsd'
-                    : 'DATE(DATE_ADD(bh.created_at, INTERVAL 5 DAY)) as hsd'
+                    ? "COALESCE(bh.ngay_het_han, DATE(DATE_ADD(bh.created_at, INTERVAL {$bouquetDays} DAY))) as hsd"
+                    : "DATE(DATE_ADD(bh.created_at, INTERVAL {$bouquetDays} DAY)) as hsd"
                 ))
                 ->having('hsd', '<=', $thresholdStr)
                 ->get();
@@ -285,8 +288,8 @@ class AdminNotificationService
                       ->orWhereNotNull('ctn.ngay_het_han');
                 })
                 ->select('sp.ten_san_pham', DB::raw($hasNgayHetHanCTN
-                    ? 'COALESCE(ctn.ngay_het_han, DATE(DATE_ADD(ctn.created_at, INTERVAL 7 DAY))) as hsd'
-                    : 'DATE(DATE_ADD(ctn.created_at, INTERVAL 7 DAY)) as hsd'
+                    ? "COALESCE(ctn.ngay_het_han, DATE(DATE_ADD(ctn.created_at, INTERVAL {$freshFlowerDays} DAY))) as hsd"
+                    : "DATE(DATE_ADD(ctn.created_at, INTERVAL {$freshFlowerDays} DAY)) as hsd"
                 ))
                 ->having('hsd', '<=', $thresholdStr)
                 ->get();

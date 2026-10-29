@@ -18,6 +18,26 @@
             white-space: nowrap !important;
             padding: 12px 14px !important;
         }
+        .rs-col-name-td, .rs-col-phone-td {
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+        }
+        .rs-col-name-box, .rs-col-phone-box {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 2px !important;
+            overflow: hidden !important;
+            max-width: 100% !important;
+            width: 100% !important;
+        }
+        .rs-name-text, .rs-phone-text {
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            white-space: nowrap !important;
+            max-width: 100% !important;
+            display: block !important;
+        }
         .rs-truncate-cell {
             overflow: hidden !important;
             text-overflow: ellipsis !important;
@@ -252,11 +272,11 @@
             <table class="rs-table">
                 <colgroup>
                     <col style="width: 95px;">
-                    <col style="width: 170px;">
+                    <col style="width: 210px;">
                     <col style="width: 125px;">
-                    <col style="width: 220px;">
-                    <col style="width: 115px;">
                     <col style="width: 200px;">
+                    <col style="width: 115px;">
+                    <col style="width: 180px;">
                     <col style="width: 135px;">
                     <col style="width: 115px;">
                     <col style="width: 135px;">
@@ -292,10 +312,16 @@
                             <td style="text-align: center; white-space: nowrap;">
                                 <span class="rs-code-employee">NV-{{ str_pad($nv->ma_nhan_vien, 4, '0', STR_PAD_LEFT) }}</span>
                             </td>
-                            <td style="white-space: nowrap;">
-                                <span class="rs-text-bold">{{ $nv->ten_nhan_vien }}</span>
+                            <td class="rs-col-name-td">
+                                <div class="rs-col-name-box">
+                                    <span class="rs-text-bold rs-name-text" title="{{ $nv->ten_nhan_vien }}">{{ $nv->ten_nhan_vien }}</span>
+                                </div>
                             </td>
-                            <td style="white-space: nowrap; font-family: monospace; font-size: 13px;">{{ $nv->so_dien_thoai ?: '—' }}</td>
+                            <td class="rs-col-phone-td">
+                                <div class="rs-col-phone-box">
+                                    <span class="rs-phone-text" style="font-family: monospace; font-size: 13px;">{{ $nv->so_dien_thoai ?: '—' }}</span>
+                                </div>
+                            </td>
                             <td class="rs-truncate-cell" title="{{ $nv->email }}" style="font-size: 12.5px;">{{ $nv->email ?: '—' }}</td>
                             <td style="white-space: nowrap; text-align: center;">
                                 <span class="rs-role-badge {{ $isShipper ? 'shipper' : '' }}">
