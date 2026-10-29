@@ -279,7 +279,16 @@ public function exportDoanhThu(Request $request)
     public function exportBaoCaoSanPham(Request $request)
     {
         $data = $this->getBaoCaoSanPhamData($request);
-        extract($data);
+
+        $baoCaoSanPham         = $data['baoCaoSanPham'];
+        $tongNhapThem          = $data['tongNhapThem'];
+        $tongDaBan             = $data['tongDaBan'];
+        $tongTieuHaoSanXuat    = $data['tongTieuHaoSanXuat'];
+        $tongHangHong          = $data['tongHangHong'];
+        $tongTonKhoHienTai     = $data['tongTonKhoHienTai'];
+        $giaNhapTrungBinhChung = $data['giaNhapTrungBinhChung'];
+        $tyLeHongChung         = $data['tyLeHongChung'];
+        $tongDoanhThuSanPham   = $data['tongDoanhThuSanPham'];
 
         $filename = 'bao_cao_san_pham_' . now()->format('Ymd_His') . '.csv';
 
