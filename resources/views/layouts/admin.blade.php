@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="{{ app()->getLocale() }}" data-theme="{{ \App\Services\SystemConfigService::get('default_theme', 'light') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>RoseShop Admin</title>
+    <title>{{ \App\Services\SystemConfigService::get('shop_name', 'RoseShop') }} Admin</title>
 
     <!-- Google Fonts: Be Vietnam Pro -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -432,6 +432,140 @@
             padding: 0 4px !important;
             min-width: 24px !important;
         }
+
+        /* ==========================================================================
+           RoseShop Dark Mode Theme Styles (Activated via data-theme="dark")
+           ========================================================================== */
+        [data-theme="dark"] {
+            --rs-primary-text: #F9FAFB !important;
+            --rs-secondary-text: #E5E7EB !important;
+            --rs-muted-text: #9CA3AF !important;
+            --rs-placeholder: #6B7280 !important;
+            --rs-border: #374151 !important;
+            --rs-page-bg: #111827 !important;
+            --rs-white: #1F2937 !important;
+            --rs-brand-light-bg: #371B28 !important;
+        }
+
+        [data-theme="dark"] body {
+            background-color: #111827 !important;
+            color: #E5E7EB !important;
+        }
+
+        [data-theme="dark"] .sidebar {
+            background-color: #1F2937 !important;
+            border-right-color: #374151 !important;
+        }
+
+        [data-theme="dark"] .sidebar .brand h2,
+        [data-theme="dark"] .sidebar .admin-name {
+            color: #F9FAFB !important;
+        }
+
+        [data-theme="dark"] .sidebar .brand-sub,
+        [data-theme="dark"] .sidebar .admin-role {
+            color: #9CA3AF !important;
+        }
+
+        [data-theme="dark"] .sidebar .menu-item,
+        [data-theme="dark"] .sidebar .menu-parent,
+        [data-theme="dark"] .sidebar .submenu-item {
+            color: #D1D5DB !important;
+        }
+
+        [data-theme="dark"] .sidebar .menu-icon,
+        [data-theme="dark"] .sidebar .menu-chevron {
+            color: #9CA3AF !important;
+        }
+
+        [data-theme="dark"] .sidebar .menu-item:hover,
+        [data-theme="dark"] .sidebar .menu-parent:hover,
+        [data-theme="dark"] .sidebar .submenu-item:hover {
+            background-color: #371B28 !important;
+            color: #F472B6 !important;
+        }
+
+        [data-theme="dark"] .sidebar .menu-item:hover .menu-icon,
+        [data-theme="dark"] .sidebar .menu-parent:hover .menu-icon {
+            color: #F472B6 !important;
+            stroke: #F472B6 !important;
+        }
+
+        [data-theme="dark"] .sidebar .menu-item.active,
+        [data-theme="dark"] .sidebar .menu-parent.active,
+        [data-theme="dark"] .sidebar .submenu-item.active {
+            background-color: #371B28 !important;
+            color: #F472B6 !important;
+        }
+
+        [data-theme="dark"] .sidebar .menu-item.active .menu-icon,
+        [data-theme="dark"] .sidebar .menu-parent.active .menu-icon {
+            color: #F472B6 !important;
+            stroke: #F472B6 !important;
+        }
+
+        [data-theme="dark"] .sidebar .admin-footer {
+            border-top-color: #374151 !important;
+            background-color: #1F2937 !important;
+        }
+
+        [data-theme="dark"] .admin-page-content,
+        [data-theme="dark"] .content {
+            background-color: #111827 !important;
+            color: #E5E7EB !important;
+        }
+
+        [data-theme="dark"] .rs-card,
+        [data-theme="dark"] .card,
+        [data-theme="dark"] .table-card,
+        [data-theme="dark"] .donut-card,
+        [data-theme="dark"] .chart-card {
+            background-color: #1F2937 !important;
+            border-color: #374151 !important;
+            color: #E5E7EB !important;
+        }
+
+        [data-theme="dark"] .form-control,
+        [data-theme="dark"] .form-select {
+            background-color: #111827 !important;
+            border-color: #374151 !important;
+            color: #F9FAFB !important;
+        }
+
+        [data-theme="dark"] .form-control:focus,
+        [data-theme="dark"] .form-select:focus {
+            border-color: #EC3D8F !important;
+            background-color: #111827 !important;
+            color: #F9FAFB !important;
+        }
+
+        [data-theme="dark"] table,
+        [data-theme="dark"] .table {
+            color: #E5E7EB !important;
+            border-color: #374151 !important;
+        }
+
+        [data-theme="dark"] .table th {
+            background-color: #1A2234 !important;
+            color: #F9FAFB !important;
+            border-bottom-color: #374151 !important;
+        }
+
+        [data-theme="dark"] .table td {
+            background-color: #1F2937 !important;
+            border-bottom-color: #374151 !important;
+            color: #E5E7EB !important;
+        }
+
+        [data-theme="dark"] .table tbody tr:hover td {
+            background-color: #2D3748 !important;
+        }
+
+        [data-theme="dark"] .modal-content {
+            background-color: #1F2937 !important;
+            border-color: #374151 !important;
+            color: #E5E7EB !important;
+        }
     </style>
 </head>
 
@@ -441,9 +575,9 @@
     <aside class="sidebar">
         <div>
             <div class="brand">
-                <img src="{{ asset('img/logo.png') }}" alt="Logo" class="brand-logo">
+                <img src="{{ \App\Services\SystemConfigService::getLogoUrl() }}" alt="Logo" class="brand-logo" onerror="this.src='{{ asset('img/logo.png') }}'">
                 <div>
-                    <h2>RoseShop</h2>
+                    <h2>{{ \App\Services\SystemConfigService::get('shop_name', 'RoseShop') }}</h2>
                     <p class="brand-sub">FLOWER OF YOU</p>
                 </div>
             </div>
@@ -504,7 +638,7 @@
                         <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                         <polyline points="9 22 9 12 15 12 15 22"/>
                     </svg>
-                    <span>Tổng quan</span>
+                    <span>{{ __('admin.nav_dashboard') }}</span>
                 </a>
 
                 {{-- Bán hàng --}}
@@ -713,29 +847,16 @@
                         </div>
                     </div>
 
-                    {{-- Hệ thống (ADMIN only) --}}
-                    <div class="menu-group {{ $isHeThongActive ? 'open' : '' }}" id="group-he-thong">
-                        <button type="button" class="menu-parent {{ $isHeThongActive ? 'active' : '' }}" onclick="toggleSubmenu(this)">
-                            <div class="menu-parent-left">
-                                <svg class="menu-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
-                                    <circle cx="12" cy="12" r="3"/>
-                                </svg>
-                                <span>Hệ thống</span>
-                            </div>
-                            <svg class="menu-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="m9 18 6-6-6-6"/>
-                            </svg>
-                        </button>
-                        <div class="submenu-list" style="{{ $isHeThongActive ? 'display: block;' : 'display: none;' }}">
-                            <a href="{{ route('admin.he-thong.thong-bao') }}" class="submenu-item {{ request()->routeIs('admin.he-thong.thong-bao*') ? 'active' : '' }}">
-                                Thông báo
-                            </a>
-                            <a href="{{ route('admin.he-thong.cau-hinh') }}" class="submenu-item {{ request()->routeIs('admin.he-thong.cau-hinh*') ? 'active' : '' }}">
-                                Cấu hình hệ thống
-                            </a>
-                        </div>
-                    </div>
+                    {{-- Cấu hình hệ thống (ADMIN only) --}}
+                    <a href="{{ route('admin.he-thong.cau-hinh') }}" 
+                       class="menu-item {{ $isHeThongActive ? 'active' : '' }}" 
+                       id="menu-cau-hinh">
+                        <svg class="menu-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <span>{{ __('admin.nav_system_settings') }}</span>
+                    </a>
                 @endif
             </nav>
         </div>
@@ -748,7 +869,7 @@
 
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit">Đăng xuất</button>
+                <button type="submit">{{ __('admin.logout') }}</button>
             </form>
         </div>
     </aside>
@@ -769,7 +890,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             const allGroups = document.querySelectorAll('.sidebar .menu-group');
             const tongQuanItem = document.getElementById('menu-tong-quan');
+            const cauHinhItem = document.getElementById('menu-cau-hinh');
             const isDashboard = {{ request()->routeIs('admin.dashboard') ? 'true' : 'false' }};
+            const isCauHinh = {{ request()->routeIs('admin.he-thong.*') ? 'true' : 'false' }};
 
             // Accordion toggle & active state handling
             window.toggleSubmenu = function(button) {
@@ -797,10 +920,11 @@
                     if (submenu) submenu.style.display = 'none';
                     button.classList.remove('active');
 
-                    // Nếu đóng hết tất cả nhóm và đang ở trang Dashboard -> khôi phục active cho Tổng quan
+                    // Nếu đóng hết tất cả nhóm -> khôi phục active cho menu đơn tương ứng
                     const anyGroupOpen = document.querySelector('.sidebar .menu-group.open');
-                    if (!anyGroupOpen && isDashboard && tongQuanItem) {
-                        tongQuanItem.classList.add('active');
+                    if (!anyGroupOpen) {
+                        if (isDashboard && tongQuanItem) tongQuanItem.classList.add('active');
+                        if (isCauHinh && cauHinhItem) cauHinhItem.classList.add('active');
                     }
                 } else {
                     // Nếu nhóm này đang đóng -> mở ra và gán trạng thái active màu hồng
@@ -809,16 +933,15 @@
                     if (submenu) submenu.style.display = 'block';
                     button.classList.add('active');
 
-                    // Tắt active ở Tổng quan
-                    if (tongQuanItem) {
-                        tongQuanItem.classList.remove('active');
-                    }
+                    // Tắt active ở các menu đơn
+                    if (tongQuanItem) tongQuanItem.classList.remove('active');
+                    if (cauHinhItem) cauHinhItem.classList.remove('active');
                 }
             };
 
-            // Khi click Tổng quan: đóng tất cả các submenu đang mở
-            if (tongQuanItem) {
-                tongQuanItem.addEventListener('click', function() {
+            // Khi click menu đơn (Tổng quan, Cấu hình): đóng tất cả các submenu đang mở
+            [tongQuanItem, cauHinhItem].filter(Boolean).forEach(item => {
+                item.addEventListener('click', function() {
                     allGroups.forEach(group => {
                         group.classList.remove('open');
                         const submenu = group.querySelector('.submenu-list');
@@ -826,9 +949,9 @@
                         const parentBtn = group.querySelector('.menu-parent');
                         if (parentBtn) parentBtn.classList.remove('active');
                     });
-                    tongQuanItem.classList.add('active');
+                    item.classList.add('active');
                 });
-            }
+            });
 
             // Tự động kết thúc / đóng mọi thông báo alert sau 3 giây (3s)
             function setupAutoDismiss(alertEl) {

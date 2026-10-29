@@ -109,29 +109,38 @@ public function chiTietSanPham($id, Request $request)
         ? Carbon::parse($request->ngay_ket_thuc)->endOfDay()
         : Carbon::now()->endOfDay();
 
+    if ($ngayBatDau->gt($ngayKetThuc)) {
+        $temp = $ngayBatDau;
+        $ngayBatDau = $ngayKetThuc->copy()->startOfDay();
+        $ngayKetThuc = $temp->copy()->endOfDay();
+    }
+
     $sanPham = SanPham::findOrFail($id);
 
-    // Lịch sử bán trong khoảng lọc
+    // 1. Lịch sử bán trong khoảng lọc: Đơn DELIVERED theo delivered timestamp
     $lichSuGiaBan = DB::table('chi_tiet_hoa_don as ct')
         ->join('hoa_don as hd', 'ct.ma_hoa_don', '=', 'hd.ma_hoa_don')
         ->where('ct.ma_san_pham', $id)
         ->where('hd.trang_thai', 'DELIVERED')
-        ->whereBetween('hd.ngay_dat', [$ngayBatDau, $ngayKetThuc])
+        ->whereBetween(DB::raw('COALESCE(hd.ngay_giao, hd.ngay_den_noi, hd.ngay_dat)'), [$ngayBatDau, $ngayKetThuc])
         ->select(
-            'hd.ngay_dat',
+            'hd.ma_hoa_don',
+            DB::raw('COALESCE(hd.ngay_giao, hd.ngay_den_noi, hd.ngay_dat) as ngay_giao'),
             'ct.so_luong',
-            'ct.gia_ban_snapshot'
+            'ct.gia_ban_snapshot',
+            DB::raw('(ct.so_luong * ct.gia_ban_snapshot) as thanh_tien')
         )
-        ->orderByDesc('hd.ngay_dat')
+        ->orderByDesc(DB::raw('COALESCE(hd.ngay_giao, hd.ngay_den_noi, hd.ngay_dat)'))
         ->get();
 
-    // Lịch sử nhập trong khoảng lọc
+    // 2. Lịch sử nhập trong khoảng lọc: Phiếu nhập CONFIRMED
     $lichSuNhap = DB::table('chi_tiet_nhap as ctn')
         ->join('phieu_nhap as pn', 'ctn.ma_phieu_nhap', '=', 'pn.ma_phieu_nhap')
         ->where('ctn.ma_san_pham', $id)
         ->where('pn.trang_thai', 'CONFIRMED')
         ->whereBetween('pn.ngay_nhap', [$ngayBatDau, $ngayKetThuc])
         ->select(
+            'pn.ma_phieu_nhap',
             'pn.ngay_nhap',
             'ctn.so_luong',
             'ctn.gia_nhap',
@@ -140,60 +149,77 @@ public function chiTietSanPham($id, Request $request)
         ->orderByDesc('pn.ngay_nhap')
         ->get();
 
-    // Tính tổng bán trong khoảng lọc
-    $tongDaBan = $lichSuGiaBan->sum('so_luong');
+    // 3. Lịch sử tiêu hao sản xuất bó hoa trong khoảng lọc
+    $lichSuSanXuat = DB::table('chi_tiet_bo_hoa as ctbh')
+        ->join('bo_hoa as bh', 'ctbh.ma_bo_hoa', '=', 'bh.ma_bo_hoa')
+        ->leftJoin('hoa_don as hd', 'bh.ma_hoa_don', '=', 'hd.ma_hoa_don')
+        ->where('ctbh.ma_san_pham', $id)
+        ->where(function ($q) {
+            $q->whereNull('bh.ma_hoa_don')
+              ->orWhereIn('hd.trang_thai', ['CONFIRMED', 'SHIPPING', 'DELIVERED']);
+        })
+        ->whereBetween('bh.created_at', [$ngayBatDau, $ngayKetThuc])
+        ->select(
+            'bh.ma_bo_hoa',
+            'bh.ten_bo_hoa',
+            'bh.loai_bo_hoa',
+            'bh.created_at',
+            'ctbh.vai_tro',
+            'ctbh.so_luong'
+        )
+        ->orderByDesc('bh.created_at')
+        ->get();
 
-    // Tính tổng doanh thu trong khoảng lọc
-    $tongDoanhThu = $lichSuGiaBan->sum(function ($row) {
-        return $row->so_luong * $row->gia_ban_snapshot;
-    });
+    // Tính tổng số lượng
+    $tongNhap = (int) $lichSuNhap->sum('so_luong');
+    $tongDaBan = (int) $lichSuGiaBan->sum('so_luong');
+    $tongTieuHao = (int) $lichSuSanXuat->sum('so_luong');
+    $tongDoanhThu = (float) $lichSuGiaBan->sum('thanh_tien');
 
-    // Tính tổng hỏng trong khoảng lọc
-    $tongHangHong = BaoCaoHangHong::where('ma_san_pham', $id)
+    // Hàng hỏng trong kỳ
+    $tongHangHong = (int) BaoCaoHangHong::where('ma_san_pham', $id)
         ->whereBetween('thoi_gian_bao_cao', [$ngayBatDau, $ngayKetThuc])
         ->sum('so_luong_hong');
 
-    // Tính tồn kho tại thời điểm den_ngay: cumulative từ đầu đến den_ngay
-    $tongNhapDenNgay = DB::table('chi_tiet_nhap as ctn')
+    // Tồn kho vật lý (On-Hand) và Khả dụng (Available)
+    $hasLots = DB::table('chi_tiet_nhap')->where('ma_san_pham', $id)->exists();
+    $lotStock = (int) DB::table('chi_tiet_nhap as ctn')
         ->join('phieu_nhap as pn', 'ctn.ma_phieu_nhap', '=', 'pn.ma_phieu_nhap')
-        ->where('ctn.ma_san_pham', $id)
         ->where('pn.trang_thai', 'CONFIRMED')
-        ->where('pn.ngay_nhap', '<=', $ngayKetThuc)
-        ->sum('ctn.so_luong');
+        ->where('ctn.ma_san_pham', $id)
+        ->sum('ctn.so_luong_con_lai');
 
-    $tongBanDenNgay = DB::table('chi_tiet_hoa_don as cthd')
-        ->join('hoa_don as hd', 'cthd.ma_hoa_don', '=', 'hd.ma_hoa_don')
-        ->where('cthd.ma_san_pham', $id)
-        ->where('hd.trang_thai', 'DELIVERED')
-        ->where('hd.ngay_dat', '<=', $ngayKetThuc)
-        ->sum('cthd.so_luong');
+    $tonKhoHienTai = $hasLots ? $lotStock : (int) $sanPham->so_luong;
 
-    $tongHongDenNgay = BaoCaoHangHong::where('ma_san_pham', $id)
-        ->where('thoi_gian_bao_cao', '<=', $ngayKetThuc)
-        ->sum('so_luong_hong');
+    $dangGiu = (int) DB::table('inventory_reservations')
+        ->where('ma_san_pham', $id)
+        ->where('trang_thai', 'RESERVED')
+        ->sum('so_luong');
 
-    $tonKhoHienTai = $tongNhapDenNgay - $tongBanDenNgay - $tongHongDenNgay;
+    $tonKhaDung = max(0, $tonKhoHienTai - $dangGiu);
 
     return response()->json([
         'san_pham' => [
-            'ma_san_pham' => $sanPham->ma_san_pham,
+            'ma_san_pham'  => $sanPham->ma_san_pham,
             'ten_san_pham' => $sanPham->ten_san_pham,
-            'loai_san_pham' => $sanPham->loai_san_pham,
-            'so_luong' => $tonKhoHienTai,
-            'trang_thai' => $sanPham->trang_thai,
-            'hinh_anh' => $sanPham->hinh_anh,
+            'loai_san_pham' => \App\Helpers\LabelHelper::loaiSanPham($sanPham->loai_san_pham),
+            'so_luong'     => $tonKhoHienTai,
+            'trang_thai'   => $sanPham->trang_thai,
+            'hinh_anh'     => $sanPham->hinh_anh,
         ],
         'tong_quan' => [
-            'tong_nhap_den_ngay' => (int) $tongNhapDenNgay,
-            'tong_da_ban_den_ngay' => (int) $tongBanDenNgay,
-            'tong_hang_hong_den_ngay' => (int) $tongHongDenNgay,
-            'ton_kho_hien_tai' => (int) $tonKhoHienTai,
-            'tong_da_ban' => $tongDaBan,
-            'tong_doanh_thu' => $tongDoanhThu,
-            'tong_hang_hong' => $tongHangHong,
+            'nhap_trong_ky'     => $tongNhap,
+            'tong_da_ban'       => $tongDaBan,
+            'tieu_hao_san_xuat' => $tongTieuHao,
+            'tong_hang_hong'    => $tongHangHong,
+            'ton_kho_hien_tai'  => $tonKhoHienTai,
+            'ton_kha_dung'      => $tonKhaDung,
+            'dang_giu'          => $dangGiu,
+            'tong_doanh_thu'    => $tongDoanhThu,
         ],
         'lich_su_gia_ban' => $lichSuGiaBan,
-        'lich_su_nhap' => $lichSuNhap,
+        'lich_su_nhap'    => $lichSuNhap,
+        'lich_su_san_xuat' => $lichSuSanXuat,
     ]);
 }
 public function exportDoanhThu(Request $request)
@@ -244,7 +270,7 @@ public function exportDoanhThu(Request $request)
     }
 
     /**
-     * Xuất Excel báo cáo sản phẩm — route GET /bao-cao/san-pham/export
+     * Xuất Excel / CSV báo cáo sản phẩm — route GET /bao-cao/san-pham/export
      */
     public function exportBaoCaoSanPham(Request $request)
     {
@@ -264,6 +290,7 @@ public function exportDoanhThu(Request $request)
             $baoCaoSanPham,
             $tongNhapThem,
             $tongDaBan,
+            $tongTieuHaoSanXuat,
             $tongHangHong,
             $tongTonKhoHienTai,
             $giaNhapTrungBinhChung,
@@ -277,14 +304,16 @@ public function exportDoanhThu(Request $request)
                 '#',
                 'Sản phẩm',
                 'Loại sản phẩm',
-                'Nhập thêm',
-                'Đã bán',
+                'Nhập trong kỳ',
+                'Bán trong kỳ',
+                'Tiêu hao sản xuất',
                 'Hàng hỏng',
-                'Tồn kho hiện tại',
+                'Tồn hiện tại (On-Hand)',
+                'Khả dụng (Available)',
                 'Giá nhập TB (VNĐ)',
                 'Giá bán hiện tại (VNĐ)',
-                'Tỷ lệ hỏng (%)',
                 'Doanh thu (VNĐ)',
+                'Tỷ lệ hao hụt (%)',
                 'Trạng thái',
             ]);
 
@@ -295,12 +324,14 @@ public function exportDoanhThu(Request $request)
                     \App\Helpers\LabelHelper::loaiSanPham($row['loai_san_pham']),
                     $row['nhap_them'],
                     $row['da_ban'],
+                    $row['tieu_hao_san_xuat'],
                     $row['hang_hong'],
                     $row['ton_kho_hien_tai'],
+                    $row['ton_kha_dung'],
                     $row['gia_nhap_tb'] !== null ? number_format($row['gia_nhap_tb'], 0, ',', '.') : '-',
                     $row['gia_ban_hien_tai'] > 0 ? number_format($row['gia_ban_hien_tai'], 0, ',', '.') : '-',
-                    number_format($row['ty_le_hong'], 2, ',', '.') . '%',
                     number_format($row['doanh_thu'], 0, ',', '.'),
+                    number_format($row['ty_le_hong'], 2, ',', '.') . '%',
                     $row['trang_thai'] === 'DANG_BAN' ? 'Còn hàng' : 'Ngừng bán',
                 ]);
             }
@@ -311,12 +342,14 @@ public function exportDoanhThu(Request $request)
                 '',
                 $tongNhapThem,
                 $tongDaBan,
+                $tongTieuHaoSanXuat,
                 $tongHangHong,
                 $tongTonKhoHienTai,
+                '',
                 $giaNhapTrungBinhChung !== null ? number_format($giaNhapTrungBinhChung, 0, ',', '.') : '-',
                 '-',
-                number_format($tyLeHongChung, 2, ',', '.') . '%',
                 number_format($tongDoanhThuSanPham, 0, ',', '.'),
+                number_format($tyLeHongChung, 2, ',', '.') . '%',
                 '',
             ]);
 
@@ -373,7 +406,7 @@ public function exportDoanhThu(Request $request)
      */
     private function getBaoCaoSanPhamData(Request $request): array
     {
-        // 1. Bộ lọc thời gian
+        // 1. Bộ lọc thời gian & validate
         $ngayBatDau = $request->filled('ngay_bat_dau')
             ? Carbon::parse($request->ngay_bat_dau)->startOfDay()
             : Carbon::now()->startOfMonth()->startOfDay();
@@ -382,21 +415,29 @@ public function exportDoanhThu(Request $request)
             ? Carbon::parse($request->ngay_ket_thuc)->endOfDay()
             : Carbon::now()->endOfDay();
 
+        $dateWarning = null;
+        if ($ngayBatDau->gt($ngayKetThuc)) {
+            $temp = $ngayBatDau;
+            $ngayBatDau = $ngayKetThuc->copy()->startOfDay();
+            $ngayKetThuc = $temp->copy()->endOfDay();
+            $dateWarning = 'Ngày bắt đầu lớn hơn ngày kết thúc. Hệ thống đã tự động đảo khoảng ngày phù hợp.';
+        }
+
         $keyword = trim($request->get('keyword', ''));
         $loaiSanPham = $request->get('loai_san_pham');
         $trangThai = $request->get('trang_thai');
 
-        // 2. Danh sách sản phẩm
-       $sanPhams = SanPham::query()
-    ->select(
-        'ma_san_pham',
-        'ten_san_pham',
-        'loai_san_pham',
-        'trang_thai',
-        'hinh_anh',
-        'so_luong',
-        'gia_ban_hien_tai'
-    )
+        // 2. Danh sách sản phẩm & nguyên liệu
+        $sanPhams = SanPham::query()
+            ->select(
+                'ma_san_pham',
+                'ten_san_pham',
+                'loai_san_pham',
+                'trang_thai',
+                'hinh_anh',
+                'so_luong',
+                'gia_ban_hien_tai'
+            )
             ->when($keyword, function ($query) use ($keyword) {
                 $query->where('ten_san_pham', 'like', '%' . $keyword . '%');
             })
@@ -409,7 +450,7 @@ public function exportDoanhThu(Request $request)
             ->orderBy('ten_san_pham')
             ->get();
 
-        // 3. Nhập thêm trong khoảng ngày
+        // 3. Nhập thêm trong khoảng ngày (Phiếu nhập CONFIRMED)
         $nhapThemData = DB::table('chi_tiet_nhap as ctn')
             ->join('phieu_nhap as pn', 'ctn.ma_phieu_nhap', '=', 'pn.ma_phieu_nhap')
             ->where('pn.trang_thai', 'CONFIRMED')
@@ -423,11 +464,12 @@ public function exportDoanhThu(Request $request)
             ->get()
             ->keyBy('ma_san_pham');
 
-        // 4. Đã bán + doanh thu trong khoảng ngày
+        // 4. Đã bán + doanh thu theo thời điểm DELIVERED thực tế (ngay_giao / ngay_den_noi / ngay_dat)
         $daBanData = DB::table('chi_tiet_hoa_don as cthd')
             ->join('hoa_don as hd', 'cthd.ma_hoa_don', '=', 'hd.ma_hoa_don')
             ->where('hd.trang_thai', 'DELIVERED')
-            ->whereBetween('hd.ngay_dat', [$ngayBatDau, $ngayKetThuc])
+            ->whereNotNull('cthd.ma_san_pham')
+            ->whereBetween(DB::raw('COALESCE(hd.ngay_giao, hd.ngay_den_noi, hd.ngay_dat)'), [$ngayBatDau, $ngayKetThuc])
             ->groupBy('cthd.ma_san_pham')
             ->select(
                 'cthd.ma_san_pham',
@@ -437,8 +479,26 @@ public function exportDoanhThu(Request $request)
             ->get()
             ->keyBy('ma_san_pham');
 
-        // 5. Hàng hỏng trong khoảng ngày
+        // 5. Tiêu hao để sản xuất bó hoa thành phẩm trong kỳ (không tính BOM mẫu)
+        $tieuHaoData = DB::table('chi_tiet_bo_hoa as ctbh')
+            ->join('bo_hoa as bh', 'ctbh.ma_bo_hoa', '=', 'bh.ma_bo_hoa')
+            ->leftJoin('hoa_don as hd', 'bh.ma_hoa_don', '=', 'hd.ma_hoa_don')
+            ->where(function ($q) {
+                $q->whereNull('bh.ma_hoa_don')
+                  ->orWhereIn('hd.trang_thai', ['CONFIRMED', 'SHIPPING', 'DELIVERED']);
+            })
+            ->whereBetween('bh.created_at', [$ngayBatDau, $ngayKetThuc])
+            ->groupBy('ctbh.ma_san_pham')
+            ->select(
+                'ctbh.ma_san_pham',
+                DB::raw('SUM(ctbh.so_luong) as tong_tieu_hao')
+            )
+            ->get()
+            ->keyBy('ma_san_pham');
+
+        // 6. Hàng hỏng ghi nhận trong kỳ (chỉ tính record của sản phẩm/nguyên liệu)
         $hangHongData = BaoCaoHangHong::query()
+            ->whereNotNull('ma_san_pham')
             ->whereBetween('thoi_gian_bao_cao', [$ngayBatDau, $ngayKetThuc])
             ->groupBy('ma_san_pham')
             ->select(
@@ -448,72 +508,62 @@ public function exportDoanhThu(Request $request)
             ->get()
             ->keyBy('ma_san_pham');
 
-        // 5b. Subqueries up-to-date (tính đến ngày kết thúc) để tính TỒN KHO tại thời điểm den_ngay
-        $tongNhapDenNgay = DB::table('chi_tiet_nhap as ctn')
+        // 7. Tồn kho vật lý thực tế (On-Hand) từ các lô hàng CONFIRMED còn tồn
+        $lotStockData = DB::table('chi_tiet_nhap as ctn')
             ->join('phieu_nhap as pn', 'ctn.ma_phieu_nhap', '=', 'pn.ma_phieu_nhap')
             ->where('pn.trang_thai', 'CONFIRMED')
-            ->where('pn.ngay_nhap', '<=', $ngayKetThuc)
             ->groupBy('ctn.ma_san_pham')
-            ->select('ctn.ma_san_pham', DB::raw('SUM(ctn.so_luong) as tong_nhap_den_ngay'))
+            ->select(
+                'ctn.ma_san_pham',
+                DB::raw('SUM(ctn.so_luong_con_lai) as tong_ton_lot')
+            )
             ->get()
             ->keyBy('ma_san_pham');
 
-        $tongBanDenNgay = DB::table('chi_tiet_hoa_don as cthd')
-            ->join('hoa_don as hd', 'cthd.ma_hoa_don', '=', 'hd.ma_hoa_don')
-            ->where('hd.trang_thai', 'DELIVERED')
-            ->where('hd.ngay_dat', '<=', $ngayKetThuc)
-            ->groupBy('cthd.ma_san_pham')
-            ->select('cthd.ma_san_pham', DB::raw('SUM(cthd.so_luong) as tong_ban_den_ngay'))
-            ->get()
-            ->keyBy('ma_san_pham');
+        $hasLotsMap = DB::table('chi_tiet_nhap')
+            ->select('ma_san_pham')
+            ->distinct()
+            ->pluck('ma_san_pham')
+            ->flip();
 
-        $tongHongDenNgay = BaoCaoHangHong::query()
-            ->where('thoi_gian_bao_cao', '<=', $ngayKetThuc)
+        // Tồn đang giữ chỗ (RESERVED)
+        $reservedData = DB::table('inventory_reservations')
+            ->where('trang_thai', 'RESERVED')
+            ->whereNotNull('ma_san_pham')
             ->groupBy('ma_san_pham')
-            ->select('ma_san_pham', DB::raw('SUM(so_luong_hong) as tong_hong_den_ngay'))
+            ->select(
+                'ma_san_pham',
+                DB::raw('SUM(so_luong) as tong_reserved')
+            )
             ->get()
             ->keyBy('ma_san_pham');
 
-// 6. Giá bán hiện tại: giá bán cao nhất của lô nhập còn hàng đã xác nhận
-$giaHienTaiData = collect();
+        // 8. Giá nhập gần nhất từ lô đã xác nhận (tham khảo khi kỳ không có nhập mới)
+        $giaNhapMoiNhatData = DB::table('chi_tiet_nhap as ctn')
+            ->join('phieu_nhap as pn', 'ctn.ma_phieu_nhap', '=', 'pn.ma_phieu_nhap')
+            ->where('pn.trang_thai', 'CONFIRMED')
+            ->select(
+                'ctn.ma_san_pham',
+                'ctn.gia_nhap',
+                'pn.ngay_nhap',
+                'ctn.ma_chi_tiet_nhap'
+            )
+            ->orderByDesc('pn.ngay_nhap')
+            ->orderByDesc('ctn.ma_chi_tiet_nhap')
+            ->get()
+            ->unique('ma_san_pham')
+            ->keyBy('ma_san_pham');
 
-
-$giaNhapMoiNhatData = DB::table('chi_tiet_nhap as ctn')
-    ->join('phieu_nhap as pn', 'ctn.ma_phieu_nhap', '=', 'pn.ma_phieu_nhap')
-    ->where('pn.trang_thai', 'CONFIRMED')
-    ->select(
-        'ctn.ma_san_pham',
-        'ctn.gia_nhap',
-        'pn.ngay_nhap',
-        'ctn.ma_chi_tiet_nhap'
-    )
-    ->orderByDesc('pn.ngay_nhap')
-    ->orderByDesc('ctn.ma_chi_tiet_nhap')
-    ->get()
-    ->unique('ma_san_pham')
-    ->keyBy('ma_san_pham');
-
-foreach ($sanPhams as $sp) {
-    $giaHienTaiData[$sp->ma_san_pham] = (object) [
-        'gia_ban' => $sp->gia_ban_hien_tai !== null
-            ? (float) $sp->gia_ban_hien_tai
-            : null,
-
-        'gia_nhap' => isset($giaNhapMoiNhatData[$sp->ma_san_pham])
-            ? (float) $giaNhapMoiNhatData[$sp->ma_san_pham]->gia_nhap
-            : null,
-    ];
-}
-
-        // 7. Ghép dữ liệu thành bảng báo cáo chính
+        // 9. Ghép dữ liệu thành bảng báo cáo chính
         $baoCaoSanPham = $sanPhams->map(function ($sp) use (
             $nhapThemData,
             $daBanData,
+            $tieuHaoData,
             $hangHongData,
-            $tongNhapDenNgay,
-            $tongBanDenNgay,
-            $tongHongDenNgay,
-            $giaHienTaiData,
+            $lotStockData,
+            $hasLotsMap,
+            $reservedData,
+            $giaNhapMoiNhatData
         ) {
             $ma = $sp->ma_san_pham;
 
@@ -523,53 +573,55 @@ foreach ($sanPhams as $sp) {
             $daBan = (int) ($daBanData[$ma]->tong_da_ban ?? 0);
             $doanhThu = (float) ($daBanData[$ma]->doanh_thu ?? 0);
 
+            $tieuHao = (int) ($tieuHaoData[$ma]->tong_tieu_hao ?? 0);
             $hangHong = (int) ($hangHongData[$ma]->tong_hong ?? 0);
 
-          $giaNhapTB = $nhapThem > 0
-    ? round($tienNhap / $nhapThem, 2)
-    : (
-        isset($giaHienTaiData[$ma])
-            ? (float) $giaHienTaiData[$ma]->gia_nhap
-            : null
-    );
+            // Nguồn On-Hand vật lý thực tế
+            $onHand = isset($hasLotsMap[$ma])
+                ? (int) ($lotStockData[$ma]->tong_ton_lot ?? 0)
+                : (int) $sp->so_luong;
 
-            $tyLeHong = $nhapThem > 0
-                ? round(($hangHong / $nhapThem) * 100, 2)
+            // Đang giữ & Khả dụng
+            $reserved = (int) ($reservedData[$ma]->tong_reserved ?? 0);
+            $available = max(0, $onHand - $reserved);
+
+            // Giá nhập trung bình tham khảo
+            $giaNhapTB = $nhapThem > 0
+                ? round($tienNhap / $nhapThem, 2)
+                : (isset($giaNhapMoiNhatData[$ma]) ? (float) $giaNhapMoiNhatData[$ma]->gia_nhap : null);
+
+            // Tỷ lệ hao hụt: Hàng hỏng / Tổng lượng hàng quản lý trong kỳ
+            $tongLuongQuanLy = $onHand + $daBan + $tieuHao + $hangHong;
+            $tyLeHaoHut = $tongLuongQuanLy > 0
+                ? round(($hangHong / $tongLuongQuanLy) * 100, 2)
                 : 0;
 
-            // Tính tồn kho tại thời điểm den_ngay: tổng nhập đến den_ngay - tổng bán đến den_ngay - tổng hỏng đến den_ngay
-            $tongNhapDen = (int) ($tongNhapDenNgay[$ma]->tong_nhap_den_ngay ?? 0);
-            $tongBanDen = (int) ($tongBanDenNgay[$ma]->tong_ban_den_ngay ?? 0);
-            $tongHongDen = (int) ($tongHongDenNgay[$ma]->tong_hong_den_ngay ?? 0);
-
-            $tonBaoCao = $tongNhapDen - $tongBanDen - $tongHongDen;
-
             return [
-                'ma_san_pham'      => $ma,
-                'ten_san_pham'     => $sp->ten_san_pham,
-                'loai_san_pham'    => $sp->loai_san_pham,
-                'trang_thai'       => $sp->trang_thai,
-                'hinh_anh'         => $sp->hinh_anh,
+                'ma_san_pham'       => $ma,
+                'ten_san_pham'      => $sp->ten_san_pham,
+                'loai_san_pham'     => $sp->loai_san_pham,
+                'trang_thai'        => $sp->trang_thai,
+                'hinh_anh'          => $sp->hinh_anh,
 
-                'nhap_them'        => $nhapThem,
-                'da_ban'           => $daBan,
-                'hang_hong'        => $hangHong,
-                'ton_kho_hien_tai' => (int) $tonBaoCao,
+                'nhap_them'         => $nhapThem,
+                'da_ban'            => $daBan,
+                'tieu_hao_san_xuat' => $tieuHao,
+                'hang_hong'         => $hangHong,
+                'ton_kho_hien_tai'  => $onHand,
+                'ton_kha_dung'      => $available,
+                'dang_giu'          => $reserved,
 
-                'gia_nhap_tb'      => $giaNhapTB,
-                // 'gia_ban_hien_tai' => (float) ($giaBanHienTai[$ma] ?? 0),
-               'gia_ban_hien_tai' => isset($giaHienTaiData[$ma])
-    ? (float) $giaHienTaiData[$ma]->gia_ban
-    : 0,
-
-                'ty_le_hong'       => $tyLeHong,
-                'doanh_thu'        => $doanhThu,
+                'gia_nhap_tb'       => $giaNhapTB,
+                'gia_ban_hien_tai'  => (float) ($sp->gia_ban_hien_tai ?? 0),
+                'ty_le_hong'        => $tyLeHaoHut,
+                'doanh_thu'         => $doanhThu,
             ];
         });
 
-        // 8. Dòng tổng cộng
+        // 10. Dòng tổng cộng
         $tongNhapThem = $baoCaoSanPham->sum('nhap_them');
         $tongDaBan = $baoCaoSanPham->sum('da_ban');
+        $tongTieuHaoSanXuat = $baoCaoSanPham->sum('tieu_hao_san_xuat');
         $tongHangHong = $baoCaoSanPham->sum('hang_hong');
         $tongTonKhoHienTai = $baoCaoSanPham->sum('ton_kho_hien_tai');
         $tongDoanhThuSanPham = $baoCaoSanPham->sum('doanh_thu');
@@ -582,16 +634,18 @@ foreach ($sanPhams as $sp) {
             ? round($tongTriGiaNhap / $tongNhapThem, 2)
             : null;
 
-        $tyLeHongChung = $tongNhapThem > 0
-            ? round(($tongHangHong / $tongNhapThem) * 100, 2)
+        $tongLuongQuanLyChung = $tongTonKhoHienTai + $tongDaBan + $tongTieuHaoSanXuat + $tongHangHong;
+        $tyLeHongChung = $tongLuongQuanLyChung > 0
+            ? round(($tongHangHong / $tongLuongQuanLyChung) * 100, 2)
             : 0;
 
-        // 9. Top 5 sản phẩm bán chạy
+        // 11. Top 5 sản phẩm bán chạy (dùng cùng điều kiện DELIVERED theo delivered timestamp)
         $topSanPhamBanChay = DB::table('chi_tiet_hoa_don as ct')
             ->join('hoa_don as hd', 'ct.ma_hoa_don', '=', 'hd.ma_hoa_don')
             ->join('san_pham as sp', 'ct.ma_san_pham', '=', 'sp.ma_san_pham')
             ->where('hd.trang_thai', 'DELIVERED')
-            ->whereBetween('hd.ngay_dat', [$ngayBatDau, $ngayKetThuc])
+            ->whereNotNull('ct.ma_san_pham')
+            ->whereBetween(DB::raw('COALESCE(hd.ngay_giao, hd.ngay_den_noi, hd.ngay_dat)'), [$ngayBatDau, $ngayKetThuc])
             ->when($keyword, function ($query) use ($keyword) {
                 $query->where('sp.ten_san_pham', 'like', '%' . $keyword . '%');
             })
@@ -616,6 +670,7 @@ foreach ($sanPhams as $sp) {
 
             'tongNhapThem'          => $tongNhapThem,
             'tongDaBan'             => $tongDaBan,
+            'tongTieuHaoSanXuat'    => $tongTieuHaoSanXuat,
             'tongHangHong'          => $tongHangHong,
             'tongTonKhoHienTai'     => $tongTonKhoHienTai,
             'tongDoanhThuSanPham'   => $tongDoanhThuSanPham,
@@ -628,6 +683,7 @@ foreach ($sanPhams as $sp) {
             'keyword'               => $keyword,
             'loaiSanPham'           => $loaiSanPham,
             'trangThai'             => $trangThai,
+            'dateWarning'           => $dateWarning,
         ];
     }
 

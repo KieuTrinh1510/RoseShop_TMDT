@@ -144,6 +144,16 @@ class ThanhToanController extends Controller
                 ->with('error', 'Tài khoản đang bị tạm khóa mua hàng do có từ 3 vi phạm chưa xử lý. Vui lòng thanh toán các khoản vi phạm để được mở lại quyền mua hàng.');
         }
 
+        // Kiểm tra cấu hình bật/tắt phương thức thanh toán của hệ thống
+        if ($request->phuong_thuc_thanh_toan === 'COD' && !\App\Services\SystemConfigService::getBool('payment_cod_enabled', true)) {
+            return redirect()->route('customer.thanh-toan')
+                ->with('error', 'Phương thức thanh toán COD hiện đang tạm ngưng phục vụ.');
+        }
+        if ($request->phuong_thuc_thanh_toan === 'NGAN_HANG' && !\App\Services\SystemConfigService::getBool('payment_vnpay_enabled', true)) {
+            return redirect()->route('customer.thanh-toan')
+                ->with('error', 'Phương thức thanh toán trực tuyến (VNPay) hiện đang tạm ngưng phục vụ.');
+        }
+
         // 2 vi phạm hoặc COD bị giới hạn: Cấm COD (chỉ thanh toán online, 2 -> 1 mở lại COD)
         if ($request->phuong_thuc_thanh_toan === 'COD'
             && ($khachHang->quyen_cod === 'GIOI_HAN' || $soViPhamChuaGo >= 2)) {

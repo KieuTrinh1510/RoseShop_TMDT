@@ -101,7 +101,7 @@ class BoHoaController extends Controller
                 'gia_ban'       => $giaBan,
                 'bo_dau_tien'   => $first,
                 'created_at'    => $first->created_at,
-                'ngay_het_han'  => $first->ngay_het_han ?? ($first->created_at ? $first->created_at->copy()->addDays($first->mauBoHoa?->han_su_dung_ngay ?? 5) : null),
+                'ngay_het_han'  => $first->ngay_het_han ?? ($first->created_at ? $first->created_at->copy()->addDays($first->mauBoHoa?->han_su_dung_ngay ?? \App\Services\SystemConfigService::getInt('finished_bouquet_expiry_days', 5)) : null),
                 'so_bien_the'   => $group->count(),
             ];
         })->values();
