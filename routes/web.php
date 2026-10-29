@@ -111,6 +111,11 @@ Route::get('/bo-hoa-tu-tao/chi-tiet',   [ChiTietSanPhamController::class, 'showT
 Route::middleware(['auth'])->group(function () {
     Route::get('/vnpay/payment/{hoaDon}', [VnPayController::class, 'payment'])
         ->name('vnpay.payment');
+
+    // ── [MỚI] Luồng pending: chưa có HoaDon, chỉ có ref cache ──
+    Route::get('/vnpay/pending/{ref}', [VnPayController::class, 'paymentPending'])
+        ->where('ref', 'TXN-[a-zA-Z0-9\-]+')
+        ->name('vnpay.pending.payment');
 });
  
 // Return URL: khách hàng có thể vừa mất session (ví dụ mở app VNPay/trình duyệt khác

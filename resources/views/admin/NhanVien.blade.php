@@ -280,7 +280,7 @@
                     <col style="width: 135px;">
                     <col style="width: 115px;">
                     <col style="width: 135px;">
-                    <col style="width: 110px;">
+                    <col style="width: 145px;">
                 </colgroup>
                 <thead>
                     <tr>
@@ -303,6 +303,8 @@
                             $isActive = $user ? ($user->trang_thai === 'HOAT_DONG') : true;
                             $isShipper = ($nv->chuc_vu === 'SHIPPER');
                             $debt = $shipperDebts[$nv->ma_nhan_vien] ?? 0;
+                            $tienPhat = (float) ($nv->tien_phat ?? 0);
+                            $tongCanNop = (float) $debt + $tienPhat;
                             $hasHistory = in_array($nv->ma_nhan_vien, $hasBusinessIds ?? []);
                         @endphp
                         <tr>
@@ -344,8 +346,8 @@
                             {{-- Cột Tiền COD cần nộp --}}
                             <td style="text-align: center; white-space: nowrap; font-weight: 600;">
                                 @if($isShipper)
-                                    <span style="color: {{ $debt > 0 ? '#ea580c' : '#16a34a' }};">
-                                        {{ number_format($debt, 0, ',', '.') }} đ
+                                    <span style="color: {{ $tongCanNop > 0 ? '#ea580c' : '#16a34a' }};">
+                                        {{ number_format($tongCanNop, 0, ',', '.') }} đ
                                     </span>
                                 @else
                                     <span style="color: #94a3b8;">—</span>
@@ -353,6 +355,21 @@
                             </td>
                             <td style="text-align: center; white-space: nowrap;">
                                 <div class="rs-action-group">
+                                    {{-- Nút Nộp tiền COD + Phạt (chỉ hiện cho SHIPPER có nợ hoặc có phạt) --}}
+                                    @if($isShipper && ($debt > 0 || $tienPhat > 0))
+                                        <button type="button"
+                                                class="rs-action-btn payback"
+                                                style="background:#e0f2fe; color:#0369a1;"
+                                                title="Xác nhận đã nộp tiền COD & phạt"
+                                                onclick="openPaybackModal({{ $nv->ma_nhan_vien }}, '{{ addslashes($nv->ten_nhan_vien) }}', {{ (float) $debt }}, {{ $tienPhat }})">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="2" y="5" width="20" height="14" rx="2"/>
+                                                <line x1="2" y1="10" x2="22" y2="10"/>
+                                                <circle cx="8" cy="15" r="1.5"/>
+                                            </svg>
+                                        </button>
+                                    @endif
+
                                     {{-- Nút Sửa --}}
                                     <button type="button"
                                              class="rs-action-btn edit"
@@ -738,6 +755,60 @@
     </div>
 </div>
 
+{{-- ==========================================================================
+   MODAL 5: XÁC NHẬN NỘP TIỀN COD + PHẠT
+   ========================================================================== --}}
+<div class="rs-modal" id="paybackModal">
+    <div class="rs-modal-dialog" style="max-width: 540px;">
+        <form method="POST" action="" id="paybackForm" onsubmit="submitPayback(event)">
+            @csrf
+            <div class="rs-modal-header">
+                <h3 class="rs-modal-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="5" width="20" height="14" rx="2"/>
+                        <line x1="2" y1="10" x2="22" y2="10"/>
+                        <circle cx="8" cy="15" r="1.5"/>
+                    </svg>
+                    Xác nhận nộp tiền COD + Phạt
+                </h3>
+                <button type="button" class="rs-modal-close" onclick="closePaybackModal()">&times;</button>
+            </div>
+
+            <div class="rs-modal-body">
+                <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:12px; padding:16px 18px; margin-bottom:16px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:14px;">
+                        <span style="color:#0369a1;">Shipper:</span>
+                        <strong id="pb_name" style="color:#0c4a6e;">—</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:14px;">
+                        <span style="color:#0369a1;">Tổng COD cần nộp:</span>
+                        <strong id="pb_cod" style="color:#0c4a6e;">0 đ</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-size:14px;">
+                        <span style="color:#b45309;">Tiền phạt:</span>
+                        <strong id="pb_fine" style="color:#b45309;">0 đ</strong>
+                    </div>
+                    <div style="border-top:1px dashed #7dd3fc; padding-top:10px; margin-top:10px; display:flex; justify-content:space-between; font-size:15px;">
+                        <span style="font-weight:700; color:#0c4a6e;">TỔNG CẦN NỘP:</span>
+                        <strong id="pb_total" style="color:#dc2626; font-size:16px;">0 đ</strong>
+                    </div>
+                </div>
+
+                <div style="background:#fef3c7; border:1px solid #fde68a; border-radius:8px; padding:12px 14px; font-size:13px; color:#92400e; line-height:1.5;">
+                    <strong>⚠️ Lưu ý:</strong> Sau khi xác nhận, tất cả đơn COD <em>đã thu tiền mặt</em> sẽ chuyển sang trạng thái <strong>"Đã nộp"</strong> và tiền phạt của shipper sẽ được <strong>xóa về 0</strong>. Thao tác này <u>không thể hoàn tác</u>.
+                </div>
+            </div>
+
+            <div class="rs-modal-footer">
+                <button type="button" class="rs-btn-cancel" onclick="closePaybackModal()">Hủy</button>
+                <button type="submit" class="rs-btn-submit" id="pb_submit_btn" style="background:#0ea5e9;">
+                    Xác nhận đã nộp
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -773,7 +844,7 @@
     function openStatusModal(id, name, role, email, isActive) {
         const form = document.getElementById('statusForm');
         form.action = `/nhan-vien/${id}/toggle-status`;
-        
+
         document.getElementById('status_emp_name').textContent = name;
         document.getElementById('status_emp_role').textContent = role;
         document.getElementById('status_emp_email').textContent = email;
@@ -842,6 +913,60 @@
 
     function closeDeleteModal() {
         document.getElementById('deleteModal').classList.remove('show');
+    }
+
+    // ============ XÁC NHẬN NỘP TIỀN COD + PHẠT ============
+    function openPaybackModal(id, name, cod, fine) {
+        const form = document.getElementById('paybackForm');
+        form.action = `/nhan-vien/${id}/tra-tien`;
+        document.getElementById('pb_name').textContent  = name;
+        document.getElementById('pb_cod').textContent   = new Intl.NumberFormat('vi-VN').format(cod)  + ' đ';
+        document.getElementById('pb_fine').textContent  = new Intl.NumberFormat('vi-VN').format(fine) + ' đ';
+        document.getElementById('pb_total').textContent = new Intl.NumberFormat('vi-VN').format(cod + fine) + ' đ';
+
+        const btn = document.getElementById('pb_submit_btn');
+        btn.disabled = false;
+        btn.textContent = 'Xác nhận đã nộp';
+
+        document.getElementById('paybackModal').classList.add('show');
+    }
+
+    function closePaybackModal() {
+        document.getElementById('paybackModal').classList.remove('show');
+    }
+
+    function submitPayback(e) {
+        e.preventDefault();
+        const form = document.getElementById('paybackForm');
+        const btn  = document.getElementById('pb_submit_btn');
+        btn.disabled = true;
+        btn.textContent = 'Đang xử lý...';
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                closePaybackModal();
+                alert('✓ ' + data.message);
+                location.reload();
+            } else {
+                alert('✕ ' + (data.message || 'Có lỗi xảy ra.'));
+                btn.disabled = false;
+                btn.textContent = 'Xác nhận đã nộp';
+            }
+        })
+        .catch(() => {
+            alert('✕ Lỗi kết nối. Vui lòng thử lại.');
+            btn.disabled = false;
+            btn.textContent = 'Xác nhận đã nộp';
+        });
     }
 
     // Đóng modal khi bấm ra ngoài nền mờ

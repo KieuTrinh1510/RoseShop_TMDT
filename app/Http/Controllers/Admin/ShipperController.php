@@ -91,6 +91,15 @@ class ShipperController extends Controller
             ->select('ma_nhan_vien_giao', DB::raw('COUNT(*) as total'))
             ->pluck('total', 'ma_nhan_vien_giao');
 
+        // 8.5. Công nợ COD đang giữ của từng shipper — khớp với NhanVienController::payback()
+        $shipperDebts = HoaDon::query()
+            ->select('ma_nhan_vien_giao', DB::raw('SUM(tong_tien) as tong_can_tra'))
+            ->where('trang_thai', 'DELIVERED')
+            ->where('trang_thai_thanh_toan', 'DA_THANH_TOAN')
+            ->where('da_thu_tien_mat', true)
+            ->groupBy('ma_nhan_vien_giao')
+            ->pluck('tong_can_tra', 'ma_nhan_vien_giao');
+
         // 9. Danh sách ID shipper đã phát sinh lịch sử giao hàng (để kiểm tra xóa)
         $hasDeliveryHistoryIds = HoaDon::query()
             ->whereNotNull('ma_nhan_vien_giao')
@@ -106,7 +115,8 @@ class ShipperController extends Controller
             'dangOnline',
             'dangGiaoHang',
             'completedOrdersCount',
-            'hasDeliveryHistoryIds'
+            'hasDeliveryHistoryIds',
+            'shipperDebts'
         ));
     }
 
@@ -127,7 +137,7 @@ class ShipperController extends Controller
         $tienCodDangGiu = HoaDon::where('ma_nhan_vien_giao', $id)
             ->where('trang_thai', 'DELIVERED')
             ->where('trang_thai_thanh_toan', 'DA_THANH_TOAN')
-            ->where('phuong_thuc_thanh_toan', 'COD')
+            ->where('da_thu_tien_mat', true)
             ->sum('tong_tien');
 
         return response()->json([

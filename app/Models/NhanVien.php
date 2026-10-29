@@ -23,6 +23,7 @@ class NhanVien extends Model
         'chuc_vu',
         'cong_viec',
         'luong',
+        'tien_phat',
     ];
 
     protected $casts = [

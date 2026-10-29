@@ -131,84 +131,76 @@ class ThanhToanController extends Controller
 
         $user      = Auth::user()->load('khachHang');
         $khachHang = $user->khachHang;
+        $laVnpay   = $request->phuong_thuc_thanh_toan === 'NGAN_HANG';
 
-        // ─── Chặn theo mức vi phạm (chỉ tính vi phạm CHƯA GỠ) ───
-        $viPhamChuaGo = \App\Models\ViPhamKhachHang::where('ma_khach_hang', $khachHang->ma_khach_hang)
-            ->where('da_go', false);
+        // ═══════════════════════════════════════════════════════════════════
+        // CHẶN VI PHẠM: CHỈ ÁP DỤNG COD (VNPAY đã trả trước → không cần chặn)
+        // ═══════════════════════════════════════════════════════════════════
+        if (!$laVnpay) {
+            $viPhamChuaGo = \App\Models\ViPhamKhachHang::where('ma_khach_hang', $khachHang->ma_khach_hang)
+                ->where('da_go', false);
 
-        $soViPhamChuaGo = (clone $viPhamChuaGo)->count();
+            $soViPhamChuaGo = (clone $viPhamChuaGo)->count();
 
-        // >= 3 vi phạm: Tạm khóa mua hàng (không được tạo đơn mới, 3 -> 2 cho mua lại)
-        if ($soViPhamChuaGo >= 3) {
-            return redirect()->route('customer.vi-pham.index')
-                ->with('error', 'Tài khoản đang bị tạm khóa mua hàng do có từ 3 vi phạm chưa xử lý. Vui lòng thanh toán các khoản vi phạm để được mở lại quyền mua hàng.');
-        }
+            // >= 3 vi phạm: Tạm khóa mua hàng (không được tạo đơn mới, 3 -> 2 cho mua lại)
+            if ($soViPhamChuaGo >= 3) {
+                return redirect()->route('customer.vi-pham.index')
+                    ->with('error', 'Tài khoản đang bị tạm khóa mua hàng do có từ 3 vi phạm chưa xử lý. Vui lòng thanh toán các khoản vi phạm để được mở lại quyền mua hàng.');
+            }
 
-        // Kiểm tra cấu hình bật/tắt phương thức thanh toán của hệ thống
-        if ($request->phuong_thuc_thanh_toan === 'COD' && !\App\Services\SystemConfigService::getBool('payment_cod_enabled', true)) {
-            return redirect()->route('customer.thanh-toan')
-                ->with('error', 'Phương thức thanh toán COD hiện đang tạm ngưng phục vụ.');
-        }
-        if ($request->phuong_thuc_thanh_toan === 'NGAN_HANG' && !\App\Services\SystemConfigService::getBool('payment_vnpay_enabled', true)) {
-            return redirect()->route('customer.thanh-toan')
-                ->with('error', 'Phương thức thanh toán trực tuyến (VNPay) hiện đang tạm ngưng phục vụ.');
-        }
-
-        // 2 vi phạm hoặc COD bị giới hạn: Cấm COD (chỉ thanh toán online, 2 -> 1 mở lại COD)
-        if ($request->phuong_thuc_thanh_toan === 'COD'
-            && ($khachHang->quyen_cod === 'GIOI_HAN' || $soViPhamChuaGo >= 2)) {
-            return redirect()->route('customer.thanh-toan')
-                ->with('error', 'Tài khoản của bạn đang bị hạn chế COD do vi phạm. Vui lòng thanh toán trước (VNPay) hoặc thanh toán khoản vi phạm tại mục "Xử lý vi phạm".');
+            // 2 vi phạm hoặc COD bị giới hạn: Cấm COD (chỉ thanh toán online, 2 -> 1 mở lại COD)
+            if ($request->phuong_thuc_thanh_toan === 'COD'
+                && ($khachHang->quyen_cod === 'GIOI_HAN' || $soViPhamChuaGo >= 2)) {
+                return redirect()->route('customer.thanh-toan')
+                    ->with('error', 'Tài khoản của bạn đang bị hạn chế COD do vi phạm. Vui lòng thanh toán trước (VNPay) hoặc thanh toán khoản vi phạm tại mục "Xử lý vi phạm".');
+            }
         }
 
         $diemSuDung = (int) session('diem_su_dung', 0);
         $diaChiGiao = $request->dia_chi_chi_tiet . ', ' . $request->xa_phuong
             . ', ' . $request->quan_huyen . ', Hà Nội';
 
-        // Tự động lưu địa chỉ vào sổ địa chỉ nếu chưa có hoặc có thay đổi
         $this->luuDiaChiVaoSo($khachHang, $request, $diaChiGiao);
 
-        $donData = [
-            'phuong_thuc_thanh_toan' => $request->phuong_thuc_thanh_toan,
-            'dia_chi_giao'           => $diaChiGiao,
-            'so_dien_thoai'          => $request->so_dien_thoai,
-        ];
-        $laVnpay = $request->phuong_thuc_thanh_toan === 'NGAN_HANG';
-        $loaiCheckout = $request->input('loai_checkout');
+        // ─── Xác định nhánh: mua ngay 1 bó hoa vs giỏ hỗn hợp ───────────────
+        $loaiCheckout  = $request->input('loai_checkout');
+        $isMuaNgayBoHoa = (($loaiCheckout === 'mua_ngay_bo_hoa'
+                            || (!$loaiCheckout && session()->has('bo_hoa_checkout')))
+                           && session()->has('bo_hoa_checkout'));
 
-        // ─── Nhánh: Mua ngay 1 bó hoa ──────────────────────────────────
-        if (($loaiCheckout === 'mua_ngay_bo_hoa' || (!$loaiCheckout && session()->has('bo_hoa_checkout'))) && session()->has('bo_hoa_checkout')) {
+        if ($isMuaNgayBoHoa) {
+            $checkoutData = session('bo_hoa_checkout');
             try {
-                $hoaDon = DB::transaction(fn () => \App\Http\Controllers\Customer\BoHoaController::taoDonTuCheckout(
-                    session('bo_hoa_checkout'), $khachHang, $donData, $diemSuDung
-                ), 3);
+                $info = \App\Http\Controllers\Customer\BoHoaController::duLieuCheckout(
+                    $checkoutData, $khachHang->getKey()
+                );
+                $tongTienGoc = (float) $info['quote']['tong_tien'];
             } catch (\Throwable $e) {
-                return redirect()->route('customer.thanh-toan')->with('error', $e->getMessage());
+                session()->forget('bo_hoa_checkout');
+                $redirectRoute = ($checkoutData['loai'] ?? '') === 'TUY_CHON'
+                    ? route('customer.bo-hoa.tu-tao')
+                    : route('customer.bo-hoa.he-thong');
+                return redirect($redirectRoute)->with('error', $e->getMessage());
             }
-            session()->forget(['bo_hoa_checkout', 'diem_su_dung']);
-            \App\Services\CartService::syncToDatabase();
-            if ($laVnpay) return redirect()->route('vnpay.payment', $hoaDon);
-            return redirect()->route('customer.thong-bao', ['tab' => 'don-hien-tai'])
-                ->with('success', 'Đơn bó hoa đã được tạo và đang chờ nhân viên xác nhận.');
-        }
+            $dsCheckoutBoHoa = [0 => $checkoutData];
+            $gioHang         = [];
+            $rawBoHoa        = [];
+        } else {
+            $rawBoHoa = session('checkout_bo_hoa', ($loaiCheckout === 'bo_hoa' ? session('gio_bo_hoa', []) : []));
+            $gioHang  = session('checkout_items', session('mua_ngay', ($loaiCheckout === 'san_pham' ? session('gio_hang', []) : [])));
 
-        // ─── Nhánh: Thanh toán giỏ hàng (Bao gồm Bó hoa + Sản phẩm lẻ) ───
-        $rawBoHoa  = session('checkout_bo_hoa', ($loaiCheckout === 'bo_hoa' ? session('gio_bo_hoa', []) : []));
-        $gioHang   = session('checkout_items', session('mua_ngay', ($loaiCheckout === 'san_pham' ? session('gio_hang', []) : [])));
+            if (empty($rawBoHoa) && empty($gioHang) && !session()->has('mua_ngay')) {
+                $rawBoHoa = session('gio_bo_hoa', []);
+                $gioHang  = session('gio_hang', []);
+            }
 
-        if (empty($rawBoHoa) && empty($gioHang) && !session()->has('mua_ngay')) {
-            $rawBoHoa = session('gio_bo_hoa', []);
-            $gioHang  = session('gio_hang', []);
-        }
+            if (empty($rawBoHoa) && empty($gioHang)) {
+                return redirect()->route('customer.gio-hang')
+                    ->with('error', 'Vui lòng chọn sản phẩm để thanh toán.');
+            }
 
-        if (empty($rawBoHoa) && empty($gioHang)) {
-            return redirect()->route('customer.gio-hang')
-                ->with('error', 'Vui lòng chọn sản phẩm để thanh toán.');
-        }
-
-        $dsCheckoutBoHoa = [];
-        $tongGocBoHoa    = 0;
-        if (!empty($rawBoHoa)) {
+            $dsCheckoutBoHoa = [];
+            $tongGocBoHoa    = 0;
             foreach ($rawBoHoa as $bKey => $bItem) {
                 $itemCheckout = [
                     'loai'          => 'MAU',
@@ -218,65 +210,95 @@ class ThanhToanController extends Controller
                     'loi_nhan'      => $bItem['loi_nhan'] ?? null,
                 ];
                 try {
-                    $info = \App\Http\Controllers\Customer\BoHoaController::duLieuCheckout($itemCheckout, $khachHang->getKey());
+                    $info = \App\Http\Controllers\Customer\BoHoaController::duLieuCheckout(
+                        $itemCheckout, $khachHang->getKey()
+                    );
                     $tongGocBoHoa += (float) $info['quote']['tong_tien'];
                     $dsCheckoutBoHoa[$bKey] = $itemCheckout;
                 } catch (\Throwable $e) {
-                    return redirect()->route('customer.thanh-toan')->with('error', 'Mẫu bó hoa không khả dụng: ' . $e->getMessage());
+                    return redirect()->route('customer.thanh-toan')
+                        ->with('error', 'Mẫu bó hoa không khả dụng: ' . $e->getMessage());
                 }
             }
+
+            $tongGocSP   = collect($gioHang)->sum(fn ($i) => $i['gia_ban'] * $i['so_luong']);
+            $tongTienGoc = $tongGocBoHoa + $tongGocSP;
         }
 
-        $tongGocSP   = collect($gioHang)->sum(fn($i) => $i['gia_ban'] * $i['so_luong']);
-        $tongTienGoc = $tongGocBoHoa + $tongGocSP;
-        $giamGia     = min($diemSuDung * self::DIEM_QUY_DOI, $tongTienGoc);
-        $tongTien    = max(0, $tongTienGoc - $giamGia);
+        $giamGia  = min($diemSuDung * self::DIEM_QUY_DOI, $tongTienGoc);
+        $tongTien = max(0, $tongTienGoc - $giamGia);
 
+        // ═══════════════════════════════════════════════════════════════════
+        // NHÁNH VNPAY — KHÔNG tạo HoaDon, KHÔNG trừ/cộng điểm, KHÔNG giữ kho.
+        // Chỉ cache pending data. IPN thành công mới thực sự tạo đơn.
+        // ═══════════════════════════════════════════════════════════════════
+        if ($laVnpay) {
+            $ref = 'TXN-' . \Illuminate\Support\Str::uuid()->toString();
+            $pendingData = [
+                'ma_khach_hang'       => (int) $khachHang->ma_khach_hang,
+                'ten_nguoi_nhan'      => $request->ten_nguoi_nhan,
+                'so_dien_thoai'       => $request->so_dien_thoai,
+                'quan_huyen'          => $request->quan_huyen,
+                'xa_phuong'           => $request->xa_phuong,
+                'dia_chi_chi_tiet'    => $request->dia_chi_chi_tiet,
+                'dia_chi_giao'        => $diaChiGiao,
+                'diem_su_dung'        => $diemSuDung,
+                'tong_tien'           => (float) $tongTien,
+                'tong_tien_goc'       => (float) $tongTienGoc,
+                'loai_checkout'       => $isMuaNgayBoHoa ? 'mua_ngay_bo_hoa' : 'gop',
+                'is_mua_ngay_bo_hoa'  => $isMuaNgayBoHoa,
+                'ds_bo_hoa'           => array_values($dsCheckoutBoHoa),
+                'ds_bo_hoa_keys'      => array_keys($dsCheckoutBoHoa),   // ← dùng để xóa giỏ DB
+                'gio_hang'            => $gioHang,
+                'gio_hang_keys'       => array_keys($gioHang),            // ← dùng để xóa giỏ DB
+                'created_at'          => now()->toIso8601String(),
+            ];
+            \Illuminate\Support\Facades\Cache::put(
+                "vnpay_pending_{$ref}", $pendingData, now()->addHours(25)
+            );
+
+            return redirect()->route('vnpay.pending.payment', ['ref' => $ref]);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // NHÁNH COD — giữ nguyên hành vi cũ: tạo HoaDon + reserve + điểm ngay
+        // ═══════════════════════════════════════════════════════════════════
         try {
             $hoaDon = DB::transaction(function () use (
                 $request, $gioHang, $dsCheckoutBoHoa, $khachHang, $tongTien,
-                $diemSuDung, $diaChiGiao, $laVnpay
+                $diemSuDung, $diaChiGiao
             ) {
                 $hoaDon = HoaDon::create([
                     'ma_khach_hang'          => $khachHang->ma_khach_hang,
                     'trang_thai'             => 'PENDING',
                     'trang_thai_thanh_toan'  => 'CHUA_THANH_TOAN',
-                    'phuong_thuc_thanh_toan' => $request->phuong_thuc_thanh_toan,
+                    'phuong_thuc_thanh_toan' => 'COD',
                     'dia_chi_giao'           => $diaChiGiao,
                     'so_dien_thoai'          => $request->so_dien_thoai,
                     'tong_tien'              => $tongTien,
                     'ngay_dat'               => now(),
                 ]);
 
-                // 1. Xử lý các bó hoa (nếu có)
-                if (!empty($dsCheckoutBoHoa)) {
-                    foreach ($dsCheckoutBoHoa as $checkout) {
-                        \App\Http\Controllers\Customer\BoHoaController::hoanTatBoHoa($hoaDon, $checkout, $khachHang, 0, false, false);
-                    }
+                // 1. Bó hoa
+                foreach ($dsCheckoutBoHoa as $checkout) {
+                    \App\Http\Controllers\Customer\BoHoaController::hoanTatBoHoa(
+                        $hoaDon, $checkout, $khachHang, 0, false, false
+                    );
                 }
 
-                // 2. Xử lý sản phẩm lẻ (nếu có)
+                // 2. Sản phẩm lẻ
                 if (!empty($gioHang)) {
                     $allocatedRows = \App\Services\InventoryReservationService::reserveSingleItems($hoaDon, $gioHang);
                     $grouped = collect($allocatedRows)->groupBy(function ($r) {
-                        if (!empty($r['ma_bo_hoa'])) {
-                            return 'bo_' . $r['ma_bo_hoa'];
-                        }
+                        if (!empty($r['ma_bo_hoa'])) return 'bo_' . $r['ma_bo_hoa'];
                         return ($r['ma_san_pham'] ?? 0) . '-' . ($r['ma_chi_tiet_nhap'] ?? 0);
                     });
 
                     foreach ($grouped as $items) {
                         $first = $items->first();
-                        $item = null;
-                        if (!empty($first['ma_bo_hoa'])) {
-                            $item = collect($gioHang)->first(fn ($row) =>
-                                !empty($row['ma_bo_hoa']) && (int) $row['ma_bo_hoa'] === (int) $first['ma_bo_hoa']
-                            );
-                        } else {
-                            $item = collect($gioHang)->first(fn ($row) =>
-                                !empty($row['ma_san_pham']) && (int) $row['ma_san_pham'] === (int) $first['ma_san_pham']
-                            );
-                        }
+                        $item  = !empty($first['ma_bo_hoa'])
+                            ? collect($gioHang)->first(fn ($row) => !empty($row['ma_bo_hoa']) && (int) $row['ma_bo_hoa'] === (int) $first['ma_bo_hoa'])
+                            : collect($gioHang)->first(fn ($row) => !empty($row['ma_san_pham']) && (int) $row['ma_san_pham'] === (int) $first['ma_san_pham']);
 
                         ChiTietHoaDon::create([
                             'ma_hoa_don'        => $hoaDon->getKey(),
@@ -290,7 +312,7 @@ class ThanhToanController extends Controller
                     }
                 }
 
-                // 3. Trừ điểm sử dụng & Cộng điểm tích lũy
+                // 3. Điểm tích lũy (COD xử lý ngay — giữ hành vi cũ)
                 if ($diemSuDung > 0 && $khachHang) {
                     $khachHang->decrement('diem_tich_luy', $diemSuDung);
                 }
@@ -299,47 +321,33 @@ class ThanhToanController extends Controller
                     $khachHang->increment('diem_tich_luy', $diemMoi);
                 }
 
-                // 4. Lưu snapshot VNPay nếu chọn VNPAY
-                if ($laVnpay) {
-                    $hoaDon->vnpay_cart_snapshot = [
-                        'loai_don'        => 'gop',
-                        'ds_checkout'     => $dsCheckoutBoHoa,
-                        'gio_hang'        => $gioHang,
-                        'diem_su_dung'    => $diemSuDung,
-                    ];
-                    $hoaDon->save();
-                }
-
                 return $hoaDon;
-            });
+            }, 3);
         } catch (\Exception $e) {
             return redirect()->route('customer.thanh-toan')->with('error', $e->getMessage());
         }
 
-        // ─── DỌN DẸP SESSION GIỎ HÀNG ───
-        if (!empty($gioHang)) {
-            $mainCart = session('gio_hang', []);
-            foreach (array_keys($gioHang) as $k) {
-                if (isset($mainCart[$k])) unset($mainCart[$k]);
+        // Dọn session giỏ hàng
+        if ($isMuaNgayBoHoa) {
+            session()->forget(['bo_hoa_checkout', 'diem_su_dung']);
+        } else {
+            if (!empty($gioHang)) {
+                $mainCart = session('gio_hang', []);
+                foreach (array_keys($gioHang) as $k) {
+                    if (isset($mainCart[$k])) unset($mainCart[$k]);
+                }
+                session(['gio_hang' => $mainCart]);
             }
-            session(['gio_hang' => $mainCart]);
-        }
-
-        if (!empty($rawBoHoa)) {
-            $mainCartBH = session('gio_bo_hoa', []);
-            foreach (array_keys($rawBoHoa) as $bKey) {
-                if (isset($mainCartBH[$bKey])) unset($mainCartBH[$bKey]);
+            if (!empty($rawBoHoa)) {
+                $mainCartBH = session('gio_bo_hoa', []);
+                foreach (array_keys($rawBoHoa) as $bKey) {
+                    if (isset($mainCartBH[$bKey])) unset($mainCartBH[$bKey]);
+                }
+                session(['gio_bo_hoa' => $mainCartBH]);
             }
-            session(['gio_bo_hoa' => $mainCartBH]);
+            session()->forget(['checkout_items', 'checkout_bo_hoa', 'mua_ngay', 'diem_su_dung']);
         }
-
-        session()->forget(['checkout_items', 'checkout_bo_hoa', 'mua_ngay', 'diem_su_dung']);
         \App\Services\CartService::syncToDatabase();
-
-        if ($laVnpay) {
-            return redirect()->route('vnpay.payment', $hoaDon)
-                ->with('info', "Đơn hàng #{$hoaDon->ma_hoa_don} đã được tạo. Vui lòng hoàn tất thanh toán qua VNPay.");
-        }
 
         return redirect()->route('customer.dashboard')
             ->with('success', '🎉 Đặt hàng thành công! Phương thức: COD. Chúng tôi sẽ liên hệ sớm nhất.');

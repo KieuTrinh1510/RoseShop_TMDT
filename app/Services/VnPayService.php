@@ -236,5 +236,39 @@ class VnPayService
 
         return hash_hmac('sha512', $hashData, $this->hashSecret);
     }
+    /**
+ * Tạo URL thanh toán VNPay từ dữ liệu thô (dùng cho luồng "pending checkout"
+ * — chưa có HoaDon, chỉ có txn_ref + số tiền đã tính sẵn từ cache).
+ *
+ * @param string $txnRef  Ref dạng 'TXN-{uuid}' đã lưu vào Cache
+ * @param float  $amountVnd  Tổng tiền cuối (đã trừ điểm, khớp với pending cache)
+ */
+public function createPaymentUrlFromData(string $txnRef, float $amountVnd, Request $request): string
+{
+    $amount = $this->toVnpAmount($amountVnd);
+
+    $ip = $request->ip();
+    if (!$ip || $ip === '::1') {
+        $ip = '127.0.0.1';
+    }
+
+    $params = [
+        'vnp_Version'    => $this->version,
+        'vnp_Command'    => $this->command,
+        'vnp_TmnCode'    => $this->tmnCode,
+        'vnp_Amount'     => $amount,
+        'vnp_CurrCode'   => $this->currCode,
+        'vnp_TxnRef'     => $txnRef,
+        'vnp_OrderInfo'  => 'Thanh toan don hang ' . $txnRef,
+        'vnp_OrderType'  => 'other',
+        'vnp_Locale'     => $this->locale,
+        'vnp_ReturnUrl'  => $this->returnUrl,
+        'vnp_IpAddr'     => $ip,
+        'vnp_CreateDate' => now(self::VNPAY_TIMEZONE)->format('YmdHis'),
+        'vnp_ExpireDate' => now(self::VNPAY_TIMEZONE)->addMinutes(15)->format('YmdHis'),
+    ];
+
+    return $this->buildSignedUrl($params);
+}
 }
 

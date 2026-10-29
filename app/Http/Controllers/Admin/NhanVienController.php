@@ -80,7 +80,7 @@ class NhanVienController extends Controller
             ->select('ma_nhan_vien_giao', DB::raw('SUM(tong_tien) as tong_can_tra'))
             ->where('trang_thai', 'DELIVERED')
             ->where('trang_thai_thanh_toan', 'DA_THANH_TOAN')
-            ->where('phuong_thuc_thanh_toan', 'COD')
+            ->where('da_thu_tien_mat', true)
             ->groupBy('ma_nhan_vien_giao')
             ->pluck('tong_can_tra', 'ma_nhan_vien_giao');
 
