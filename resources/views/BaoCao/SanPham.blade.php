@@ -37,17 +37,22 @@
         </div>
     @endif
 
-    {{-- ═══════════════════════ BỘ LỌC THỜI GIAN ═══════════════════════ --}}
+    {{-- ═══════════════════════ BỘ LỌC ═══════════════════════ --}}
     <div class="filter-card mb-4">
         <div class="filter-card-header mb-3">
             <span class="filter-title">
-                <i class="bi bi-funnel-fill me-1"></i> LỌC THEO THỜI GIAN
+                <i class="bi bi-funnel-fill me-1"></i> Bộ lọc
             </span>
         </div>
 
         <form method="GET" action="{{ route('bao-cao.san-pham') }}" id="formFilter">
-            <div class="d-flex flex-wrap gap-3 align-items-end">
-                <div>
+            @if(request('per_page'))
+                <input type="hidden" name="per_page" value="{{ request('per_page') }}">
+            @endif
+
+            <div class="rs-filter-row">
+                {{-- 1. Ngày bắt đầu --}}
+                <div class="rs-filter-col rs-col-date">
                     <label class="filter-label">Ngày bắt đầu</label>
                     <div class="input-icon-wrap">
                         <input type="date"
@@ -58,7 +63,8 @@
                     </div>
                 </div>
 
-                <div>
+                {{-- 2. Ngày kết thúc --}}
+                <div class="rs-filter-col rs-col-date">
                     <label class="filter-label">Ngày kết thúc</label>
                     <div class="input-icon-wrap">
                         <input type="date"
@@ -69,38 +75,43 @@
                     </div>
                 </div>
 
-                @if($keyword)
-                    <input type="hidden" name="keyword" value="{{ $keyword }}">
-                @endif
-
-                <div>
-                    <button type="submit" class="btn btn-filter">
-                        <i class="bi bi-funnel me-1"></i> Lọc dữ liệu
+                {{-- 3. Nút Lọc --}}
+                <div class="rs-filter-col rs-col-btn">
+                    <button type="submit" class="btn btn-filter-pink" title="Lọc theo khoảng ngày">
+                        <i class="bi bi-funnel"></i>
+                        <span>Lọc</span>
                     </button>
                 </div>
 
-                <div>
-                    <a href="{{ route('bao-cao.san-pham') }}" class="btn btn-reset">
-                        <i class="bi bi-arrow-clockwise me-1"></i> Đặt lại
+                {{-- 4. Nút Đặt lại --}}
+                <div class="rs-filter-col rs-col-btn">
+                    <a href="{{ route('bao-cao.san-pham') }}" class="btn btn-reset" title="Đặt lại bộ lọc">
+                        <i class="bi bi-arrow-clockwise"></i>
+                        <span>Đặt lại</span>
                     </a>
                 </div>
-            </div>
-        </form>
-    </div>
 
-    {{-- ═══════════════════════ TÌM KIẾM SẢN PHẨM ═══════════════════════ --}}
-    <div class="search-wrap mb-3">
-        <form method="GET" action="{{ route('bao-cao.san-pham') }}" id="formSearch">
-            <input type="hidden" name="ngay_bat_dau" value="{{ $ngayBatDau->format('Y-m-d') }}">
-            <input type="hidden" name="ngay_ket_thuc" value="{{ $ngayKetThuc->format('Y-m-d') }}">
+                {{-- 5. Khung tìm kiếm sản phẩm (đưa ra phía sau, giãn đều vừa khung) --}}
+                <div class="rs-filter-col rs-col-search">
+                    <label class="filter-label">Tìm kiếm sản phẩm</label>
+                    <div class="rs-search-box-wrap">
+                        <i class="bi bi-search rs-search-box-icon"></i>
+                        <input type="text"
+                               name="keyword"
+                               class="form-control rs-search-box-input"
+                               style="padding-left: 46px !important;"
+                               placeholder="Tìm theo tên sản phẩm..."
+                               value="{{ $keyword }}">
+                    </div>
+                </div>
 
-            <div class="search-input-wrap">
-                <i class="bi bi-search search-icon"></i>
-                <input type="text"
-                       name="keyword"
-                       class="search-input"
-                       placeholder="Tìm kiếm sản phẩm (Enter để tìm)..."
-                       value="{{ $keyword }}">
+                {{-- 6. Nút Tìm --}}
+                <div class="rs-filter-col rs-col-btn">
+                    <button type="submit" class="btn btn-search-pink" title="Tìm theo từ khóa">
+                        <i class="bi bi-search"></i>
+                        <span>Tìm</span>
+                    </button>
+                </div>
             </div>
         </form>
     </div>
@@ -118,7 +129,7 @@
                         <th class="col-num">Bán trong kỳ<br><small>(Số lượng)</small></th>
                         <th class="col-num">Tiêu hao SX<br><small>(Làm bó hoa)</small></th>
                         <th class="col-num">Hàng hỏng<br><small>(Số lượng)</small></th>
-                        <th class="col-num">Tồn hiện tại<br><small>(Vật lý On-Hand)</small></th>
+                        <th class="col-num">Tồn hiện tại<br><small>(On-Hand)</small></th>
                         <th class="col-num">Giá nhập TB<br><small>(VNĐ)</small></th>
                         <th class="col-num">Giá bán hiện tại<br><small>(VNĐ)</small></th>
                         <th class="col-num">Doanh thu<br><small>(VNĐ)</small></th>
@@ -131,73 +142,109 @@
                 <tbody>
                     @forelse($baoCaoSanPham as $i => $row)
                         <tr>
-                            <td class="text-center">{{ $i + 1 }}</td>
+                            <td class="text-center text-muted" style="font-size: 12px; font-weight: 500;">
+                                {{ ($baoCaoSanPham->currentPage() - 1) * $baoCaoSanPham->perPage() + $i + 1 }}
+                            </td>
 
                             {{-- Sản phẩm --}}
-                            <td class="text-start fw-medium">{{ $row['ten_san_pham'] }}</td>
+                            <td class="text-start">
+                                <div class="fw-semibold text-dark text-truncate" style="max-width: 175px; font-size: 12.5px;" title="{{ $row['ten_san_pham'] }}">
+                                    {{ $row['ten_san_pham'] }}
+                                </div>
+                            </td>
 
                             {{-- Loại --}}
-                            <td>{{ \App\Helpers\LabelHelper::loaiSanPham($row['loai_san_pham']) }}</td>
+                            <td>
+                                <div style="font-size: 12px; white-space: nowrap;">
+                                    {{ \App\Helpers\LabelHelper::loaiSanPham($row['loai_san_pham']) }}
+                                </div>
+                            </td>
 
                             {{-- Nhập thêm --}}
-                            <td class="num-green">{{ number_format($row['nhap_them']) }}</td>
+                            <td>
+                                <div class="num-green" style="font-size: 12.5px; white-space: nowrap;">
+                                    {{ number_format($row['nhap_them']) }}
+                                </div>
+                            </td>
 
                             {{-- Đã bán --}}
-                            <td class="num-purple">{{ number_format($row['da_ban']) }}</td>
+                            <td>
+                                <div class="num-purple" style="font-size: 12.5px; white-space: nowrap;">
+                                    {{ number_format($row['da_ban']) }}
+                                </div>
+                            </td>
 
                             {{-- Tiêu hao sản xuất bó hoa --}}
-                            <td class="num-blue">{{ number_format($row['tieu_hao_san_xuat']) }}</td>
+                            <td>
+                                <div class="num-blue" style="font-size: 12.5px; white-space: nowrap;">
+                                    {{ number_format($row['tieu_hao_san_xuat']) }}
+                                </div>
+                            </td>
 
                             {{-- Hàng hỏng --}}
-                            <td class="num-red">
-                                {{ number_format($row['hang_hong']) }}
+                            <td>
+                                <div class="num-red" style="font-size: 12.5px; white-space: nowrap;">
+                                    {{ number_format($row['hang_hong']) }}
+                                </div>
 
                                 @if($row['hang_hong'] > 0)
-                                    <br>
-                                    <a href="#"
-                                       class="link-chitiet"
-                                       data-id="{{ $row['ma_san_pham'] }}"
-                                       data-ten="{{ $row['ten_san_pham'] }}"
-                                       data-batdau="{{ $ngayBatDau->format('Y-m-d') }}"
-                                       data-ketthuc="{{ $ngayKetThuc->format('Y-m-d') }}">
-                                        &lt;&lt; Chi tiết &gt;&gt;
-                                    </a>
+                                    <div>
+                                        <a href="#"
+                                           class="link-chitiet"
+                                           data-id="{{ $row['ma_san_pham'] }}"
+                                           data-ten="{{ $row['ten_san_pham'] }}"
+                                           data-batdau="{{ $ngayBatDau->format('Y-m-d') }}"
+                                           data-ketthuc="{{ $ngayKetThuc->format('Y-m-d') }}"
+                                           style="font-size: 10.5px; white-space: nowrap;">
+                                            &lt;&lt; Chi tiết &gt;&gt;
+                                        </a>
+                                    </div>
                                 @endif
                             </td>
 
                             {{-- Tồn kho hiện tại (On-Hand) kèm tooltip Khả dụng/Đang giữ --}}
-                            <td class="num-orange">
-                                <span title="Tồn vật lý: {{ $row['ton_kho_hien_tai'] }} | Khả dụng: {{ $row['ton_kha_dung'] }} | Đang giữ: {{ $row['dang_giu'] }}" style="cursor:help;">
-                                    {{ number_format($row['ton_kho_hien_tai']) }}
-                                </span>
+                            <td>
+                                <div class="num-orange" style="font-size: 12.5px; white-space: nowrap;">
+                                    <span title="Tồn vật lý: {{ $row['ton_kho_hien_tai'] }} | Khả dụng: {{ $row['ton_kha_dung'] }} | Đang giữ: {{ $row['dang_giu'] }}" style="cursor:help;">
+                                        {{ number_format($row['ton_kho_hien_tai']) }}
+                                    </span>
+                                </div>
                                 @if($row['dang_giu'] > 0)
-                                    <div class="text-muted" style="font-size:0.7rem;">(Giữ: {{ $row['dang_giu'] }})</div>
+                                    <div class="text-muted" style="font-size: 10px; white-space: nowrap;">(Giữ: {{ $row['dang_giu'] }})</div>
                                 @endif
                             </td>
 
                             {{-- Giá nhập TB --}}
-                            <td class="text-end">
-                                {{ $row['gia_nhap_tb'] !== null ? number_format($row['gia_nhap_tb'], 0, ',', '.') : '-' }}
+                            <td>
+                                <div class="text-end" style="font-size: 12px; white-space: nowrap;">
+                                    {{ $row['gia_nhap_tb'] !== null ? number_format($row['gia_nhap_tb'], 0, ',', '.') : '-' }}
+                                </div>
                             </td>
 
                             {{-- Giá bán hiện tại --}}
-                            <td class="text-end">
-                                {{ $row['gia_ban_hien_tai'] > 0 ? number_format($row['gia_ban_hien_tai'], 0, ',', '.') : '-' }}
+                            <td>
+                                <div class="text-end" style="font-size: 12px; white-space: nowrap;">
+                                    {{ $row['gia_ban_hien_tai'] > 0 ? number_format($row['gia_ban_hien_tai'], 0, ',', '.') : '-' }}
+                                </div>
                             </td>
 
                             {{-- Doanh thu --}}
-                            <td class="text-end fw-semibold">
-                                {{ number_format($row['doanh_thu'] ?? 0, 0, ',', '.') }}
+                            <td>
+                                <div class="text-end fw-semibold text-dark" style="font-size: 12.5px; white-space: nowrap;">
+                                    {{ number_format($row['doanh_thu'] ?? 0, 0, ',', '.') }}
+                                </div>
                             </td>
 
                             {{-- Tỷ lệ hao hụt --}}
-                            <td class="text-end {{ $row['ty_le_hong'] > 10 ? 'num-red fw-bold' : '' }}">
-                                {{ number_format($row['ty_le_hong'], 2, ',', '.') }}%
+                            <td>
+                                <div class="text-end {{ $row['ty_le_hong'] > 10 ? 'num-red fw-bold' : '' }}" style="font-size: 12px; white-space: nowrap;">
+                                    {{ number_format($row['ty_le_hong'], 2, ',', '.') }}%
+                                </div>
                             </td>
 
                             {{-- Trạng thái --}}
-                            <td>
-                                <span class="badge-tt {{ $row['trang_thai'] === 'DANG_BAN' ? 'badge-dang-ban' : 'badge-ngung-ban' }}">
+                            <td class="text-center">
+                                <span class="badge-tt {{ $row['trang_thai'] === 'DANG_BAN' ? 'badge-dang-ban' : 'badge-ngung-ban' }}" style="font-size: 11px; white-space: nowrap;">
                                     {{ $row['trang_thai'] === 'DANG_BAN' ? 'Đang bán' : 'Ngừng bán' }}
                                 </span>
                             </td>
@@ -225,7 +272,7 @@
                 </tbody>
 
                 {{-- ── DÒNG TỔNG CỘNG ── --}}
-                @if($baoCaoSanPham->count() > 0)
+                @if($baoCaoSanPham->total() > 0)
                     <tfoot>
                         <tr class="tong-cong-row">
                             <td colspan="3" class="fw-bold">TỔNG CỘNG</td>
@@ -247,6 +294,71 @@
                 @endif
             </table>
         </div>
+
+        {{-- ── THANH PHÂN TRANG CHUẨN ROSESHOP ── --}}
+        @if($baoCaoSanPham->total() > 0)
+            <div class="rs-table-footer">
+                <div class="rs-footer-left">
+                    <div class="rs-per-page-inline">
+                        <span class="rs-per-page-label">Số hàng mỗi trang</span>
+                        <select class="rs-per-page-select" onchange="location = this.value;">
+                            @foreach([10, 15, 20, 50, 100] as $optPerPage)
+                                <option value="{{ request()->fullUrlWithQuery(['per_page' => $optPerPage, 'page' => 1]) }}" {{ request('per_page', 10) == $optPerPage ? 'selected' : '' }}>
+                                    {{ $optPerPage }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="rs-records-count">
+                        Hiển thị {{ $baoCaoSanPham->firstItem() ?? 0 }} - {{ $baoCaoSanPham->lastItem() ?? 0 }} / {{ $baoCaoSanPham->total() }} sản phẩm
+                    </div>
+                </div>
+                <div class="rs-footer-pagination">
+                    <ul class="rs-pagination">
+                        @if ($baoCaoSanPham->onFirstPage())
+                            <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                        @else
+                            <li class="page-item"><a class="page-link" href="{{ $baoCaoSanPham->previousPageUrl() }}" rel="prev">&laquo;</a></li>
+                        @endif
+
+                        @php
+                            $cur = $baoCaoSanPham->currentPage();
+                            $last = $baoCaoSanPham->lastPage();
+                            $start = max(1, $cur - 2);
+                            $end = min($last, $cur + 2);
+                        @endphp
+
+                        @if($start > 1)
+                            <li class="page-item"><a class="page-link" href="{{ $baoCaoSanPham->url(1) }}">1</a></li>
+                            @if($start > 2)
+                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                            @endif
+                        @endif
+
+                        @for ($page = $start; $page <= $end; $page++)
+                            @if ($page == $cur)
+                                <li class="page-item active"><span class="page-link">{{ $page }}</span></li>
+                            @else
+                                <li class="page-item"><a class="page-link" href="{{ $baoCaoSanPham->url($page) }}">{{ $page }}</a></li>
+                            @endif
+                        @endfor
+
+                        @if($end < $last)
+                            @if($end < $last - 1)
+                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                            @endif
+                            <li class="page-item"><a class="page-link" href="{{ $baoCaoSanPham->url($last) }}">{{ $last }}</a></li>
+                        @endif
+
+                        @if ($baoCaoSanPham->hasMorePages())
+                            <li class="page-item"><a class="page-link" href="{{ $baoCaoSanPham->nextPageUrl() }}" rel="next">&raquo;</a></li>
+                        @else
+                            <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                        @endif
+                    </ul>
+                </div>
+            </div>
+        @endif
     </div>
 
     {{-- ═══════════════════════ GHI CHÚ ═══════════════════════ --}}

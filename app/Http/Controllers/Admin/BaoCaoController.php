@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class BaoCaoController extends Controller
 
@@ -269,6 +270,20 @@ public function exportDoanhThu(Request $request)
     public function baoCaoSanPham(Request $request)
     {
         $data = $this->getBaoCaoSanPhamData($request);
+
+        $perPage = in_array((int)$request->get('per_page'), [10, 15, 20, 50, 100]) ? (int)$request->get('per_page') : 10;
+        $page = (int) $request->get('page', 1);
+        $total = $data['baoCaoSanPham']->count();
+        $items = $data['baoCaoSanPham']->forPage($page, $perPage)->values();
+
+        $data['baoCaoSanPham'] = new LengthAwarePaginator(
+            $items,
+            $total,
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+        $data['perPage'] = $perPage;
 
         return view('BaoCao.SanPham', $data);
     }

@@ -92,12 +92,14 @@ class SanPhamHetHanController extends Controller
             $loQuery->having('hsd', '<=', $thresholdStr);
         }
 
-        $loHangsRaw = $loQuery->orderBy('hsd', 'asc')
+        $perPage = in_array((int)$request->get('per_page'), [10, 15, 20, 50, 100]) ? (int)$request->get('per_page') : 10;
+        $loHangs = $loQuery->orderBy('hsd', 'asc')
             ->orderBy('ctn.so_luong_con_lai', 'desc')
-            ->get();
+            ->paginate($perPage, ['*'], 'page_lo')
+            ->withQueryString();
 
-        // Lấy lịch sử kiểm tra chất lượng gần nhất cho các lô
-        $loIds = $loHangsRaw->pluck('ma_chi_tiet_nhap')->toArray();
+        // Lấy lịch sử kiểm tra chất lượng gần nhất cho các lô trên trang hiện tại
+        $loIds = $loHangs->pluck('ma_chi_tiet_nhap')->toArray();
         $kiemTraLo = KiemTraChatLuong::with(['nhanVien', 'nguoiDung'])
             ->where('doi_tuong_loai', 'LO_HANG')
             ->whereIn('doi_tuong_id', $loIds)
@@ -106,7 +108,7 @@ class SanPhamHetHanController extends Controller
             ->groupBy('doi_tuong_id')
             ->map(fn ($group) => $group->first());
 
-        $loHangs = $loHangsRaw->map(function ($item) use ($today, $todayStr, $kiemTraLo) {
+        $loHangs->through(function ($item) use ($today, $todayStr, $kiemTraLo) {
             $hsdDate = Carbon::parse($item->hsd)->startOfDay();
             $diff = $today->diffInDays($hsdDate, false);
             $item->diffDays = $diff;
@@ -179,12 +181,13 @@ class SanPhamHetHanController extends Controller
             $boQuery->having('hsd', '<=', $thresholdStr);
         }
 
-        $boHoasRaw = $boQuery->orderBy('hsd', 'asc')
+        $boHoas = $boQuery->orderBy('hsd', 'asc')
             ->orderBy('bh.so_luong', 'desc')
-            ->get();
+            ->paginate($perPage, ['*'], 'page_bo')
+            ->withQueryString();
 
-        // Lấy lịch sử kiểm tra cho bó hoa
-        $boIds = $boHoasRaw->pluck('ma_bo_hoa')->toArray();
+        // Lấy lịch sử kiểm tra cho bó hoa trên trang hiện tại
+        $boIds = $boHoas->pluck('ma_bo_hoa')->toArray();
         $kiemTraBo = KiemTraChatLuong::with(['nhanVien', 'nguoiDung'])
             ->where('doi_tuong_loai', 'BO_HOA')
             ->whereIn('doi_tuong_id', $boIds)
@@ -193,7 +196,7 @@ class SanPhamHetHanController extends Controller
             ->groupBy('doi_tuong_id')
             ->map(fn ($group) => $group->first());
 
-        $boHoas = $boHoasRaw->map(function ($item) use ($today, $todayStr, $kiemTraBo) {
+        $boHoas->through(function ($item) use ($today, $todayStr, $kiemTraBo) {
             $hsdDate = Carbon::parse($item->hsd)->startOfDay();
             $diff = $today->diffInDays($hsdDate, false);
             $item->diffDays = $diff;
@@ -296,7 +299,8 @@ class SanPhamHetHanController extends Controller
             'filter',
             'keyword',
             'nhanViens',
-            'isAdmin'
+            'isAdmin',
+            'perPage'
         ));
     }
 

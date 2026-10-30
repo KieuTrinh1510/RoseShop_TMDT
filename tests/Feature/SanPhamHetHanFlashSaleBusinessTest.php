@@ -332,11 +332,11 @@ class SanPhamHetHanFlashSaleBusinessTest extends TestCase
         [$sp3, $ctn3] = $this->createFlowerLot(daysToExpiry: -2); // DA_QUA_HAN
         [$sp4, $ctn4] = $this->createFlowerLot(daysToExpiry: 5); // > 2 days -> not in primary warning list
 
-        $response = $this->actingAs($staff)->get(route('admin.san-pham-het-han'));
+        $response = $this->actingAs($staff)->get(route('admin.san-pham-het-han', ['per_page' => 100]));
         $response->assertStatus(200);
 
         $loHangs = $response->viewData('loHangs');
-        $lotIds = collect($loHangs)->pluck('ma_chi_tiet_nhap')->toArray();
+        $lotIds = collect($loHangs->items())->pluck('ma_chi_tiet_nhap')->toArray();
 
         $this->assertContains($ctn1->ma_chi_tiet_nhap, $lotIds);
         $this->assertContains($ctn2->ma_chi_tiet_nhap, $lotIds);

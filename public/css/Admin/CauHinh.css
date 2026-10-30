@@ -1,0 +1,869 @@
+/* ==========================================================================
+   ROSE SHOP - CẤU HÌNH HỆ THỐNG (SYSTEM CONFIGURATION)
+   Quy chuẩn thiết kế RoseShop Admin & Đề xuất hoàn thiện toàn bộ các tab
+   ========================================================================== */
+
+.rs-cauhinh-page {
+    padding: 24px 32px;
+    background-color: #F8F9FC;
+    min-height: calc(100vh - 70px);
+    font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #344054;
+    box-sizing: border-box;
+}
+
+/* ═══════════════════════ 1. BỐ CỤC 2 CỘT ═══════════════════════ */
+.rs-cauhinh-layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px; /* Khoảng cách sidebar và form: 20–24px */
+    width: 100%;
+}
+
+/* Sidebar cấu hình: 250–270px (Đề xuất: 260px) */
+.rs-cauhinh-tabs {
+    width: 260px;
+    min-width: 260px;
+    max-width: 260px;
+    flex-shrink: 0;
+    background: #ffffff;
+    border: 1px solid #EAECF0;
+    border-radius: 12px;
+    padding: 16px 12px;
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.03);
+    display: flex;
+    flex-direction: column;
+    gap: 6px; /* Đồng nhất khoảng cách giữa các mục */
+    box-sizing: border-box;
+}
+
+.rs-tab-item {
+    display: block;
+    width: 100%;
+    padding: 11px 16px;
+    border-radius: 10px;
+    color: #475467;
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 500;
+    line-height: 1.4;
+    transition: all 0.15s ease-in-out;
+    box-sizing: border-box;
+}
+
+.rs-tab-item:hover {
+    background-color: #FDF2F8;
+    color: #EC3D8F;
+}
+
+.rs-tab-item.active {
+    background-color: #FCE7F3;
+    color: #EC3D8F;
+    font-weight: 600;
+}
+
+/* ═══════════════════════ 2. CARD CHÍNH (CONTENT AREA) ═══════════════════════ */
+.rs-cauhinh-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.rs-card {
+    background: #ffffff;
+    border: 1px solid #EAECF0;
+    border-radius: 12px;
+    padding: 24px; /* Padding card chính: 24px */
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.03);
+    box-sizing: border-box;
+}
+
+.rs-card-header {
+    border-bottom: 1px solid #EAECF0;
+    padding-bottom: 18px;
+    margin-bottom: 22px;
+}
+
+.rs-card-header-flex {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.rs-card-title {
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    color: #101828 !important;
+    margin: 0 0 6px 0 !important;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+}
+
+.rs-card-desc {
+    font-size: 13px !important;
+    color: #667085 !important;
+    margin: 0 !important;
+    line-height: 1.4;
+}
+
+/* Nhãn CHỈ ĐỌC ở góc phải tiêu đề card */
+.rs-badge-readonly {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #F2F4F7;
+    color: #344054;
+    border: 1px solid #EAECF0;
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.2px;
+    flex-shrink: 0;
+}
+
+/* ═══════════════════════ 3. FORM FIELDS CHUNG ═══════════════════════ */
+.rs-section-group {
+    margin-bottom: 22px;
+}
+
+.rs-section-title {
+    font-size: 13.5px !important; /* Font nhãn: 13–14px */
+    font-weight: 600 !important;
+    color: #344054 !important;
+    margin-bottom: 10px !important;
+    display: block;
+}
+
+.rs-form-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: 20px;
+    row-gap: 16px; /* Khoảng cách các trường: 14–18px */
+    margin-bottom: 18px;
+}
+
+.rs-form-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.rs-form-label {
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    color: #344054 !important;
+    margin-bottom: 6px !important;
+    display: block;
+}
+
+.rs-form-input {
+    height: 40px !important; /* Chiều cao ô nhập: 38–42px */
+    line-height: 38px !important;
+    border: 1px solid #D0D5DD !important;
+    border-radius: 8px !important;
+    padding: 0 14px !important;
+    font-size: 13.5px !important;
+    color: #101828 !important;
+    background-color: #ffffff !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    outline: none !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rs-form-input:focus {
+    border-color: #EC3D8F !important;
+    box-shadow: 0 0 0 3px rgba(236, 61, 143, 0.12) !important;
+}
+
+.rs-form-input::placeholder {
+    color: #98A2B3;
+    font-size: 13px;
+}
+
+/* Logo box */
+.rs-form-logo-section {
+    margin-top: 4px;
+    margin-bottom: 22px;
+}
+
+.rs-logo-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    border: 1px solid #EAECF0;
+    border-radius: 10px;
+    padding: 14px 18px;
+    box-sizing: border-box;
+}
+
+.rs-logo-card-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.rs-logo-icon-wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    border: 1px solid #EAECF0;
+    background: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.rs-flower-icon {
+    font-size: 24px;
+    color: #EC3D8F;
+}
+
+.rs-logo-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.rs-logo-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #101828;
+    margin-bottom: 3px;
+}
+
+.rs-logo-hint {
+    font-size: 12px;
+    color: #667085;
+}
+
+.btn-choose-file {
+    height: 36px;
+    padding: 0 16px;
+    border: 1px solid #D0D5DD;
+    background: #ffffff;
+    color: #344054;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    user-select: none;
+    margin: 0;
+}
+
+.btn-choose-file:hover {
+    background: #F8F9FA;
+    border-color: #98A2B3;
+    color: #101828;
+}
+
+/* ═══════════════════════ 4. TAB: GIAO DIỆN & NGÔN NGỮ (2 CỘT RADIO) ═══════════════════════ */
+.rs-radio-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.rs-radio-choice {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: #ffffff;
+    border: 1px solid #EAECF0;
+    border-radius: 10px;
+    padding: 14px 18px;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+    box-sizing: border-box;
+    position: relative;
+    user-select: none;
+}
+
+.rs-radio-choice:hover {
+    border-color: #D0D5DD;
+    background: #FAFAFA;
+}
+
+.rs-radio-choice.active {
+    border-color: #EC3D8F;
+    background-color: #FDF2F8;
+}
+
+.rs-radio-choice input[type="radio"] {
+    display: none;
+}
+
+.rs-custom-radio {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid #D0D5DD;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+    transition: all 0.15s ease;
+    background: #ffffff;
+}
+
+.rs-radio-choice.active .rs-custom-radio {
+    border-color: #EC3D8F;
+}
+
+.rs-radio-choice.active .rs-custom-radio::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #EC3D8F;
+}
+
+.rs-radio-body {
+    flex: 1;
+}
+
+.rs-radio-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.rs-radio-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #101828;
+}
+
+.rs-radio-sub {
+    font-size: 12.5px;
+    color: #667085;
+    line-height: 1.35;
+}
+
+.rs-badge-gray {
+    background: #F2F4F7;
+    color: #344054;
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* ═══════════════════════ 5. TAB: BÁN HÀNG & THANH TOÁN (COMPACT ROWS) ═══════════════════════ */
+.rs-toggle-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.rs-toggle-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    border: 1px solid #EAECF0;
+    border-radius: 10px;
+    padding: 14px 18px;
+    box-sizing: border-box;
+}
+
+.rs-toggle-info {
+    flex: 1;
+}
+
+.rs-toggle-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #101828;
+    margin-bottom: 3px;
+}
+
+.rs-toggle-desc {
+    font-size: 12.5px;
+    color: #667085;
+}
+
+/* Switch toggle đẹp mắt */
+.rs-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+    margin: 0;
+}
+
+.rs-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.rs-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #D0D5DD;
+    transition: 0.2s;
+    border-radius: 24px;
+}
+
+.rs-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.2s;
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.15);
+}
+
+.rs-switch input:checked + .rs-slider {
+    background-color: #344054; /* Màu đen xám đậm theo ảnh mẫu */
+}
+
+.rs-switch input:checked + .rs-slider:before {
+    transform: translateX(20px);
+}
+
+/* Input with unit */
+.rs-input-with-unit {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    margin-bottom: 20px;
+}
+
+.rs-input-with-unit.m-0 {
+    margin: 0 !important;
+}
+
+/* VNPay status box green */
+.rs-status-box-green {
+    background: #ECFDF3;
+    border: 1px solid #A6F4C5;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 22px;
+}
+
+.rs-status-box-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #027A48;
+    margin-bottom: 4px;
+}
+
+.rs-status-box-desc {
+    font-size: 12.5px;
+    color: #344054;
+    margin-bottom: 8px;
+}
+
+.rs-status-badge {
+    display: inline-block;
+    background: #D1FADF;
+    color: #027A48;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+/* ═══════════════════════ 6. TAB: KHO & HẠN SỬ DỤNG ═══════════════════════ */
+.rs-inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+    margin-bottom: 22px;
+}
+
+.rs-inventory-card {
+    background: #ffffff;
+    border: 1px solid #EAECF0;
+    border-radius: 10px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 115px;
+    box-sizing: border-box;
+}
+
+.rs-inventory-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #101828;
+    margin-bottom: 4px;
+}
+
+.rs-inventory-desc {
+    font-size: 12.5px;
+    color: #667085;
+    margin-bottom: 14px;
+    line-height: 1.4;
+}
+
+.rs-inventory-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.rs-inventory-input {
+    width: 64px !important;
+    height: 36px !important;
+    border: 1px solid #D0D5DD !important;
+    border-radius: 8px !important;
+    text-align: center !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    color: #101828 !important;
+    background-color: #ffffff !important;
+    outline: none !important;
+    padding: 0 4px !important;
+    box-sizing: border-box !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rs-inventory-input:focus {
+    border-color: #EC3D8F !important;
+    box-shadow: 0 0 0 3px rgba(236, 61, 143, 0.12) !important;
+}
+
+.rs-inventory-unit {
+    font-size: 13px;
+    color: #475467;
+    font-weight: 500;
+}
+
+.rs-policy-notice-blue {
+    background: #EFF8FF;
+    border: 1px solid #B2DDFF;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 22px;
+}
+
+.rs-policy-notice-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #175CD3;
+    margin-bottom: 6px;
+}
+
+.rs-policy-notice-body {
+    font-size: 12.5px;
+    color: #344054;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* ═══════════════════════ 7. TAB: FLASH SALE (3 THẺ NẰM NGANG) ═══════════════════════ */
+.rs-flashsale-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.rs-flashsale-card {
+    background: #ffffff;
+    border: 1px solid #EAECF0;
+    border-radius: 10px;
+    padding: 18px 20px;
+    box-sizing: border-box;
+}
+
+.rs-flashsale-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.rs-flashsale-rate {
+    font-size: 24px;
+    font-weight: 700;
+    color: #EC3D8F;
+    letter-spacing: -0.02em;
+}
+
+.rs-flashsale-card-desc {
+    font-size: 12.5px;
+    color: #667085;
+    line-height: 1.45;
+}
+
+/* ═══════════════════════ 8. TAB: CHÍNH SÁCH VI PHẠM & COD (BẢNG SO SÁNH) ═══════════════════════ */
+.rs-violation-table-wrap {
+    overflow-x: auto;
+    margin-bottom: 20px;
+    border: 1px solid #EAECF0;
+    border-radius: 10px;
+}
+
+.rs-violation-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    text-align: left;
+}
+
+.rs-violation-table thead th {
+    background: #F8F9FA;
+    color: #475467;
+    font-weight: 600;
+    padding: 12px 18px;
+    border-bottom: 1px solid #EAECF0;
+    white-space: nowrap;
+}
+
+.rs-violation-table tbody td {
+    padding: 13px 18px;
+    border-bottom: 1px solid #F2F4F7;
+    color: #344054;
+}
+
+.rs-violation-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.text-warning-bold {
+    color: #D97706 !important;
+    font-weight: 600 !important;
+}
+
+.text-pink-bold {
+    color: #EC3D8F !important;
+    font-weight: 600 !important;
+}
+
+.text-danger-bold {
+    color: #D92D20 !important;
+    font-weight: 600 !important;
+}
+
+.rs-detail-box {
+    background: #ffffff;
+    border: 1px solid #EAECF0;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+}
+
+.rs-detail-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #101828;
+    margin-bottom: 10px;
+}
+
+.rs-detail-item {
+    font-size: 12.5px;
+    color: #475467;
+    line-height: 1.5;
+    margin-bottom: 6px;
+}
+
+.rs-detail-item:last-child {
+    margin-bottom: 0;
+}
+
+.rs-detail-item strong {
+    color: #101828;
+}
+
+/* ═══════════════════════ 9. NÚT LƯU THAY ĐỔI ═══════════════════════ */
+.rs-form-footer {
+    display: flex;
+    justify-content: flex-end; /* Căn phải */
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px solid #EAECF0;
+}
+
+.btn-save-pink {
+    height: 40px !important; /* Nút lưu cao 40px */
+    padding: 0 24px !important;
+    background-color: #EC3D8F !important;
+    border: 1px solid #EC3D8F !important;
+    border-radius: 8px !important;
+    color: #ffffff !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 1px 2px rgba(236, 61, 143, 0.2) !important;
+    transition: all 0.15s ease !important;
+    user-select: none !important;
+}
+
+.btn-save-pink:hover {
+    background-color: #D92F7D !important;
+    border-color: #D92F7D !important;
+    color: #ffffff !important;
+}
+
+/* ═══════════════════════ RESPONSIVE ═══════════════════════ */
+@media (max-width: 992px) {
+    .rs-cauhinh-layout {
+        flex-direction: column;
+    }
+    .rs-cauhinh-tabs {
+        width: 100%;
+        max-width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    .rs-tab-item {
+        flex-shrink: 0;
+        width: auto;
+    }
+    .rs-form-grid-2,
+    .rs-radio-grid-2,
+    .rs-inventory-grid,
+    .rs-flashsale-grid-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ═══════════════════════ DARK MODE THEME SUPPORT ═══════════════════════ */
+[data-theme="dark"] .rs-cauhinh-page {
+    background-color: #0f172a !important;
+    color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .rs-card,
+[data-theme="dark"] .rs-cauhinh-tabs,
+[data-theme="dark"] .rs-logo-card,
+[data-theme="dark"] .rs-inventory-card,
+[data-theme="dark"] .rs-flashsale-card,
+[data-theme="dark"] .rs-detail-box,
+[data-theme="dark"] .rs-toggle-card {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .rs-card-header {
+    border-color: #334155 !important;
+}
+
+[data-theme="dark"] .rs-card-title,
+[data-theme="dark"] .rs-logo-title,
+[data-theme="dark"] .rs-inventory-title,
+[data-theme="dark"] .rs-toggle-title,
+[data-theme="dark"] .rs-radio-name,
+[data-theme="dark"] .rs-detail-title {
+    color: #f8fafc !important;
+}
+
+[data-theme="dark"] .rs-card-desc,
+[data-theme="dark"] .rs-logo-hint,
+[data-theme="dark"] .rs-inventory-desc,
+[data-theme="dark"] .rs-toggle-desc,
+[data-theme="dark"] .rs-radio-sub,
+[data-theme="dark"] .rs-detail-item {
+    color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .rs-tab-item {
+    color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .rs-tab-item:hover {
+    background-color: #334155 !important;
+    color: #ec3d8f !important;
+}
+
+[data-theme="dark"] .rs-tab-item.active {
+    background-color: rgba(236, 61, 143, 0.2) !important;
+    color: #ec3d8f !important;
+}
+
+[data-theme="dark"] .rs-form-label,
+[data-theme="dark"] .rs-section-title {
+    color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .rs-form-input,
+[data-theme="dark"] .rs-inventory-input {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+}
+
+[data-theme="dark"] .rs-radio-choice {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+[data-theme="dark"] .rs-radio-choice.active {
+    background-color: rgba(236, 61, 143, 0.15) !important;
+    border-color: #ec3d8f !important;
+}
+
+[data-theme="dark"] .rs-badge-readonly,
+[data-theme="dark"] .rs-badge-gray {
+    background-color: #334155 !important;
+    color: #e2e8f0 !important;
+    border-color: #475569 !important;
+}
+
+[data-theme="dark"] .btn-choose-file {
+    background-color: #334155 !important;
+    border-color: #475569 !important;
+    color: #f8fafc !important;
+}
+
+[data-theme="dark"] .btn-choose-file:hover {
+    background-color: #475569 !important;
+    border-color: #64748b !important;
+}
+
+[data-theme="dark"] .rs-violation-table-wrap {
+    border-color: #334155 !important;
+}
+
+[data-theme="dark"] .rs-violation-table thead th {
+    background-color: #0f172a !important;
+    color: #94a3b8 !important;
+    border-color: #334155 !important;
+}
+
+[data-theme="dark"] .rs-violation-table tbody td {
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .rs-form-footer {
+    border-color: #334155 !important;
+}
+
+[data-theme="dark"] .rs-logo-icon-wrap {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+}
+
