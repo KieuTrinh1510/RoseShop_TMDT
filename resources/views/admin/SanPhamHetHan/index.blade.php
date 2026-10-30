@@ -4,49 +4,180 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <style>
-        .exp-container { padding: 24px; max-width: 1440px; margin: 0 auto; }
+        .exp-container { padding: 24px 32px 24px 32px; max-width: 100%; margin: 0; background: #f8f9fa; min-height: 100vh; }
 
         /* Stats Cards */
         .exp-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
         @media (max-width: 1200px) { .exp-stats-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 576px) { .exp-stats-grid { grid-template-columns: 1fr; } }
 
-        .exp-stat-card { background: #ffffff; border: 1px solid #EAECF0; border-radius: 14px; padding: 18px 20px; box-shadow: 0 1px 3px rgba(16, 24, 40, 0.04); display: flex; align-items: center; gap: 16px; transition: all 0.2s ease; }
+        .exp-stat-card { background: #ffffff; border: 1px solid #EAECF0; border-radius: 12px; padding: 10px 14px; box-shadow: 0 1px 3px rgba(16, 24, 40, 0.04); display: flex; align-items: center; gap: 10px; height: 82px; min-height: 82px; transition: all 0.2s ease; }
         .exp-stat-card:hover { box-shadow: 0 4px 12px rgba(16, 24, 40, 0.08); transform: translateY(-1px); }
-        .exp-stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+        .exp-stat-icon { width: 38px; height: 38px; min-width: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
         .exp-stat-icon.red { background: #FEE4E2; color: #D92D20; }
         .exp-stat-icon.orange { background: #FEF0C7; color: #DC6803; }
         .exp-stat-icon.purple { background: #F4EBFF; color: #7F56D9; }
         .exp-stat-icon.green { background: #ECFDF3; color: #039855; }
-        .exp-stat-info h3 { margin: 0; font-size: 22px; font-weight: 700; color: #101828; line-height: 1.2; }
-        .exp-stat-info p { margin: 0; font-size: 13px; color: #667085; font-weight: 500; }
-        .exp-stat-info .sub-text { font-size: 11.5px; color: #98A2B3; margin-top: 3px; }
+        .exp-stat-info h3 { margin: 0; font-size: 18px; font-weight: 700; color: #101828; line-height: 1.15; }
+        .exp-stat-info p { margin: 0; font-size: 11.5px; color: #344054; font-weight: 600; line-height: 1.2; white-space: nowrap; }
+        .exp-stat-info .sub-text { font-size: 10px; color: #667085; margin-top: 1px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* Filter Box */
-        .exp-filter-card { background: #ffffff; border: 1px solid #EAECF0; border-radius: 14px; padding: 16px 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(16, 24, 40, 0.04); }
-        .exp-filter-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
-        .exp-filter-tab { padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; text-decoration: none; color: #475467; background: #F2F4F7; transition: all 0.15s ease; border: 1px solid transparent; }
+        /* Filter Tab */
+        .exp-filter-tab { padding: 5px 9px; border-radius: 6px; font-size: 11.5px; font-weight: 600; text-decoration: none; color: #475467; background: #F2F4F7; transition: all 0.15s ease; border: 1px solid transparent; white-space: nowrap; }
         .exp-filter-tab:hover { color: #101828; background: #EAECF0; }
         .exp-filter-tab.active { color: #ffffff; background: #EC3D8F; border-color: #EC3D8F; }
 
         /* Section Container */
-        .exp-section-card { background: #ffffff; border: 1px solid #EAECF0; border-radius: 14px; box-shadow: 0 1px 3px rgba(16, 24, 40, 0.04); margin-bottom: 30px; overflow: hidden; }
-        .exp-section-header { padding: 18px 24px; border-bottom: 1px solid #EAECF0; display: flex; align-items: center; justify-content: space-between; background: #FAFAFA; flex-wrap: wrap; gap: 12px; }
-        .exp-section-title { display: flex; align-items: center; gap: 10px; }
-        .exp-section-title h2 { margin: 0; font-size: 17px; font-weight: 700; color: #101828; }
-        .exp-section-title .badge-count { background: #FEE4E2; color: #B42318; font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 12px; }
+        .exp-section-card { background: #ffffff; border: 1px solid #EAECF0; border-radius: 12px; box-shadow: 0 1px 3px rgba(16, 24, 40, 0.04); margin-bottom: 24px; overflow: hidden; }
+        .exp-section-header { padding: 12px 18px; border-bottom: 1px solid #EAECF0; display: flex; align-items: center; justify-content: space-between; background: #FAFAFA; flex-wrap: wrap; gap: 10px; }
+        .exp-section-title { display: flex; align-items: center; gap: 8px; }
+        .exp-section-title h2 { margin: 0; font-size: 15px; font-weight: 700; color: #101828; }
+        .exp-section-title .badge-count { background: #FEE4E2; color: #B42318; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
 
-        /* Tables */
+        /* Tables - Compact và hài hòa */
         .exp-table { width: 100%; margin-bottom: 0; border-collapse: collapse; }
-        .exp-table th { background: #F9FAFB; color: #475467; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; padding: 12px 18px; border-bottom: 1px solid #EAECF0; white-space: nowrap; }
-        .exp-table td { padding: 14px 18px; vertical-align: middle; border-bottom: 1px solid #F2F4F7; font-size: 13.5px; color: #344054; }
+        .exp-table th { background: #F8F9FA !important; color: #475467 !important; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; padding: 8px 12px; border-bottom: 1px solid #EAECF0; white-space: nowrap; }
+        .exp-table td { padding: 8px 12px; vertical-align: middle; border-bottom: 1px solid #EAECF0; font-size: 12px; color: #344054; }
         .exp-table tbody tr:hover { background-color: #FDFBFB; }
 
-        .exp-item-thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; border: 1px solid #EAECF0; background: #F2F4F7; flex-shrink: 0; }
-        .exp-item-placeholder { width: 44px; height: 44px; border-radius: 8px; background: #FDE8ED; color: #EC3D8F; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        /* Thumbnails đồng bộ giống SanPham */
+        .rs-product-thumb {
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            min-height: 36px;
+            max-width: 36px;
+            max-height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #f1f5f9;
+            flex-shrink: 0;
+        }
+        .rs-product-thumb-img {
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            min-height: 36px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            display: block;
+        }
+        .rs-product-thumb-placeholder {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 16px;
+            background: #f1f5f9;
+        }
 
-        /* Button Action */
-        .btn-action-process { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; font-size: 12.5px; font-weight: 600; color: #ffffff; background: #EC3D8F; border: 1px solid #EC3D8F; border-radius: 8px; cursor: pointer; transition: all 0.15s ease; white-space: nowrap; }
+        /* Button Action: nhỏ gọn, vừa vặn */
+        .btn-action-process { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; font-size: 11.5px; font-weight: 600; color: #ffffff; background: #EC3D8F; border: 1px solid #EC3D8F; border-radius: 6px; cursor: pointer; transition: all 0.15s ease; white-space: nowrap; }
+        .btn-action-process:hover { background: #D92578; border-color: #D92578; color: #ffffff; }
+
+        /* RoseShop Standard Table Footer & Pagination */
+        .rs-table-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            background: #ffffff;
+            border-top: 1px solid #EAECF0;
+            border-bottom-left-radius: 14px;
+            border-bottom-right-radius: 14px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .rs-footer-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .rs-per-page-inline {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #475467;
+        }
+        .rs-per-page-select {
+            width: 68px !important;
+            height: 34px !important;
+            padding: 0 20px 0 10px !important;
+            border: 1px solid #D0D5DD !important;
+            border-radius: 8px !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            color: #101828 !important;
+            background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475467' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 6px center !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            outline: none !important;
+            cursor: pointer !important;
+        }
+        .rs-records-count {
+            font-size: 13px;
+            color: #667085;
+            white-space: nowrap;
+        }
+        .rs-footer-pagination {
+            display: flex;
+            align-items: center;
+        }
+        .rs-pagination {
+            display: flex;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            gap: 4px;
+            align-items: center;
+        }
+        .rs-pagination .page-item .page-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 34px;
+            height: 34px;
+            padding: 0 8px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #475467;
+            background: #ffffff;
+            border: 1px solid #D0D5DD;
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+        .rs-pagination .page-item:not(.disabled) .page-link:hover {
+            background: #F9FAFB;
+            border-color: #EC3D8F;
+            color: #EC3D8F;
+        }
+        .rs-pagination .page-item.active .page-link {
+            background: #EC3D8F;
+            border-color: #EC3D8F;
+            color: #ffffff;
+            font-weight: 700;
+        }
+        .rs-pagination .page-item.disabled .page-link {
+            background: #F9FAFB;
+            border-color: #EAECF0;
+            color: #D0D5DD;
+            cursor: not-allowed;
+        }
+        .rs-pagination .page-link.ellipsis {
+            border-color: transparent !important;
+            background: transparent !important;
+            color: #98A2B3 !important;
+            cursor: default !important;
+        }
         .btn-action-process:hover { background: #D92578; border-color: #D92578; color: #ffffff; transform: translateY(-1px); }
 
         /* Decision Navigation Tabs in Modal */
@@ -93,18 +224,18 @@
     @endif
 
     {{-- Page Header --}}
-    <div class="rs-page-header d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="rs-page-title fs-4 fw-bold text-dark mb-1">Sản phẩm cận hạn / hết hạn</h1>
-            <p class="rs-page-subtitle text-muted mb-0" style="font-size: 13px;">
-                Theo dõi HSD, cảnh báo chất lượng thực tế. HSD chỉ là cảnh báo, quyết định xử lý hoàn toàn do người vận hành (Bán tiếp / Flash Sale / Báo hỏng).
+    <div class="rs-page-header d-flex justify-content-between align-items-center mb-3 gap-3 flex-nowrap">
+        <div style="flex: 1; min-width: 0;">
+            <h1 class="rs-page-title fs-5 fw-bold text-dark mb-1">Sản phẩm cận hạn / hết hạn</h1>
+            <p class="rs-page-subtitle text-muted mb-0 text-truncate" style="font-size: 12px;">
+                Theo dõi HSD, cảnh báo chất lượng thực tế. HSD chỉ là cảnh báo, quyết định xử lý do người vận hành.
             </p>
         </div>
-        <div class="d-flex align-items-center gap-2">
-            <a href="{{ route('admin.hoan-hang.flash-sale.index') }}" class="btn btn-outline-danger btn-sm fw-semibold rounded-3 px-3 py-2">
+        <div class="d-flex align-items-center gap-2 flex-shrink-0">
+            <a href="{{ route('admin.hoan-hang.flash-sale.index') }}" class="btn btn-outline-danger btn-sm fw-semibold rounded-3 px-3 py-1 text-nowrap" style="font-size: 12px; height: 32px; display: inline-flex; align-items: center;">
                 <i class="bi bi-lightning me-1"></i> Quản lý Flash Sale
             </a>
-            <a href="{{ route('admin.bao-cao-hang-hong.index') }}" class="btn btn-outline-secondary btn-sm fw-semibold rounded-3 px-3 py-2">
+            <a href="{{ route('admin.bao-cao-hang-hong.index') }}" class="btn btn-outline-secondary btn-sm fw-semibold rounded-3 px-3 py-1 text-nowrap" style="font-size: 12px; height: 32px; display: inline-flex; align-items: center;">
                 <i class="bi bi-trash3 me-1"></i> Báo cáo hàng hỏng
             </a>
         </div>
@@ -114,89 +245,91 @@
     <div class="exp-stats-grid">
         <div class="exp-stat-card">
             <div class="exp-stat-icon red"><i class="bi bi-exclamation-triangle"></i></div>
-            <div class="exp-stat-info">
+            <div class="exp-stat-info" style="min-width: 0; flex: 1;">
                 <h3>{{ number_format($thongKe['tongCanXuLy']) }}</h3>
-                <p>Tổng sản phẩm cần kiểm tra</p>
-                <div class="sub-text">Lô hoa tươi & Bó hoa thành phẩm</div>
+                <p>Tổng SP cần kiểm tra</p>
+                <div class="sub-text">Lô hoa & Bó thành phẩm</div>
             </div>
         </div>
 
         <div class="exp-stat-card">
             <div class="exp-stat-icon orange"><i class="bi bi-flower1"></i></div>
-            <div class="exp-stat-info">
+            <div class="exp-stat-info" style="min-width: 0; flex: 1;">
                 <h3>{{ number_format($thongKe['tongLo']) }}</h3>
-                <p>Lô hoa tươi cận / hết hạn</p>
-                <div class="sub-text">
-                    <span class="text-danger fw-semibold">{{ $thongKe['loQuaHan'] }} quá hạn</span> •
-                    <span class="text-danger fw-semibold">{{ $thongKe['loHomNay'] }} hôm nay</span> •
-                    <span class="text-warning fw-semibold">{{ $thongKe['loSapHet'] }} sắp hết</span>
+                <p>Lô hoa tươi cận/hết hạn</p>
+                <div class="sub-text text-nowrap" style="font-size: 10px;">
+                    <span class="text-danger fw-bold">{{ $thongKe['loQuaHan'] }}</span> quá hạn •
+                    <span class="text-danger fw-bold">{{ $thongKe['loHomNay'] }}</span> hôm nay •
+                    <span class="text-warning fw-bold">{{ $thongKe['loSapHet'] }}</span> sắp hết
                 </div>
             </div>
         </div>
 
         <div class="exp-stat-card">
             <div class="exp-stat-icon purple"><i class="bi bi-box2-heart"></i></div>
-            <div class="exp-stat-info">
+            <div class="exp-stat-info" style="min-width: 0; flex: 1;">
                 <h3>{{ number_format($thongKe['tongBo']) }}</h3>
-                <p>Bó hoa thành phẩm cận / hết hạn</p>
-                <div class="sub-text">
-                    <span class="text-danger fw-semibold">{{ $thongKe['boQuaHan'] }} quá hạn</span> •
-                    <span class="text-danger fw-semibold">{{ $thongKe['boHomNay'] }} hôm nay</span> •
-                    <span class="text-warning fw-semibold">{{ $thongKe['boSapHet'] }} sắp hết</span>
+                <p>Bó hoa cận/hết hạn</p>
+                <div class="sub-text text-nowrap" style="font-size: 10px;">
+                    <span class="text-danger fw-bold">{{ $thongKe['boQuaHan'] }}</span> quá hạn •
+                    <span class="text-danger fw-bold">{{ $thongKe['boHomNay'] }}</span> hôm nay •
+                    <span class="text-warning fw-bold">{{ $thongKe['boSapHet'] }}</span> sắp hết
                 </div>
             </div>
         </div>
 
         <div class="exp-stat-card">
             <div class="exp-stat-icon green"><i class="bi bi-cash-stack"></i></div>
-            <div class="exp-stat-info">
+            <div class="exp-stat-info" style="min-width: 0; flex: 1;">
                 <h3>{{ number_format($thongKe['tongGiaTri']) }}đ</h3>
                 <p>Ước tính giá trị tồn kho</p>
-                <div class="sub-text">Cần kiểm tra chất lượng & quyết định</div>
+                <div class="sub-text">Cần kiểm tra & xử lý</div>
             </div>
         </div>
     </div>
 
     {{-- Filter & Search Card --}}
-    <div class="exp-filter-card">
-        <form method="GET" action="{{ route('admin.san-pham-het-han') }}" class="row g-3 align-items-center">
-            <div class="col-lg-7 col-md-12">
-                <div class="exp-filter-tabs">
-                    <a href="{{ route('admin.san-pham-het-han', array_merge(request()->query(), ['filter' => 'all'])) }}"
-                       class="exp-filter-tab {{ $filter === 'all' ? 'active' : '' }}">
-                        Tất cả cần kiểm tra ({{ $thongKe['tongCanXuLy'] }})
-                    </a>
-                    <a href="{{ route('admin.san-pham-het-han', array_merge(request()->query(), ['filter' => 'sap_het'])) }}"
-                       class="exp-filter-tab {{ $filter === 'sap_het' ? 'active' : '' }}">
-                        Sắp hết hạn 1-2 ngày ({{ $thongKe['loSapHet'] + $thongKe['boSapHet'] }})
-                    </a>
-                    <a href="{{ route('admin.san-pham-het-han', array_merge(request()->query(), ['filter' => 'hom_nay'])) }}"
-                       class="exp-filter-tab {{ $filter === 'hom_nay' ? 'active' : '' }}">
-                        Hết hạn hôm nay ({{ $thongKe['loHomNay'] + $thongKe['boHomNay'] }})
-                    </a>
-                    <a href="{{ route('admin.san-pham-het-han', array_merge(request()->query(), ['filter' => 'qua_han'])) }}"
-                       class="exp-filter-tab {{ $filter === 'qua_han' ? 'active' : '' }}">
-                        Đã quá hạn ({{ $thongKe['loQuaHan'] + $thongKe['boQuaHan'] }})
-                    </a>
-                </div>
+    <div class="card border-0 shadow-sm rounded-3 p-2 mb-4 bg-white">
+        <form method="GET" action="{{ route('admin.san-pham-het-han') }}" class="d-flex align-items-center justify-content-between gap-2 flex-nowrap" style="overflow-x: auto;">
+            <div class="d-flex align-items-center gap-1 flex-nowrap flex-shrink-0">
+                <a href="{{ route('admin.san-pham-het-han', array_merge(request()->query(), ['filter' => 'all'])) }}"
+                   class="exp-filter-tab {{ $filter === 'all' ? 'active' : '' }}">
+                    Tất cả ({{ $thongKe['tongCanXuLy'] }})
+                </a>
+                <a href="{{ route('admin.san-pham-het-han', array_merge(request()->query(), ['filter' => 'sap_het'])) }}"
+                   class="exp-filter-tab {{ $filter === 'sap_het' ? 'active' : '' }}">
+                    Sắp hết hạn ({{ $thongKe['loSapHet'] + $thongKe['boSapHet'] }})
+                </a>
+                <a href="{{ route('admin.san-pham-het-han', array_merge(request()->query(), ['filter' => 'hom_nay'])) }}"
+                   class="exp-filter-tab {{ $filter === 'hom_nay' ? 'active' : '' }}">
+                    Hết hạn hôm nay ({{ $thongKe['loHomNay'] + $thongKe['boHomNay'] }})
+                </a>
+                <a href="{{ route('admin.san-pham-het-han', array_merge(request()->query(), ['filter' => 'qua_han'])) }}"
+                   class="exp-filter-tab {{ $filter === 'qua_han' ? 'active' : '' }}">
+                    Đã quá hạn ({{ $thongKe['loQuaHan'] + $thongKe['boQuaHan'] }})
+                </a>
             </div>
 
-            <div class="col-lg-5 col-md-12">
-                <div class="input-group">
-                    <span class="input-group-text bg-white border-end-0">
-                        <i class="bi bi-search text-muted"></i>
-                    </span>
-                    <input type="text" name="keyword" class="form-control border-start-0"
+            <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                <div class="position-relative d-flex align-items-center" style="width: 250px;">
+                    <i class="bi bi-search position-absolute text-muted" style="left: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; font-size: 13px; z-index: 5;"></i>
+                    <input type="text" name="keyword" class="form-control"
+                           style="padding: 0 12px 0 38px !important; border-radius: 8px; border: 1px solid #D0D5DD; font-size: 12px; height: 34px;"
                            placeholder="Tìm tên hoa, mã lô, tên bó hoa..."
                            value="{{ $keyword }}">
                     <input type="hidden" name="filter" value="{{ $filter }}">
-                    <button class="btn btn-outline-secondary px-3" type="submit">Tìm</button>
-                    @if($keyword !== '' || $filter !== 'all')
-                        <a href="{{ route('admin.san-pham-het-han') }}" class="btn btn-light border px-3" title="Đặt lại bộ lọc">
-                            <i class="bi bi-arrow-counterclockwise"></i>
-                        </a>
+                    @if(request('per_page'))
+                        <input type="hidden" name="per_page" value="{{ request('per_page') }}">
                     @endif
                 </div>
+                <button class="btn text-white fw-bold d-inline-flex align-items-center justify-content-center text-nowrap" style="background:#EC3D8F; border-color:#EC3D8F; font-size: 12px; height: 34px; padding: 0 14px; border-radius: 8px;" type="submit">
+                    Tìm
+                </button>
+                @if($keyword !== '' || $filter !== 'all')
+                    <a href="{{ route('admin.san-pham-het-han') }}" class="btn btn-light border d-inline-flex align-items-center justify-content-center" style="height: 34px; width: 34px; padding: 0; border-radius: 8px;" title="Đặt lại bộ lọc">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+                @endif
             </div>
         </form>
     </div>
@@ -209,7 +342,7 @@
             <div class="exp-section-title">
                 <i class="bi bi-flower2 text-danger fs-5"></i>
                 <h2>Lô hoa tươi cần kiểm tra chất lượng</h2>
-                <span class="badge-count">{{ count($loHangs) }} lô</span>
+                <span class="badge-count">{{ $loHangs->total() }} lô</span>
             </div>
             <div>
                 <a href="{{ route('admin.lo-hang') }}" class="btn btn-outline-secondary btn-sm fw-semibold rounded-2 px-3">
@@ -234,50 +367,52 @@
                 <tbody>
                     @forelse($loHangs as $idx => $lo)
                         <tr>
-                            <td class="text-center fw-bold text-muted">{{ $idx + 1 }}</td>
+                            <td class="text-center fw-bold text-muted">{{ $loHangs->firstItem() ? ($loHangs->firstItem() + $idx) : ($idx + 1) }}</td>
                             <td>
                                 <div class="d-flex align-items-center gap-2">
-                                    @if($lo->hinh_anh)
-                                        <img src="{{ asset('storage/' . $lo->hinh_anh) }}"
-                                             alt="{{ $lo->ten_san_pham }}"
-                                             class="exp-item-thumb"
-                                             onerror="this.onerror=null; this.src='{{ asset($lo->hinh_anh) }}';">
-                                    @else
-                                        <div class="exp-item-placeholder"><i class="bi bi-flower1"></i></div>
-                                    @endif
+                                    <div class="rs-product-thumb">
+                                        @if($lo->hinh_anh)
+                                            <img src="{{ asset('storage/' . $lo->hinh_anh) }}"
+                                                 alt="{{ $lo->ten_san_pham }}"
+                                                 class="rs-product-thumb-img"
+                                                 onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'rs-product-thumb-placeholder\'><i class=\'bi bi-flower1\'></i></div>';">
+                                        @else
+                                            <div class="rs-product-thumb-placeholder"><i class="bi bi-flower1"></i></div>
+                                        @endif
+                                    </div>
                                     <div>
-                                        <div class="fw-bold text-dark">{{ $lo->ten_san_pham }}</div>
-                                        <div class="text-muted" style="font-size: 11.5px;">
-                                            Lô: <span class="fw-semibold text-primary">#{{ $lo->ma_chi_tiet_nhap }}</span>
-                                            (PN #{{ $lo->ma_phieu_nhap }}) • ĐVT: {{ $lo->don_vi_tinh ?? 'Cành' }}
+                                        <div class="fw-bold text-dark" style="font-size: 12.5px;">{{ $lo->ten_san_pham }}</div>
+                                        <div class="text-muted" style="font-size: 11px;">
+                                            Lô: <span class="fw-bold" style="color:#EC3D8F; font-family: monospace; font-size: 11px;">#{{ $lo->ma_chi_tiet_nhap }}</span>
+                                            (PN <span class="fw-bold" style="color:#EC3D8F; font-family: monospace; font-size: 11px;">#{{ $lo->ma_phieu_nhap }}</span>) • ĐVT: {{ $lo->don_vi_tinh ?? 'Cành' }}
                                         </div>
                                     </div>
                                 </div>
                             </td>
                             <td class="text-center">
-                                <span class="fw-bold text-dark fs-6">{{ number_format($lo->so_luong_con_lai) }}</span>
-                                <span class="text-muted" style="font-size: 12px;">/ {{ number_format($lo->so_luong) }}</span>
+                                <span class="fw-bold text-dark" style="font-size: 12.5px;">{{ number_format($lo->so_luong_con_lai) }}</span>
+                                <span class="text-muted" style="font-size: 11px;">/ {{ number_format($lo->so_luong) }}</span>
                             </td>
-                            <td class="text-end fw-bold text-dark">
+                            <td class="text-end fw-bold text-dark" style="font-size: 12.5px;">
                                 {{ number_format($lo->giaBanHienTai) }}đ
                             </td>
                             <td class="text-center text-nowrap">
-                                <div class="fw-bold text-dark">{{ $lo->hsdFmt }}</div>
+                                <div class="fw-semibold text-dark" style="font-size: 11.5px;">{{ $lo->hsdFmt }}</div>
                                 @if($lo->canhBaoCode === 'DA_QUA_HAN')
-                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold" style="font-size: 11px;">
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold" style="font-size: 10.5px; padding: 2px 6px;">
                                         {{ $lo->canhBaoText }}
                                     </span>
                                 @elseif($lo->canhBaoCode === 'HET_HAN_HOM_NAY')
-                                    <span class="badge bg-danger text-white fw-bold" style="font-size: 11px;">
+                                    <span class="badge bg-danger text-white fw-bold" style="font-size: 10.5px; padding: 2px 6px;">
                                         {{ $lo->canhBaoText }}
                                     </span>
                                 @else
-                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fw-semibold" style="font-size: 11px;">
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fw-semibold" style="font-size: 10.5px; padding: 2px 6px;">
                                         {{ $lo->canhBaoText }}
                                     </span>
                                 @endif
                             </td>
-                            <td class="text-center" style="font-size: 12px;">
+                            <td class="text-center" style="font-size: 11px;">
                                 @if($lo->kiemTraGanNhat)
                                     <div>
                                         @if($lo->kiemTraGanNhat->ket_qua === 'CON_BAN_DUOC')
@@ -326,6 +461,78 @@
                 </tbody>
             </table>
         </div>
+
+        {{-- Phân trang Lô hoa tươi chuẩn RoseShop --}}
+        <div class="rs-table-footer">
+            <div class="rs-footer-left">
+                <div class="rs-per-page-inline">
+                    <span>Hiển thị</span>
+                    <select class="rs-per-page-select" onchange="window.location.href = this.value;">
+                        @foreach([10, 15, 20, 50, 100] as $s)
+                            <option value="{{ request()->fullUrlWithQuery(['per_page' => $s, 'page_lo' => 1]) }}" {{ (int)request('per_page', $perPage ?? 10) === $s ? 'selected' : '' }}>
+                                {{ $s }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <span>/ trang</span>
+                </div>
+                <div class="rs-records-count">
+                    Hiển thị <strong>{{ $loHangs->firstItem() ?? 0 }}-{{ $loHangs->lastItem() ?? 0 }}</strong> trong tổng số <strong>{{ $loHangs->total() }}</strong> lô hoa
+                </div>
+            </div>
+
+            <div class="rs-footer-pagination">
+                @if($loHangs->hasPages())
+                    <ul class="rs-pagination">
+                        {{-- Nút trang trước --}}
+                        @if($loHangs->onFirstPage())
+                            <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                        @else
+                            <li class="page-item"><a class="page-link" href="{{ $loHangs->previousPageUrl() }}">&laquo;</a></li>
+                        @endif
+
+                        {{-- Các số trang (rút gọn nếu quá nhiều trang) --}}
+                        @php
+                            $curPage = $loHangs->currentPage();
+                            $lastPage = $loHangs->lastPage();
+                            $startPage = max(1, $curPage - 2);
+                            $endPage = min($lastPage, $curPage + 2);
+                        @endphp
+
+                        @if($startPage > 1)
+                            <li class="page-item"><a class="page-link" href="{{ $loHangs->url(1) }}">1</a></li>
+                            @if($startPage > 2)
+                                <li class="page-item disabled"><span class="page-link ellipsis">...</span></li>
+                            @endif
+                        @endif
+
+                        @for($i = $startPage; $i <= $endPage; $i++)
+                            <li class="page-item {{ $i === $curPage ? 'active' : '' }}">
+                                @if($i === $curPage)
+                                    <span class="page-link">{{ $i }}</span>
+                                @else
+                                    <a class="page-link" href="{{ $loHangs->url($i) }}">{{ $i }}</a>
+                                @endif
+                            </li>
+                        @endfor
+
+                        @if($endPage < $lastPage)
+                            @if($endPage < $lastPage - 1)
+                                <li class="page-item disabled"><span class="page-link ellipsis">...</span></li>
+                            @endif
+                            <li class="page-item"><a class="page-link" href="{{ $loHangs->url($lastPage) }}">{{ $lastPage }}</a></li>
+                        @endif
+
+                        {{-- Nút trang kế --}}
+                        @if($loHangs->hasMorePages())
+                            <li class="page-item"><a class="page-link" href="{{ $loHangs->nextPageUrl() }}">&raquo;</a></li>
+                        @else
+                            <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                        @endif
+                    </ul>
+                @endif
+            </div>
+        </div>
     </div>
 
     {{-- ========================================================================= --}}
@@ -336,7 +543,7 @@
             <div class="exp-section-title">
                 <i class="bi bi-box2-heart text-warning fs-5"></i>
                 <h2>Bó hoa thành phẩm cần kiểm tra chất lượng</h2>
-                <span class="badge-count" style="background:#FEF0C7; color:#B54708;">{{ count($boHoas) }} bó</span>
+                <span class="badge-count" style="background:#FEF0C7; color:#B54708;">{{ $boHoas->total() }} bó</span>
             </div>
             <div>
                 <a href="{{ route('admin.mau-bo-hoa') }}" class="btn btn-outline-secondary btn-sm fw-semibold rounded-2 px-3">
@@ -361,52 +568,52 @@
                 <tbody>
                     @forelse($boHoas as $idx => $bh)
                         <tr>
-                            <td class="text-center fw-bold text-muted">{{ $idx + 1 }}</td>
+                            <td class="text-center fw-bold text-muted">{{ $boHoas->firstItem() ? ($boHoas->firstItem() + $idx) : ($idx + 1) }}</td>
                             <td>
                                 <div class="d-flex align-items-center gap-2">
-                                    @if($bh->hinh_anh)
-                                        <img src="{{ asset('storage/' . $bh->hinh_anh) }}"
-                                             alt="{{ $bh->ten_bo_hoa }}"
-                                             class="exp-item-thumb"
-                                             onerror="this.onerror=null; this.src='{{ asset($bh->hinh_anh) }}';">
-                                    @else
-                                        <div class="exp-item-placeholder" style="background:#FEF0C7; color:#DC6803;">
-                                            <i class="bi bi-flower3"></i>
-                                        </div>
-                                    @endif
+                                    <div class="rs-product-thumb">
+                                        @if($bh->hinh_anh)
+                                            <img src="{{ asset('storage/' . $bh->hinh_anh) }}"
+                                                 alt="{{ $bh->ten_bo_hoa }}"
+                                                 class="rs-product-thumb-img"
+                                                 onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'rs-product-thumb-placeholder\' style=\'background:#FEF0C7; color:#DC6803;\'><i class=\'bi bi-flower3\'></i></div>';">
+                                        @else
+                                            <div class="rs-product-thumb-placeholder" style="background:#FEF0C7; color:#DC6803;"><i class="bi bi-flower3"></i></div>
+                                        @endif
+                                    </div>
                                     <div>
-                                        <div class="fw-bold text-dark">{{ $bh->ten_bo_hoa }}</div>
-                                        <div class="text-muted" style="font-size: 11.5px;">
-                                            Mã bó: <span class="fw-semibold text-primary">#{{ $bh->ma_bo_hoa }}</span>
+                                        <div class="fw-bold text-dark" style="font-size: 12.5px;">{{ $bh->ten_bo_hoa }}</div>
+                                        <div class="text-muted" style="font-size: 11px;">
+                                            Mã bó: <span class="fw-bold" style="color:#EC3D8F; font-family: monospace; font-size: 11px;">#{{ $bh->ma_bo_hoa }}</span>
                                             @if($bh->ten_mau) • Mẫu: {{ $bh->ten_mau }} @endif
                                         </div>
                                     </div>
                                 </div>
                             </td>
                             <td class="text-center">
-                                <span class="fw-bold text-dark fs-6">{{ number_format($bh->so_luong) }}</span>
-                                <span class="text-muted" style="font-size: 12px;">bó</span>
+                                <span class="fw-bold text-dark" style="font-size: 12.5px;">{{ number_format($bh->so_luong) }}</span>
+                                <span class="text-muted" style="font-size: 11px;">bó</span>
                             </td>
-                            <td class="text-end fw-bold text-dark">
+                            <td class="text-end fw-bold text-dark" style="font-size: 12.5px;">
                                 {{ number_format($bh->gia_ban) }}đ
                             </td>
                             <td class="text-center text-nowrap">
-                                <div class="fw-bold text-dark">{{ $bh->hsdFmt }}</div>
+                                <div class="fw-semibold text-dark" style="font-size: 11.5px;">{{ $bh->hsdFmt }}</div>
                                 @if($bh->canhBaoCode === 'DA_QUA_HAN')
-                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold" style="font-size: 11px;">
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold" style="font-size: 10.5px; padding: 2px 6px;">
                                         {{ $bh->canhBaoText }}
                                     </span>
                                 @elseif($bh->canhBaoCode === 'HET_HAN_HOM_NAY')
-                                    <span class="badge bg-danger text-white fw-bold" style="font-size: 11px;">
+                                    <span class="badge bg-danger text-white fw-bold" style="font-size: 10.5px; padding: 2px 6px;">
                                         {{ $bh->canhBaoText }}
                                     </span>
                                 @else
-                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fw-semibold" style="font-size: 11px;">
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fw-semibold" style="font-size: 10.5px; padding: 2px 6px;">
                                         {{ $bh->canhBaoText }}
                                     </span>
                                 @endif
                             </td>
-                            <td class="text-center" style="font-size: 12px;">
+                            <td class="text-center" style="font-size: 11px;">
                                 @if($bh->kiemTraGanNhat)
                                     <div>
                                         @if($bh->kiemTraGanNhat->ket_qua === 'CON_BAN_DUOC')
@@ -454,6 +661,78 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        {{-- Phân trang Bó hoa thành phẩm chuẩn RoseShop --}}
+        <div class="rs-table-footer">
+            <div class="rs-footer-left">
+                <div class="rs-per-page-inline">
+                    <span>Hiển thị</span>
+                    <select class="rs-per-page-select" onchange="window.location.href = this.value;">
+                        @foreach([10, 15, 20, 50, 100] as $s)
+                            <option value="{{ request()->fullUrlWithQuery(['per_page' => $s, 'page_bo' => 1]) }}" {{ (int)request('per_page', $perPage ?? 10) === $s ? 'selected' : '' }}>
+                                {{ $s }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <span>/ trang</span>
+                </div>
+                <div class="rs-records-count">
+                    Hiển thị <strong>{{ $boHoas->firstItem() ?? 0 }}-{{ $boHoas->lastItem() ?? 0 }}</strong> trong tổng số <strong>{{ $boHoas->total() }}</strong> bó hoa
+                </div>
+            </div>
+
+            <div class="rs-footer-pagination">
+                @if($boHoas->hasPages())
+                    <ul class="rs-pagination">
+                        {{-- Nút trang trước --}}
+                        @if($boHoas->onFirstPage())
+                            <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                        @else
+                            <li class="page-item"><a class="page-link" href="{{ $boHoas->previousPageUrl() }}">&laquo;</a></li>
+                        @endif
+
+                        {{-- Các số trang (rút gọn nếu quá nhiều trang) --}}
+                        @php
+                            $curPageBo = $boHoas->currentPage();
+                            $lastPageBo = $boHoas->lastPage();
+                            $startPageBo = max(1, $curPageBo - 2);
+                            $endPageBo = min($lastPageBo, $curPageBo + 2);
+                        @endphp
+
+                        @if($startPageBo > 1)
+                            <li class="page-item"><a class="page-link" href="{{ $boHoas->url(1) }}">1</a></li>
+                            @if($startPageBo > 2)
+                                <li class="page-item disabled"><span class="page-link ellipsis">...</span></li>
+                            @endif
+                        @endif
+
+                        @for($i = $startPageBo; $i <= $endPageBo; $i++)
+                            <li class="page-item {{ $i === $curPageBo ? 'active' : '' }}">
+                                @if($i === $curPageBo)
+                                    <span class="page-link">{{ $i }}</span>
+                                @else
+                                    <a class="page-link" href="{{ $boHoas->url($i) }}">{{ $i }}</a>
+                                @endif
+                            </li>
+                        @endfor
+
+                        @if($endPageBo < $lastPageBo)
+                            @if($endPageBo < $lastPageBo - 1)
+                                <li class="page-item disabled"><span class="page-link ellipsis">...</span></li>
+                            @endif
+                            <li class="page-item"><a class="page-link" href="{{ $boHoas->url($lastPageBo) }}">{{ $lastPageBo }}</a></li>
+                        @endif
+
+                        {{-- Nút trang kế --}}
+                        @if($boHoas->hasMorePages())
+                            <li class="page-item"><a class="page-link" href="{{ $boHoas->nextPageUrl() }}">&raquo;</a></li>
+                        @else
+                            <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                        @endif
+                    </ul>
+                @endif
+            </div>
         </div>
     </div>
 
