@@ -124,101 +124,103 @@
         </form>
     </div>
 
-    {{-- ═══════════════════════ 3. KPI CARDS GRID (8 CHỈ SỐ THEO UC10.4) ═══════════════════════ --}}
+    {{-- ═══════════════════════ 3. KPI CARDS GRID (8 CHỈ SỐ THEO BỐ CỤC: ICON + SỐ 1 BÊN, 2 HÀNG CHỮ 1 BÊN) ═══════════════════════ --}}
     <div class="kpi-cards-grid">
         {{-- KPI 1: Tổng đơn giao --}}
         <div class="kpi-card kpi-blue">
-            <div class="kpi-header">
-                <span class="kpi-title">Tổng đơn được giao</span>
+            <div class="kpi-side-left">
                 <div class="kpi-icon"><i class="bi bi-box-seam"></i></div>
+                <div class="kpi-value">{{ number_format($kpis['tong_don_giao']) }}</div>
             </div>
-            <div class="kpi-value">{{ number_format($kpis['tong_don_giao']) }}</div>
-            <div class="kpi-sub">
-                <span>Đã phân công / bước vào luồng giao</span>
+            <div class="kpi-side-right">
+                <div class="kpi-title" title="TỔNG ĐƠN ĐƯỢC GIAO">Tổng đơn giao</div>
+                <div class="kpi-sub" title="Đã phân công / bước vào luồng giao">Đã vào luồng giao</div>
             </div>
         </div>
 
         {{-- KPI 2: Giao thành công --}}
         <div class="kpi-card kpi-emerald">
-            <div class="kpi-header">
-                <span class="kpi-title">Giao thành công</span>
+            <div class="kpi-side-left">
                 <div class="kpi-icon"><i class="bi bi-check-circle-fill"></i></div>
+                <div class="kpi-value text-success">{{ number_format($kpis['giao_thanh_cong']) }}</div>
             </div>
-            <div class="kpi-value">{{ number_format($kpis['giao_thanh_cong']) }}</div>
-            <div class="kpi-sub text-success">
-                <i class="bi bi-arrow-up-right me-1"></i>Trạng thái DELIVERED
+            <div class="kpi-side-right">
+                <div class="kpi-title" title="GIAO THÀNH CÔNG">Giao thành công</div>
+                <div class="kpi-sub text-success" title="Trạng thái DELIVERED">
+                    Trạng thái DELIVERED
+                </div>
             </div>
         </div>
 
         {{-- KPI 3: Giao thất bại --}}
         <div class="kpi-card kpi-rose">
-            <div class="kpi-header">
-                <span class="kpi-title">Giao thất bại</span>
+            <div class="kpi-side-left">
                 <div class="kpi-icon"><i class="bi bi-x-circle-fill"></i></div>
+                <div class="kpi-value text-danger">{{ number_format($kpis['giao_that_bai']) }}</div>
             </div>
-            <div class="kpi-value">{{ number_format($kpis['giao_that_bai']) }}</div>
-            <div class="kpi-sub text-danger">
-                <span>Có báo cáo thất bại / hoàn hàng</span>
+            <div class="kpi-side-right">
+                <div class="kpi-title" title="GIAO THẤT BẠI">Giao thất bại</div>
+                <div class="kpi-sub text-danger" title="Có báo cáo thất bại / hoàn hàng">Báo thất bại / hoàn</div>
             </div>
         </div>
 
         {{-- KPI 4: Tỷ lệ giao thành công --}}
         <div class="kpi-card kpi-indigo">
-            <div class="kpi-header">
-                <span class="kpi-title">Tỷ lệ thành công</span>
+            <div class="kpi-side-left">
                 <div class="kpi-icon"><i class="bi bi-percent"></i></div>
+                <div class="kpi-value text-purple">{{ $kpis['ty_le_thanh_cong'] }}%</div>
             </div>
-            <div class="kpi-value">{{ $kpis['ty_le_thanh_cong'] }}%</div>
-            <div class="kpi-sub">
-                <span>Thành công / Tổng đơn giao</span>
+            <div class="kpi-side-right">
+                <div class="kpi-title" title="TỶ LỆ THÀNH CÔNG">Tỷ lệ thành công</div>
+                <div class="kpi-sub" title="Thành công / Tổng đơn giao">Thành công / Tổng đơn</div>
             </div>
         </div>
 
         {{-- KPI 5: Shipper từ chối --}}
         <div class="kpi-card kpi-gray" title="Chức năng Shipper từ chối nhận đơn chưa được persist trong cơ sở dữ liệu hiện tại">
-            <div class="kpi-header">
-                <span class="kpi-title">Shipper từ chối</span>
+            <div class="kpi-side-left">
                 <div class="kpi-icon"><i class="bi bi-slash-circle"></i></div>
+                <div class="kpi-value text-muted" style="font-size: 1.15rem;">0</div>
             </div>
-            <div class="kpi-value small-text">{{ $kpis['shipper_tu_choi'] }}</div>
-            <div class="kpi-sub">
-                <i class="bi bi-info-circle me-1"></i>Chưa có sự kiện persist trong DB
+            <div class="kpi-side-right">
+                <div class="kpi-title" title="SHIPPER TỪ CHỐI">Shipper từ chối</div>
+                <div class="kpi-sub" title="Chưa có sự kiện persist trong DB">Chưa có sự kiện DB</div>
             </div>
         </div>
 
         {{-- KPI 6: Tổng COD đã thu --}}
         <div class="kpi-card kpi-amber">
-            <div class="kpi-header">
-                <span class="kpi-title">Tổng COD đã thu</span>
+            <div class="kpi-side-left">
                 <div class="kpi-icon"><i class="bi bi-cash-stack"></i></div>
+                <div class="kpi-value text-orange" style="font-size: 0.95rem;">{{ number_format($kpis['tong_cod_da_thu'], 0, ',', '.') }}đ</div>
             </div>
-            <div class="kpi-value">{{ number_format($kpis['tong_cod_da_thu'], 0, ',', '.') }}đ</div>
-            <div class="kpi-sub">
-                <span>Đơn DELIVERED đã thu tiền mặt</span>
+            <div class="kpi-side-right">
+                <div class="kpi-title" title="TỔNG COD ĐÃ THU">Tổng COD đã thu</div>
+                <div class="kpi-sub" title="Đơn DELIVERED đã thu tiền mặt">Đơn DELIVERED tiền mặt</div>
             </div>
         </div>
 
         {{-- KPI 7: COD chưa nộp --}}
         <div class="kpi-card kpi-orange" title="Hệ thống hiện chưa có bảng/nghiệp vụ đối soát nộp tiền COD từ Shipper về cửa hàng">
-            <div class="kpi-header">
-                <span class="kpi-title">COD chưa nộp</span>
+            <div class="kpi-side-left">
                 <div class="kpi-icon"><i class="bi bi-wallet2"></i></div>
+                <div class="kpi-value text-orange" style="font-size: 1.15rem;">0đ</div>
             </div>
-            <div class="kpi-value small-text">{{ $kpis['cod_chua_nop'] }}</div>
-            <div class="kpi-sub text-muted">
-                <i class="bi bi-info-circle me-1"></i>Toàn bộ COD đã thu hiện do Shipper giữ
+            <div class="kpi-side-right">
+                <div class="kpi-title" title="COD CHƯA NỘP">COD chưa nộp</div>
+                <div class="kpi-sub" title="Toàn bộ COD hiện do Shipper giữ">Shipper đang giữ tiền</div>
             </div>
         </div>
 
         {{-- KPI 8: Thời gian giao TB --}}
         <div class="kpi-card kpi-teal">
-            <div class="kpi-header">
-                <span class="kpi-title">Thời gian giao TB</span>
+            <div class="kpi-side-left">
                 <div class="kpi-icon"><i class="bi bi-stopwatch"></i></div>
+                <div class="kpi-value" style="font-size: 0.95rem;">{{ $kpis['thoi_gian_giao_tb'] }}</div>
             </div>
-            <div class="kpi-value">{{ $kpis['thoi_gian_giao_tb'] }}</div>
-            <div class="kpi-sub">
-                <span>Từ lúc bắt đầu đến khi giao</span>
+            <div class="kpi-side-right">
+                <div class="kpi-title" title="THỜI GIAN GIAO TB">TG giao TB</div>
+                <div class="kpi-sub" title="Từ lúc bắt đầu đến khi giao">Từ bắt đầu đến khi giao</div>
             </div>
         </div>
     </div>
@@ -284,38 +286,38 @@
             <table class="rs-table">
                 <thead>
                     <tr>
-                        <th style="width: 50px;">STT</th>
-                        <th>Shipper</th>
-                        <th>Số điện thoại</th>
-                        <th class="text-center">Tổng giao</th>
-                        <th class="text-center">Thành công</th>
-                        <th class="text-center">Thất bại</th>
-                        <th class="text-center">Đang giao</th>
-                        <th class="text-center">Tỷ lệ thành công</th>
-                        <th class="text-end">COD đã thu</th>
-                        <th class="text-center">TG giao TB</th>
+                        <th style="width: 50px;" class="text-center">STT</th>
+                        <th style="white-space: nowrap;">Shipper</th>
+                        <th style="white-space: nowrap;">Số điện thoại</th>
+                        <th class="text-center" style="white-space: nowrap;">Tổng giao</th>
+                        <th class="text-center" style="white-space: nowrap;">Thành công</th>
+                        <th class="text-center" style="white-space: nowrap;">Thất bại</th>
+                        <th class="text-center" style="white-space: nowrap;">Đang giao</th>
+                        <th class="text-center" style="white-space: nowrap;">Tỷ lệ thành công</th>
+                        <th class="text-end" style="white-space: nowrap;">COD đã thu</th>
+                        <th class="text-center" style="white-space: nowrap;">TG giao TB</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($topShippers as $idx => $ts)
                         <tr>
-                            <td>{{ $idx + 1 }}</td>
-                            <td>
-                                <strong>{{ $ts->ten_nhan_vien }}</strong>
-                                <div class="text-muted small">Mã NV: #{{ $ts->ma_nhan_vien }}</div>
+                            <td class="text-center text-muted" style="white-space: nowrap; font-size: 12px;">{{ $idx + 1 }}</td>
+                            <td style="white-space: nowrap;">
+                                <strong style="font-size: 12.5px;">{{ $ts->ten_nhan_vien }}</strong>
+                                <div class="text-muted small" style="font-size: 11px;">Mã NV: #{{ $ts->ma_nhan_vien }}</div>
                             </td>
-                            <td>{{ $ts->so_dien_thoai }}</td>
-                            <td class="text-center fw-bold">{{ number_format($ts->tong_giao) }}</td>
-                            <td class="text-center text-success fw-bold">{{ number_format($ts->thanh_cong) }}</td>
-                            <td class="text-center text-danger fw-bold">{{ number_format($ts->that_bai) }}</td>
-                            <td class="text-center text-primary fw-bold">{{ number_format($ts->dang_giao) }}</td>
-                            <td class="text-center">
-                                <span class="badge {{ $ts->ty_le >= 80 ? 'bg-success' : ($ts->ty_le >= 50 ? 'bg-warning text-dark' : 'bg-danger') }}">
+                            <td style="white-space: nowrap; font-size: 12px;">{{ $ts->so_dien_thoai }}</td>
+                            <td class="text-center fw-bold" style="white-space: nowrap; font-size: 12.5px;">{{ number_format($ts->tong_giao) }}</td>
+                            <td class="text-center text-success fw-bold" style="white-space: nowrap; font-size: 12.5px;">{{ number_format($ts->thanh_cong) }}</td>
+                            <td class="text-center text-danger fw-bold" style="white-space: nowrap; font-size: 12.5px;">{{ number_format($ts->that_bai) }}</td>
+                            <td class="text-center text-primary fw-bold" style="white-space: nowrap; font-size: 12.5px;">{{ number_format($ts->dang_giao) }}</td>
+                            <td class="text-center" style="white-space: nowrap;">
+                                <span class="badge {{ $ts->ty_le >= 80 ? 'bg-success' : ($ts->ty_le >= 50 ? 'bg-warning text-dark' : 'bg-danger') }}" style="font-size: 11px;">
                                     {{ $ts->ty_le }}%
                                 </span>
                             </td>
-                            <td class="text-end fw-bold text-dark">{{ number_format($ts->cod_da_thu, 0, ',', '.') }}đ</td>
-                            <td class="text-center">{{ $ts->tg_giao_tb }}</td>
+                            <td class="text-end fw-bold text-dark" style="white-space: nowrap; font-size: 12.5px;">{{ number_format($ts->cod_da_thu, 0, ',', '.') }}đ</td>
+                            <td class="text-center" style="white-space: nowrap; font-size: 12px;">{{ $ts->tg_giao_tb }}</td>
                         </tr>
                     @empty
                         <tr>
@@ -354,11 +356,12 @@
                     <input type="hidden" name="per_page" value="{{ request('per_page') }}">
                 @endif
 
-                <div class="rs-search-box-wrap">
-                    <i class="bi bi-search rs-search-box-icon"></i>
+                <div class="rs-search-box-wrap" style="position: relative;">
+                    <i class="bi bi-search rs-search-box-icon" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #98A2B3; font-size: 13.5px; z-index: 3; pointer-events: none;"></i>
                     <input type="text" name="q" class="form-control rs-search-box-input"
                            placeholder="Tìm theo mã đơn, khách, SĐT, shipper..."
-                           value="{{ $keyword }}">
+                           value="{{ $keyword }}"
+                           style="padding-left: 42px !important; height: 38px !important; font-size: 12.5px !important;">
                 </div>
                 <button type="submit" class="btn btn-search-pink" title="Tìm kiếm">
                     <i class="bi bi-search"></i>
@@ -378,14 +381,14 @@
                 <thead>
                     <tr>
                         <th style="width: 45px;" class="text-center">STT</th>
-                        <th>Mã đơn</th>
-                        <th>Khách hàng</th>
-                        <th>Shipper</th>
-                        <th>Bắt đầu giao</th>
-                        <th>Hoàn thành</th>
-                        <th class="text-center">Thời gian giao</th>
-                        <th class="text-center">Trạng thái</th>
-                        <th>Thanh toán</th>
+                        <th style="white-space: nowrap;">Mã đơn</th>
+                        <th style="white-space: nowrap;">Khách hàng</th>
+                        <th style="white-space: nowrap;">Shipper</th>
+                        <th style="white-space: nowrap;">Bắt đầu giao</th>
+                        <th style="white-space: nowrap;">Hoàn thành</th>
+                        <th class="text-center" style="white-space: nowrap;">Thời gian giao</th>
+                        <th class="text-center" style="white-space: nowrap;">Trạng thái</th>
+                        <th style="white-space: nowrap;">Thanh toán</th>
                         <th class="text-end" style="min-width: 145px; white-space: nowrap;">Tiền COD</th>
                         <th style="width: 60px;" class="text-center">Chi tiết</th>
                     </tr>
@@ -393,56 +396,56 @@
                 <tbody>
                     @forelse($danhSachDonHang as $idx => $hd)
                         <tr>
-                            <td class="text-center text-muted">{{ $danhSachDonHang->firstItem() + $idx }}</td>
-                            <td>
-                                <strong class="order-code-pink">{{ $hd->ma_hien_thi }}</strong>
-                                <div class="text-muted small">{{ $hd->ngay_dat ? $hd->ngay_dat->format('d/m/Y') : '' }}</div>
+                            <td class="text-center text-muted" style="white-space: nowrap; font-size: 12px;">{{ $danhSachDonHang->firstItem() + $idx }}</td>
+                            <td style="white-space: nowrap;">
+                                <strong class="order-code-pink" style="font-size: 12.5px;">{{ $hd->ma_hien_thi }}</strong>
+                                <div class="text-muted small" style="font-size: 11px;">{{ $hd->ngay_dat ? $hd->ngay_dat->format('d/m/Y') : '' }}</div>
                             </td>
-                            <td>
-                                <div class="fw-bold">{{ $hd->khachHang ? $hd->khachHang->ho_ten : 'Khách vãng lai' }}</div>
-                                <div class="text-muted small">
+                            <td style="white-space: nowrap;">
+                                <div class="fw-bold" style="font-size: 12px;">{{ $hd->khachHang ? $hd->khachHang->ho_ten : 'Khách vãng lai' }}</div>
+                                <div class="text-muted small" style="font-size: 11px;">
                                     {{ $hd->so_dien_thoai ?: ($hd->khachHang ? $hd->khachHang->so_dien_thoai : '') }}
                                 </div>
                             </td>
-                            <td>
+                            <td style="white-space: nowrap; min-width: 135px;">
                                 @if($hd->shipper)
-                                    <span class="fw-semibold text-dark">{{ $hd->shipper->ten_nhan_vien }}</span>
+                                    <span class="fw-semibold text-dark" style="font-size: 12px; white-space: nowrap;">{{ $hd->shipper->ten_nhan_vien }}</span>
                                 @else
-                                    <span class="text-muted fst-italic">Chưa phân công</span>
+                                    <span class="text-muted fst-italic" style="font-size: 12px;">Chưa phân công</span>
                                 @endif
                             </td>
-                            <td>
+                            <td style="white-space: nowrap; font-size: 12px;">
                                 {{ $hd->ngay_bat_giao ? $hd->ngay_bat_giao->format('d/m H:i') : '—' }}
                             </td>
-                            <td>
+                            <td style="white-space: nowrap; font-size: 12px;">
                                 @if($hd->trang_thai === 'DELIVERED')
                                     {{ $hd->ngay_giao ? $hd->ngay_giao->format('d/m H:i') : ($hd->ngay_den_noi ? $hd->ngay_den_noi->format('d/m H:i') : '—') }}
                                 @elseif($hd->trang_thai === 'CANCELLED')
-                                    <span class="text-danger small">{{ $hd->thoi_diem_huy ? $hd->thoi_diem_huy->format('d/m H:i') : 'Đã hủy' }}</span>
+                                    <span class="text-danger small" style="font-size: 11px;">{{ $hd->thoi_diem_huy ? $hd->thoi_diem_huy->format('d/m H:i') : 'Đã hủy' }}</span>
                                 @else
                                     —
                                 @endif
                             </td>
-                            <td class="text-center font-monospace">
+                            <td class="text-center font-monospace" style="white-space: nowrap; font-size: 12px;">
                                 {{ $hd->thoi_gian_giao_text }}
                             </td>
-                            <td class="text-center">
+                            <td class="text-center" style="white-space: nowrap;">
                                 <span class="badge-status {{ $hd->trang_thai_badge }}">
                                     {{ $hd->trang_thai_text }}
                                 </span>
                                 @if($hd->trang_thai_giao === 'FAILED' && $hd->loai_loi)
-                                    <div class="text-danger small mt-1" style="font-size: 0.72rem;">
+                                    <div class="text-danger small mt-1" style="font-size: 0.72rem; white-space: nowrap;">
                                         Do {{ $hd->loai_loi }}
                                     </div>
                                 @endif
                             </td>
-                            <td>
-                                <div>{{ $hd->phuong_thuc_thanh_toan }}</div>
-                                <div class="text-muted small">{{ number_format($hd->tong_tien, 0, ',', '.') }}đ</div>
+                            <td style="white-space: nowrap;">
+                                <div style="font-size: 12px;">{{ $hd->phuong_thuc_thanh_toan }}</div>
+                                <div class="text-muted small" style="font-size: 11px;">{{ number_format($hd->tong_tien, 0, ',', '.') }}đ</div>
                             </td>
                             <td class="text-end" style="white-space: nowrap;">
                                 @if($hd->phuong_thuc_thanh_toan === 'COD')
-                                    <span class="fw-bold text-dark">{{ number_format($hd->tien_cod, 0, ',', '.') }}đ</span>
+                                    <span class="fw-bold text-dark" style="font-size: 12.5px;">{{ number_format($hd->tien_cod, 0, ',', '.') }}đ</span>
                                     @if($hd->trang_thai === 'DELIVERED' && ($hd->da_thu_tien_mat || $hd->trang_thai_thanh_toan === 'DA_THANH_TOAN'))
                                         <span class="badge-cod-collected">Đã thu</span>
                                     @else
@@ -452,7 +455,7 @@
                                     <span class="text-muted">—</span>
                                 @endif
                             </td>
-                            <td class="text-center">
+                            <td class="text-center" style="white-space: nowrap;">
                                 <button type="button" class="btn-view-detail" title="Xem chi tiết đơn giao" onclick="openDeliveryDrawer({{ $hd->ma_hoa_don }})">
                                     <i class="bi bi-eye"></i>
                                 </button>
@@ -477,14 +480,14 @@
                 @if($danhSachDonHang->count() > 0)
                     <tfoot>
                         <tr>
-                            <td colspan="4" class="text-uppercase fw-semibold">TỔNG CỘNG TRONG KỲ</td>
-                            <td colspan="2" class="text-center">Thành công: <span class="text-success fw-bold">{{ $kpis['giao_thanh_cong'] }}</span> / Thất bại: <span class="text-danger fw-bold">{{ $kpis['giao_that_bai'] }}</span></td>
-                            <td class="text-center">—</td>
-                            <td class="text-center">
+                            <td colspan="4" class="text-uppercase fw-semibold" style="white-space: nowrap; font-size: 12px;">TỔNG CỘNG TRONG KỲ</td>
+                            <td colspan="2" class="text-center" style="white-space: nowrap; font-size: 12px;">Thành công: <span class="text-success fw-bold">{{ $kpis['giao_thanh_cong'] }}</span> / Thất bại: <span class="text-danger fw-bold">{{ $kpis['giao_that_bai'] }}</span></td>
+                            <td class="text-center" style="white-space: nowrap;">—</td>
+                            <td class="text-center" style="white-space: nowrap;">
                                 <span class="badge-status badge-delivered">{{ $kpis['ty_le_thanh_cong'] }}%</span>
                             </td>
-                            <td>—</td>
-                            <td class="text-end text-danger fw-bold">{{ number_format($kpis['tong_cod_da_thu'], 0, ',', '.') }}đ</td>
+                            <td style="white-space: nowrap;">—</td>
+                            <td class="text-end text-danger fw-bold" style="white-space: nowrap; font-size: 12.5px;">{{ number_format($kpis['tong_cod_da_thu'], 0, ',', '.') }}đ</td>
                             <td></td>
                         </tr>
                     </tfoot>
@@ -492,7 +495,7 @@
             </table>
         </div>
 
-        {{-- Thanh phân trang chuẩn RoseShop --}}
+        {{-- Thanh phân trang chuẩn RoseShop có dấu ba chấm --}}
         <div class="rs-table-footer">
             <div class="rs-footer-left">
                 <form method="GET" action="{{ route('admin.bao-cao.giao-hang') }}" class="rs-per-page-form" id="perPageForm">
@@ -527,7 +530,47 @@
             </div>
 
             <div class="rs-footer-right">
-                {{ $danhSachDonHang->appends(request()->query())->links('pagination::bootstrap-4') }}
+                @php
+                    $cur = $danhSachDonHang->currentPage();
+                    $last = $danhSachDonHang->lastPage();
+                    $start = max(1, $cur - 2);
+                    $end = min($last, $cur + 2);
+                @endphp
+                <ul class="pagination mb-0">
+                    @if ($danhSachDonHang->onFirstPage())
+                        <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                    @else
+                        <li class="page-item"><a class="page-link" href="{{ $danhSachDonHang->appends(request()->query())->previousPageUrl() }}">&laquo;</a></li>
+                    @endif
+
+                    @if($start > 1)
+                        <li class="page-item"><a class="page-link" href="{{ $danhSachDonHang->appends(request()->query())->url(1) }}">1</a></li>
+                        @if($start > 2)
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        @endif
+                    @endif
+
+                    @for ($page = $start; $page <= $end; $page++)
+                        @if ($page == $cur)
+                            <li class="page-item active"><span class="page-link">{{ $page }}</span></li>
+                        @else
+                            <li class="page-item"><a class="page-link" href="{{ $danhSachDonHang->appends(request()->query())->url($page) }}">{{ $page }}</a></li>
+                        @endif
+                    @endfor
+
+                    @if($end < $last)
+                        @if($end < $last - 1)
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        @endif
+                        <li class="page-item"><a class="page-link" href="{{ $danhSachDonHang->appends(request()->query())->url($last) }}">{{ $last }}</a></li>
+                    @endif
+
+                    @if ($danhSachDonHang->hasMorePages())
+                        <li class="page-item"><a class="page-link" href="{{ $danhSachDonHang->appends(request()->query())->nextPageUrl() }}">&raquo;</a></li>
+                    @else
+                        <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                    @endif
+                </ul>
             </div>
         </div>
     </div>

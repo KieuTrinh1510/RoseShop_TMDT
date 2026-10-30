@@ -220,6 +220,25 @@
     box-shadow: 0 0 0 3px rgba(236, 61, 143, 0.12) !important;
 }
 
+/* Ẩn triệt để calendar indicator mặc định của Chromium / Safari để không bị đè 2 icon */
+.filter-input[type="date"]::-webkit-calendar-picker-indicator {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    opacity: 0 !important;
+    cursor: pointer !important;
+    z-index: 2 !important;
+}
+
+.filter-input[type="date"]::-webkit-inner-spin-button {
+    display: none !important;
+    -webkit-appearance: none !important;
+}
+
 .input-icon-wrap {
     position: relative;
     width: 100%;
@@ -227,12 +246,13 @@
 
 .input-icon-wrap .input-icon {
     position: absolute;
-    right: 10px;
+    right: 12px;
     top: 50%;
     transform: translateY(-50%);
     color: #98A2B3;
     pointer-events: none;
-    font-size: 13px;
+    font-size: 14px;
+    z-index: 1;
 }
 
 .btn-filter-pink, .btn-search-pink {
@@ -283,23 +303,28 @@
     color: #101828 !important;
 }
 
-/* ═══════════════════════ 3. KPI CARDS GRID (8 CARDS) ═══════════════════════ */
+/* ═══════════════════════ 3. KPI CARDS GRID (8 CARDS - ICON VÀ SỐ 1 BÊN, 2 HÀNG CHỮ 1 BÊN) ═══════════════════════ */
 .kpi-cards-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 24px;
+    gap: 12px;
+    margin-bottom: 22px;
 }
 
 .kpi-card {
     background: var(--rs-card-bg);
-    border: 1px solid var(--rs-border);
-    border-radius: var(--rs-radius);
-    padding: 16px 18px;
-    box-shadow: var(--rs-shadow-sm);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+    border: 1px solid #EAECF0 !important;
+    border-radius: 10px !important;
+    padding: 10px 14px !important;
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.04) !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+    min-height: 74px !important;
+    height: 74px !important;
+    max-height: 74px !important;
     position: relative;
     overflow: hidden;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -307,7 +332,7 @@
 
 .kpi-card:hover {
     transform: translateY(-2px);
-    box-shadow: var(--rs-shadow-md);
+    box-shadow: 0 4px 8px -2px rgba(16, 24, 40, 0.08) !important;
 }
 
 .kpi-card::before {
@@ -319,49 +344,68 @@
     height: 100%;
 }
 
-.kpi-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
+.kpi-side-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-shrink: 0 !important;
 }
 
-.kpi-title {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--rs-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
+.kpi-side-right {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    overflow: hidden !important;
 }
 
 .kpi-icon {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 15px !important;
 }
 
 .kpi-value {
-    font-size: 1.55rem;
-    font-weight: 700;
-    line-height: 1.2;
-    color: var(--rs-text-main);
-    margin-bottom: 4px;
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    line-height: 1.1 !important;
+    color: #101828 !important;
+    white-space: nowrap !important;
+    margin: 0 !important;
 }
 
 .kpi-value.small-text {
-    font-size: 1.15rem;
+    font-size: 1.1rem !important;
+}
+
+.kpi-title {
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    color: #475467 !important;
+    letter-spacing: 0.02em !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.25 !important;
+    margin: 0 0 2px 0 !important;
 }
 
 .kpi-sub {
-    font-size: 0.76rem;
-    color: var(--rs-text-sub);
-    display: flex;
-    align-items: center;
-    gap: 4px;
+    font-size: 10.5px !important;
+    color: #667085 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    line-height: 1.25 !important;
+    margin: 0 !important;
+    display: block !important;
 }
 
 /* Card color variants */
@@ -370,26 +414,26 @@
 
 .kpi-emerald::before { background: var(--rs-success); }
 .kpi-emerald .kpi-icon { background: var(--rs-success-light); color: var(--rs-success); }
-.kpi-emerald .kpi-value { color: #047857; }
+.kpi-emerald .kpi-value { color: #047857 !important; }
 
 .kpi-rose::before { background: var(--rs-danger); }
 .kpi-rose .kpi-icon { background: var(--rs-danger-light); color: var(--rs-danger); }
-.kpi-rose .kpi-value { color: #b91c1c; }
+.kpi-rose .kpi-value { color: #b91c1c !important; }
 
 .kpi-indigo::before { background: #6366f1; }
 .kpi-indigo .kpi-icon { background: #eef2ff; color: #6366f1; }
 
 .kpi-gray::before { background: #94a3b8; }
 .kpi-gray .kpi-icon { background: #f1f5f9; color: #64748b; }
-.kpi-gray .kpi-value { color: #64748b; font-size: 1rem; }
+.kpi-gray .kpi-value { color: #64748b !important; }
 
 .kpi-amber::before { background: #f59e0b; }
 .kpi-amber .kpi-icon { background: #fffbeb; color: #d97706; }
-.kpi-amber .kpi-value { color: #b45309; }
+.kpi-amber .kpi-value { color: #b45309 !important; }
 
 .kpi-orange::before { background: #ea580c; }
 .kpi-orange .kpi-icon { background: #fff7ed; color: #ea580c; }
-.kpi-orange .kpi-value { color: #c2410c; font-size: 1rem; }
+.kpi-orange .kpi-value { color: #c2410c !important; }
 
 .kpi-teal::before { background: #0d9488; }
 .kpi-teal .kpi-icon { background: #f0fdfa; color: #0d9488; }
