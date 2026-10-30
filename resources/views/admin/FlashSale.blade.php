@@ -4,16 +4,16 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <style>
-        .fs-container { padding: 24px; max-width: 1440px; margin: 0 auto; }
+        .fs-container { padding: 24px 32px; background: #f8f9fa; min-height: 100vh; }
 
         /* Stats Grid */
         .fs-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
         @media (max-width: 1200px) { .fs-stats-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 576px) { .fs-stats-grid { grid-template-columns: 1fr; } }
 
-        .fs-stat-card { background: #fff; border: 1px solid #EAECF0; border-radius: 14px; padding: 18px 20px; display: flex; align-items: center; gap: 16px; transition: all 0.2s ease; }
+        .fs-stat-card { background: #fff; border: 1px solid #EAECF0; border-radius: 14px; padding: 14px 18px; display: flex; align-items: center; gap: 14px; height: 84px; transition: all 0.2s ease; }
         .fs-stat-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(16,24,40,0.06); }
-        .fs-stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+        .fs-stat-icon { width: 44px; height: 44px; min-width: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
         .fs-stat-icon.pink { background: #FDEAF3; color: #EC3D8F; }
         .fs-stat-icon.green { background: #ECFDF3; color: #039855; }
         .fs-stat-icon.orange { background: #FEF0C7; color: #DC6803; }
@@ -25,8 +25,8 @@
 
         /* Table */
         .fs-table { width: 100%; border-collapse: collapse; margin-bottom: 0; }
-        .fs-table th { background: #F9FAFB; color: #475467; font-size: 12px; font-weight: 600; text-transform: uppercase; padding: 12px 18px; border-bottom: 1px solid #EAECF0; white-space: nowrap; }
-        .fs-table td { padding: 14px 18px; vertical-align: middle; border-bottom: 1px solid #F2F4F7; font-size: 13.5px; color: #344054; }
+        .fs-table th { background: #F9FAFB; color: #475467; font-size: 11.5px; font-weight: 600; text-transform: uppercase; padding: 10px 10px; border-bottom: 1px solid #EAECF0; white-space: nowrap; }
+        .fs-table td { padding: 10px 10px; vertical-align: middle; border-bottom: 1px solid #F2F4F7; font-size: 12.5px; color: #344054; }
         .fs-table tbody tr:hover { background-color: #FDFBFB; }
 
         /* Badges */
@@ -42,15 +42,15 @@
         .badge-rate-75 { background: #FDF2FA; color: #C11574; border: 1px solid #FCCEEE; }
 
         /* Filter Tab */
-        .fs-filter-tab { display: inline-block; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #667085; text-decoration: none; transition: all 0.2s; white-space: nowrap; }
+        .fs-filter-tab { display: inline-block; padding: 5px 9px; border-radius: 6px; font-size: 12px; font-weight: 600; color: #667085; text-decoration: none; transition: all 0.2s; white-space: nowrap; }
         .fs-filter-tab:hover { background: #F2F4F7; color: #344054; }
         .fs-filter-tab.active { background: #EC3D8F; color: #fff; }
 
         .btn-quick-hr { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1px solid #D0D5DD; background: #fff; color: #344054; cursor: pointer; }
         .btn-quick-hr:hover { background: #F2F4F7; }
 
-        /* Action Buttons */
-        .btn-act { font-size: 12px; padding: 5px 10px; border-radius: 7px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; border: 1px solid transparent; cursor: pointer; transition: all 0.15s ease; white-space: nowrap; }
+        /* Action Buttons: nhỏ gọn, 1 hàng */
+        .btn-act { font-size: 11px; padding: 4px 7px; border-radius: 6px; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; text-decoration: none; border: 1px solid transparent; cursor: pointer; transition: all 0.15s ease; white-space: nowrap; line-height: 1.2; }
         .btn-act-extend { background: #EFF8FF; color: #175CD3; border-color: #B2DDFF; }
         .btn-act-extend:hover { background: #D1E9FF; color: #155EEF; }
         .btn-act-return { background: #ECFDF3; color: #027A48; border-color: #A6F4C5; }
@@ -59,6 +59,104 @@
         .btn-act-damage:hover { background: #FEE4E2; color: #912018; }
         .btn-act-close { background: #F2F4F7; color: #344054; border-color: #D0D5DD; }
         .btn-act-close:hover { background: #E4E7EC; color: #1D2939; }
+
+        /* RoseShop Standard Table Footer & Pagination */
+        .rs-table-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            background: #ffffff;
+            border-top: 1px solid #EAECF0;
+            border-bottom-left-radius: 14px;
+            border-bottom-right-radius: 14px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .rs-footer-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .rs-per-page-inline {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #475467;
+        }
+        .rs-per-page-select {
+            width: 68px !important;
+            height: 34px !important;
+            padding: 0 20px 0 10px !important;
+            border: 1px solid #D0D5DD !important;
+            border-radius: 8px !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            color: #101828 !important;
+            background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475467' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 6px center !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            outline: none !important;
+            cursor: pointer !important;
+        }
+        .rs-records-count {
+            font-size: 13px;
+            color: #667085;
+            white-space: nowrap;
+        }
+        .rs-footer-pagination {
+            display: flex;
+            align-items: center;
+        }
+        .rs-pagination {
+            display: flex;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            gap: 4px;
+            align-items: center;
+        }
+        .rs-pagination .page-item .page-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 34px;
+            height: 34px;
+            padding: 0 8px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #475467;
+            background: #ffffff;
+            border: 1px solid #D0D5DD;
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+        .rs-pagination .page-item:not(.disabled) .page-link:hover {
+            background: #F9FAFB;
+            border-color: #EC3D8F;
+            color: #EC3D8F;
+        }
+        .rs-pagination .page-item.active .page-link {
+            background: #EC3D8F;
+            border-color: #EC3D8F;
+            color: #ffffff;
+            font-weight: 700;
+        }
+        .rs-pagination .page-item.disabled .page-link {
+            background: #F9FAFB;
+            border-color: #EAECF0;
+            color: #D0D5DD;
+            cursor: not-allowed;
+        }
+        .rs-pagination .page-link.ellipsis {
+            border-color: transparent !important;
+            background: transparent !important;
+            color: #98A2B3 !important;
+            cursor: default !important;
+        }
     </style>
 @endpush
 
@@ -90,18 +188,18 @@
     @endif
 
     {{-- Page Header --}}
-    <div class="rs-page-header d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-        <div>
-            <h1 class="rs-page-title fs-4 fw-bold text-dark mb-1">FLASH SALE</h1>
-            <p class="rs-page-subtitle text-muted mb-0" style="font-size: 13px;">
+    <div class="rs-page-header d-flex justify-content-between align-items-center mb-3 gap-3 flex-nowrap">
+        <div style="flex: 1; min-width: 0;">
+            <h1 class="rs-page-title fs-5 fw-bold text-dark mb-1">FLASH SALE</h1>
+            <p class="rs-page-subtitle text-muted mb-0 text-truncate" style="font-size: 12px;">
                 Quản lý tập trung các chương trình Flash Sale từ nhiều nguồn: Cận hạn, Hết hạn, Hàng hoàn và Hàng có vấn đề.
             </p>
         </div>
-        <div class="d-flex align-items-center gap-2">
-            <a href="{{ route('admin.san-pham-het-han') }}" class="btn btn-outline-danger btn-sm fw-semibold rounded-3 px-3 py-2">
+        <div class="d-flex align-items-center gap-2 flex-shrink-0">
+            <a href="{{ route('admin.san-pham-het-han') }}" class="btn btn-outline-danger btn-sm fw-semibold rounded-3 px-3 py-1 text-nowrap" style="font-size: 12px; height: 32px; display: inline-flex; align-items: center;">
                 <i class="bi bi-clock-history me-1"></i> Sản phẩm cận hạn
             </a>
-            <a href="{{ route('admin.bao-cao-hang-hong.index') }}" class="btn btn-outline-secondary btn-sm fw-semibold rounded-3 px-3 py-2">
+            <a href="{{ route('admin.bao-cao-hang-hong.index') }}" class="btn btn-outline-secondary btn-sm fw-semibold rounded-3 px-3 py-1 text-nowrap" style="font-size: 12px; height: 32px; display: inline-flex; align-items: center;">
                 <i class="bi bi-trash3 me-1"></i> Báo cáo hàng hỏng
             </a>
         </div>
@@ -111,67 +209,68 @@
     <div class="fs-stats-grid">
         <div class="fs-stat-card">
             <div class="fs-stat-icon pink"><i class="bi bi-lightning-fill"></i></div>
-            <div>
-                <h3 class="fs-4 fw-bold text-dark mb-0">{{ number_format($thongKe['tat_ca']) }}</h3>
-                <div class="text-muted" style="font-size: 13px;">Tổng chương trình Flash Sale</div>
+            <div class="d-flex flex-column justify-content-center">
+                <h3 class="fw-bold text-dark mb-0" style="font-size: 20px; line-height: 1.2;">{{ number_format($thongKe['tat_ca']) }}</h3>
+                <div class="text-muted text-nowrap mt-1" style="font-size: 12px; line-height: 1.2;">Tổng CT Flash Sale</div>
             </div>
         </div>
         <div class="fs-stat-card">
             <div class="fs-stat-icon green"><i class="bi bi-play-circle-fill"></i></div>
-            <div>
-                <h3 class="fs-4 fw-bold text-dark mb-0">{{ number_format($thongKe['dang_ban']) }}</h3>
-                <div class="text-muted" style="font-size: 13px;">Đang mở bán Flash Sale</div>
+            <div class="d-flex flex-column justify-content-center">
+                <h3 class="fw-bold text-dark mb-0" style="font-size: 20px; line-height: 1.2;">{{ number_format($thongKe['dang_ban']) }}</h3>
+                <div class="text-muted text-nowrap mt-1" style="font-size: 12px; line-height: 1.2;">Đang mở bán Flash Sale</div>
             </div>
         </div>
         <div class="fs-stat-card">
             <div class="fs-stat-icon orange"><i class="bi bi-clock-history"></i></div>
-            <div>
-                <h3 class="fs-4 fw-bold text-dark mb-0">{{ number_format($thongKe['het_thoi_gian']) }}</h3>
-                <div class="text-muted" style="font-size: 13px;">Đã hết thời gian (cần kiểm tra)</div>
+            <div class="d-flex flex-column justify-content-center">
+                <h3 class="fw-bold text-dark mb-0" style="font-size: 20px; line-height: 1.2;">{{ number_format($thongKe['het_thoi_gian']) }}</h3>
+                <div class="text-muted text-nowrap mt-1" style="font-size: 12px; line-height: 1.2;">Đã hết thời gian</div>
             </div>
         </div>
         <div class="fs-stat-card">
             <div class="fs-stat-icon gray"><i class="bi bi-bag-check-fill"></i></div>
-            <div>
-                <h3 class="fs-4 fw-bold text-dark mb-0">{{ number_format($thongKe['het_hang']) }}</h3>
-                <div class="text-muted" style="font-size: 13px;">Đã bán hết hàng</div>
+            <div class="d-flex flex-column justify-content-center">
+                <h3 class="fw-bold text-dark mb-0" style="font-size: 20px; line-height: 1.2;">{{ number_format($thongKe['het_hang']) }}</h3>
+                <div class="text-muted text-nowrap mt-1" style="font-size: 12px; line-height: 1.2;">Đã bán hết hàng</div>
             </div>
         </div>
     </div>
 
-    {{-- Filter bar --}}
-    <div class="card border-0 shadow-sm rounded-3 p-3 mb-4 bg-white">
-        <form method="GET" action="{{ route('admin.hoan-hang.flash-sale.index') }}" class="row g-3 align-items-center">
-            <div class="col-lg-8 col-md-12">
-                <div class="d-flex flex-wrap gap-1 align-items-center">
-                    <span class="text-muted fw-semibold me-2" style="font-size: 12px; text-transform: uppercase;">Bộ lọc:</span>
-                    <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'all', 'keyword' => $keyword ?? '']) }}"
-                       class="fs-filter-tab {{ ($filter ?? 'all') === 'all' ? 'active' : '' }}">Tất cả ({{ $thongKe['tat_ca'] }})</a>
-                    <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'CAN_HAN', 'keyword' => $keyword ?? '']) }}"
-                       class="fs-filter-tab {{ ($filter ?? '') === 'CAN_HAN' ? 'active' : '' }}">Cận hạn</a>
-                    <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'HET_HAN', 'keyword' => $keyword ?? '']) }}"
-                       class="fs-filter-tab {{ ($filter ?? '') === 'HET_HAN' ? 'active' : '' }}">Hết hạn</a>
-                    <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'HANG_HOAN', 'keyword' => $keyword ?? '']) }}"
-                       class="fs-filter-tab {{ ($filter ?? '') === 'HANG_HOAN' ? 'active' : '' }}">Hàng hoàn</a>
-                    <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'HANG_CO_VAN_DE', 'keyword' => $keyword ?? '']) }}"
-                       class="fs-filter-tab {{ ($filter ?? '') === 'HANG_CO_VAN_DE' ? 'active' : '' }}">Có vấn đề</a>
-                    <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'dang_ban', 'keyword' => $keyword ?? '']) }}"
-                       class="fs-filter-tab {{ ($filter ?? '') === 'dang_ban' ? 'active' : '' }}">Đang bán ({{ $thongKe['dang_ban'] }})</a>
-                    <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'het_thoi_gian', 'keyword' => $keyword ?? '']) }}"
-                       class="fs-filter-tab {{ ($filter ?? '') === 'het_thoi_gian' ? 'active' : '' }}">Hết giờ ({{ $thongKe['het_thoi_gian'] }})</a>
-                </div>
+    {{-- Filter bar: Cùng 1 hàng, không bị rớt dòng --}}
+    <div class="card border-0 shadow-sm rounded-3 p-2 mb-4 bg-white">
+        <form method="GET" action="{{ route('admin.hoan-hang.flash-sale.index') }}" class="d-flex align-items-center justify-content-between gap-2 flex-nowrap" style="overflow-x: auto;">
+            <div class="d-flex align-items-center gap-1 flex-nowrap">
+                <span class="text-muted fw-semibold me-1 text-nowrap" style="font-size: 11px; text-transform: uppercase;">Bộ lọc:</span>
+                <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'all', 'keyword' => $keyword ?? '']) }}"
+                   class="fs-filter-tab {{ ($filter ?? 'all') === 'all' ? 'active' : '' }}">Tất cả ({{ $thongKe['tat_ca'] }})</a>
+                <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'CAN_HAN', 'keyword' => $keyword ?? '']) }}"
+                   class="fs-filter-tab {{ ($filter ?? '') === 'CAN_HAN' ? 'active' : '' }}">Cận hạn</a>
+                <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'HET_HAN', 'keyword' => $keyword ?? '']) }}"
+                   class="fs-filter-tab {{ ($filter ?? '') === 'HET_HAN' ? 'active' : '' }}">Hết hạn</a>
+                <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'HANG_HOAN', 'keyword' => $keyword ?? '']) }}"
+                   class="fs-filter-tab {{ ($filter ?? '') === 'HANG_HOAN' ? 'active' : '' }}">Hàng hoàn</a>
+                <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'HANG_CO_VAN_DE', 'keyword' => $keyword ?? '']) }}"
+                   class="fs-filter-tab {{ ($filter ?? '') === 'HANG_CO_VAN_DE' ? 'active' : '' }}">Có vấn đề</a>
+                <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'dang_ban', 'keyword' => $keyword ?? '']) }}"
+                   class="fs-filter-tab {{ ($filter ?? '') === 'dang_ban' ? 'active' : '' }}">Đang bán ({{ $thongKe['dang_ban'] }})</a>
+                <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'het_thoi_gian', 'keyword' => $keyword ?? '']) }}"
+                   class="fs-filter-tab {{ ($filter ?? '') === 'het_thoi_gian' ? 'active' : '' }}">Hết giờ ({{ $thongKe['het_thoi_gian'] }})</a>
             </div>
-            <div class="col-lg-4 col-md-12">
-                <div class="input-group">
-                    <input type="text" name="keyword" class="form-control" placeholder="Tìm tên hoa, mã Flash Sale..." value="{{ $keyword ?? '' }}">
+            <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                <div class="position-relative" style="width: 250px;">
+                    <i class="bi bi-search position-absolute text-muted" style="left: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; font-size: 13px; z-index: 5;"></i>
+                    <input type="text" name="keyword" class="form-control" style="padding: 0 12px 0 38px !important; height: 34px; border-radius: 8px; font-size: 12px;" placeholder="Tìm tên hoa, mã Flash Sale..." value="{{ $keyword ?? '' }}">
                     <input type="hidden" name="filter" value="{{ $filter ?? 'all' }}">
-                    <button class="btn btn-outline-secondary px-3" type="submit">Tìm</button>
-                    @if(!empty($keyword) || ($filter ?? 'all') !== 'all')
-                        <a href="{{ route('admin.hoan-hang.flash-sale.index') }}" class="btn btn-light border px-3" title="Đặt lại">
-                            <i class="bi bi-arrow-counterclockwise"></i>
-                        </a>
-                    @endif
                 </div>
+                <button type="submit" class="btn text-white fw-bold d-inline-flex align-items-center justify-content-center text-nowrap" style="background:#EC3D8F; border-color:#EC3D8F; font-size: 12px; height: 34px; padding: 0 14px; border-radius: 8px;">
+                    Tìm
+                </button>
+                @if(!empty($keyword) || ($filter ?? 'all') !== 'all')
+                    <a href="{{ route('admin.hoan-hang.flash-sale.index') }}" class="btn btn-light border d-inline-flex align-items-center justify-content-center" style="height: 34px; width: 34px; padding: 0; border-radius: 8px;" title="Đặt lại">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+                @endif
             </div>
         </form>
     </div>
@@ -188,16 +287,16 @@
             <table class="fs-table">
                 <thead>
                     <tr>
-                        <th class="text-center" style="width: 60px;">Mã</th>
-                        <th>Sản phẩm / Bó hoa</th>
-                        <th class="text-center">Nguồn</th>
-                        <th class="text-center">Quota / Đã bán / Giữ / Còn</th>
-                        <th class="text-end">Giá gốc</th>
-                        <th class="text-center">Mức giảm</th>
-                        <th class="text-end">Giá Flash Sale</th>
-                        <th class="text-center">Thời gian kết thúc</th>
-                        <th class="text-center">Trạng thái</th>
-                        <th class="text-center" style="min-width: 250px;">Thao tác</th>
+                        <th class="text-center" style="width: 75px;">Mã</th>
+                        <th style="min-width: 180px; max-width: 240px;">Sản phẩm / Bó hoa</th>
+                        <th class="text-center" style="width: 110px;">Nguồn</th>
+                        <th class="text-center" style="width: 160px;">Quota / Đã bán / Giữ / Còn</th>
+                        <th class="text-end" style="width: 95px;">Giá gốc</th>
+                        <th class="text-center" style="width: 80px;">Mức giảm</th>
+                        <th class="text-end" style="width: 110px;">Giá Flash Sale</th>
+                        <th class="text-center" style="width: 140px;">Thời gian kết thúc</th>
+                        <th class="text-center" style="width: 100px;">Trạng thái</th>
+                        <th class="text-center" style="width: 170px;">Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -211,90 +310,104 @@
                             $daHetGio = $fs->ket_thuc && \Carbon\Carbon::parse($fs->ket_thuc)->isPast();
                         @endphp
                         <tr>
-                            <td class="text-center fw-bold text-muted">#FS-{{ $fs->ma_flash_sale }}</td>
+                            <td class="text-center" style="white-space: nowrap;">
+                                <span class="fw-bold" style="color:#EC3D8F; font-family: monospace; font-size: 12px;">#FS-{{ $fs->ma_flash_sale }}</span>
+                            </td>
                             <td>
-                                <div class="fw-bold text-dark">{{ $ten }}</div>
-                                <div class="text-muted" style="font-size: 11.5px;">
-                                    @if($fs->ma_chi_tiet_nhap)
-                                        Lô: #{{ $fs->ma_chi_tiet_nhap }}
-                                    @elseif($fs->ma_chi_tiet_hang_hoan)
-                                        Hoàn: #{{ $fs->ma_chi_tiet_hang_hoan }}
-                                    @elseif($fs->ma_bo_hoa)
-                                        Bó hoa: #{{ $fs->ma_bo_hoa }}
+                                <div style="max-width: 250px; min-width: 0;">
+                                    <div class="fw-bold text-dark text-truncate" title="{{ $ten }}" style="font-size: 13px;">{{ $ten }}</div>
+                                    <div class="text-muted" style="font-size: 11.5px; white-space: nowrap;">
+                                        @if($fs->ma_chi_tiet_nhap)
+                                            Lô: <span class="fw-bold" style="color:#EC3D8F; font-family: monospace; font-size: 11px;">#{{ $fs->ma_chi_tiet_nhap }}</span>
+                                        @elseif($fs->ma_chi_tiet_hang_hoan)
+                                            Hoàn: <span class="fw-bold" style="color:#EC3D8F; font-family: monospace; font-size: 11px;">#{{ $fs->ma_chi_tiet_hang_hoan }}</span>
+                                        @elseif($fs->ma_bo_hoa)
+                                            Bó hoa: <span class="fw-bold" style="color:#EC3D8F; font-family: monospace; font-size: 11px;">#{{ $fs->ma_bo_hoa }}</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center" style="white-space: nowrap;">
+                                <div>
+                                    @switch($fs->nguon)
+                                        @case('CAN_HAN')
+                                            <span class="badge-source badge-src-can-han"><i class="bi bi-clock"></i> Cận hạn</span>
+                                            @break
+                                        @case('HET_HAN')
+                                            <span class="badge-source badge-src-het-han"><i class="bi bi-exclamation-circle"></i> Hết hạn</span>
+                                            @break
+                                        @case('HANG_HOAN')
+                                            <span class="badge-source badge-src-hoan-hang"><i class="bi bi-arrow-return-left"></i> Hàng hoàn</span>
+                                            @break
+                                        @case('HANG_CO_VAN_DE')
+                                            <span class="badge-source badge-src-co-van-de"><i class="bi bi-patch-question"></i> Có vấn đề</span>
+                                            @break
+                                        @default
+                                            <span class="badge-source badge-src-hoan-hang">{{ $fs->nguon ?? 'Chưa rõ' }}</span>
+                                    @endswitch
+                                </div>
+                            </td>
+                            <td class="text-center" style="white-space: nowrap;">
+                                <div class="d-inline-flex align-items-center gap-1" style="font-size: 12.5px;">
+                                    <span class="fw-bold text-dark" title="Hạn mức Flash Sale (Quota)">{{ number_format($fs->so_luong) }}</span>
+                                    <span class="text-muted">/</span>
+                                    <span class="fw-bold text-success" title="Đã bán thành công (Consumed)">{{ number_format($fs->so_luong_da_ban) }}</span>
+                                    <span class="text-muted">/</span>
+                                    <span class="fw-bold text-warning" title="Đang có khách giữ (Reserved)">{{ number_format($dangGiu) }}</span>
+                                    <span class="text-muted">/</span>
+                                    <span class="fw-bold {{ $conQuota > 0 ? 'text-primary' : 'text-muted' }}" title="Suất sale còn khả dụng">{{ number_format($conQuota) }}</span>
+                                </div>
+                            </td>
+                            <td class="text-end text-muted text-decoration-line-through" style="white-space: nowrap;">
+                                <div style="font-size: 12.5px;">{{ number_format($fs->gia_goc) }}đ</div>
+                            </td>
+                            <td class="text-center" style="white-space: nowrap;">
+                                <div>
+                                    @php
+                                        $rate = $fs->ti_le_giam ?? ($fs->gia_goc > 0 ? round(($fs->so_tien_giam / $fs->gia_goc) * 100) : 0);
+                                    @endphp
+                                    @if($rate >= 70)
+                                        <span class="badge-rate badge-rate-75">-{{ $rate }}%</span>
+                                    @elseif($rate >= 45)
+                                        <span class="badge-rate badge-rate-50">-{{ $rate }}%</span>
+                                    @else
+                                        <span class="badge-rate badge-rate-30">-{{ $rate }}%</span>
                                     @endif
                                 </div>
                             </td>
-                            <td class="text-center">
-                                @switch($fs->nguon)
-                                    @case('CAN_HAN')
-                                        <span class="badge-source badge-src-can-han"><i class="bi bi-clock"></i> Cận hạn</span>
-                                        @break
-                                    @case('HET_HAN')
-                                        <span class="badge-source badge-src-het-han"><i class="bi bi-exclamation-circle"></i> Hết hạn</span>
-                                        @break
-                                    @case('HANG_HOAN')
-                                        <span class="badge-source badge-src-hoan-hang"><i class="bi bi-arrow-return-left"></i> Hàng hoàn</span>
-                                        @break
-                                    @case('HANG_CO_VAN_DE')
-                                        <span class="badge-source badge-src-co-van-de"><i class="bi bi-patch-question"></i> Có vấn đề</span>
-                                        @break
-                                    @default
-                                        <span class="badge-source badge-src-hoan-hang">{{ $fs->nguon ?? 'Chưa rõ' }}</span>
-                                @endswitch
+                            <td class="text-end fw-bold text-danger" style="white-space: nowrap;">
+                                <div style="font-size: 13.5px;">{{ number_format($fs->gia_flash_sale) }}đ</div>
                             </td>
-                            <td class="text-center text-nowrap">
-                                <span class="fw-bold text-dark" title="Hạn mức Flash Sale (Quota)">{{ number_format($fs->so_luong) }}</span>
-                                <span class="text-muted">/</span>
-                                <span class="fw-bold text-success" title="Đã bán thành công (Consumed)">{{ number_format($fs->so_luong_da_ban) }}</span>
-                                <span class="text-muted">/</span>
-                                <span class="fw-bold text-warning" title="Đang có khách giữ (Reserved)">{{ number_format($dangGiu) }}</span>
-                                <span class="text-muted">/</span>
-                                <span class="fw-bold {{ $conQuota > 0 ? 'text-primary' : 'text-muted' }}" title="Suất sale còn khả dụng">{{ number_format($conQuota) }}</span>
-                            </td>
-                            <td class="text-end text-muted text-decoration-line-through">
-                                {{ number_format($fs->gia_goc) }}đ
-                            </td>
-                            <td class="text-center">
-                                @php
-                                    $rate = $fs->ti_le_giam ?? ($fs->gia_goc > 0 ? round(($fs->so_tien_giam / $fs->gia_goc) * 100) : 0);
-                                @endphp
-                                @if($rate >= 70)
-                                    <span class="badge-rate badge-rate-75">-{{ $rate }}%</span>
-                                @elseif($rate >= 45)
-                                    <span class="badge-rate badge-rate-50">-{{ $rate }}%</span>
-                                @else
-                                    <span class="badge-rate badge-rate-30">-{{ $rate }}%</span>
-                                @endif
-                            </td>
-                            <td class="text-end fw-bold text-danger fs-6">
-                                {{ number_format($fs->gia_flash_sale) }}đ
-                            </td>
-                            <td class="text-center text-nowrap">
-                                <div class="fw-semibold {{ $daHetGio ? 'text-danger' : 'text-dark' }}">
+                            <td class="text-center" style="white-space: nowrap;">
+                                <div class="fw-semibold {{ $daHetGio ? 'text-danger' : 'text-dark' }}" style="font-size: 12.5px;">
                                     {{ optional($fs->ket_thuc)->format('d/m/Y H:i') }}
                                 </div>
                                 @if($daHetGio)
-                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold" style="font-size: 10.5px;">
-                                        Đã hết giờ
-                                    </span>
+                                    <div class="mt-1">
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle fw-semibold" style="font-size: 10.5px;">
+                                            Đã hết giờ
+                                        </span>
+                                    </div>
                                 @endif
                             </td>
-                            <td class="text-center">
-                                @if($fs->trang_thai === 'DANG_BAN')
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold">Đang bán</span>
-                                @elseif($fs->trang_thai === 'KET_THUC')
-                                    <span class="badge bg-secondary-subtle text-secondary border fw-semibold">Đã kết thúc</span>
-                                @elseif($fs->trang_thai === 'HET_HANG')
-                                    <span class="badge bg-dark text-white fw-semibold">Hết quota</span>
-                                @else
-                                    <span class="badge bg-light text-dark border">{{ $fs->trang_thai }}</span>
-                                @endif
+                            <td class="text-center" style="white-space: nowrap;">
+                                <div>
+                                    @if($fs->trang_thai === 'DANG_BAN')
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold" style="font-size: 11.5px;">Đang bán</span>
+                                    @elseif($fs->trang_thai === 'KET_THUC')
+                                        <span class="badge bg-secondary-subtle text-secondary border fw-semibold" style="font-size: 11.5px;">Đã kết thúc</span>
+                                    @elseif($fs->trang_thai === 'HET_HANG')
+                                        <span class="badge bg-dark text-white fw-semibold" style="font-size: 11.5px;">Hết quota</span>
+                                    @else
+                                        <span class="badge bg-light text-dark border" style="font-size: 11.5px;">{{ $fs->trang_thai }}</span>
+                                    @endif
+                                </div>
                             </td>
-                            <td class="text-center">
-                                <div class="d-flex align-items-center justify-content-center gap-1 flex-wrap">
+                            <td class="text-center" style="white-space: nowrap;">
+                                <div class="d-flex align-items-center justify-content-center gap-1 flex-nowrap">
                                     {{-- 1. Gia hạn Flash Sale --}}
                                     <button type="button"
-                                            class="btn-act btn-act-extend btn-open-modal-extend"
+                                            class="btn-act btn-act-extend btn-open-modal-extend text-nowrap"
                                             data-id="{{ $fs->ma_flash_sale }}"
                                             data-ten="{{ $ten }}"
                                             data-ketthuc="{{ optional($fs->ket_thuc)->format('Y-m-d\\TH:i') }}"
@@ -305,7 +418,7 @@
                                     {{-- 2. Báo hỏng hàng Flash Sale (trừ tồn vật lý và báo hỏng) --}}
                                     @if($conQuota > 0)
                                         <button type="button"
-                                                class="btn-act btn-act-damage btn-open-modal-damage"
+                                                class="btn-act btn-act-damage btn-open-modal-damage text-nowrap"
                                                 data-id="{{ $fs->ma_flash_sale }}"
                                                 data-ten="{{ $ten }}"
                                                 data-conlai="{{ $conQuota }}"
@@ -319,7 +432,7 @@
                                         <form action="{{ route('admin.hoan-hang.flash-sale.close', $fs->ma_flash_sale) }}" method="POST" class="d-inline"
                                               onsubmit="return confirm('Xác nhận kết thúc chương trình Flash Sale này? Hệ thống sẽ ngừng áp dụng giá sale, sản phẩm vẫn được giữ nguyên trong kho bán thường.');">
                                             @csrf
-                                            <button type="submit" class="btn-act btn-act-close" title="Kết thúc chương trình">
+                                            <button type="submit" class="btn-act btn-act-close text-nowrap" title="Kết thúc chương trình">
                                                 <i class="bi bi-stop-circle"></i> Kết thúc
                                             </button>
                                         </form>
@@ -338,9 +451,76 @@
                 </tbody>
             </table>
         </div>
-        @if($flashSales->hasPages())
-            <div class="p-3 border-top d-flex justify-content-end bg-light">
-                {{ $flashSales->links() }}
+        {{-- Phân trang chuẩn RoseShop cho Flash Sale --}}
+        @if($flashSales->total() > 0)
+            <div class="rs-table-footer">
+                <div class="rs-footer-left">
+                    <div class="rs-per-page-inline">
+                        <span>Số hàng mỗi trang:</span>
+                        <select class="rs-per-page-select" onchange="location = this.value;">
+                            @foreach([10, 15, 20, 50] as $sz)
+                                <option value="{{ request()->fullUrlWithQuery(['per_page' => $sz, 'page' => 1]) }}"
+                                        {{ ($flashSales->perPage() == $sz) ? 'selected' : '' }}>
+                                    {{ $sz }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="rs-records-count">
+                        {{ $flashSales->firstItem() ?? 0 }}-{{ $flashSales->lastItem() ?? 0 }} / {{ $flashSales->total() }} bản ghi
+                    </div>
+                </div>
+                @if($flashSales->hasPages())
+                    <div class="rs-footer-pagination">
+                        <ul class="rs-pagination">
+                            {{-- Trang trước --}}
+                            @if ($flashSales->onFirstPage())
+                                <li class="page-item disabled"><span class="page-link">&lsaquo;</span></li>
+                            @else
+                                <li class="page-item"><a class="page-link" href="{{ $flashSales->previousPageUrl() }}" rel="prev">&lsaquo;</a></li>
+                            @endif
+
+                            {{-- Rút gọn trang với dấu ... --}}
+                            @php
+                                $curP = $flashSales->currentPage();
+                                $lastP = $flashSales->lastPage();
+                                $pagesFs = [];
+                                if ($lastP <= 3) {
+                                    for ($i = 1; $i <= $lastP; $i++) { $pagesFs[] = $i; }
+                                } else {
+                                    if ($curP == 1) {
+                                        $pagesFs = [1, '...', $lastP];
+                                    } elseif ($curP == $lastP) {
+                                        $pagesFs = [1, '...', $lastP];
+                                    } else {
+                                        $pagesFs = [1];
+                                        if ($curP > 2) { $pagesFs[] = '...'; }
+                                        $pagesFs[] = $curP;
+                                        if ($curP < $lastP - 1) { $pagesFs[] = '...'; }
+                                        $pagesFs[] = $lastP;
+                                    }
+                                }
+                            @endphp
+
+                            @foreach ($pagesFs as $p)
+                                @if ($p === '...')
+                                    <li class="page-item disabled"><span class="page-link ellipsis">&hellip;</span></li>
+                                @elseif ($p == $curP)
+                                    <li class="page-item active"><span class="page-link">{{ $p }}</span></li>
+                                @else
+                                    <li class="page-item"><a class="page-link" href="{{ $flashSales->url($p) }}">{{ $p }}</a></li>
+                                @endif
+                            @endforeach
+
+                            {{-- Trang sau --}}
+                            @if ($flashSales->hasMorePages())
+                                <li class="page-item"><a class="page-link" href="{{ $flashSales->nextPageUrl() }}" rel="next">&rsaquo;</a></li>
+                            @else
+                                <li class="page-item disabled"><span class="page-link">&rsaquo;</span></li>
+                            @endif
+                        </ul>
+                    </div>
+                @endif
             </div>
         @endif
     </div>

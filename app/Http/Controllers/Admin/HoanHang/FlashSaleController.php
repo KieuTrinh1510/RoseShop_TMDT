@@ -95,7 +95,8 @@ class FlashSaleController extends Controller
             });
         }
 
-        $flashSales = $query->orderByDesc('ma_flash_sale')->paginate(15)->withQueryString();
+        $perPage = in_array((int)$request->get('per_page'), [10, 15, 20, 50, 100]) ? (int)$request->get('per_page') : 10;
+        $flashSales = $query->orderByDesc('ma_flash_sale')->paginate($perPage)->withQueryString();
 
         // Thống kê nhanh
         $thongKe = [
@@ -147,6 +148,7 @@ class FlashSaleController extends Controller
             'filter'     => $filter,
             'keyword'    => $keyword,
             'nhanViens'  => NhanVien::orderBy('ten_nhan_vien')->get(['ma_nhan_vien', 'ten_nhan_vien']),
+            'perPage'    => $perPage,
         ]);
     }
 
