@@ -38,9 +38,10 @@
     font-size: 0.9rem;
 }.bao-cao-san-pham-container /* ── PAGE CONTAINER ─────────────────────────── */
 .page-container{
-    max-width: 1340px;
-    margin: 0 auto;
-    padding: 1.75rem 1.5rem 3rem;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 24px 32px 24px 32px !important;
 }.bao-cao-san-pham-container /* ── PAGE HEADER ────────────────────────────── */
 .page-header-section{
     display: flex;
@@ -61,36 +62,42 @@
     flex-shrink: 0;
 }.bao-cao-san-pham-container /* ── FILTER CARD ────────────────────────────── */
 .filter-card{
-    background: #fff;
-    border: 1.5px solid #e91e8c;
-    border-radius: 10px;
-    padding: 1.25rem 1.5rem;
+    background: #fff !important;
+    border: 1px solid #EAECF0 !important;
+    border-radius: 10px !important;
+    padding: 16px 20px !important;
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05) !important;
 }.bao-cao-san-pham-container .filter-card-header{
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 12px;
 }.bao-cao-san-pham-container .filter-title{
     font-weight: 700;
-    color: #e91e8c;
+    color: #EC3D8F !important;
     font-size: 0.88rem;
     letter-spacing: .4px;
     text-transform: uppercase;
 }.bao-cao-san-pham-container .filter-label{
     display: block;
-    font-size: 0.8rem;
-    color: #495057;
-    margin-bottom: 4px;
-    font-weight: 500;
+    font-size: 12px !important;
+    color: #475467 !important;
+    margin-bottom: 5px !important;
+    font-weight: 500 !important;
+    white-space: nowrap !important;
 }.bao-cao-san-pham-container .filter-input{
-    border: 1px solid #dee2e6;
-    border-radius: 6px;
-    padding: 6px 32px 6px 10px;
-    font-size: 0.88rem;
-    min-width: 160px;
+    border: 1px solid #D0D5DD !important;
+    border-radius: 6px !important;
+    padding: 6px 30px 6px 12px !important;
+    font-size: 12.5px !important;
+    color: #344054 !important;
+    background-color: #fff !important;
+    height: 38px !important;
+    width: 100% !important;
 }.bao-cao-san-pham-container .filter-input:focus{
-    border-color: #e91e8c;
-    box-shadow: 0 0 0 3px rgba(233,30,140,.15);
-    outline: none;
+    border-color: #EC3D8F !important;
+    box-shadow: 0 0 0 3px rgba(236, 61, 143, 0.12) !important;
+    outline: none !important;
 }.bao-cao-san-pham-container .input-icon-wrap{ position: relative; }.bao-cao-san-pham-container .input-icon{
     position: absolute;
     right: 10px;
@@ -157,39 +164,82 @@
     outline: none;
 }.bao-cao-san-pham-container /* ── TABLE CARD ─────────────────────────────── */
 .table-card{
-    background: #fff;
-    border-radius: 10px;
-    border: 1px solid #e9ecef;
+    background: #fff !important;
+    border-radius: 10px !important;
+    border: 1px solid #EAECF0 !important;
     overflow: hidden;
-    box-shadow: 0 1px 4px rgba(0,0,0,.04);
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05) !important;
 }.bao-cao-san-pham-container /* ── REPORT TABLE ───────────────────────────── */
-.report-table{
+.table-responsive {
     width: 100%;
+    overflow-x: auto;
+    position: relative;
+    scrollbar-width: thin;
+    scrollbar-color: #D0D5DD transparent;
+}
+.table-responsive::-webkit-scrollbar {
+    height: 6px;
+}
+.table-responsive::-webkit-scrollbar-track {
+    background: #F8F9FA;
+}
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #D0D5DD;
+    border-radius: 4px;
+}
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #98A2B3;
+}
+.report-table{
+    width: 1290px !important;
+    min-width: 1290px !important;
+    max-width: 1290px !important;
+    table-layout: fixed !important;
     border-collapse: collapse;
     font-size: 0.875rem;
-}.bao-cao-san-pham-container .report-table th{
-    background: #fdf0f7;
-    color: #495057;
-    font-weight: 700;
-    font-size: 0.78rem;
+}
+.report-table th,
+.bao-cao-san-pham-container .report-table th{
+    background: #F8F9FA !important;
+    color: #475467 !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
     text-align: center;
-    padding: 11px 8px;
-    border-bottom: 2px solid #f0c0d8;
-    white-space: nowrap;
-}.bao-cao-san-pham-container .report-table th small{
+    padding: 10px 4px !important;
+    border-bottom: 1px solid #EAECF0 !important;
+    border-top: 1px solid #EAECF0 !important;
+    white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
+}
+.report-table th small,
+.bao-cao-san-pham-container .report-table th small{
     display: block;
     font-weight: 400;
-    font-size: 0.7rem;
-    color: #868e96;
+    font-size: 10px !important;
+    color: #667085 !important;
     margin-top: 2px;
-}.bao-cao-san-pham-container .report-table td{
-    padding: 10px 8px;
-    border-bottom: 1px solid #f1f3f5;
+}
+.report-table td,
+.bao-cao-san-pham-container .report-table td{
+    padding: 8px 4px !important;
+    border-bottom: 1px solid #EAECF0 !important;
     vertical-align: middle;
     text-align: center;
-}.bao-cao-san-pham-container .report-table tbody tr:hover{ background: #fff5f9; }.bao-cao-san-pham-container /* Column widths */
-.col-stt{ width: 42px; }.bao-cao-san-pham-container .col-sp{ min-width: 170px; text-align: left !important; }.bao-cao-san-pham-container .col-loai{ min-width: 110px; }.bao-cao-san-pham-container .col-num{ min-width: 90px; }.bao-cao-san-pham-container .col-tt{ min-width: 100px; }.bao-cao-san-pham-container .col-action{ width: 70px; }.bao-cao-san-pham-container /* ── NUMBER COLORS ──────────────────────────── */
-.num-green{ color: #28a745; font-weight: 600; }.bao-cao-san-pham-container .num-purple{ color: #6f42c1; font-weight: 600; }.bao-cao-san-pham-container .num-blue{ color: #0284c7; font-weight: 600; }.bao-cao-san-pham-container .num-red{ color: #dc3545; font-weight: 600; }.bao-cao-san-pham-container .num-orange{ color: #fd7e14; font-weight: 600; }.bao-cao-san-pham-container /* ── PRODUCT CELL ───────────────────────────── */
+    overflow: hidden;
+    box-sizing: border-box;
+}
+.report-table tbody tr:hover{ background: #FAFAFA !important; }
+
+/* Column widths - Cố định chính xác 12 cột đầu = 1129px để cột 13 (Trạng thái) hé hé ra đúng 51px trong khung nhìn 1180px */
+.col-stt{ width: 38px !important; min-width: 38px !important; max-width: 38px !important; }
+.col-sp{ width: 172px !important; min-width: 172px !important; max-width: 172px !important; text-align: left !important; }
+.col-loai{ width: 100px !important; min-width: 100px !important; max-width: 100px !important; }
+.col-num{ width: 91px !important; min-width: 91px !important; max-width: 91px !important; }
+.col-tt{ width: 95px !important; min-width: 95px !important; max-width: 95px !important; text-align: center !important; }
+.col-action{ width: 65px !important; min-width: 65px !important; max-width: 65px !important; } /* ── NUMBER COLORS ──────────────────────────── */
+.num-green{ color: #027A48; font-weight: 600; }.bao-cao-san-pham-container .num-purple{ color: #6f42c1; font-weight: 600; }.bao-cao-san-pham-container .num-blue{ color: #0284c7; font-weight: 600; }.bao-cao-san-pham-container .num-red{ color: #B42318; font-weight: 600; }.bao-cao-san-pham-container .num-orange{ color: #B54708; font-weight: 600; }.bao-cao-san-pham-container /* ── PRODUCT CELL ───────────────────────────── */
 .sp-cell{
     display: flex;
     align-items: center;
@@ -200,28 +250,41 @@
     height: 38px;
     object-fit: cover;
     border-radius: 6px;
-    border: 1px solid #dee2e6;
+    border: 1px solid #EAECF0;
     flex-shrink: 0;
 }.bao-cao-san-pham-container .sp-thumb-placeholder{
     width: 38px;
     height: 38px;
     border-radius: 6px;
-    background: #fdf0f7;
-    border: 1px solid #f0c0d8;
+    background: #F8F9FA;
+    border: 1px solid #EAECF0;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #e91e8c;
+    color: #EC3D8F;
     font-size: 1.1rem;
     flex-shrink: 0;
 }.bao-cao-san-pham-container /* ── STATUS BADGE ───────────────────────────── */
 .badge-tt{
     display: inline-block;
     padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 0.75rem;
+    border-radius: 16px;
+    font-size: 11.5px;
     font-weight: 600;
-}.bao-cao-san-pham-container .badge-dang-ban{ background: #d4edda; color: #155724; }.bao-cao-san-pham-container .badge-ngung-ban{ background: #f8d7da; color: #721c24; }.bao-cao-san-pham-container /* ── CHI TIẾT LINK (trong cột Hàng hỏng) ───── */
+    line-height: 1.2;
+}.bao-cao-san-pham-container .badge-dang-ban{
+    background-color: #ECFDF3 !important;
+    color: #027A48 !important;
+    border: 1px solid #A6F4C5 !important;
+}.bao-cao-san-pham-container .badge-ngung-ban{
+    background-color: #FEF3F2 !important;
+    color: #B42318 !important;
+    border: 1px solid #FECDCA !important;
+}.bao-cao-san-pham-container .badge-draft{
+    background-color: #FFFAEB !important;
+    color: #B54708 !important;
+    border: 1px solid #FEDF89 !important;
+}.bao-cao-san-pham-container /* ── CHI TIẾT LINK (trong cột Hàng hỏng) ───── */
 .link-chitiet{
     color: #e91e8c;
     font-size: 0.76rem;
@@ -398,18 +461,255 @@
     }
 }.bao-cao-san-pham-container /* FIX FILTER BÁO CÁO SẢN PHẨM - DÀN ĐỀU */
 
-.filter-card form .d-flex, .bao-cao-san-pham-container .filter-card .d-flex{
-    display: grid !important;
-    grid-template-columns: 1fr 1fr 220px 160px !important;
-    gap: 24px !important;
-    align-items: end !important;
+/* ═════════════════════════════════════════════════════════════════════
+   ROSESHOP ENHANCED STYLING: HEADER, UNIFIED BỘ LỌC, TABLE & PAGINATION
+   ═════════════════════════════════════════════════════════════════════ */
+
+.rs-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+.rs-page-title {
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+.rs-page-subtitle {
+    font-size: 0.825rem;
+    color: #6b7280;
+    margin-top: 4px;
+    margin-bottom: 0;
+}
+
+/* ── BỘ LỌC DÀN TRÊN CÙNG 1 HÀNG DUY NHẤT ── */
+.rs-filter-row {
+    display: flex !important;
+    align-items: flex-end !important;
+    gap: 12px !important;
     width: 100% !important;
-}.bao-cao-san-pham-container .filter-card .d-flex > div{
+    flex-wrap: nowrap !important;
+}
+.rs-filter-col {
+    display: flex;
+    flex-direction: column;
+}
+.rs-col-date {
+    width: 180px !important;
+    flex-shrink: 0 !important;
+}
+.rs-col-search {
+    flex: 1 1 auto !important;
+    min-width: 250px !important;
+}
+.rs-col-btn {
+    flex-shrink: 0 !important;
+}
+.filter-label {
+    display: block;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: #475467 !important;
+    margin-bottom: 5px !important;
+    white-space: nowrap !important;
+}
+.filter-input {
+    height: 38px !important;
+    border: 1px solid #D0D5DD !important;
+    border-radius: 8px !important;
+    font-size: 12.5px !important;
+    color: #344054 !important;
+    padding: 6px 30px 6px 12px !important;
+    background-color: #ffffff !important;
     width: 100% !important;
-}.bao-cao-san-pham-container .filter-card .filter-input{
+}
+
+/* Khung tìm kiếm sản phẩm: icon kính lúp bên trong, không đè lên chữ */
+.rs-search-box-wrap {
+    position: relative;
+    width: 100%;
+}
+.rs-search-box-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #98A2B3;
+    font-size: 14px;
+    pointer-events: none;
+    z-index: 2;
+}
+.rs-search-box-input {
+    height: 38px !important;
+    border: 1px solid #D0D5DD !important;
+    border-radius: 8px !important;
+    font-size: 12.5px !important;
+    color: #344054 !important;
+    padding-left: 46px !important;
+    padding-right: 12px !important;
+    background-color: #ffffff !important;
     width: 100% !important;
-    height: 42px !important;
-}.bao-cao-san-pham-container .filter-card .btn-filter, .bao-cao-san-pham-container .filter-card .btn-reset{
-    width: 100% !important;
-    height: 42px !important;
+}
+.rs-search-box-input:focus, .filter-input:focus {
+    border-color: #EC3D8F !important;
+    box-shadow: 0 0 0 3px rgba(236, 61, 143, 0.12) !important;
+    outline: none !important;
+}
+
+/* Nút tìm kiếm & nút lọc trên cùng hàng */
+.btn-search-pink, .btn-filter-pink {
+    height: 38px !important;
+    background-color: #EC3D8F !important;
+    border: 1px solid #EC3D8F !important;
+    border-radius: 8px !important;
+    color: #ffffff !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    padding: 0 16px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    white-space: nowrap !important;
+    cursor: pointer !important;
+    box-shadow: 0 1px 2px rgba(236, 61, 143, 0.2) !important;
+    transition: all 0.15s ease !important;
+}
+.btn-search-pink:hover, .btn-filter-pink:hover {
+    background-color: #D82B7D !important;
+    border-color: #D82B7D !important;
+    color: #ffffff !important;
+}
+.btn-reset {
+    height: 38px !important;
+    background-color: #ffffff !important;
+    border: 1px solid #D0D5DD !important;
+    border-radius: 8px !important;
+    color: #344054 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    padding: 0 16px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    white-space: nowrap !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+.btn-reset:hover {
+    background-color: #F8F9FA !important;
+    border-color: #98A2B3 !important;
+    color: #101828 !important;
+}
+
+/* ── NÚT CHI TIẾT SẢN PHẨM ── */
+.btn-chi-tiet-san-pham {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid #EAECF0;
+    background: #fff;
+    color: #EC3D8F;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    transition: all 0.15s ease;
+    cursor: pointer;
+}
+.btn-chi-tiet-san-pham:hover {
+    background: #EC3D8F;
+    color: #fff;
+    border-color: #EC3D8F;
+}
+
+/* ── THANH PHÂN TRANG CHUẨN ROSESHOP ── */
+.rs-table-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 18px;
+    background: #ffffff;
+    border-top: 1px solid #EAECF0;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+.rs-footer-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.rs-per-page-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #475467;
+}
+.rs-per-page-select {
+    width: 68px !important;
+    height: 32px !important;
+    padding: 0 20px 0 10px !important;
+    border: 1px solid #D0D5DD !important;
+    border-radius: 6px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #101828 !important;
+    background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475467' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 8px center !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    outline: none !important;
+    cursor: pointer !important;
+}
+.rs-records-count {
+    font-size: 13px;
+    color: #667085;
+    white-space: nowrap;
+}
+.rs-table-footer .rs-pagination {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.rs-table-footer .page-item .page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 8px;
+    border-radius: 6px !important;
+    border: 1px solid #D0D5DD;
+    background: #ffffff;
+    color: #344054;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+.rs-table-footer .page-item.active .page-link {
+    background-color: #EC3D8F !important;
+    border-color: #EC3D8F !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    box-shadow: 0 1px 3px rgba(236, 61, 143, 0.25) !important;
+}
+.rs-table-footer .page-item.disabled .page-link {
+    color: #D0D5DD;
+    background-color: #F9FAFB;
+    border-color: #EAECF0;
+    cursor: not-allowed;
+}
+.rs-table-footer .page-item .page-link:hover:not(.active):not(.disabled) {
+    background-color: #F2F4F7;
+    border-color: #D0D5DD;
+    color: #101828;
 }
