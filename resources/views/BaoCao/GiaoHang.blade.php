@@ -3,7 +3,7 @@
 @push('styles')
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-<link rel="stylesheet" href="{{ asset('css/Admin/BaoCaoGiaoHang.css') }}">
+<link rel="stylesheet" href="{{ asset('css/Admin/BaoCaoGiaoHang.css') }}?v={{ time() }}">
 @endpush
 
 @section('content')
@@ -124,103 +124,85 @@
         </form>
     </div>
 
-    {{-- ═══════════════════════ 3. KPI CARDS GRID (8 CHỈ SỐ THEO BỐ CỤC: ICON + SỐ 1 BÊN, 2 HÀNG CHỮ 1 BÊN) ═══════════════════════ --}}
+    {{-- ═══════════════════════ 3. KPI CARDS GRID (BỐ CỤC COMPACT CHUẨN ĐỀ XUẤT) ═══════════════════════ --}}
     <div class="kpi-cards-grid">
         {{-- KPI 1: Tổng đơn giao --}}
         <div class="kpi-card kpi-blue">
-            <div class="kpi-side-left">
-                <div class="kpi-icon"><i class="bi bi-box-seam"></i></div>
+            <div class="kpi-icon"><i class="bi bi-box-seam"></i></div>
+            <div class="kpi-info">
+                <div class="kpi-title" title="TỔNG ĐƠN GIAO">TONG DON GIAO</div>
                 <div class="kpi-value">{{ number_format($kpis['tong_don_giao']) }}</div>
-            </div>
-            <div class="kpi-side-right">
-                <div class="kpi-title" title="TỔNG ĐƠN ĐƯỢC GIAO">Tổng đơn giao</div>
-                <div class="kpi-sub" title="Đã phân công / bước vào luồng giao">Đã vào luồng giao</div>
+                <div class="kpi-sub" title="Đã vào luồng giao">Đã vào luồng giao</div>
             </div>
         </div>
 
         {{-- KPI 2: Giao thành công --}}
         <div class="kpi-card kpi-emerald">
-            <div class="kpi-side-left">
-                <div class="kpi-icon"><i class="bi bi-check-circle-fill"></i></div>
-                <div class="kpi-value text-success">{{ number_format($kpis['giao_thanh_cong']) }}</div>
-            </div>
-            <div class="kpi-side-right">
-                <div class="kpi-title" title="GIAO THÀNH CÔNG">Giao thành công</div>
-                <div class="kpi-sub text-success" title="Trạng thái DELIVERED">
-                    Trạng thái DELIVERED
-                </div>
+            <div class="kpi-icon"><i class="bi bi-check-circle"></i></div>
+            <div class="kpi-info">
+                <div class="kpi-title" title="GIAO THÀNH CÔNG">GIAO THANH CONG</div>
+                <div class="kpi-value">{{ number_format($kpis['giao_thanh_cong']) }}</div>
+                <div class="kpi-sub" title="Trạng thái DELIVERED">Trạng thái DELIVERED</div>
             </div>
         </div>
 
         {{-- KPI 3: Giao thất bại --}}
         <div class="kpi-card kpi-rose">
-            <div class="kpi-side-left">
-                <div class="kpi-icon"><i class="bi bi-x-circle-fill"></i></div>
-                <div class="kpi-value text-danger">{{ number_format($kpis['giao_that_bai']) }}</div>
-            </div>
-            <div class="kpi-side-right">
-                <div class="kpi-title" title="GIAO THẤT BẠI">Giao thất bại</div>
-                <div class="kpi-sub text-danger" title="Có báo cáo thất bại / hoàn hàng">Báo thất bại / hoàn</div>
+            <div class="kpi-icon"><i class="bi bi-x-circle"></i></div>
+            <div class="kpi-info">
+                <div class="kpi-title" title="GIAO THẤT BẠI">GIAO THAT BAI</div>
+                <div class="kpi-value">{{ number_format($kpis['giao_that_bai']) }}</div>
+                <div class="kpi-sub" title="Báo thất bại / hoàn">Báo thất bại / hoàn</div>
             </div>
         </div>
 
-        {{-- KPI 4: Tỷ lệ giao thành công --}}
+        {{-- KPI 4: Tỷ lệ thành công --}}
         <div class="kpi-card kpi-indigo">
-            <div class="kpi-side-left">
-                <div class="kpi-icon"><i class="bi bi-percent"></i></div>
-                <div class="kpi-value text-purple">{{ $kpis['ty_le_thanh_cong'] }}%</div>
-            </div>
-            <div class="kpi-side-right">
-                <div class="kpi-title" title="TỶ LỆ THÀNH CÔNG">Tỷ lệ thành công</div>
-                <div class="kpi-sub" title="Thành công / Tổng đơn giao">Thành công / Tổng đơn</div>
+            <div class="kpi-icon"><i class="bi bi-percent"></i></div>
+            <div class="kpi-info">
+                <div class="kpi-title" title="TỶ LỆ THÀNH CÔNG">TY LE THANH CONG</div>
+                <div class="kpi-value">{{ $kpis['ty_le_thanh_cong'] }}%</div>
+                <div class="kpi-sub" title="Thành công / Tổng đơn">Thành công / Tổng đơn</div>
             </div>
         </div>
 
         {{-- KPI 5: Shipper từ chối --}}
         <div class="kpi-card kpi-gray" title="Chức năng Shipper từ chối nhận đơn chưa được persist trong cơ sở dữ liệu hiện tại">
-            <div class="kpi-side-left">
-                <div class="kpi-icon"><i class="bi bi-slash-circle"></i></div>
-                <div class="kpi-value text-muted" style="font-size: 1.15rem;">0</div>
-            </div>
-            <div class="kpi-side-right">
-                <div class="kpi-title" title="SHIPPER TỪ CHỐI">Shipper từ chối</div>
-                <div class="kpi-sub" title="Chưa có sự kiện persist trong DB">Chưa có sự kiện DB</div>
+            <div class="kpi-icon"><i class="bi bi-slash-circle"></i></div>
+            <div class="kpi-info">
+                <div class="kpi-title" title="SHIPPER TỪ CHỐI">SHIPPER TỪ CHỐI</div>
+                <div class="kpi-value">0</div>
+                <div class="kpi-sub" title="Chưa có sự kiện DB">Chưa có sự kiện DB</div>
             </div>
         </div>
 
         {{-- KPI 6: Tổng COD đã thu --}}
         <div class="kpi-card kpi-amber">
-            <div class="kpi-side-left">
-                <div class="kpi-icon"><i class="bi bi-cash-stack"></i></div>
-                <div class="kpi-value text-orange" style="font-size: 0.95rem;">{{ number_format($kpis['tong_cod_da_thu'], 0, ',', '.') }}đ</div>
-            </div>
-            <div class="kpi-side-right">
-                <div class="kpi-title" title="TỔNG COD ĐÃ THU">Tổng COD đã thu</div>
-                <div class="kpi-sub" title="Đơn DELIVERED đã thu tiền mặt">Đơn DELIVERED tiền mặt</div>
+            <div class="kpi-icon"><i class="bi bi-wallet2"></i></div>
+            <div class="kpi-info">
+                <div class="kpi-title" title="TỔNG COD ĐÃ THU">TONG COD DA THU</div>
+                <div class="kpi-value" style="font-size: 16px;">{{ number_format($kpis['tong_cod_da_thu'], 0, ',', '.') }}đ</div>
+                <div class="kpi-sub" title="Đơn DELIVERED tiền mặt">Đơn DELIVERED tiền mặt</div>
             </div>
         </div>
 
         {{-- KPI 7: COD chưa nộp --}}
         <div class="kpi-card kpi-orange" title="Hệ thống hiện chưa có bảng/nghiệp vụ đối soát nộp tiền COD từ Shipper về cửa hàng">
-            <div class="kpi-side-left">
-                <div class="kpi-icon"><i class="bi bi-wallet2"></i></div>
-                <div class="kpi-value text-orange" style="font-size: 1.15rem;">0đ</div>
-            </div>
-            <div class="kpi-side-right">
-                <div class="kpi-title" title="COD CHƯA NỘP">COD chưa nộp</div>
-                <div class="kpi-sub" title="Toàn bộ COD hiện do Shipper giữ">Shipper đang giữ tiền</div>
+            <div class="kpi-icon"><i class="bi bi-inbox"></i></div>
+            <div class="kpi-info">
+                <div class="kpi-title" title="COD CHƯA NỘP">COD CHƯA NỘP</div>
+                <div class="kpi-value">0đ</div>
+                <div class="kpi-sub" title="Shipper đang giữ tiền">Shipper đang giữ tiền</div>
             </div>
         </div>
 
         {{-- KPI 8: Thời gian giao TB --}}
         <div class="kpi-card kpi-teal">
-            <div class="kpi-side-left">
-                <div class="kpi-icon"><i class="bi bi-stopwatch"></i></div>
-                <div class="kpi-value" style="font-size: 0.95rem;">{{ $kpis['thoi_gian_giao_tb'] }}</div>
-            </div>
-            <div class="kpi-side-right">
-                <div class="kpi-title" title="THỜI GIAN GIAO TB">TG giao TB</div>
-                <div class="kpi-sub" title="Từ lúc bắt đầu đến khi giao">Từ bắt đầu đến khi giao</div>
+            <div class="kpi-icon"><i class="bi bi-stopwatch"></i></div>
+            <div class="kpi-info">
+                <div class="kpi-title" title="GIAO TB">GIAO TB</div>
+                <div class="kpi-value" style="font-size: 16px;">{{ $kpis['thoi_gian_giao_tb'] }}</div>
+                <div class="kpi-sub" title="Từ bắt đầu đến khi giao">Từ bắt đầu đến khi giao</div>
             </div>
         </div>
     </div>

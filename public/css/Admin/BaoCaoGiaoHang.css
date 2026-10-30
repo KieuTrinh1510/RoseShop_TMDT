@@ -303,7 +303,7 @@
     color: #101828 !important;
 }
 
-/* ═══════════════════════ 3. KPI CARDS GRID (8 CARDS - ICON VÀ SỐ 1 BÊN, 2 HÀNG CHỮ 1 BÊN) ═══════════════════════ */
+/* ═══════════════════════ 3. KPI CARDS GRID (BỐ CỤC COMPACT CHUẨN ĐỀ XUẤT) ═══════════════════════ */
 .kpi-cards-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -312,19 +312,19 @@
 }
 
 .kpi-card {
-    background: var(--rs-card-bg);
+    background: #ffffff !important;
     border: 1px solid #EAECF0 !important;
     border-radius: 10px !important;
-    padding: 10px 14px !important;
+    padding: 8px 12px !important;
     box-shadow: 0 1px 3px rgba(16, 24, 40, 0.04) !important;
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
     justify-content: flex-start !important;
     gap: 12px !important;
-    min-height: 74px !important;
-    height: 74px !important;
-    max-height: 74px !important;
+    min-height: 70px !important;
+    height: 70px !important;
+    max-height: 70px !important;
     position: relative;
     overflow: hidden;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -344,48 +344,29 @@
     height: 100%;
 }
 
-.kpi-side-left {
+.kpi-icon {
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    border-radius: 8px !important;
     display: flex !important;
     align-items: center !important;
-    gap: 8px !important;
+    justify-content: center !important;
+    font-size: 14px !important;
     flex-shrink: 0 !important;
 }
 
-.kpi-side-right {
+.kpi-info {
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
     min-width: 0 !important;
     flex: 1 1 auto !important;
-    overflow: hidden !important;
-}
-
-.kpi-icon {
-    width: 32px !important;
-    height: 32px !important;
-    min-width: 32px !important;
-    border-radius: 8px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 15px !important;
-}
-
-.kpi-value {
-    font-size: 1.25rem !important;
-    font-weight: 700 !important;
-    line-height: 1.1 !important;
-    color: #101828 !important;
-    white-space: nowrap !important;
-    margin: 0 !important;
-}
-
-.kpi-value.small-text {
-    font-size: 1.1rem !important;
+    gap: 1px !important;
 }
 
 .kpi-title {
-    font-size: 11.5px !important;
+    font-size: 11px !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
     color: #475467 !important;
@@ -393,8 +374,18 @@
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
-    line-height: 1.25 !important;
-    margin: 0 0 2px 0 !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+}
+
+.kpi-value {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    line-height: 1.15 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    margin: 0 !important;
 }
 
 .kpi-sub {
@@ -403,40 +394,43 @@
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
-    line-height: 1.25 !important;
+    line-height: 1.2 !important;
     margin: 0 !important;
     display: block !important;
 }
 
 /* Card color variants */
-.kpi-blue::before { background: var(--rs-info); }
-.kpi-blue .kpi-icon { background: var(--rs-info-light); color: var(--rs-info); }
+.kpi-blue::before { background: #3b82f6 !important; }
+.kpi-blue .kpi-icon { background: #eff6ff !important; color: #2563eb !important; }
+.kpi-blue .kpi-value { color: #2563eb !important; }
 
-.kpi-emerald::before { background: var(--rs-success); }
-.kpi-emerald .kpi-icon { background: var(--rs-success-light); color: var(--rs-success); }
-.kpi-emerald .kpi-value { color: #047857 !important; }
+.kpi-emerald::before { background: #10b981 !important; }
+.kpi-emerald .kpi-icon { background: #ecfdf5 !important; color: #059669 !important; }
+.kpi-emerald .kpi-value { color: #059669 !important; }
 
-.kpi-rose::before { background: var(--rs-danger); }
-.kpi-rose .kpi-icon { background: var(--rs-danger-light); color: var(--rs-danger); }
-.kpi-rose .kpi-value { color: #b91c1c !important; }
+.kpi-rose::before { background: #ef4444 !important; }
+.kpi-rose .kpi-icon { background: #fef2f2 !important; color: #dc2626 !important; }
+.kpi-rose .kpi-value { color: #dc2626 !important; }
 
-.kpi-indigo::before { background: #6366f1; }
-.kpi-indigo .kpi-icon { background: #eef2ff; color: #6366f1; }
+.kpi-indigo::before { background: #6366f1 !important; }
+.kpi-indigo .kpi-icon { background: #eef2ff !important; color: #4f46e5 !important; }
+.kpi-indigo .kpi-value { color: #4f46e5 !important; }
 
-.kpi-gray::before { background: #94a3b8; }
-.kpi-gray .kpi-icon { background: #f1f5f9; color: #64748b; }
-.kpi-gray .kpi-value { color: #64748b !important; }
+.kpi-gray::before { background: #94a3b8 !important; }
+.kpi-gray .kpi-icon { background: #f1f5f9 !important; color: #64748b !important; }
+.kpi-gray .kpi-value { color: #475467 !important; }
 
-.kpi-amber::before { background: #f59e0b; }
-.kpi-amber .kpi-icon { background: #fffbeb; color: #d97706; }
-.kpi-amber .kpi-value { color: #b45309 !important; }
+.kpi-amber::before { background: #f59e0b !important; }
+.kpi-amber .kpi-icon { background: #fffbeb !important; color: #d97706 !important; }
+.kpi-amber .kpi-value { color: #d97706 !important; }
 
-.kpi-orange::before { background: #ea580c; }
-.kpi-orange .kpi-icon { background: #fff7ed; color: #ea580c; }
-.kpi-orange .kpi-value { color: #c2410c !important; }
+.kpi-orange::before { background: #ea580c !important; }
+.kpi-orange .kpi-icon { background: #fff7ed !important; color: #ea580c !important; }
+.kpi-orange .kpi-value { color: #ea580c !important; }
 
-.kpi-teal::before { background: #0d9488; }
-.kpi-teal .kpi-icon { background: #f0fdfa; color: #0d9488; }
+.kpi-teal::before { background: #0d9488 !important; }
+.kpi-teal .kpi-icon { background: #f0fdfa !important; color: #0d9488 !important; }
+.kpi-teal .kpi-value { color: #0d9488 !important; }
 
 /* ═══════════════════════ 4. BIỂU ĐỒ ═══════════════════════ */
 .charts-grid {
