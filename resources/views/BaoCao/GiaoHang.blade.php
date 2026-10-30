@@ -13,7 +13,7 @@
     <div class="rs-page-header">
         <div class="rs-page-header-text">
             <h1 class="rs-page-title">
-                <i class="bi bi-truck me-2 text-danger"></i>Thống kê giao hàng
+                Thống kê giao hàng
             </h1>
             <p class="rs-page-subtitle">
                 Theo dõi hiệu quả giao hàng, tỷ lệ thành công, hiệu suất Shipper và công nợ COD (UC10.4).
@@ -130,7 +130,7 @@
         <div class="kpi-card kpi-blue">
             <div class="kpi-icon"><i class="bi bi-box-seam"></i></div>
             <div class="kpi-info">
-                <div class="kpi-title" title="TỔNG ĐƠN GIAO">TONG DON GIAO</div>
+                <div class="kpi-title" title="TỔNG ĐƠN GIAO">TỔNG ĐƠN GIAO</div>
                 <div class="kpi-value">{{ number_format($kpis['tong_don_giao']) }}</div>
                 <div class="kpi-sub" title="Đã vào luồng giao">Đã vào luồng giao</div>
             </div>
@@ -140,7 +140,7 @@
         <div class="kpi-card kpi-emerald">
             <div class="kpi-icon"><i class="bi bi-check-circle"></i></div>
             <div class="kpi-info">
-                <div class="kpi-title" title="GIAO THÀNH CÔNG">GIAO THANH CONG</div>
+                <div class="kpi-title" title="GIAO THÀNH CÔNG">GIAO THÀNH CÔNG</div>
                 <div class="kpi-value">{{ number_format($kpis['giao_thanh_cong']) }}</div>
                 <div class="kpi-sub" title="Trạng thái DELIVERED">Trạng thái DELIVERED</div>
             </div>
@@ -150,7 +150,7 @@
         <div class="kpi-card kpi-rose">
             <div class="kpi-icon"><i class="bi bi-x-circle"></i></div>
             <div class="kpi-info">
-                <div class="kpi-title" title="GIAO THẤT BẠI">GIAO THAT BAI</div>
+                <div class="kpi-title" title="GIAO THẤT BẠI">GIAO THẤT BẠI</div>
                 <div class="kpi-value">{{ number_format($kpis['giao_that_bai']) }}</div>
                 <div class="kpi-sub" title="Báo thất bại / hoàn">Báo thất bại / hoàn</div>
             </div>
@@ -160,7 +160,7 @@
         <div class="kpi-card kpi-indigo">
             <div class="kpi-icon"><i class="bi bi-percent"></i></div>
             <div class="kpi-info">
-                <div class="kpi-title" title="TỶ LỆ THÀNH CÔNG">TY LE THANH CONG</div>
+                <div class="kpi-title" title="TỶ LỆ THÀNH CÔNG">TỶ LỆ THÀNH CÔNG</div>
                 <div class="kpi-value">{{ $kpis['ty_le_thanh_cong'] }}%</div>
                 <div class="kpi-sub" title="Thành công / Tổng đơn">Thành công / Tổng đơn</div>
             </div>
@@ -180,7 +180,7 @@
         <div class="kpi-card kpi-amber">
             <div class="kpi-icon"><i class="bi bi-wallet2"></i></div>
             <div class="kpi-info">
-                <div class="kpi-title" title="TỔNG COD ĐÃ THU">TONG COD DA THU</div>
+                <div class="kpi-title" title="TỔNG COD ĐÃ THU">TỔNG COD ĐÃ THU</div>
                 <div class="kpi-value" style="font-size: 16px;">{{ number_format($kpis['tong_cod_da_thu'], 0, ',', '.') }}đ</div>
                 <div class="kpi-sub" title="Đơn DELIVERED tiền mặt">Đơn DELIVERED tiền mặt</div>
             </div>
