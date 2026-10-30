@@ -41,40 +41,49 @@
             <span class="filter-title">
                 <i class="bi bi-funnel-fill"></i> Bộ lọc thống kê giao hàng
             </span>
-            <span class="text-muted small">
-                Thời gian: <strong>{{ $ngayBatDau->format('d/m/Y') }}</strong> — <strong>{{ $ngayKetThuc->format('d/m/Y') }}</strong>
-            </span>
-        </div>
-
-        {{-- Nút chọn nhanh chu kỳ --}}
-        <div class="quick-filter-group">
-            <span class="quick-filter-label"><i class="bi bi-clock-history me-1"></i>Chọn nhanh:</span>
-            <button type="button" class="btn-quick-filter" onclick="setQuickDate('today')">Hôm nay</button>
-            <button type="button" class="btn-quick-filter" onclick="setQuickDate('7days')">7 ngày qua</button>
-            <button type="button" class="btn-quick-filter" onclick="setQuickDate('this_month')">Tháng này</button>
-            <button type="button" class="btn-quick-filter" onclick="setQuickDate('last_month')">Tháng trước</button>
+            {{-- Nút chọn nhanh chu kỳ --}}
+            <div class="quick-filter-group mb-0">
+                <span class="quick-filter-label"><i class="bi bi-clock-history me-1"></i>Chọn nhanh:</span>
+                <button type="button" class="btn-quick-filter" onclick="setQuickDate('today')">Hôm nay</button>
+                <button type="button" class="btn-quick-filter" onclick="setQuickDate('7days')">7 ngày qua</button>
+                <button type="button" class="btn-quick-filter" onclick="setQuickDate('this_month')">Tháng này</button>
+                <button type="button" class="btn-quick-filter" onclick="setQuickDate('last_month')">Tháng trước</button>
+            </div>
         </div>
 
         <form method="GET" action="{{ route('admin.bao-cao.giao-hang') }}" id="formFilterGiaoHang">
-            <div class="filter-form-grid">
-                {{-- Từ ngày --}}
-                <div class="filter-field">
+            @if(request('per_page'))
+                <input type="hidden" name="per_page" value="{{ request('per_page') }}">
+            @endif
+            @if(!empty($keyword))
+                <input type="hidden" name="q" value="{{ $keyword }}">
+            @endif
+
+            <div class="rs-filter-row">
+                {{-- 1. Từ ngày --}}
+                <div class="rs-filter-col rs-col-date">
                     <label class="filter-label">Từ ngày</label>
-                    <input type="date" name="ngay_bat_dau" id="filter_ngay_bat_dau" class="filter-input"
-                           value="{{ $ngayBatDau->format('Y-m-d') }}">
+                    <div class="input-icon-wrap">
+                        <input type="date" name="ngay_bat_dau" id="filter_ngay_bat_dau" class="form-control filter-input"
+                               value="{{ $ngayBatDau->format('Y-m-d') }}">
+                        <i class="bi bi-calendar3 input-icon"></i>
+                    </div>
                 </div>
 
-                {{-- Đến ngày --}}
-                <div class="filter-field">
+                {{-- 2. Đến ngày --}}
+                <div class="rs-filter-col rs-col-date">
                     <label class="filter-label">Đến ngày</label>
-                    <input type="date" name="ngay_ket_thuc" id="filter_ngay_ket_thuc" class="filter-input"
-                           value="{{ $ngayKetThuc->format('Y-m-d') }}">
+                    <div class="input-icon-wrap">
+                        <input type="date" name="ngay_ket_thuc" id="filter_ngay_ket_thuc" class="form-control filter-input"
+                               value="{{ $ngayKetThuc->format('Y-m-d') }}">
+                        <i class="bi bi-calendar3 input-icon"></i>
+                    </div>
                 </div>
 
-                {{-- Shipper --}}
-                <div class="filter-field">
+                {{-- 3. Shipper --}}
+                <div class="rs-filter-col rs-col-select">
                     <label class="filter-label">Nhân viên giao (Shipper)</label>
-                    <select name="shipper_id" class="filter-select">
+                    <select name="shipper_id" class="form-select filter-select">
                         <option value="">-- Tất cả Shipper --</option>
                         @foreach($dsShipper as $sp)
                             <option value="{{ $sp->ma_nhan_vien }}" {{ $shipperId == $sp->ma_nhan_vien ? 'selected' : '' }}>
@@ -84,34 +93,31 @@
                     </select>
                 </div>
 
-                {{-- Trạng thái giao hàng --}}
-                <div class="filter-field">
+                {{-- 4. Trạng thái giao hàng --}}
+                <div class="rs-filter-col rs-col-select">
                     <label class="filter-label">Trạng thái giao hàng</label>
-                    <select name="trang_thai" class="filter-select">
+                    <select name="trang_thai" class="form-select filter-select">
                         <option value="all" {{ $trangThaiFilter === 'all' ? 'selected' : '' }}>-- Tất cả trạng thái --</option>
                         <option value="DELIVERED" {{ $trangThaiFilter === 'DELIVERED' ? 'selected' : '' }}>Giao thành công (DELIVERED)</option>
                         <option value="FAILED" {{ $trangThaiFilter === 'FAILED' ? 'selected' : '' }}>Giao thất bại (FAILED)</option>
                         <option value="SHIPPING" {{ $trangThaiFilter === 'SHIPPING' ? 'selected' : '' }}>Đang giao hàng (SHIPPING)</option>
                         <option value="CONFIRMED" {{ $trangThaiFilter === 'CONFIRMED' ? 'selected' : '' }}>Chờ lấy hàng (CONFIRMED)</option>
-                        <option value="REJECTED" {{ $trangThaiFilter === 'REJECTED' ? 'selected' : '' }}>Shipper từ chối (REJECTED)</option>
                     </select>
                 </div>
 
-                {{-- Preserve keyword search if present --}}
-                @if(!empty($keyword))
-                    <input type="hidden" name="q" value="{{ $keyword }}">
-                @endif
-
-                {{-- Nút bấm --}}
-                <div class="filter-field">
-                    <button type="submit" class="btn-filter-submit">
-                        <i class="bi bi-funnel"></i> Lọc dữ liệu
+                {{-- 5. Nút Lọc dữ liệu --}}
+                <div class="rs-filter-col rs-col-btn">
+                    <button type="submit" class="btn btn-filter-pink" title="Lọc dữ liệu">
+                        <i class="bi bi-funnel"></i>
+                        <span>Lọc</span>
                     </button>
                 </div>
 
-                <div class="filter-field">
-                    <a href="{{ route('admin.bao-cao.giao-hang') }}" class="btn-filter-reset">
-                        <i class="bi bi-arrow-clockwise"></i> Đặt lại
+                {{-- 6. Nút Đặt lại --}}
+                <div class="rs-filter-col rs-col-btn">
+                    <a href="{{ route('admin.bao-cao.giao-hang') }}" class="btn btn-reset" title="Đặt lại bộ lọc">
+                        <i class="bi bi-arrow-clockwise"></i>
+                        <span>Đặt lại</span>
                     </a>
                 </div>
             </div>
@@ -333,9 +339,9 @@
             <span class="text-muted small">Hiển thị {{ $danhSachDonHang->firstItem() ?? 0 }} - {{ $danhSachDonHang->lastItem() ?? 0 }} trên tổng số {{ $danhSachDonHang->total() }} đơn</span>
         </div>
 
-        {{-- Toolbar tìm kiếm và phân trang --}}
+        {{-- Toolbar tìm kiếm chuẩn RoseShop --}}
         <div class="table-toolbar">
-            <form method="GET" action="{{ route('admin.bao-cao.giao-hang') }}" class="search-input-wrap" id="formTableSearch">
+            <form method="GET" action="{{ route('admin.bao-cao.giao-hang') }}" class="rs-table-search-form" id="formTableSearch">
                 <input type="hidden" name="ngay_bat_dau" value="{{ $ngayBatDau->format('Y-m-d') }}">
                 <input type="hidden" name="ngay_ket_thuc" value="{{ $ngayKetThuc->format('Y-m-d') }}">
                 @if($shipperId)
@@ -344,21 +350,34 @@
                 @if($trangThaiFilter !== 'all')
                     <input type="hidden" name="trang_thai" value="{{ $trangThaiFilter }}">
                 @endif
-                <i class="bi bi-search"></i>
-                <input type="text" name="q" value="{{ $keyword }}" placeholder="Tìm mã đơn, khách, SĐT, shipper..." onchange="this.form.submit()">
+                @if(request('per_page'))
+                    <input type="hidden" name="per_page" value="{{ request('per_page') }}">
+                @endif
+
+                <div class="rs-search-box-wrap">
+                    <i class="bi bi-search rs-search-box-icon"></i>
+                    <input type="text" name="q" class="form-control rs-search-box-input"
+                           placeholder="Tìm theo mã đơn, khách, SĐT, shipper..."
+                           value="{{ $keyword }}">
+                </div>
+                <button type="submit" class="btn btn-search-pink" title="Tìm kiếm">
+                    <i class="bi bi-search"></i>
+                    <span>Tìm</span>
+                </button>
+                @if(!empty($keyword))
+                    <a href="{{ route('admin.bao-cao.giao-hang', request()->except('q')) }}" class="btn btn-reset" title="Xóa tìm kiếm">
+                        <i class="bi bi-x-circle"></i>
+                        <span>Xóa tìm</span>
+                    </a>
+                @endif
             </form>
-            @if(!empty($keyword))
-                <a href="{{ route('admin.bao-cao.giao-hang', request()->except('q')) }}" class="btn btn-sm btn-outline-secondary">
-                    <i class="bi bi-x-circle me-1"></i> Xóa tìm kiếm
-                </a>
-            @endif
         </div>
 
         <div class="table-responsive">
             <table class="rs-table">
                 <thead>
                     <tr>
-                        <th style="width: 45px;">STT</th>
+                        <th style="width: 45px;" class="text-center">STT</th>
                         <th>Mã đơn</th>
                         <th>Khách hàng</th>
                         <th>Shipper</th>
@@ -367,16 +386,16 @@
                         <th class="text-center">Thời gian giao</th>
                         <th class="text-center">Trạng thái</th>
                         <th>Thanh toán</th>
-                        <th class="text-end">Tiền COD</th>
+                        <th class="text-end" style="min-width: 145px; white-space: nowrap;">Tiền COD</th>
                         <th style="width: 60px;" class="text-center">Chi tiết</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($danhSachDonHang as $idx => $hd)
                         <tr>
-                            <td>{{ $danhSachDonHang->firstItem() + $idx }}</td>
+                            <td class="text-center text-muted">{{ $danhSachDonHang->firstItem() + $idx }}</td>
                             <td>
-                                <strong class="text-primary">{{ $hd->ma_hien_thi }}</strong>
+                                <strong class="order-code-pink">{{ $hd->ma_hien_thi }}</strong>
                                 <div class="text-muted small">{{ $hd->ngay_dat ? $hd->ngay_dat->format('d/m/Y') : '' }}</div>
                             </td>
                             <td>
@@ -421,7 +440,7 @@
                                 <div>{{ $hd->phuong_thuc_thanh_toan }}</div>
                                 <div class="text-muted small">{{ number_format($hd->tong_tien, 0, ',', '.') }}đ</div>
                             </td>
-                            <td class="text-end">
+                            <td class="text-end" style="white-space: nowrap;">
                                 @if($hd->phuong_thuc_thanh_toan === 'COD')
                                     <span class="fw-bold text-dark">{{ number_format($hd->tien_cod, 0, ',', '.') }}đ</span>
                                     @if($hd->trang_thai === 'DELIVERED' && ($hd->da_thu_tien_mat || $hd->trang_thai_thanh_toan === 'DA_THANH_TOAN'))
@@ -458,11 +477,11 @@
                 @if($danhSachDonHang->count() > 0)
                     <tfoot>
                         <tr>
-                            <td colspan="4" class="text-uppercase">TỔNG CỘNG TRONG KỲ</td>
-                            <td colspan="2" class="text-center">Thành công: <span class="text-success">{{ $kpis['giao_thanh_cong'] }}</span> / Thất bại: <span class="text-danger">{{ $kpis['giao_that_bai'] }}</span></td>
+                            <td colspan="4" class="text-uppercase fw-semibold">TỔNG CỘNG TRONG KỲ</td>
+                            <td colspan="2" class="text-center">Thành công: <span class="text-success fw-bold">{{ $kpis['giao_thanh_cong'] }}</span> / Thất bại: <span class="text-danger fw-bold">{{ $kpis['giao_that_bai'] }}</span></td>
                             <td class="text-center">—</td>
                             <td class="text-center">
-                                <span class="badge bg-secondary">{{ $kpis['ty_le_thanh_cong'] }}%</span>
+                                <span class="badge-status badge-delivered">{{ $kpis['ty_le_thanh_cong'] }}%</span>
                             </td>
                             <td>—</td>
                             <td class="text-end text-danger fw-bold">{{ number_format($kpis['tong_cod_da_thu'], 0, ',', '.') }}đ</td>
@@ -473,12 +492,44 @@
             </table>
         </div>
 
-        {{-- Pagination --}}
-        @if($danhSachDonHang->hasPages())
-            <div class="p-3 border-top d-flex justify-content-end">
-                {{ $danhSachDonHang->links() }}
+        {{-- Thanh phân trang chuẩn RoseShop --}}
+        <div class="rs-table-footer">
+            <div class="rs-footer-left">
+                <form method="GET" action="{{ route('admin.bao-cao.giao-hang') }}" class="rs-per-page-form" id="perPageForm">
+                    <input type="hidden" name="ngay_bat_dau" value="{{ $ngayBatDau->format('Y-m-d') }}">
+                    <input type="hidden" name="ngay_ket_thuc" value="{{ $ngayKetThuc->format('Y-m-d') }}">
+                    @if($shipperId)
+                        <input type="hidden" name="shipper_id" value="{{ $shipperId }}">
+                    @endif
+                    @if($trangThaiFilter !== 'all')
+                        <input type="hidden" name="trang_thai" value="{{ $trangThaiFilter }}">
+                    @endif
+                    @if(!empty($keyword))
+                        <input type="hidden" name="q" value="{{ $keyword }}">
+                    @endif
+
+                    <label class="rs-per-page-inline">
+                        <span>Hiển thị:</span>
+                        <select name="per_page" class="rs-per-page-select" onchange="this.form.submit()">
+                            @foreach([10, 20, 50, 100] as $size)
+                                <option value="{{ $size }}" {{ request('per_page', 20) == $size ? 'selected' : '' }}>
+                                    {{ $size }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <span>đơn/trang</span>
+                    </label>
+                </form>
+
+                <span class="rs-records-count">
+                    Hiển thị <strong>{{ $danhSachDonHang->firstItem() ?? 0 }} - {{ $danhSachDonHang->lastItem() ?? 0 }}</strong> trên tổng số <strong>{{ $danhSachDonHang->total() }}</strong> đơn
+                </span>
             </div>
-        @endif
+
+            <div class="rs-footer-right">
+                {{ $danhSachDonHang->appends(request()->query())->links('pagination::bootstrap-4') }}
+            </div>
+        </div>
     </div>
 
 </div>
