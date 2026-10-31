@@ -22,7 +22,7 @@ class TonKhoController extends Controller
      */
     public function index(Request $request)
     {
-        $loaiTonKho  = trim((string) ($request->input('loai_ton_kho') ?? '')); // '', 'san_pham', 'bo_hoa'
+        $loaiTonKho  = trim((string) ($request->input('loai_ton_kho') ?? '')); // '', 'san_pham', 'nguyen_vat_lieu', 'bo_hoa'
         $kw          = trim((string) ($request->input('keyword') ?? ''));
         $loaiSanPham = trim((string) ($request->input('loai_san_pham') ?? ''));
         $trangThaiKd = trim((string) ($request->input('trang_thai') ?? ''));
@@ -35,35 +35,58 @@ class TonKhoController extends Controller
         }
 
         // Logic ưu tiên nguồn dữ liệu:
-        // - Khi chọn loai_ton_kho='bo_hoa': Bắt buộc lấy Bó hoa thành phẩm, bỏ qua bộ lọc loại sản phẩm của Product/NVL.
-        // - Khi chọn loai_ton_kho='san_pham': Chỉ lấy Sản phẩm / Nguyên vật liệu.
-        // - Khi chọn 'Tất cả': Nếu có chọn loại sản phẩm cụ thể thì lấy Sản phẩm, ngược lại lấy cả hai.
+        // - Khi chọn loai_ton_kho='bo_hoa': Bắt buộc lấy Bó hoa thành phẩm, bỏ qua bộ lọc loại sản phẩm.
+        // - Khi chọn loai_ton_kho='san_pham': Chỉ lấy Sản phẩm hoa bán lẻ (loại trừ nguyên vật liệu).
+        // - Khi chọn loai_ton_kho='nguyen_vat_lieu': Chỉ lấy Nguyên vật liệu.
+        // - Khi chọn 'Tất cả' ('') :
+        //     + Nếu có chọn loại sản phẩm cụ thể:
+        //         * Nếu thuộc DANH_SACH_LOAI_NGUYEN_LIEU -> chỉ lấy NVL
+        //         * Ngược lại -> chỉ lấy SP bán lẻ
+        //     + Nếu không chọn -> lấy cả 3 nhóm (Sản phẩm, Nguyên vật liệu, Bó hoa)
+        $layBoHoa         = false;
+        $laySanPham       = false;
+        $layNguyenVatLieu = false;
+
         if ($loaiTonKho === 'bo_hoa') {
-            $layBoHoa   = true;
-            $laySanPham = false;
+            $layBoHoa    = true;
             $loaiSanPham = '';
+        } elseif ($loaiTonKho === 'nguyen_vat_lieu') {
+            $layNguyenVatLieu = true;
         } elseif ($loaiTonKho === 'san_pham') {
-            $layBoHoa   = false;
             $laySanPham = true;
         } else {
+            // Tất cả kho hàng ('')
             if ($loaiSanPham !== '') {
-                $layBoHoa   = false;
-                $laySanPham = true;
+                if (in_array($loaiSanPham, SanPham::DANH_SACH_LOAI_NGUYEN_LIEU, true)) {
+                    $layNguyenVatLieu = true;
+                } else {
+                    $laySanPham = true;
+                }
             } else {
-                $layBoHoa   = true;
-                $laySanPham = true;
+                $layBoHoa         = true;
+                $laySanPham       = true;
+                $layNguyenVatLieu = true;
             }
         }
 
         // Tách số định danh nếu user tìm kiếm bằng mã (hỗ trợ #330, SP330, #BH37, BH37, 37, 330...)
         $cleanNum = preg_replace('/[^0-9]/', '', $kw);
 
-        // ── 1. NGUỒN DỮ LIỆU SẢN PHẨM / NGUYÊN VẬT LIỆU ──
+        // ── 1. NGUỒN DỮ LIỆU SẢN PHẨM & NGUYÊN VẬT LIỆU ──
         $sanPhamList = collect();
-        if ($laySanPham) {
+        if ($laySanPham || $layNguyenVatLieu) {
             $spQuery = SanPham::with([
                 'reservations' => fn ($q) => $q->where('trang_thai', InventoryReservation::STATUS_RESERVED),
             ]);
+
+            // Lọc phân loại Sản phẩm vs Nguyên vật liệu theo field thực tế loai_san_pham
+            if ($laySanPham && !$layNguyenVatLieu) {
+                // Chỉ lấy mặt hàng hoa bán lẻ trực tiếp (loại trừ các loại nguyên vật liệu)
+                $spQuery->whereNotIn('loai_san_pham', SanPham::DANH_SACH_LOAI_NGUYEN_LIEU);
+            } elseif ($layNguyenVatLieu && !$laySanPham) {
+                // Chỉ lấy nguyên vật liệu
+                $spQuery->whereIn('loai_san_pham', SanPham::DANH_SACH_LOAI_NGUYEN_LIEU);
+            }
 
             if ($kw !== '') {
                 $spQuery->where(function ($q) use ($kw, $cleanNum) {
@@ -98,23 +121,29 @@ class TonKhoController extends Controller
                 $onHand = (int) $sp->ton_thuc_te;
                 $reserved = (int) $sp->ton_dang_giu;
                 $available = (int) $sp->ton_kha_dung;
+                $isNvl = in_array($sp->loai_san_pham, SanPham::DANH_SACH_LOAI_NGUYEN_LIEU, true);
 
                 return (object) [
-                    'is_bo_hoa'         => false,
-                    'ma_dinh_danh'      => '#' . $sp->ma_san_pham,
-                    'ma_san_pham'       => $sp->ma_san_pham,
-                    'id'                => $sp->ma_san_pham,
-                    'ten_san_pham'      => $sp->ten_san_pham,
-                    'hinh_anh'          => $sp->hinh_anh,
-                    'loai_san_pham'     => $sp->loai_san_pham,
-                    'loai_badge_text'   => $sp->loai_san_pham,
-                    'loai_badge_class'  => 'bg-light text-dark border',
-                    'don_vi_tinh_text'  => $sp->don_vi_tinh_text,
-                    'gia_ban_hien_tai'  => (float) $sp->gia_ban_hien_tai,
-                    'ton_thuc_te'       => $onHand,
-                    'ton_dang_giu'      => $reserved,
-                    'ton_kha_dung'      => $available,
-                    'trang_thai_kd'     => $sp->trang_thai,
+                    'is_bo_hoa'          => false,
+                    'is_nguyen_vat_lieu' => $isNvl,
+                    'loai_ton_kho'       => $isNvl ? 'nguyen_vat_lieu' : 'san_pham',
+                    'loai_nhom_text'     => $isNvl ? 'Nguyên vật liệu' : 'Sản phẩm',
+                    'ma_dinh_danh'       => '#' . $sp->ma_san_pham,
+                    'ma_san_pham'        => $sp->ma_san_pham,
+                    'id'                 => $sp->ma_san_pham,
+                    'ten_san_pham'       => $sp->ten_san_pham,
+                    'hinh_anh'           => $sp->hinh_anh,
+                    'loai_san_pham'      => $sp->loai_san_pham,
+                    'loai_badge_text'    => \App\Helpers\LabelHelper::loaiSanPham($sp->loai_san_pham),
+                    'loai_badge_class'   => $isNvl
+                        ? 'bg-warning-subtle text-warning-emphasis border border-warning-subtle'
+                        : 'bg-info-subtle text-info-emphasis border border-info-subtle',
+                    'don_vi_tinh_text'   => $sp->don_vi_tinh_text,
+                    'gia_ban_hien_tai'   => (float) $sp->gia_ban_hien_tai,
+                    'ton_thuc_te'        => $onHand,
+                    'ton_dang_giu'       => $reserved,
+                    'ton_kha_dung'       => $available,
+                    'trang_thai_kd'      => $sp->trang_thai,
                 ];
             });
         }
@@ -193,8 +222,11 @@ class TonKhoController extends Controller
                 $chiTietPhu = "{$sizeText} · {$kieuText}" . ($m->concept ? " · {$m->concept}" : '');
 
                 return (object) [
-                    'is_bo_hoa'         => true,
-                    'ma_dinh_danh'      => '#BH' . $m->ma_mau_bo_hoa,
+                    'is_bo_hoa'          => true,
+                    'is_nguyen_vat_lieu' => false,
+                    'loai_ton_kho'       => 'bo_hoa',
+                    'loai_nhom_text'     => 'Bó hoa thành phẩm',
+                    'ma_dinh_danh'       => '#BH' . $m->ma_mau_bo_hoa,
                     'ma_san_pham'       => $m->ma_mau_bo_hoa,
                     'ma_mau_bo_hoa'     => $m->ma_mau_bo_hoa,
                     'id'                => $m->ma_mau_bo_hoa,
@@ -256,10 +288,20 @@ class TonKhoController extends Controller
 
         // ── 5. TÍNH TOÁN KPI THỐNG KÊ TOÀN DIỆN ──
         $allSp = SanPham::with(['reservations' => fn ($q) => $q->where('trang_thai', InventoryReservation::STATUS_RESERVED)])->get();
-        $spOnHand = (int) $allSp->sum('ton_thuc_te');
-        $spReserved = (int) $allSp->sum('ton_dang_giu');
-        $spAvailable = max(0, $spOnHand - $spReserved);
-        $spSapHet = (int) $allSp->filter(fn ($s) => $s->ton_kha_dung > 0 && $s->ton_kha_dung <= 10)->count();
+
+        $calcKpi = function ($collection) {
+            $onHand    = (int) $collection->sum('ton_thuc_te');
+            $reserved  = (int) $collection->sum('ton_dang_giu');
+            $available = max(0, $onHand - $reserved);
+            $sapHet    = (int) $collection->filter(fn ($s) => $s->ton_kha_dung > 0 && $s->ton_kha_dung <= 10)->count();
+            return [$collection->count(), $onHand, $reserved, $available, $sapHet];
+        };
+
+        $retailSp = $allSp->filter(fn ($s) => !in_array($s->loai_san_pham, SanPham::DANH_SACH_LOAI_NGUYEN_LIEU, true));
+        $nvlSp    = $allSp->filter(fn ($s) => in_array($s->loai_san_pham, SanPham::DANH_SACH_LOAI_NGUYEN_LIEU, true));
+
+        [$spCount, $spOnHand, $spReserved, $spAvailable, $spSapHet]       = $calcKpi($retailSp);
+        [$nvlCount, $nvlOnHand, $nvlReserved, $nvlAvailable, $nvlSapHet] = $calcKpi($nvlSp);
 
         $allMau = MauBoHoa::with([
             'boHoas' => fn ($q) => $q->where('loai_bo_hoa', 'HE_THONG')
@@ -283,25 +325,48 @@ class TonKhoController extends Controller
             }
         }
         $boAvailable = max(0, $boOnHand - $boReserved);
+        $boCount = $allMau->count();
 
         if ($loaiTonKho === 'bo_hoa') {
-            $tongMatHang = $allMau->count();
-            $tongTonThucTe = $boOnHand;
-            $tongDangGiu = $boReserved;
-            $tongKhaDung = $boAvailable;
+            $tongMatHang    = $boCount;
+            $tongTonThucTe  = $boOnHand;
+            $tongDangGiu    = $boReserved;
+            $tongKhaDung    = $boAvailable;
             $tongSapHetHang = $boSapHet;
-        } elseif ($loaiTonKho === 'san_pham' || (!empty($loaiSanPham) && $loaiTonKho !== 'bo_hoa')) {
-            $tongMatHang = $allSp->count();
-            $tongTonThucTe = $spOnHand;
-            $tongDangGiu = $spReserved;
-            $tongKhaDung = $spAvailable;
+        } elseif ($loaiTonKho === 'nguyen_vat_lieu') {
+            $tongMatHang    = $nvlCount;
+            $tongTonThucTe  = $nvlOnHand;
+            $tongDangGiu    = $nvlReserved;
+            $tongKhaDung    = $nvlAvailable;
+            $tongSapHetHang = $nvlSapHet;
+        } elseif ($loaiTonKho === 'san_pham') {
+            $tongMatHang    = $spCount;
+            $tongTonThucTe  = $spOnHand;
+            $tongDangGiu    = $spReserved;
+            $tongKhaDung    = $spAvailable;
             $tongSapHetHang = $spSapHet;
         } else {
-            $tongMatHang = $allSp->count() + $allMau->count();
-            $tongTonThucTe = $spOnHand + $boOnHand;
-            $tongDangGiu = $spReserved + $boReserved;
-            $tongKhaDung = $spAvailable + $boAvailable;
-            $tongSapHetHang = $spSapHet + $boSapHet;
+            if ($loaiSanPham !== '') {
+                if (in_array($loaiSanPham, SanPham::DANH_SACH_LOAI_NGUYEN_LIEU, true)) {
+                    $tongMatHang    = $nvlCount;
+                    $tongTonThucTe  = $nvlOnHand;
+                    $tongDangGiu    = $nvlReserved;
+                    $tongKhaDung    = $nvlAvailable;
+                    $tongSapHetHang = $nvlSapHet;
+                } else {
+                    $tongMatHang    = $spCount;
+                    $tongTonThucTe  = $spOnHand;
+                    $tongDangGiu    = $spReserved;
+                    $tongKhaDung    = $spAvailable;
+                    $tongSapHetHang = $spSapHet;
+                }
+            } else {
+                $tongMatHang    = $spCount + $nvlCount + $boCount;
+                $tongTonThucTe  = $spOnHand + $nvlOnHand + $boOnHand;
+                $tongDangGiu    = $spReserved + $nvlReserved + $boReserved;
+                $tongKhaDung    = $spAvailable + $nvlAvailable + $boAvailable;
+                $tongSapHetHang = $spSapHet + $nvlSapHet + $boSapHet;
+            }
         }
 
         return view('admin.TonKho.index', compact(

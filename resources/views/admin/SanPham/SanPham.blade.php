@@ -204,14 +204,15 @@
             width: 100%;
             overflow-x: auto;
             position: relative;
+            -webkit-overflow-scrolling: touch;
         }
         .rs-table {
             width: 100%;
-            min-width: 1180px;
+            min-width: 1080px;
             border-collapse: separate;
             border-spacing: 0;
             text-align: left;
-            table-layout: fixed;
+            table-layout: auto;
         }
         .rs-table thead tr {
             background-color: #F8F9FA !important;
@@ -225,6 +226,14 @@
             text-transform: none;
             border-bottom: 1px solid #EAECF0 !important;
             white-space: nowrap !important;
+        }
+        .rs-table th:first-child,
+        .rs-table td:first-child {
+            padding-left: 20px !important;
+        }
+        .rs-table th:last-child,
+        .rs-table td:last-child {
+            padding-right: 20px !important;
         }
         .rs-table tbody tr {
             border-bottom: 1px solid #EAECF0;
@@ -317,6 +326,7 @@
             align-items: center;
             justify-content: center;
             gap: 4px;
+            flex-wrap: nowrap;
         }
         .rs-action-btn {
             width: 32px;
@@ -670,16 +680,15 @@
         <div class="rs-table-container">
             <table class="rs-table">
                 <colgroup>
-                    <col style="width: 100px;">
-                    <col style="width: 90px;">
-                    <col style="width: 230px;">
-                    <col style="width: 125px;">
-                    <col style="width: 80px;">
-                    <col style="width: 155px;">
-                    <col style="width: 125px;">
-                    <col style="width: 95px;">
-                    <col style="width: 110px;">
-                    <col style="width: 110px;">
+                    <col style="width: 8%;">
+                    <col style="width: 6%;">
+                    <col style="width: 27%;">
+                    <col style="width: 12%;">
+                    <col style="width: 6%;">
+                    <col style="width: 15%;">
+                    <col style="width: 11%;">
+                    <col style="width: 8%;">
+                    <col style="width: 7%;">
                 </colgroup>
                 <thead>
                     <tr>
@@ -690,7 +699,6 @@
                         <th style="text-align: center; white-space: nowrap;">Đơn vị</th>
                         <th style="text-align: right; white-space: nowrap;">Giá nhập / niêm yết</th>
                         <th style="text-align: right; white-space: nowrap;">Giá bán hiện tại</th>
-                        <th style="text-align: center; white-space: nowrap;">Tồn kho</th>
                         <th style="text-align: center; white-space: nowrap;">Trạng thái</th>
                         <th style="text-align: center; white-space: nowrap;">Thao tác</th>
                     </tr>
@@ -724,7 +732,7 @@
                             <td>
                                 <div class="fw-bold text-dark" style="font-size:13.5px;">{{ $sp->ten_san_pham }}</div>
                                 @if($sp->mo_ta)
-                                    <small class="text-muted d-block text-truncate" style="max-width: 200px; font-size:11.5px;">{{ $sp->mo_ta }}</small>
+                                    <small class="text-muted d-block text-truncate" style="max-width: 100%; font-size:11.5px;">{{ $sp->mo_ta }}</small>
                                 @endif
                             </td>
 
@@ -740,7 +748,7 @@
                                 </span>
                             </td>
 
-                            <td style="text-align:right;">
+                            <td style="text-align:right; white-space: nowrap;">
                                 @php
                                     // Nhóm các lô theo giá nhập để hiển thị đúng giá nhập của từng lô hàng
                                     $nhomGia = $loCoHang->groupBy(function($item) {
@@ -798,41 +806,9 @@
                                 @endif
                             </td>
 
-                            <td style="text-align:right;" class="fw-bold text-success">
+                            <td style="text-align:right; white-space: nowrap;" class="fw-bold text-success">
                                 {{ $sp->gia_ban_hien_tai ? number_format($sp->gia_ban_hien_tai, 0, ',', '.') . ' ₫' : '—' }}
                             </td>
-
-                                                <td style="text-align:center;">
-                        @php
-                            $tonFS   = (int) ($sp->ton_flash_sale ?? 0);
-                            $tongAll = $tongConLai + $tonFS;
-                        @endphp
-
-                        @if($tongAll > 0)
-                            <div style="display:flex; flex-direction:column; align-items:center; gap:3px;">
-                                {{-- Tồn kho thường --}}
-                                <div style="display:flex; align-items:center; gap:4px;">
-                                    <span class="badge-confirmed">{{ $tongConLai }}</span>
-                                    <span style="font-size:11px; color:#667085;">tồn kho</span>
-                                </div>
-
-                                {{-- FlashSale (chỉ hiện khi có) --}}
-                                @if($tonFS > 0)
-                                    <div style="display:flex; align-items:center; gap:4px;">
-                                        <span class="badge-flash-sale">+{{ $tonFS }}</span>
-                                        <span style="font-size:11px; color:#B42318;">FlashSale</span>
-                                    </div>
-                                @endif
-
-                                {{-- Tổng --}}
-                                <div style="font-size:11px; color:#344054; border-top:1px dashed #EAECF0; padding-top:3px; margin-top:1px; min-width:100%;">
-                                    = <strong style="color:#101828;">{{ $tongAll }}</strong> tổng
-                                </div>
-                            </div>
-                        @else
-                            <span class="badge-cancelled">0 (Hết)</span>
-                        @endif
-                    </td>
 
                             <td style="text-align:center; white-space: nowrap;">
                                 @if($sp->trang_thai === 'DANG_BAN')
@@ -898,7 +874,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="text-center text-muted py-4">
+                            <td colspan="9" class="text-center text-muted py-4">
                                 <i class="bi bi-inbox fs-3 d-block mb-2"></i>
                                 Không tìm thấy sản phẩm nào phù hợp với bộ lọc.
                             </td>

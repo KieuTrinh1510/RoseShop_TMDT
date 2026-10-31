@@ -767,7 +767,7 @@
             <div class="home-panel">
                 <div class="panel-title">
                     <h3>Đơn hàng chờ xử lý</h3>
-                    <a href="{{ route('don-hang.index') }}" class="mini-link">Xem tất cả</a>
+                    <a href="{{ route('don-hang.index', ['tab' => 'pending', 'page' => 1]) }}" class="mini-link">Xem tất cả</a>
                 </div>
 
                 <div class="order-list">
