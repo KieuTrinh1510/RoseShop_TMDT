@@ -37,6 +37,15 @@ class SanPham extends Model
     public const LOAI_PHU_KIEN           = 'PHU_KIEN';
     public const LOAI_MIENG_XOP          = 'MIENG_XOP';
 
+    /** Danh sách các loại sản phẩm thuộc nhóm Nguyên Vật Liệu (nội bộ, làm hoa / phụ liệu). */
+    public const DANH_SACH_LOAI_NGUYEN_LIEU = [
+        self::LOAI_GIAY_GOI,
+        self::LOAI_RUY_BANG,
+        self::LOAI_PHU_KIEN_TRANG_TRI,
+        self::LOAI_THIEP,
+        self::LOAI_MIENG_XOP,
+    ];
+
     public const DVT_CANH  = 'CANH';
     public const DVT_CAI   = 'CAI';
     public const DVT_CHAU  = 'CHAU';
@@ -160,6 +169,21 @@ class SanPham extends Model
     public function scopeXop($query)
     {
         return $query->where('loai_san_pham', self::LOAI_MIENG_XOP);
+    }
+
+    public function scopeNguyenVatLieu($query)
+    {
+        return $query->whereIn('loai_san_pham', self::DANH_SACH_LOAI_NGUYEN_LIEU);
+    }
+
+    public function scopeSanPhamBanLe($query)
+    {
+        return $query->whereNotIn('loai_san_pham', self::DANH_SACH_LOAI_NGUYEN_LIEU);
+    }
+
+    public function isNguyenVatLieu(): bool
+    {
+        return in_array($this->loai_san_pham, self::DANH_SACH_LOAI_NGUYEN_LIEU, true);
     }
 
     public function reservations()

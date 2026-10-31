@@ -154,7 +154,7 @@
     {{-- KPI Cards (5 thẻ ngang hàng) --}}
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-3 mb-4">
         <div class="col">
-            <a href="{{ route('admin.ton-kho') }}" class="text-decoration-none">
+            <a href="{{ route('admin.ton-kho', request()->except(['page', 'tinh_trang_ton'])) }}" class="text-decoration-none">
                 <div class="stat-card-tk" title="Xem tất cả mặt hàng">
                     <div class="title"><i class="bi bi-grid me-1 text-primary"></i> Tổng mặt hàng</div>
                     <div class="value">{{ number_format($tongMatHang) }}</div>
@@ -168,7 +168,7 @@
             </div>
         </div>
         <div class="col">
-            <a href="{{ route('admin.ton-kho', ['tinh_trang_ton' => 'dang_giu']) }}" class="text-decoration-none">
+            <a href="{{ route('admin.ton-kho', array_merge(request()->except('page'), ['tinh_trang_ton' => 'dang_giu'])) }}" class="text-decoration-none">
                 <div class="stat-card-tk {{ request('tinh_trang_ton') === 'dang_giu' ? 'border-warning border-2' : '' }}" title="Lọc các mặt hàng đang có đơn giữ">
                     <div class="title"><i class="bi bi-clock-history me-1 text-warning"></i> Đang giữ (Reserved)</div>
                     <div class="value text-warning">{{ number_format($tongDangGiu) }}</div>
@@ -176,7 +176,7 @@
             </a>
         </div>
         <div class="col">
-            <a href="{{ route('admin.ton-kho', ['tinh_trang_ton' => 'con_hang']) }}" class="text-decoration-none">
+            <a href="{{ route('admin.ton-kho', array_merge(request()->except('page'), ['tinh_trang_ton' => 'con_hang'])) }}" class="text-decoration-none">
                 <div class="stat-card-tk {{ request('tinh_trang_ton') === 'con_hang' ? 'border-success border-2' : '' }}" title="Lọc các mặt hàng còn khả dụng">
                     <div class="title"><i class="bi bi-check2-circle me-1 text-success"></i> Khả dụng (Available)</div>
                     <div class="value text-success">{{ number_format($tongKhaDung) }}</div>
@@ -184,7 +184,7 @@
             </a>
         </div>
         <div class="col">
-            <a href="{{ route('admin.ton-kho', ['tinh_trang_ton' => 'sap_het']) }}" class="text-decoration-none">
+            <a href="{{ route('admin.ton-kho', array_merge(request()->except('page'), ['tinh_trang_ton' => 'sap_het'])) }}" class="text-decoration-none">
                 <div class="stat-card-tk {{ request('tinh_trang_ton') === 'sap_het' ? 'border-danger border-2' : '' }}" title="Lọc các mặt hàng sắp hết hàng (Khả dụng ≤ 10)">
                     <div class="title"><i class="bi bi-exclamation-triangle me-1 text-danger"></i> Sắp hết hàng</div>
                     <div class="value text-danger">{{ number_format($tongSapHetHang) }}</div>
@@ -201,7 +201,8 @@
                     <label class="form-label" style="font-size:12px; font-weight:600; color:#475467;">Loại tồn kho</label>
                     <select name="loai_ton_kho" class="form-select">
                         <option value="">-- Tất cả kho hàng --</option>
-                        <option value="san_pham" {{ request('loai_ton_kho') === 'san_pham' ? 'selected' : '' }}>Sản phẩm / Nguyên vật liệu</option>
+                        <option value="san_pham" {{ request('loai_ton_kho') === 'san_pham' ? 'selected' : '' }}>Sản phẩm</option>
+                        <option value="nguyen_vat_lieu" {{ request('loai_ton_kho') === 'nguyen_vat_lieu' ? 'selected' : '' }}>Nguyên vật liệu</option>
                         <option value="bo_hoa" {{ request('loai_ton_kho') === 'bo_hoa' ? 'selected' : '' }}>Bó hoa thành phẩm</option>
                     </select>
                 </div>
@@ -317,11 +318,14 @@
                             </td>
                             <td>
                                 @if($isBoHoa)
-                                    <div><small class="badge" style="background:#f3e8ff; color:#6b21a8; border: 1px solid #e9d5ff;">Bó hoa thành phẩm</small></div>
+                                    <div><small class="badge" style="background:#f3e8ff; color:#6b21a8; border: 1px solid #e9d5ff; font-weight:600;">Bó hoa thành phẩm</small></div>
                                     <small class="text-muted">{{ $sp->don_vi_tinh_text }}</small>
+                                @elseif(!empty($sp->is_nguyen_vat_lieu))
+                                    <div><small class="badge" style="background:#FEF0C7; color:#B54708; border: 1px solid #FEDF89; font-weight:600;">Nguyên vật liệu</small></div>
+                                    <small class="text-muted">{{ $sp->loai_badge_text }} · {{ $sp->don_vi_tinh_text }}</small>
                                 @else
-                                    <div><small class="badge bg-light text-dark border">{{ $sp->loai_san_pham }}</small></div>
-                                    <small class="text-muted">{{ $sp->don_vi_tinh_text }}</small>
+                                    <div><small class="badge" style="background:#E0F2FE; color:#026AA2; border: 1px solid #B9E6FE; font-weight:600;">Sản phẩm</small></div>
+                                    <small class="text-muted">{{ $sp->loai_badge_text }} · {{ $sp->don_vi_tinh_text }}</small>
                                 @endif
                             </td>
                             <td class="text-center">

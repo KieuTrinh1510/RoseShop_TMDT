@@ -19,6 +19,12 @@ class LabelHelper
         'THIEP'              => 'Thiệp chúc mừng',
         'MIENG_XOP'          => 'Xốp / Mút cắm hoa',
         'SAN_PHAM_PREMIUM'   => 'Sản phẩm cao cấp',
+        'HOA_GIA'            => 'Hoa giả',
+        'CHAU_HOA_GIA'       => 'Chậu hoa giả',
+        'CAY_CANH'           => 'Cây cảnh',
+        'HOA_SAP'            => 'Hoa sáp',
+        'HOA_GIAY_NHUN'      => 'Hoa giấy nhún',
+        'TERRARIUM'          => 'Terrarium',
     ];
 
     public static function loaiSanPham(?string $ma): string
