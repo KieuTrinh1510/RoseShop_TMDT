@@ -2405,20 +2405,9 @@
                                         <th style="width: 105px; min-width: 105px; text-align: center;">Tồn thực tế</th>
                                         <th style="width: 85px; min-width: 85px; text-align: center;">Đang giữ</th>
                                         <th style="width: 90px; min-width: 90px; text-align: center;">Khả dụng</th>
-                                        <th style="width: 125px; min-width: 125px; text-align: right;">Giá bán</th>
+                                        <th style="width: 130px; min-width: 130px; text-align: right;">Giá vốn / Giá bán</th>
                                         <th style="width: 95px; min-width: 95px; text-align: center;">Trạng thái</th>
                                         <th style="width: 90px; min-width: 90px; text-align: center;">Thao tác</th>
-                                        <th style="width: 52px;">Ảnh</th>
-                                        <th>Tên bó hoa</th>
-                                        <th>Mẫu nguồn</th>
-                                        <th>Size / Kiểu</th>
-                                        <th style="min-width: 140px;">Thời hạn</th>
-                                        <th class="text-center">Tồn thực tế</th>
-                                        <th class="text-center">Đang giữ</th>
-                                        <th class="text-center">Khả dụng</th>
-                                        <th class="text-end">Giá vốn / Giá bán</th>
-                                        <th class="text-center">Trạng thái</th>
-                                        <th class="text-end" style="width: 140px;">Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -2500,8 +2489,6 @@
                                             <td style="text-align: center; font-family: monospace;" class="fw-bold text-success">
                                                 {{ $bo->so_luong }}
                                             </td>
-                                            <td style="text-align: right;" class="fw-bold text-success">
-                                                {{ number_format($bo->gia_ban, 0, ',', '.') }} đ
                                             <td class="text-end">
                                                 <div class="small text-muted text-nowrap">Vốn: <span class="fw-semibold text-secondary">{{ number_format($bo->gia_von ?? 0, 0, ',', '.') }} đ</span></div>
                                                 <div class="fw-bold text-nowrap" style="color:var(--rose-primary);">Bán: {{ number_format($bo->gia_ban, 0, ',', '.') }} đ</div>
@@ -3997,34 +3984,41 @@
             const url = button.dataset.boChitietGia;
             try {
                 const r = await api(url);
-                document.getElementById('ctg_ten').textContent  = r.data.ten_bo_hoa;
-                document.getElementById('ctg_ma').textContent   = r.data.ma_bo_hoa;
-                document.getElementById('ctg_size').textContent = r.data.size;
-                document.getElementById('ctg_kieu').textContent = r.data.kieu_bo_hoa_text;
+                const setElText = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = val;
+                };
 
-                document.getElementById('ctg_size_label').textContent = r.data.size;
-                document.getElementById('ctg_kieu_label').textContent = r.data.kieu_bo_hoa_text;
+                setElText('ctg_ten', r.data.ten_bo_hoa);
+                setElText('ctg_ma', r.data.ma_bo_hoa);
+                setElText('ctg_size', r.data.size);
+                setElText('ctg_kieu', r.data.kieu_bo_hoa_text);
+                setElText('ctg_size_label', r.data.size);
+                setElText('ctg_kieu_label', r.data.kieu_bo_hoa_text);
 
                 const tbody = document.getElementById('ctg_nguyen_lieu');
-                tbody.innerHTML = '';
-                r.data.chi_tiet.forEach(ct => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${ct.ten_san_pham}</td>
-                        <td><span class="badge bg-secondary">${ct.vai_tro_text}</span></td>
-                        <td class="text-end">${ct.so_luong} ${ct.don_vi_tinh || ''}</td>
-                        <td class="text-end">${money(ct.gia_nhap)}</td>
-                        <td class="text-end fw-semibold">${money(ct.thanh_tien)}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-
-                document.getElementById('ctg_tong_nl').textContent = money(r.data.gia_von ?? r.data.tien_nguyen_lieu);
-                if (document.getElementById('ctg_gia_ban')) {
-                    document.getElementById('ctg_gia_ban').textContent = money(r.data.gia_ban);
+                if (tbody) {
+                    tbody.innerHTML = '';
+                    r.data.chi_tiet.forEach(ct => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${ct.ten_san_pham}</td>
+                            <td><span class="badge bg-secondary">${ct.vai_tro_text}</span></td>
+                            <td class="text-end">${ct.so_luong} ${ct.don_vi_tinh || ''}</td>
+                            <td class="text-end">${money(ct.gia_nhap)}</td>
+                            <td class="text-end fw-semibold">${money(ct.thanh_tien)}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
                 }
 
-                new bootstrap.Modal(document.getElementById('modalChiTietGiaBo')).show();
+                setElText('ctg_tong_nl', money(r.data.gia_von ?? r.data.tien_nguyen_lieu));
+                setElText('ctg_gia_ban', money(r.data.gia_ban));
+
+                const modalEl = document.getElementById('modalChiTietGiaBo');
+                if (modalEl) {
+                    new bootstrap.Modal(modalEl).show();
+                }
             } catch (e) {
                 tell(e.message);
             }
