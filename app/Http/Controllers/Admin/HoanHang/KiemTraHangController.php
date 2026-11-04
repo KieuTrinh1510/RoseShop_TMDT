@@ -44,8 +44,12 @@ class KiemTraHangController extends Controller
     // ─────────────────────────────────────────────────────────────
     // Hiển thị đơn CANCELLED và các sản phẩm cần kiểm tra
     // ─────────────────────────────────────────────────────────────
-    public function index($maHoaDon)
+    public function index(Request $request, $maHoaDon)
     {
+        // Modal trong trang quản lý đơn hàng gọi AJAX kèm ?mo_kiem_tra=1.
+        // Request JSON không kèm cờ này (VD: xem log ở trang hóa đơn) vẫn chỉ đọc, không đổi trạng thái.
+        $moKiemTra = $request->expectsJson() && $request->boolean('mo_kiem_tra');
+
         $hoaDon = HoaDon::with(['khachHang', 'shipper'])->findOrFail($maHoaDon);
 
         if ($loi = $this->loiDieuKienDon($hoaDon)) {
@@ -64,6 +68,29 @@ class KiemTraHangController extends Controller
             return $this->phanHoiLoi('Đơn này chưa có phiếu hàng hoàn nên chưa thể kiểm tra.', 422);
         }
 
+        // Modal kiểm tra: chỉ cho mở khi hàng hoàn đang CHO_MANG_VE_KHO hoặc DA_NHAN_TAI_KHO.
+        if ($moKiemTra) {
+            if ($hangHoan->trang_thai === 'DA_KIEM_TRA') {
+                return $this->phanHoiLoi('Hàng hoàn của đơn này đã được kiểm tra, không thể kiểm tra lại.', 422);
+            }
+            if (!in_array($hangHoan->trang_thai, ['CHO_MANG_VE_KHO', 'DA_NHAN_TAI_KHO'], true)) {
+                return $this->phanHoiLoi('Hàng hoàn chưa ở trạng thái cho phép kiểm tra.', 422);
+            }
+        }
+
+        // Không có bước xác nhận shipper giao hàng về kho riêng.
+        // Khi admin mở màn hình kiểm tra (trang cũ hoặc modal), xem như hàng đã được tiếp nhận tại kho.
+        // Request JSON thường (xem log) không chạy bước này.
+        $vuaNhanKho = false;
+        if ((!$request->expectsJson() || $moKiemTra) && $hangHoan->trang_thai === 'CHO_MANG_VE_KHO') {
+            $hangHoan->update([
+                'trang_thai'             => 'DA_NHAN_TAI_KHO',
+                'thoi_diem_nhan_tai_kho' => $hangHoan->thoi_diem_nhan_tai_kho ?? now(),
+            ]);
+            $hangHoan->refresh();
+            $vuaNhanKho = true;
+        }
+
         $data = [
             'hoaDon'          => $hoaDon,
             'hangHoan'        => $hangHoan,
@@ -73,9 +100,11 @@ class KiemTraHangController extends Controller
             'dongKiemTra'     => $hangHoan->chiTiet->map(fn ($ct) => $this->moTaDong($ct))->values(),
             'tyLeGiamMacDinh' => self::TY_LE_GIAM_FLASH_SALE,
             'nhanViens' => $this->danhSachNhanVienBaoCao(),
+            'vuaNhanKho'      => $vuaNhanKho,
+            'thongTinDon'     => $this->thongTinDonChoModal($hoaDon, $hangHoan),
         ];
 
-        if (request()->expectsJson()) {
+        if ($request->expectsJson()) {
             return response()->json(['success' => true, 'data' => $data]);
         }
 
@@ -215,6 +244,9 @@ class KiemTraHangController extends Controller
             }
             if ($hong + $ban === 0) {
                 $this->nem($key, 'Mỗi sản phẩm phải có ít nhất 1 đơn vị hỏng hoặc còn bán được.');
+            }
+            if ($hong + $ban !== $theoDon) {
+                $this->nem($key, "Số lượng hỏng + còn bán được ({$hong} + {$ban}) phải bằng số lượng theo đơn ({$theoDon}).");
             }
             if ($hong > 0 && blank($in['ly_do_hong'] ?? null)) {
                 $this->nem($key . '.ly_do_hong', 'Vui lòng nhập lý do hỏng cho dòng đã xác nhận hỏng.');
@@ -558,6 +590,26 @@ class KiemTraHangController extends Controller
             'ghi_chu'                => $ct->ghi_chu,
         ];
     }
+    /** Thông tin tóm tắt đơn hàng để modal hiển thị (chỉ đọc). */
+    private function thongTinDonChoModal(HoaDon $hoaDon, HangHoan $hangHoan): array
+    {
+        $ghtb = $hangHoan->giaoHangThatBai;
+
+        return [
+            'ma_hoa_don'             => $hoaDon->ma_hoa_don,
+            'ma_hd_code'             => '#HD-' . str_pad((string) $hoaDon->ma_hoa_don, 4, '0', STR_PAD_LEFT),
+            'khach_hang'             => $hoaDon->khachHang?->ten_khach_hang,
+            'so_dien_thoai'          => $hoaDon->so_dien_thoai ?: $hoaDon->khachHang?->so_dien_thoai,
+            'tong_tien'              => (float) $hoaDon->tong_tien,
+            'shipper'                => $ghtb?->shipper?->ten_nhan_vien ?? $hoaDon->shipper?->ten_nhan_vien,
+            'loai_loi'               => strtoupper((string) $ghtb?->loai_loi),
+            'ly_do'                  => $ghtb?->ly_do ?: $hoaDon->ly_do_huy,
+            'thoi_diem_bao'          => $ghtb?->thoi_diem_bao?->format('d/m/Y H:i'),
+            'trang_thai_hang_hoan'   => $hangHoan->trang_thai,
+            'thoi_diem_nhan_tai_kho' => $hangHoan->thoi_diem_nhan_tai_kho?->format('d/m/Y H:i'),
+        ];
+    }
+
     private function danhSachNhanVienBaoCao()
 {
     return NhanVien::where(function ($q) {

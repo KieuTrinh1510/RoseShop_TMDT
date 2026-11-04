@@ -73,7 +73,8 @@ class FlashSaleController extends Controller
 
         $fs = $this->truyVanDangBan()->whereKey($data['ma_flash_sale'])->firstOrFail();
 
-        $conLai = (int) $fs->so_luong - (int) $fs->so_luong_da_ban;
+        // Quota thực tế còn lại = tổng quota - đã bán - đang được giữ ở reservation.
+        $conLai = (int) $fs->available_quota;
         if ((int) $data['so_luong'] > $conLai) {
             return back()->with('error', "Flash Sale chỉ còn {$conLai} sản phẩm.");
         }

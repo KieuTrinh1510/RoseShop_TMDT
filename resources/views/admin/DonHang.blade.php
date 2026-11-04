@@ -4,705 +4,7 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 <link rel="stylesheet" href="{{ asset('css/Admin/DonHang.css') }}">
-<style>
-    .rs-management-page {
-        padding: 24px 32px !important;
-        background-color: #F8F9FC;
-        min-height: 100vh;
-        font-family: inherit;
-        color: #344054;
-    }
-    .rs-header-block {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-    }
-    .rs-header-title {
-        font-size: 22px;
-        font-weight: 700;
-        color: #101828;
-        margin: 0 0 4px 0;
-    }
-    .rs-header-subtitle {
-        font-size: 14px;
-        color: #667085;
-        margin: 0;
-    }
 
-    /* ─── TAB NAVIGATION ─── */
-    .rs-tab-bar {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        background: #ffffff;
-        padding: 6px 8px;
-        border-radius: 12px;
-        border: 1px solid #EAECF0;
-        margin-bottom: 16px;
-        overflow-x: auto;
-    }
-    .rs-tab-item {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 14px;
-        border-radius: 8px;
-        font-size: 13.5px;
-        font-weight: 500;
-        color: #475467;
-        text-decoration: none;
-        white-space: nowrap;
-        transition: all 0.15s ease;
-    }
-    .rs-tab-item:hover {
-        background-color: #F8F9FC;
-        color: #101828;
-    }
-    .rs-tab-item.active {
-        background-color: #FDF2F8;
-        color: #EC3D8F;
-        font-weight: 600;
-    }
-    .rs-tab-count {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 1px 7px;
-        border-radius: 10px;
-        font-size: 12px;
-        font-weight: 600;
-        background-color: #F2F4F7;
-        color: #344054;
-        min-width: 20px;
-    }
-    .rs-tab-item.active .rs-tab-count {
-        background-color: #EC3D8F;
-        color: #ffffff;
-    }
-    .rs-tab-count-danger {
-        background-color: #FEF3F2;
-        color: #B42318;
-    }
-    .rs-tab-item.active .rs-tab-count-danger {
-        background-color: #B42318;
-        color: #ffffff;
-    }
-
-    /* ─── MAIN CARD & FILTER ─── */
-    .rs-main-card {
-        background: #ffffff;
-        border-radius: 16px;
-        border: 1px solid #EAECF0;
-        box-shadow: 0 1px 3px rgba(16, 24, 40, 0.05);
-        overflow: hidden;
-    }
-    .rs-filter-bar {
-        padding: 16px 20px;
-        border-bottom: 1px solid #EAECF0;
-        background: #ffffff;
-        display: flex;
-        align-items: flex-end;
-        gap: 12px;
-        flex-wrap: wrap;
-    }
-    .rs-filter-group {
-        display: flex;
-        flex-direction: column;
-        flex: 1 1 140px;
-        min-width: 120px;
-    }
-    .rs-filter-group-lg {
-        flex: 2 1 220px;
-        min-width: 200px;
-    }
-    .rs-filter-group label {
-        display: block;
-        font-size: 12.5px;
-        font-weight: 600;
-        color: #475467;
-        margin-bottom: 5px;
-        white-space: nowrap;
-    }
-    .rs-filter-group select, .rs-filter-group input {
-        width: 100%;
-        border: 1px solid #D0D5DD;
-        border-radius: 8px;
-        height: 38px;
-        padding: 0 12px;
-        font-size: 13.5px;
-        color: #101828;
-        background: #ffffff;
-        outline: none;
-        transition: all 0.15s ease;
-        box-sizing: border-box;
-    }
-    .rs-filter-group select {
-        -webkit-appearance: none !important;
-        -moz-appearance: none !important;
-        appearance: none !important;
-        background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475467' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 12px center !important;
-        padding-right: 32px !important;
-        cursor: pointer;
-    }
-    .rs-filter-group select:focus, .rs-filter-group input:focus {
-        border-color: #EC3D8F;
-        box-shadow: 0 0 0 3px rgba(236, 61, 143, 0.15);
-    }
-    .rs-filter-btn-group {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        flex-shrink: 0;
-        margin-bottom: 0;
-    }
-    .rs-btn-filter-submit {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        height: 38px;
-        padding: 0 16px;
-        background-color: #EC3D8F;
-        color: #ffffff;
-        border: none;
-        border-radius: 8px;
-        font-weight: 500;
-        font-size: 13.5px;
-        cursor: pointer;
-        white-space: nowrap;
-        transition: all 0.2s ease;
-    }
-    .rs-btn-filter-submit:hover {
-        background-color: #D82677;
-        color: #ffffff;
-    }
-    .rs-btn-filter-reset {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        height: 38px;
-        padding: 0 12px;
-        background-color: #FEF3F2;
-        color: #B42318;
-        border: 1px solid #FECDCA;
-        border-radius: 8px;
-        font-size: 13.5px;
-        font-weight: 500;
-        text-decoration: none;
-        white-space: nowrap;
-        transition: all 0.2s ease;
-    }
-    .rs-btn-filter-reset:hover {
-        background-color: #FEE4E2;
-        color: #912018;
-    }
-
-    /* ─── CARD TITLE BAR ─── */
-    .rs-card-title-bar {
-        padding: 14px 20px;
-        background: #ffffff;
-        border-bottom: 1px solid #EAECF0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-    .rs-card-title {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 15px;
-        font-weight: 700;
-        color: #101828;
-    }
-
-    /* ─── TABLE STYLES ─── */
-    .rs-table-container {
-        width: 100%;
-        overflow-x: auto;
-        position: relative;
-    }
-    .rs-table {
-        width: 100%;
-        min-width: 1050px;
-        border-collapse: separate;
-        border-spacing: 0;
-        text-align: left;
-    }
-    .rs-table thead tr {
-        background-color: #F8F9FA !important;
-    }
-    .rs-table th {
-        background-color: #F8F9FA !important;
-        padding: 12px 14px;
-        font-size: 13px;
-        font-weight: 600;
-        color: #475467 !important;
-        border-bottom: 1px solid #EAECF0 !important;
-        white-space: nowrap !important;
-    }
-    .rs-table tbody tr {
-        border-bottom: 1px solid #EAECF0;
-        transition: background-color 0.15s ease;
-    }
-    .rs-table tbody tr:hover {
-        background-color: #F9FAFB;
-    }
-    .rs-table td {
-        padding: 12px 14px;
-        font-size: 13.5px;
-        color: #344054;
-        vertical-align: middle;
-        border-bottom: 1px solid #EAECF0;
-    }
-    .rs-code-order {
-        font-family: monospace;
-        font-size: 12.5px;
-        font-weight: 700;
-        color: #EC3D8F !important;
-        white-space: nowrap !important;
-    }
-
-    /* ─── STATUS BADGES ─── */
-    .rs-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        padding: 3px 10px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-    .rs-badge-pending {
-        background: #FFFAEB;
-        color: #B54708;
-        border: 1px solid #FEDF89;
-    }
-    .rs-badge-confirmed {
-        background: #F0F9FF;
-        color: #026AA2;
-        border: 1px solid #B9E6FE;
-    }
-    .rs-badge-shipping {
-        background: #F9F5FF;
-        color: #6941C6;
-        border: 1px solid #E9D7FE;
-    }
-    .rs-badge-delivered {
-        background: #ECFDF3;
-        color: #027A48;
-        border: 1px solid #ABEFC6;
-    }
-    .rs-badge-failed {
-        background: #FEF3F2;
-        color: #B42318;
-        border: 1px solid #FECDCA;
-    }
-    .rs-badge-cancelled {
-        background: #F2F4F7;
-        color: #475467;
-        border: 1px solid #EAECF0;
-    }
-
-    /* Return goods status badges */
-    .rs-badge-return-waiting {
-        background: #FFFAEB;
-        color: #B54708;
-        border: 1px solid #FEDF89;
-    }
-    .rs-badge-return-received {
-        background: #EFF8FF;
-        color: #175CD3;
-        border: 1px solid #B2DDFF;
-    }
-    .rs-badge-return-checking {
-        background: #FDF2FA;
-        color: #C11574;
-        border: 1px solid #FCCEEE;
-    }
-    .rs-badge-return-done {
-        background: #ECFDF3;
-        color: #027A48;
-        border: 1px solid #ABEFC6;
-    }
-
-    .rs-badge-paid {
-        background: #ECFDF3;
-        color: #027A48;
-        border: 1px solid #ABEFC6;
-        padding: 3px 8px;
-        border-radius: 10px;
-        font-size: 11.5px;
-        font-weight: 600;
-        white-space: nowrap;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-    }
-    .rs-badge-unpaid {
-        background: #FEF3F2;
-        color: #B42318;
-        border: 1px solid #FECDCA;
-        padding: 3px 8px;
-        border-radius: 10px;
-        font-size: 11.5px;
-        font-weight: 600;
-        white-space: nowrap;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    /* Shipper select & Action Buttons */
-    .shipper-select {
-        border: 1px solid #D0D5DD !important;
-        border-radius: 8px !important;
-        height: 34px !important;
-        padding: 0 8px !important;
-        font-size: 12.5px !important;
-        color: #344054 !important;
-        background: #ffffff !important;
-        max-width: 155px !important;
-    }
-    .shipper-select.error {
-        border-color: #FDA29B !important;
-        background-color: #FEF3F2 !important;
-    }
-    .rs-order-btn {
-        width: 32px;
-        height: 32px;
-        min-width: 32px;
-        border-radius: 8px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border: 1px solid transparent;
-        cursor: pointer;
-        transition: all 0.15s ease;
-    }
-    .rs-order-btn.btn-success {
-        background-color: #ECFDF3 !important;
-        border-color: #ABEFC6 !important;
-        color: #027A48 !important;
-    }
-    .rs-order-btn.btn-success:hover {
-        background-color: #027A48 !important;
-        color: #ffffff !important;
-    }
-    .rs-order-btn.btn-danger {
-        background-color: #FEF3F2 !important;
-        border-color: #FECDCA !important;
-        color: #B42318 !important;
-    }
-    .rs-order-btn.btn-danger:hover {
-        background-color: #B42318 !important;
-        color: #ffffff !important;
-    }
-    .rs-btn-action {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 5px 10px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        text-decoration: none;
-        border: 1px solid transparent;
-        cursor: pointer;
-        transition: all 0.15s ease;
-        white-space: nowrap;
-    }
-    .rs-btn-action-primary {
-        background-color: #FDF2F8;
-        border-color: #FCCEEE;
-        color: #EC3D8F;
-    }
-    .rs-btn-action-primary:hover {
-        background-color: #EC3D8F;
-        color: #ffffff;
-    }
-    .rs-btn-action-info {
-        background-color: #EFF8FF;
-        border-color: #B2DDFF;
-        color: #175CD3;
-    }
-    .rs-btn-action-info:hover {
-        background-color: #175CD3;
-        color: #ffffff;
-    }
-    .rs-btn-action-warning {
-        background-color: #FFFAEB;
-        border-color: #FEDF89;
-        color: #B54708;
-    }
-    .rs-btn-action-warning:hover {
-        background-color: #B54708;
-        color: #ffffff;
-    }
-    .rs-btn-action-ghost {
-        background-color: #F2F4F7;
-        border-color: #D0D5DD;
-        color: #344054;
-    }
-    .rs-btn-action-ghost:hover {
-        background-color: #E4E7EC;
-        color: #101828;
-    }
-
-    /* ─── FOOTER PAGINATION ─── */
-    .rs-table-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 14px 20px;
-        background: #ffffff;
-        border-top: 1px solid #EAECF0;
-        flex-wrap: wrap;
-        gap: 12px;
-    }
-    .rs-footer-left {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-    }
-    .rs-per-page-inline {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 13.5px;
-        color: #475467;
-    }
-    .rs-per-page-select {
-        width: 68px !important;
-        height: 34px !important;
-        padding: 0 20px 0 10px !important;
-        border: 1px solid #D0D5DD !important;
-        border-radius: 8px !important;
-        font-size: 13.5px !important;
-        font-weight: 500 !important;
-        color: #101828 !important;
-        background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475467' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 6px center !important;
-        -webkit-appearance: none !important;
-        -moz-appearance: none !important;
-        appearance: none !important;
-        outline: none !important;
-        cursor: pointer !important;
-    }
-    .rs-records-count {
-        font-size: 13.5px;
-        color: #667085;
-        white-space: nowrap;
-    }
-    .rs-pagination, .pagination {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        margin: 0;
-        padding: 0;
-        list-style: none;
-    }
-    .rs-pagination .page-item .page-link {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 34px;
-        height: 34px;
-        padding: 0 8px;
-        border-radius: 8px !important;
-        border: 1px solid #D0D5DD;
-        background: #ffffff;
-        color: #344054;
-        font-size: 13.5px;
-        font-weight: 500;
-        text-decoration: none;
-        transition: all 0.15s ease;
-    }
-    .rs-pagination .page-item.active .page-link,
-    .rs-pagination .page-item.active > .page-link {
-        background-color: #EC3D8F !important;
-        border-color: #EC3D8F !important;
-        color: #ffffff !important;
-        font-weight: 600 !important;
-    }
-    .rs-pagination .page-item.disabled .page-link {
-        color: #D0D5DD;
-        background-color: #F9FAFB;
-        border-color: #EAECF0;
-        cursor: not-allowed;
-    }
-
-    /* ─── MODAL / DIALOG ─── */
-    .overlay {
-        display: none !important;
-        position: fixed !important;
-        inset: 0 !important;
-        background: rgba(16, 24, 40, 0.6) !important;
-        z-index: 1050 !important;
-        align-items: center !important;
-        justify-content: center !important;
-        backdrop-filter: blur(2px);
-    }
-    .overlay.show {
-        display: flex !important;
-    }
-    .dialog {
-        background: #ffffff !important;
-        border-radius: 14px !important;
-        padding: 24px 28px !important;
-        max-width: 460px !important;
-        width: 90% !important;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-        border: 1px solid #EAECF0 !important;
-    }
-    .dialog h3 {
-        font-size: 16px !important;
-        font-weight: 700 !important;
-        color: #B42318 !important;
-        margin-bottom: 8px !important;
-    }
-    .dialog p {
-        font-size: 13.5px !important;
-        color: #475467 !important;
-        margin-bottom: 16px !important;
-        line-height: 1.5 !important;
-    }
-    .dialog-actions textarea {
-        width: 100% !important;
-        height: 70px !important;
-        border: 1px solid #D0D5DD !important;
-        border-radius: 8px !important;
-        padding: 8px 10px !important;
-        font-size: 13px !important;
-        outline: none !important;
-        resize: none !important;
-    }
-
-    /* ─── FAILED DETAIL DRAWER / MODAL ─── */
-    .rs-drawer {
-        background: #ffffff;
-        border-radius: 16px;
-        max-width: 760px;
-        width: 95%;
-        max-height: 90vh;
-        overflow-y: auto;
-        box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);
-        border: 1px solid #EAECF0;
-        padding: 24px 28px;
-    }
-    .rs-drawer-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #EAECF0;
-        padding-bottom: 16px;
-        margin-bottom: 20px;
-    }
-    .rs-drawer-title {
-        font-size: 18px;
-        font-weight: 700;
-        color: #101828;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .rs-section-title {
-        font-size: 13.5px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: #475467;
-        margin-bottom: 12px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    .rs-timeline {
-        display: flex;
-        justify-content: space-between;
-        position: relative;
-        margin: 20px 0 24px 0;
-        padding: 0 10px;
-    }
-    .rs-timeline::before {
-        content: '';
-        position: absolute;
-        top: 14px;
-        left: 20px;
-        right: 20px;
-        height: 2px;
-        background-color: #EAECF0;
-        z-index: 1;
-    }
-    .rs-timeline-step {
-        position: relative;
-        z-index: 2;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        width: 18%;
-    }
-    .rs-timeline-dot {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        background-color: #F2F4F7;
-        border: 2px solid #D0D5DD;
-        color: #667085;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 12px;
-        font-weight: 700;
-        margin-bottom: 6px;
-    }
-    .rs-timeline-step.completed .rs-timeline-dot {
-        background-color: #ECFDF3;
-        border-color: #12B76A;
-        color: #027A48;
-    }
-    .rs-timeline-step.current .rs-timeline-dot {
-        background-color: #FDF2F8;
-        border-color: #EC3D8F;
-        color: #EC3D8F;
-    }
-    .rs-timeline-label {
-        font-size: 11.5px;
-        font-weight: 600;
-        color: #344054;
-        line-height: 1.3;
-    }
-    .rs-timeline-time {
-        font-size: 10.5px;
-        color: #667085;
-        margin-top: 2px;
-    }
-
-    .toast {
-        position: fixed !important;
-        bottom: 28px !important;
-        right: 28px !important;
-        background: #101828 !important;
-        color: #ffffff !important;
-        padding: 11px 20px !important;
-        border-radius: 8px !important;
-        font-size: 13px !important;
-        opacity: 0 !important;
-        transform: translateY(12px) !important;
-        transition: opacity .25s, transform .25s !important;
-        pointer-events: none !important;
-        z-index: 1200 !important;
-        max-width: 360px !important;
-    }
-    .toast.show {
-        opacity: 1 !important;
-        transform: translateY(0) !important;
-    }
-    .toast.error { background: #B42318 !important; }
-    .toast.success { background: #027A48 !important; }
-</style>
 @endpush
 
 @section('content')
@@ -1071,8 +373,9 @@
                                 </div>
                             @elseif($isFailedOrder)
                                 <div style="display: inline-flex; gap: 6px; align-items: center;">
-                                    @if($hangHoan && $hangHoan->trang_thai === 'DA_NHAN_TAI_KHO')
+                                    @if($hangHoan && in_array($hangHoan->trang_thai, ['CHO_MANG_VE_KHO', 'DA_NHAN_TAI_KHO'], true))
                                         <a href="{{ route('admin.hoa-don.kiem-tra-hang', $dh->ma_hoa_don) }}"
+                                           onclick="return openKiemTraModal({{ $dh->ma_hoa_don }}, event)"
                                            class="rs-btn-action rs-btn-action-primary"
                                            title="Kiểm tra chất lượng hàng hoàn">
                                             <i class="bi bi-clipboard-check"></i> Kiểm tra hàng
@@ -1095,6 +398,7 @@
                                 </div>
                             @else
                                 <a href="{{ route('hoa-don.show', $dh->ma_hoa_don) }}"
+                                   onclick="return openOrderDetail({{ $dh->ma_hoa_don }}, event)"
                                    class="rs-btn-action rs-btn-action-ghost"
                                    title="Xem chi tiết hóa đơn">
                                     <i class="bi bi-eye"></i> Chi tiết
@@ -1333,6 +637,41 @@
         </div>
     </div>
 
+    {{-- ════════ MODAL CHI TIẾT ĐƠN HÀNG ════════ --}}
+    <div class="overlay" id="orderDetailOverlay" aria-hidden="true">
+        <div class="rs-drawer" id="orderDetailDrawer" role="dialog" aria-modal="true" aria-labelledby="odTitle">
+            <div class="rs-drawer-header">
+                <div class="rs-drawer-title">
+                    <i class="bi bi-receipt"></i>
+                    <span id="odTitle">Chi tiết đơn hàng</span>
+                </div>
+                <button type="button" class="kth-close" onclick="closeOrderDetail()" aria-label="Đóng">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div id="orderDetailBody" class="order-detail-body">
+                <div class="kth-loading">Đang tải chi tiết đơn hàng...</div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ════════ MODAL KIỂM TRA HÀNG HOÀN ════════ --}}
+    <div class="kth-overlay" id="kthOverlay">
+        <div class="kth-modal" role="dialog" aria-modal="true" aria-labelledby="kthTitle">
+            <div class="kth-header">
+                <h3 class="kth-title" id="kthTitle"><i class="bi bi-clipboard-check"></i> Kiểm tra hàng hoàn</h3>
+                <button type="button" class="kth-close" onclick="closeKiemTraModal()" aria-label="Đóng"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="kth-body" id="kthBody">
+                <div class="kth-loading">Đang tải dữ liệu hàng hoàn...</div>
+            </div>
+            <div class="kth-footer">
+                <button type="button" class="kth-btn" onclick="closeKiemTraModal()">Hủy</button>
+                <button type="button" class="kth-btn primary" id="kthSaveBtn" onclick="saveKiemTra()" disabled>Lưu kết quả kiểm tra</button>
+            </div>
+        </div>
+    </div>
+
     {{-- ════════ TOAST NOTIFICATION ════════ --}}
     <div class="toast" id="toast"></div>
 
@@ -1475,6 +814,80 @@
         sel.addEventListener('change', () => sel.classList.remove('error'));
     });
 
+    // ─── ORDER DETAIL MODAL ───
+    function openOrderDetail(orderId, event) {
+        event?.preventDefault();
+        const overlay = document.getElementById('orderDetailOverlay');
+        const body = document.getElementById('orderDetailBody');
+        if (!overlay || !body) return false;
+
+        overlay.classList.add('show');
+        overlay.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        body.innerHTML = '<div class="kth-loading">Đang tải chi tiết đơn hàng...</div>';
+
+        fetch(`/hoa-don/${orderId}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        })
+            .then(r => r.json().then(j => ({ ok: r.ok, j })))
+            .then(({ ok, j }) => {
+                if (!ok || !j.success) throw new Error(j.message || 'Không tải được chi tiết đơn hàng.');
+                renderOrderDetail(j.data || {});
+            })
+            .catch(err => {
+                body.innerHTML = `<div class="order-detail-error"><i class="bi bi-exclamation-circle"></i>${kthEsc(err.message || 'Không tải được chi tiết đơn hàng.')}</div>`;
+            });
+
+        return false;
+    }
+
+    function closeOrderDetail() {
+        const overlay = document.getElementById('orderDetailOverlay');
+        if (overlay) {
+            overlay.classList.remove('show');
+            overlay.setAttribute('aria-hidden', 'true');
+        }
+        document.body.style.overflow = '';
+    }
+
+    function renderOrderDetail(d) {
+        const esc = v => kthEsc(v || '—');
+        const money = v => Number(v || 0).toLocaleString('vi-VN') + '₫';
+        const customer = d.khach_hang || {};
+        const shipper = d.nhan_vien_giao || {};
+        const rows = (d.chi_tiet_hoa_don || []).map(x => `
+            <tr>
+                <td><strong>${esc(x.ten_hien_thi || x.san_pham?.ten_san_pham)}</strong><small>${esc(x.loai === 'bo_hoa' ? 'Bó hoa' : 'Sản phẩm')}</small></td>
+                <td class="text-center">${Number(x.so_luong || 0)}</td>
+                <td class="text-end">${money(x.gia_ban_snapshot)}</td>
+                <td class="text-end">${money(x.thanh_tien)}</td>
+            </tr>
+        `).join('') || '<tr><td colspan="4" class="text-center text-muted">Không có sản phẩm.</td></tr>';
+
+        document.getElementById('orderDetailBody').innerHTML = `
+            <div class="order-detail-grid">
+                <div><label>Mã đơn hàng</label><strong class="order-detail-code">${esc('#HD-' + String(d.ma_hoa_don || '').padStart(4, '0'))}</strong></div>
+                <div><label>Trạng thái</label><span class="rs-badge rs-badge-${d.trang_thai === 'DELIVERED' ? 'delivered' : (d.trang_thai === 'CANCELLED' ? 'cancelled' : 'confirmed')}">${esc(d.trang_thai_text || d.trang_thai)}</span></div>
+                <div><label>Ngày đặt</label><span>${esc(d.ngay_dat)}</span></div>
+                <div><label>Khách hàng</label><span>${esc(customer.ten_khach_hang)}</span></div>
+                <div><label>Số điện thoại</label><span>${esc(customer.so_dien_thoai || d.so_dien_thoai)}</span></div>
+                <div><label>Shipper</label><span>${esc(shipper.ten_nhan_vien)}</span></div>
+                <div><label>Thanh toán</label><span>${esc(d.phuong_thuc_thanh_toan)} · ${esc(d.trang_thai_thanh_toan)}</span></div>
+                <div><label>Tổng tiền</label><strong>${money(d.tong_tien)}</strong></div>
+            </div>
+            <div class="order-detail-section">
+                <h4><i class="bi bi-box-seam"></i> Sản phẩm trong đơn</h4>
+                <div class="order-detail-table-wrap"><table class="order-detail-table"><thead><tr><th>Sản phẩm</th><th class="text-center">SL</th><th class="text-end">Đơn giá</th><th class="text-end">Thành tiền</th></tr></thead><tbody>${rows}</tbody></table></div>
+            </div>
+            <div class="order-detail-section"><h4><i class="bi bi-geo-alt"></i> Địa chỉ giao hàng</h4><p class="order-detail-address">${esc(d.dia_chi_giao)}</p></div>
+            ${d.hang_hoan ? `<div class="order-detail-return"><strong>Hàng hoàn:</strong> ${esc(d.hang_hoan.trang_thai_text || d.hang_hoan.trang_thai)}</div>` : ''}
+        `;
+    }
+
+    document.getElementById('orderDetailOverlay')?.addEventListener('click', function (e) {
+        if (e.target === this) closeOrderDetail();
+    });
+
     // ─── FAILED DETAIL MODAL LOGIC ───
     function openFailedDetail(orderId) {
         const raw = document.getElementById('failed-data-' + orderId);
@@ -1554,6 +967,7 @@
         const status = data.hang_hoan_trang_thai;
         const isChoMangVe  = status === 'CHO_MANG_VE_KHO';
         const isDaNhan     = status === 'DA_NHAN_TAI_KHO';
+        const canInspect   = isChoMangVe || isDaNhan;
         const isDangKiemTra= status === 'DANG_KIEM_TRA';
         const isDaKiemTra  = status === 'DA_KIEM_TRA';
 
@@ -1591,9 +1005,9 @@
 
         // Inspect button or message
         const actionSlot = document.getElementById('fmInspectActionSlot');
-        if (isDaNhan) {
+        if (canInspect) {
             actionSlot.innerHTML = `
-                <a href="${data.kiem_tra_url}" class="rs-btn-action rs-btn-action-primary">
+                <a href="${data.kiem_tra_url}" onclick="closeFailedDetail(); return openKiemTraModal(${data.ma_hoa_don}, event)" class="rs-btn-action rs-btn-action-primary">
                     <i class="bi bi-clipboard-check"></i> Thực hiện kiểm tra hàng
                 </a>
             `;
@@ -1640,6 +1054,284 @@
 
     document.getElementById('failedModalOverlay').addEventListener('click', function (e) {
         if (e.target === this) closeFailedDetail();
+    });
+    // ─── MODAL KIỂM TRA HÀNG HOÀN ───
+    const KTH_URL_TPL   = @json(route('admin.hoa-don.kiem-tra-hang', ['maHoaDon' => '__ID__']));
+    const KTH_STORE_TPL = @json(route('admin.hoa-don.kiem-tra-hang.store', ['maHoaDon' => '__ID__']));
+    const kth = { id: null, items: [], saving: false, reloadOnClose: false };
+
+    const kthEsc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const kthMoney = n => Number(n || 0).toLocaleString('vi-VN') + 'đ';
+    const kthEl = id => document.getElementById(id);
+
+    function kthHeaders(json = true) {
+        const h = { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': CSRF };
+        if (json) h['Content-Type'] = 'application/json';
+        return h;
+    }
+
+    // Trả về false để chặn điều hướng <a href> (fallback sang trang cũ nếu JS lỗi)
+    function openKiemTraModal(orderId, ev) {
+        if (ev) ev.preventDefault();
+        kth.id = orderId; kth.items = []; kth.reloadOnClose = false;
+        kthEl('kthBody').innerHTML = '<div class="kth-loading">Đang tải dữ liệu hàng hoàn...</div>';
+        kthEl('kthSaveBtn').disabled = true;
+        kthEl('kthOverlay').classList.add('show');
+        document.body.style.overflow = 'hidden';
+
+        fetch(KTH_URL_TPL.replace('__ID__', orderId) + '?mo_kiem_tra=1', { headers: kthHeaders(false), credentials: 'same-origin' })
+            .then(r => r.json().then(j => ({ ok: r.ok, j })))
+            .then(({ ok, j }) => {
+                if (!ok || !j.success) {
+                    closeKiemTraModal();
+                    showToast(j.message || 'Không thể mở màn hình kiểm tra hàng hoàn.', 'error');
+                    return;
+                }
+                kth.reloadOnClose = !!j.data.vuaNhanKho;
+                renderKiemTra(j.data);
+            })
+            .catch(() => { closeKiemTraModal(); showToast('Lỗi kết nối, vui lòng thử lại.', 'error'); });
+        return false;
+    }
+
+    function closeKiemTraModal() {
+        if (kth.saving) return;
+        kthEl('kthOverlay').classList.remove('show');
+        document.body.style.overflow = '';
+        // Trạng thái vừa chuyển sang "Đã nhận tại kho" → tải lại để bảng đơn hàng hiển thị đúng
+        if (kth.reloadOnClose) { kth.reloadOnClose = false; location.reload(); }
+    }
+
+    function renderKiemTra(d) {
+        const t = d.thongTinDon || {};
+        kth.items = d.dongKiemTra || [];
+        const nvOptions = (d.nhanViens || []).map(n => `<option value="${n.ma_nhan_vien}">${kthEsc(n.ten_nhan_vien)}</option>`).join('');
+        const nguon = t.loai_loi === 'SHIPPER' ? 'Do shipper' : (t.loai_loi === 'CUSTOMER' ? 'Do khách hàng' : '—');
+        const ro = (label, val, cls = '') => `<div class="kth-field ${cls}"><label>${label}</label><div class="kth-ro">${kthEsc(val || '—')}</div></div>`;
+
+        const rows = kth.items.map(it => {
+            const id = it.ma_chi_tiet_hang_hoan;
+            return `
+            <div class="kth-item" id="kth-item-${id}" data-max="${it.so_luong_theo_don}" data-gia="${it.gia_ban}" data-bo="${it.la_bo_hoa ? 1 : 0}">
+                <div class="kth-item-head">
+                    <img class="kth-thumb" src="${kthEsc(it.anh)}" alt="" onerror="this.style.visibility='hidden'">
+                    <div class="kth-item-meta">
+                        <div class="kth-item-name"><span class="kth-tag ${it.la_bo_hoa ? 'bo' : ''}">${it.la_bo_hoa ? 'Bó hoa' : 'Sản phẩm'}</span>${kthEsc(it.ten)}</div>
+                        <div style="font-size:12.5px;color:#667085;">Giá bán: ${kthMoney(it.gia_ban)}</div>
+                    </div>
+                    <div class="kth-order-qty"><b>${it.so_luong_theo_don}</b><span>theo đơn</span></div>
+                    <div class="kth-result" id="kth-result-${id}"></div>
+                </div>
+                ${it.la_bo_hoa ? `<label class="kth-xabo"><input type="checkbox" id="kth-xabo-${id}" onchange="kthXaBo(${id}, this.checked)"> Xả toàn bộ bó (tất cả xem là hàng hỏng)</label>` : ''}
+                <div class="kth-qty-row">
+                    <div class="kth-qty-block hong">
+                        <label>Số lượng hỏng</label>
+                        <div class="kth-stepper">
+                            <button type="button" id="kth-hong-minus-${id}" onclick="kthStep(${id},'hong',-1)">−</button>
+                            <input type="number" id="kth-hong-${id}" min="0" max="${it.so_luong_theo_don}" value="0" oninput="kthInput(${id},'hong')">
+                            <button type="button" id="kth-hong-plus-${id}" onclick="kthStep(${id},'hong',1)">+</button>
+                        </div>
+                    </div>
+                    <div class="kth-qty-block ban">
+                        <label>Số lượng còn bán được</label>
+                        <div class="kth-stepper">
+                            <button type="button" id="kth-ban-minus-${id}" onclick="kthStep(${id},'ban',-1)">−</button>
+                            <input type="number" id="kth-ban-${id}" min="0" max="${it.so_luong_theo_don}" value="${it.so_luong_theo_don}" oninput="kthInput(${id},'ban')">
+                            <button type="button" id="kth-ban-plus-${id}" onclick="kthStep(${id},'ban',1)">+</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="kth-damage" id="kth-damage-${id}">
+                    <div><label>Lý do hỏng <span class="req">*</span></label>
+                        <textarea id="kth-lydo-${id}" maxlength="255" placeholder="VD: Hoa dập, cánh gãy..." oninput="kthValidateRow(${id}, false)"></textarea></div>
+                    <div><label>Nhân viên báo cáo <span class="req">*</span></label>
+                        <select id="kth-nv-${id}" onchange="kthValidateRow(${id}, false)"><option value="">-- Chọn nhân viên --</option>${nvOptions}</select></div>
+                </div>
+                <div class="kth-row-error" id="kth-error-${id}"></div>
+            </div>`;
+        }).join('');
+
+        kthEl('kthBody').innerHTML = `
+            <div class="kth-section-title"><i class="bi bi-receipt"></i> Thông tin đơn hàng</div>
+            <div class="kth-info-grid">
+                ${ro('Mã đơn hàng', t.ma_hd_code)}
+                ${ro('Khách hàng', t.khach_hang)}
+                ${ro('Số điện thoại', t.so_dien_thoai)}
+                ${ro('Tổng tiền đơn', kthMoney(t.tong_tien))}
+                ${ro('Nguồn lỗi', nguon)}
+                ${ro('Shipper', t.shipper)}
+                ${ro('Thời điểm giao thất bại', t.thoi_diem_bao)}
+                ${ro('Nhận tại kho', t.thoi_diem_nhan_tai_kho)}
+                ${ro('Lý do thất bại', t.ly_do, 'kth-span2')}
+            </div>
+            <div class="kth-section-title"><i class="bi bi-box-seam"></i> Chi tiết hàng hoàn
+                <small>Số hỏng + số còn bán được phải bằng số lượng theo đơn</small></div>
+            <div class="kth-list">${rows || '<div class="kth-loading">Không có sản phẩm nào trong hàng hoàn này.</div>'}</div>
+            <div class="kth-summary">
+                <div><span>Tổng số lượng hỏng</span><b style="color:#B42318" id="kth-sum-hong">0</b></div>
+                <div><span>Tổng còn bán được (chuyển Flash Sale)</span><b style="color:#027A48" id="kth-sum-ban">0</b></div>
+                <div><span>Thiệt hại hàng hỏng (ước tính)</span><b style="color:#B54708" id="kth-sum-tien">0đ</b></div>
+            </div>
+            <div class="kth-note">ⓘ Tiền hệ thống/shipper chịu, hao hụt Flash Sale và phạt shipper do hệ thống tính khi lưu. Hàng còn bán được sẽ chờ tạo chương trình ở trang Flash Sale.</div>
+            <div class="kth-global-error" id="kthGlobalError"></div>`;
+
+        kth.items.forEach(it => kthRefresh(it.ma_chi_tiet_hang_hoan));
+        kthEl('kthSaveBtn').disabled = kth.items.length === 0;
+    }
+
+    const kthMax = id => Number(kthEl('kth-item-' + id).dataset.max);
+    const kthClamp = (v, max) => Math.max(0, Math.min(max, Number.isFinite(v) ? Math.trunc(v) : 0));
+
+    function kthSet(id, hong) {
+        const max = kthMax(id);
+        hong = kthClamp(hong, max);
+        kthEl('kth-hong-' + id).value = hong;
+        kthEl('kth-ban-' + id).value = max - hong;
+        kthRefresh(id);
+    }
+    function kthStep(id, field, delta) {
+        const h = Number(kthEl('kth-hong-' + id).value) || 0;
+        const b = Number(kthEl('kth-ban-' + id).value) || 0;
+        kthSet(id, field === 'hong' ? h + delta : kthMax(id) - (b + delta));
+    }
+    function kthInput(id, field) {
+        const max = kthMax(id);
+        const v = kthClamp(Number(kthEl(`kth-${field}-${id}`).value), max);
+        kthSet(id, field === 'hong' ? v : max - v);
+    }
+    function kthXaBo(id, checked) {
+        kthSet(id, checked ? kthMax(id) : 0);
+    }
+
+    // Cập nhật giao diện 1 dòng + tổng kết sau mỗi thay đổi
+    function kthRefresh(id) {
+        const max = kthMax(id);
+        const hong = Number(kthEl('kth-hong-' + id).value) || 0;
+        const ban = max - hong;
+        kthEl('kth-damage-' + id).classList.toggle('show', hong > 0);
+
+        const xabo = kthEl('kth-xabo-' + id);
+        if (xabo) xabo.checked = (hong === max && max > 0);
+
+        kthEl('kth-hong-minus-' + id).disabled = hong <= 0;
+        kthEl('kth-hong-plus-' + id).disabled  = hong >= max;
+        kthEl('kth-ban-minus-' + id).disabled  = ban <= 0;
+        kthEl('kth-ban-plus-' + id).disabled   = ban >= max;
+
+        const res = kthEl('kth-result-' + id);
+        if (ban > 0 && hong > 0) res.innerHTML = '<span class="kth-badge mix">FLASH_SALE (' + ban + ') + hỏng (' + hong + ')</span>';
+        else if (ban > 0)        res.innerHTML = '<span class="kth-badge fs">FLASH_SALE</span>';
+        else                     res.innerHTML = '<span class="kth-badge hong">HONG</span>';
+
+        kthValidateRow(id, false);
+        kthUpdateSummary();
+    }
+
+    function kthUpdateSummary() {
+        let h = 0, b = 0, tien = 0;
+        kth.items.forEach(it => {
+            const id = it.ma_chi_tiet_hang_hoan, max = kthMax(id);
+            const hong = Number(kthEl('kth-hong-' + id).value) || 0;
+            h += hong; b += max - hong; tien += hong * Number(kthEl('kth-item-' + id).dataset.gia || 0);
+        });
+        kthEl('kth-sum-hong').textContent = h;
+        kthEl('kth-sum-ban').textContent = b;
+        kthEl('kth-sum-tien').textContent = kthMoney(tien);
+    }
+
+    // showErr=false: chỉ kiểm tra im lặng (khi đang nhập); true: hiện lỗi khi bấm Lưu
+    function kthValidateRow(id, showErr) {
+        const max = kthMax(id);
+        const hong = Number(kthEl('kth-hong-' + id).value) || 0;
+        const ban = Number(kthEl('kth-ban-' + id).value) || 0;
+        const errs = [];
+        if (hong < 0 || ban < 0) errs.push('Số lượng không được âm.');
+        if (hong + ban !== max) errs.push(`Hỏng + còn bán được phải bằng ${max}.`);
+        if (hong > 0 && !kthEl('kth-lydo-' + id).value.trim()) errs.push('Vui lòng nhập lý do hỏng.');
+        if (hong > 0 && !kthEl('kth-nv-' + id).value) errs.push('Vui lòng chọn nhân viên báo cáo.');
+
+        const box = kthEl('kth-error-' + id);
+        const show = errs.length > 0 && (showErr || box.dataset.shown === '1');
+        if (showErr) box.dataset.shown = '1';
+        box.textContent = errs.join(' ');
+        box.classList.toggle('show', show);
+        kthEl('kth-item-' + id).classList.toggle('has-error', show);
+        return errs.length === 0;
+    }
+
+    function kthGlobalError(msg) {
+        const el = kthEl('kthGlobalError');
+        if (!el) return;
+        el.textContent = msg || '';
+        el.classList.toggle('show', !!msg);
+    }
+
+    function saveKiemTra() {
+        if (kth.saving) return;
+        kthGlobalError('');
+        let ok = true;
+        kth.items.forEach(it => { if (!kthValidateRow(it.ma_chi_tiet_hang_hoan, true)) ok = false; });
+        if (!ok) { kthGlobalError('Vui lòng kiểm tra lại các dòng bị lỗi.'); return; }
+
+        const items = {};
+        kth.items.forEach(it => {
+            const id = it.ma_chi_tiet_hang_hoan;
+            const hong = Number(kthEl('kth-hong-' + id).value) || 0;
+            const ban = Number(kthEl('kth-ban-' + id).value) || 0;
+            items[id] = {
+                so_luong_hong: hong,
+                so_luong_con_ban_duoc: ban,
+                xa_bo: !!(it.la_bo_hoa && hong === kthMax(id)),
+            };
+            if (hong > 0) {
+                items[id].ly_do_hong = kthEl('kth-lydo-' + id).value.trim();
+                items[id].ma_nhan_vien = Number(kthEl('kth-nv-' + id).value);
+            }
+        });
+
+        kth.saving = true;
+        const btn = kthEl('kthSaveBtn');
+        btn.disabled = true; btn.textContent = 'Đang lưu...';
+
+        fetch(KTH_STORE_TPL.replace('__ID__', kth.id), {
+            method: 'POST', headers: kthHeaders(true), credentials: 'same-origin',
+            body: JSON.stringify({ items }),
+        })
+            .then(r => r.json().then(j => ({ status: r.status, j })))
+            .then(({ status, j }) => {
+                if (status >= 200 && status < 300 && j.success) {
+                    kth.saving = false; kth.reloadOnClose = false;
+                    kthEl('kthOverlay').classList.remove('show');
+                    document.body.style.overflow = '';
+                    showToast(j.message || 'Đã lưu kết quả kiểm tra.', 'success');
+                    setTimeout(() => location.reload(), 900);
+                    return;
+                }
+                // Lỗi validation: gắn vào đúng dòng nếu có, còn lại hiện ở cuối modal
+                const general = [];
+                if (j.errors) {
+                    Object.entries(j.errors).forEach(([key, msgs]) => {
+                        const m = key.match(/^items\.(\d+)/);
+                        const box = m ? kthEl('kth-error-' + m[1]) : null;
+                        if (box) {
+                            box.textContent = msgs.join(' '); box.classList.add('show'); box.dataset.shown = '1';
+                            kthEl('kth-item-' + m[1]).classList.add('has-error');
+                        } else general.push(...msgs);
+                    });
+                }
+                if (!general.length && !j.errors) general.push(j.message || 'Không thể lưu kết quả kiểm tra.');
+                kthGlobalError(general.join(' ') || 'Vui lòng kiểm tra lại các dòng bị lỗi.');
+                kth.saving = false; btn.disabled = false; btn.textContent = 'Lưu kết quả kiểm tra';
+            })
+            .catch(() => {
+                kthGlobalError('Lỗi kết nối, vui lòng thử lại.');
+                kth.saving = false; btn.disabled = false; btn.textContent = 'Lưu kết quả kiểm tra';
+            });
+    }
+
+    kthEl('kthOverlay').addEventListener('click', function (e) { if (e.target === this) closeKiemTraModal(); });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && kthEl('kthOverlay').classList.contains('show')) closeKiemTraModal();
     });
 </script>
 @endpush

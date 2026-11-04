@@ -144,6 +144,8 @@ class FlashSaleController extends Controller
         return view('admin.FlashSale', [
             'flashSales' => $flashSales,
             'coTheTao'   => $coTheTao,
+            // Tên biến mà view đang dùng để render khu vực hàng hoàn chờ tạo Flash Sale.
+            'hangHoanChoFlashSale' => $coTheTao,
             'thongKe'    => $thongKe,
             'filter'     => $filter,
             'keyword'    => $keyword,

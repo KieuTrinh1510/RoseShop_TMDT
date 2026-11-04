@@ -445,7 +445,7 @@
                                 <div class="fs-stepper">
                                     <button type="button" class="fs-step"
                                             onclick="stepQty({{ $fs->ma_flash_sale }}, -1)">−</button>
-                                    <input type="number"
+                            <input type="number"
                                            id="qty-{{ $fs->ma_flash_sale }}"
                                            name="so_luong"
                                            value="1" min="1" max="{{ $conLai }}"

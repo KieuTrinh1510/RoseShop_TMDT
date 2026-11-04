@@ -115,7 +115,8 @@ class FlashSaleService
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Cập nhật số lượng đã bán, giảm tồn kho Flash Sale và hàng hoàn.
+     * Cập nhật quota đã bán của Flash Sale.
+     * Tồn kho vật lý được xử lý tập trung qua InventoryReservationService.
      * Tự chuyển trang_thai = HET_HANG khi hết.
      *
      * @param  int  $maFlashSale
@@ -156,14 +157,6 @@ class FlashSaleService
 
             if ($conLaiSauBan <= 0) {
                 $fs->update(['trang_thai' => 'HET_HANG']);
-            }
-
-            // ── Giảm so_luong_con_lai_flash_sale trên hàng hoàn ──
-            if ($fs->ma_chi_tiet_hang_hoan) {
-                $ct = ChiTietHangHoan::lockForUpdate()->find($fs->ma_chi_tiet_hang_hoan);
-                if ($ct) {
-                    $ct->decrement('so_luong_con_lai_flash_sale', $soLuongMua);
-                }
             }
 
             return $fs->fresh();

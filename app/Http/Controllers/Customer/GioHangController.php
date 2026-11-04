@@ -60,6 +60,12 @@ class GioHangController extends Controller
             $giaBan = (float) ($sp->gia_ban_hien_tai ?? $chiTiet->gia_ban);
             $maFlashSale = null;
             if ($fs && $fs->available_quota > 0) {
+                if ($soLuongMoi > (int) $fs->available_quota) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Flash Sale chỉ còn {$fs->available_quota} suất khả dụng.",
+                    ], 422);
+                }
                 $giaBan = (float) $fs->gia_flash_sale;
                 $maFlashSale = $fs->ma_flash_sale;
             }
@@ -118,6 +124,12 @@ class GioHangController extends Controller
             $giaBan = (float) ($sp->gia_ban_hien_tai ?? $chiTiet->gia_ban);
             $maFlashSale = null;
             if ($fs && $fs->available_quota > 0) {
+                if ((int) $item['so_luong'] > (int) $fs->available_quota) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Flash Sale chỉ còn {$fs->available_quota} suất khả dụng.",
+                    ], 422);
+                }
                 $giaBan = (float) $fs->gia_flash_sale;
                 $maFlashSale = $fs->ma_flash_sale;
             }
