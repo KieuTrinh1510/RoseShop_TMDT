@@ -1240,6 +1240,31 @@
             vertical-align: middle;
             border-bottom: 1px solid #EAECF0;
         }
+        .rs-col-name {
+            max-width: 220px;
+            overflow: hidden;
+        }
+        .rs-col-name strong,
+        .rs-col-name small {
+            display: block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .rs-col-mau-nguon {
+            max-width: 130px;
+            text-align: center;
+            overflow: hidden;
+        }
+        .rs-col-mau-nguon .badge-mau-nguon {
+            max-width: 105px;
+            display: inline-block;
+            vertical-align: middle;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
         .rs-product-thumb {
             width: 44px;
             height: 44px;
@@ -1722,9 +1747,9 @@
                                                      onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'rs-product-thumb-placeholder\'><i class=\'bi bi-flower1\'></i></div>';">
                                             </div>
                                         </td>
-                                        <td>
-                                            <strong class="d-block text-dark text-nowrap" style="font-size:13.5px;">{{ $m->ten_mau }}</strong>
-                                            <small class="text-muted text-nowrap" style="font-size:12px;">#{{ $m->ma_mau_bo_hoa }} · {{ $m->chiTietMauBoHoa->count() }} thành phần</small>
+                                        <td class="rs-col-name">
+                                            <strong class="d-block text-dark" title="{{ $m->ten_mau }}" style="font-size:13.5px;">{{ $m->ten_mau }}</strong>
+                                            <small class="text-muted" title="#{{ $m->ma_mau_bo_hoa }} · {{ $m->chiTietMauBoHoa->count() }} thành phần" style="font-size:12px;">#{{ $m->ma_mau_bo_hoa }} · {{ $m->chiTietMauBoHoa->count() }} thành phần</small>
                                         </td>
                                         <td style="text-align: center;">
                                             <span class="badge bg-light text-dark border">
@@ -2398,10 +2423,10 @@
                                 <thead>
                                     <tr>
                                         <th style="width: 65px; min-width: 65px; text-align: center;">Ảnh</th>
-                                        <th style="min-width: 180px; text-align: left;">Tên bó hoa</th>
-                                        <th style="width: 110px; min-width: 110px; text-align: center;">Mẫu nguồn</th>
+                                        <th style="min-width: 175px; text-align: left;">Tên bó hoa</th>
+                                        <th style="width: 125px; min-width: 125px; text-align: center;">Mẫu nguồn</th>
                                         <th style="width: 115px; min-width: 115px; text-align: center;">Size / Kiểu</th>
-                                        <th style="width: 200px; min-width: 200px; text-align: left;">Thời hạn</th>
+                                        <th style="width: 185px; min-width: 185px; text-align: left;">Thời hạn</th>
                                         <th style="width: 105px; min-width: 105px; text-align: center;">Tồn thực tế</th>
                                         <th style="width: 85px; min-width: 85px; text-align: center;">Đang giữ</th>
                                         <th style="width: 90px; min-width: 90px; text-align: center;">Khả dụng</th>
@@ -2432,13 +2457,13 @@
                                                          onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'rs-product-thumb-placeholder\'><i class=\'bi bi-flower1\'></i></div>';">
                                                 </div>
                                             </td>
-                                            <td>
-                                                <strong class="d-block text-dark text-nowrap" style="font-size:13.5px;">{{ $bo->ten_bo_hoa }}</strong>
-                                                <small class="text-muted text-nowrap" style="font-size:12px;">#{{ $bo->ma_bo_hoa }} · {{ $concepts[$bo->concept] ?? $bo->concept }}</small>
+                                            <td class="rs-col-name">
+                                                <strong class="d-block text-dark" title="{{ $bo->ten_bo_hoa }}" style="font-size:13.5px;">{{ $bo->ten_bo_hoa }}</strong>
+                                                <small class="text-muted d-block" title="#{{ $bo->ma_bo_hoa }} · {{ $concepts[$bo->concept] ?? $bo->concept }}" style="font-size:12px;">#{{ $bo->ma_bo_hoa }} · {{ $concepts[$bo->concept] ?? $bo->concept }}</small>
                                             </td>
-                                            <td style="text-align: center;">
+                                            <td class="rs-col-mau-nguon">
                                                 @if($mauNguon)
-                                                    <span class="badge bg-light text-dark border text-nowrap">{{ $mauNguon }}</span>
+                                                    <span class="badge bg-light text-dark border badge-mau-nguon" title="{{ $mauNguon }}">{{ $mauNguon }}</span>
                                                 @else
                                                     <span class="text-muted small text-nowrap">Tự thiết kế</span>
                                                 @endif
