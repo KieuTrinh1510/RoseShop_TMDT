@@ -148,14 +148,20 @@ class RegisteredUserController extends Controller
             // KHÔNG tự động đăng nhập!
             // Tạo link xác thực có chữ ký an toàn và gửi email
             $expireMinutes = (int) config('auth.verification.expire', 60);
-            $verificationUrl = URL::temporarySignedRoute(
+            $baseUrl = $request->schemeAndHttpHost();
+            if (empty($baseUrl) || !str_starts_with($baseUrl, 'http')) {
+                $baseUrl = rtrim(config('app.url'), '/');
+            }
+            $relativeUrl = URL::temporarySignedRoute(
                 'verification.verify',
                 now()->addMinutes($expireMinutes),
                 [
                     'id'   => $user->ma_nguoi_dung,
                     'hash' => sha1($request->email),
-                ]
+                ],
+                absolute: false
             );
+            $verificationUrl = rtrim($baseUrl, '/') . $relativeUrl;
 
             try {
                 Mail::to($request->email)->send(
