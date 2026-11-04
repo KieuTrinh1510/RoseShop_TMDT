@@ -30,12 +30,24 @@ class VerifyEmailController extends Controller
         $user = NguoiDung::with('khachHang')->find($id);
 
         // 1. Kiểm tra chữ ký và hạn sử dụng của link (Signature & Expiration)
-        $hasValidSig = $request->hasValidSignature();
+        // Ưu tiên kiểm tra relative signature (chữ ký không phụ thuộc domain/port/proxy) hoặc full signature
+        $hasValidSig = $request->hasValidSignature(false) || $request->hasValidSignature(true);
         if (! $hasValidSig) {
-            $hosts = ['http://127.0.0.1:8000', 'http://localhost:8000', 'http://localhost', 'http://127.0.0.1'];
+            $currentHost = $request->getHost();
+            $hosts = array_unique(array_filter([
+                $request->schemeAndHttpHost(),
+                'https://' . $currentHost,
+                'http://' . $currentHost,
+                config('app.url'),
+                'http://127.0.0.1:8000',
+                'http://localhost:8000',
+                'http://localhost',
+                'http://127.0.0.1',
+            ]));
+            $queryString = $request->server->get('QUERY_STRING') ?? $request->getQueryString();
             foreach ($hosts as $host) {
-                $testUrl = $host . '/' . ltrim($request->path(), '/') . '?' . $request->server->get('QUERY_STRING');
-                if (\Illuminate\Http\Request::create($testUrl)->hasValidSignature()) {
+                $testUrl = rtrim($host, '/') . '/' . ltrim($request->path(), '/') . ($queryString ? '?' . $queryString : '');
+                if (\Illuminate\Http\Request::create($testUrl)->hasValidSignature(true)) {
                     $hasValidSig = true;
                     break;
                 }
@@ -131,14 +143,20 @@ class VerifyEmailController extends Controller
         }
 
         $expireMinutes = (int) config('auth.verification.expire', 60);
-        $verificationUrl = URL::temporarySignedRoute(
+        $baseUrl = $request->schemeAndHttpHost();
+        if (empty($baseUrl) || !str_starts_with($baseUrl, 'http')) {
+            $baseUrl = rtrim(config('app.url'), '/');
+        }
+        $relativeUrl = URL::temporarySignedRoute(
             'verification.verify',
             now()->addMinutes($expireMinutes),
             [
                 'id'   => $user->ma_nguoi_dung,
                 'hash' => sha1($khachHang->email),
-            ]
+            ],
+            absolute: false
         );
+        $verificationUrl = rtrim($baseUrl, '/') . $relativeUrl;
 
         try {
             Mail::to($khachHang->email)->send(
