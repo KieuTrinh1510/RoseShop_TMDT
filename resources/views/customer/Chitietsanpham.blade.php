@@ -38,115 +38,122 @@
     </div>
 
     {{-- RIGHT: Thông tin --}}
-    <div class="info-panel pd-info">
-        <span class="pd-tag">Bó hoa</span>
-        <h1 class="info-title">{{ $boHoaMau->ten_mau }}</h1>
-        <p class="pd-subtitle">{{ $moTaNgan !== '' ? $moTaNgan : ($style . ' · Size ' . $boHoaMau->size) }}</p>
+    @auth
+    <form method="POST" action="{{ route('customer.mau-bo-hoa.mua', $boHoaMau->ma_mau_bo_hoa) }}" class="info-panel pd-info" id="formMuaMau">
+        @csrf
+        {{-- Hidden field để route gio.add nhận được ma_mau_bo_hoa --}}
+        <input type="hidden" name="ma_mau_bo_hoa" value="{{ $boHoaMau->ma_mau_bo_hoa }}">
 
-        <div class="pd-price-row">
-            @if(isset($activeFlashSale) && $activeFlashSale)
-                <div style="display:flex; flex-direction:column; gap:4px;">
-                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                        <span style="text-decoration:line-through; color:#98A2B3; font-size:16px;">
-                            {{ number_format($readyBo->gia_ban ?? $quote['gia_moi_bo'], 0, ',', '.') }}₫
-                        </span>
-                        <p class="pd-price price-val" style="color:#EC3D8F; font-size:24px; font-weight:700; margin:0;">
-                            {{ number_format($activeFlashSale->gia_flash_sale, 0, ',', '.') }}₫
-                            <span style="font-size:14px; font-weight:normal; color:#667085;">/ bó</span>
-                        </p>
-                        <span style="background:#FEE4E2; color:#D92D20; font-size:12px; font-weight:700; padding:2px 8px; border-radius:999px;">
-                            -{{ $activeFlashSale->phan_tram_giam }}%
-                        </span>
+        {{-- Vùng nội dung cuộn bên trong (bằng chiều cao ảnh bên trái) --}}
+        <div class="pd-info-scroll">
+            <span class="pd-tag">Bó hoa</span>
+            <h1 class="info-title">{{ $boHoaMau->ten_mau }}</h1>
+            <p class="pd-subtitle">{{ $moTaNgan !== '' ? $moTaNgan : ($style . ' · Size ' . $boHoaMau->size) }}</p>
+
+            <div class="pd-price-row">
+                @if(isset($activeFlashSale) && $activeFlashSale)
+                    <div style="display:flex; flex-direction:column; gap:4px;">
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <span style="text-decoration:line-through; color:#98A2B3; font-size:16px;">
+                                {{ number_format($readyBo->gia_ban ?? $quote['gia_moi_bo'], 0, ',', '.') }}₫
+                            </span>
+                            <p class="pd-price price-val" style="color:#EC3D8F; font-size:24px; font-weight:700; margin:0;">
+                                {{ number_format($activeFlashSale->gia_flash_sale, 0, ',', '.') }}₫
+                                <span style="font-size:14px; font-weight:normal; color:#667085;">/ bó</span>
+                            </p>
+                            <span style="background:#FEE4E2; color:#D92D20; font-size:12px; font-weight:700; padding:2px 8px; border-radius:999px;">
+                                -{{ $activeFlashSale->phan_tram_giam }}%
+                            </span>
+                        </div>
+                        <div style="font-size:13px; color:#BE185D; display:flex; align-items:center; gap:6px;">
+                            <i class="fa-solid fa-bolt" style="color:#EC3D8F;"></i>
+                            <span>Flash Sale kết thúc sau: <strong class="fs-countdown" data-end="{{ $activeFlashSale->ket_thuc ? $activeFlashSale->ket_thuc->toISOString() : '' }}">--:--:--</strong></span>
+                            <span style="color:#667085;">· Còn {{ $activeFlashSale->available_quota }} suất sale</span>
+                        </div>
                     </div>
-                    <div style="font-size:13px; color:#BE185D; display:flex; align-items:center; gap:6px;">
-                        <i class="fa-solid fa-bolt" style="color:#EC3D8F;"></i>
-                        <span>Flash Sale kết thúc sau: <strong class="fs-countdown" data-end="{{ $activeFlashSale->ket_thuc ? $activeFlashSale->ket_thuc->toISOString() : '' }}">--:--:--</strong></span>
-                        <span style="color:#667085;">· Còn {{ $activeFlashSale->available_quota }} suất sale</span>
-                    </div>
-                </div>
-            @else
-                <p class="pd-price price-val">{{ number_format($quote['gia_moi_bo'], 0, ',', '.') }}₫ / bó</p>
-            @endif
-            <span class="pd-badge pd-badge--ok"><i class="fa-solid fa-leaf"></i> Đang bán</span>
-        </div>
-
-        <div class="meta-strip">
-            <div class="meta-chip">Kiểu dáng: <strong>{{ $style }}</strong></div>
-            <div class="meta-chip">Size: <strong>{{ $boHoaMau->size }}</strong></div>
-        </div>
-
-        @include('customer.partials.pd-features')
-
-        <section class="pd-card" aria-labelledby="pdCompTitle">
-            <h2 class="pd-card-title" id="pdCompTitle">Thành phần bó hoa</h2>
-            <ul class="pd-composition">
-                @foreach($boHoaMau->chiTietMauBoHoa->groupBy('vai_tro') as $vaiTro => $items)
-                    <li>
-                        <strong>{{ \App\Http\Controllers\Admin\BoHoaController::VAI_TRO[$vaiTro] ?? $vaiTro }}:</strong>
-                        {{ $items->map(fn($i) => ($i->sanPham->ten_san_pham ?? 'Nguyên liệu').' × '.$i->so_luong)->join(', ') }}
-                    </li>
-                @endforeach
-            </ul>
-            @if(mb_strlen($moTaDai) > 160)
-                <p class="pd-composition-note">{{ $boHoaMau->mo_ta }}</p>
-            @endif
-        </section>
-
-        @auth
-        <form method="POST" action="{{ route('customer.mau-bo-hoa.mua', $boHoaMau->ma_mau_bo_hoa) }}" class="pd-card pd-options" id="formMuaMau">
-            @csrf
-
-            {{-- Hidden field để route gio.add nhận được ma_mau_bo_hoa --}}
-            <input type="hidden" name="ma_mau_bo_hoa" value="{{ $boHoaMau->ma_mau_bo_hoa }}">
-
-            <h2 class="pd-card-title">Tùy chọn đặt mua</h2>
-
-            @if(session('error'))
-                <div class="pd-alert pd-alert--danger"><i class="fa-solid fa-circle-exclamation"></i> {{ session('error') }}</div>
-            @endif
-            @if($errors->any())
-                <div class="pd-alert pd-alert--danger">
-                    <ul>
-                        @foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach
-                    </ul>
-                </div>
-            @endif
-
-            <div class="pd-options-row">
-                <div class="pd-field">
-                    <label for="soLuongMau">Số lượng <small>(tối đa 10 bó)</small></label>
-                    <div class="pd-stepper">
-                        <button type="button" onclick="pdStep('soLuongMau', -1)" aria-label="Giảm số lượng">−</button>
-                        <input type="number" name="so_luong" id="soLuongMau" min="1" max="10" value="{{ old('so_luong', 1) }}" required>
-                        <button type="button" onclick="pdStep('soLuongMau', 1)" aria-label="Tăng số lượng">+</button>
-                    </div>
-                </div>
-
-                @if(isset($dsThiep) && $dsThiep->count() > 0)
-                <div class="pd-field pd-field--grow">
-                    <label for="thiepSelectMau">Thiệp đi kèm <small>(tùy chọn)</small></label>
-                    <select name="ma_thiep" id="thiepSelectMau" class="pd-select">
-                        <option value="" data-gia="0">Không thêm thiệp</option>
-                        @foreach($dsThiep as $t)
-                            <option value="{{ $t->ma_san_pham }}" data-gia="{{ $t->gia_ban_hien_tai }}"
-                                {{ old('ma_thiep') == $t->ma_san_pham ? 'selected' : '' }}>
-                                {{ $t->ten_san_pham }} — +{{ number_format($t->gia_ban_hien_tai, 0, ',', '.') }}₫
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
+                @else
+                    <p class="pd-price price-val">{{ number_format($quote['gia_moi_bo'], 0, ',', '.') }}₫ / bó</p>
                 @endif
+                <span class="pd-badge pd-badge--ok"><i class="fa-solid fa-leaf"></i> Đang bán</span>
             </div>
 
-            <div class="pd-field">
-                <label for="loiNhanMau">Lời nhắn gửi kèm <small>(tùy chọn)</small></label>
-                <div class="pd-textarea-wrap">
-                    <textarea name="loi_nhan" id="loiNhanMau" class="pd-textarea" maxlength="2000" data-counter="loiNhanMauCounter"
-                              placeholder="Ví dụ: Chúc mừng sinh nhật em!">{{ old('loi_nhan') }}</textarea>
-                    <span class="pd-counter" id="loiNhanMauCounter">0/2000</span>
+            <div class="meta-strip">
+                <div class="meta-chip">Kiểu dáng: <strong>{{ $style }}</strong></div>
+                <div class="meta-chip">Size: <strong>{{ $boHoaMau->size }}</strong></div>
+            </div>
+
+            @include('customer.partials.pd-features')
+
+            <section class="pd-card" aria-labelledby="pdCompTitle">
+                <h2 class="pd-card-title" id="pdCompTitle">Thành phần bó hoa</h2>
+                <ul class="pd-composition">
+                    @foreach($boHoaMau->chiTietMauBoHoa->groupBy('vai_tro') as $vaiTro => $items)
+                        <li>
+                            <strong>{{ \App\Http\Controllers\Admin\BoHoaController::VAI_TRO[$vaiTro] ?? $vaiTro }}:</strong>
+                            {{ $items->map(fn($i) => ($i->sanPham->ten_san_pham ?? 'Nguyên liệu').' × '.$i->so_luong)->join(', ') }}
+                        </li>
+                    @endforeach
+                </ul>
+                @if(mb_strlen($moTaDai) > 160)
+                    <p class="pd-composition-note">{{ $boHoaMau->mo_ta }}</p>
+                @endif
+            </section>
+
+            <section class="pd-card pd-options">
+                <h2 class="pd-card-title">Tùy chọn đặt mua</h2>
+
+                @if(session('error'))
+                    <div class="pd-alert pd-alert--danger"><i class="fa-solid fa-circle-exclamation"></i> {{ session('error') }}</div>
+                @endif
+                @if($errors->any())
+                    <div class="pd-alert pd-alert--danger">
+                        <ul>
+                            @foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <div class="pd-options-row">
+                    <div class="pd-field">
+                        <label for="soLuongMau">Số lượng <small>(tối đa 10 bó)</small></label>
+                        <div class="pd-stepper">
+                            <button type="button" onclick="pdStep('soLuongMau', -1)" aria-label="Giảm số lượng">−</button>
+                            <input type="number" name="so_luong" id="soLuongMau" min="1" max="10" value="{{ old('so_luong', 1) }}" required>
+                            <button type="button" onclick="pdStep('soLuongMau', 1)" aria-label="Tăng số lượng">+</button>
+                        </div>
+                    </div>
+
+                    @if(isset($dsThiep) && $dsThiep->count() > 0)
+                    <div class="pd-field pd-field--grow">
+                        <label for="thiepSelectMau">Thiệp đi kèm <small>(tùy chọn)</small></label>
+                        <select name="ma_thiep" id="thiepSelectMau" class="pd-select">
+                            <option value="" data-gia="0">Không thêm thiệp</option>
+                            @foreach($dsThiep as $t)
+                                <option value="{{ $t->ma_san_pham }}" data-gia="{{ $t->gia_ban_hien_tai }}"
+                                    {{ old('ma_thiep') == $t->ma_san_pham ? 'selected' : '' }}>
+                                    {{ $t->ten_san_pham }} — +{{ number_format($t->gia_ban_hien_tai, 0, ',', '.') }}₫
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @endif
                 </div>
-            </div>
 
+                <div class="pd-field">
+                    <label for="loiNhanMau">Lời nhắn gửi kèm <small>(tùy chọn)</small></label>
+                    <div class="pd-textarea-wrap">
+                        <textarea name="loi_nhan" id="loiNhanMau" class="pd-textarea" maxlength="2000" data-counter="loiNhanMauCounter"
+                                  placeholder="Ví dụ: Chúc mừng sinh nhật em!">{{ old('loi_nhan') }}</textarea>
+                        <span class="pd-counter" id="loiNhanMauCounter">0/2000</span>
+                    </div>
+                </div>
+            </section>
+
+            @include('customer.partials.pd-promises')
+        </div>
+
+        {{-- Nút mua hàng và thêm giỏ hàng ở ngoài vùng nội dung, ghim cố định ở đáy --}}
+        <div class="pd-bottom-actions">
             <div class="pd-actions">
                 <button type="submit" class="btn-cart" formaction="{{ route('customer.bo-hoa.gio.add') }}">
                     <i class="fa-solid fa-cart-shopping"></i><span class="btn-label">Thêm vào giỏ</span>
@@ -157,17 +164,60 @@
             </div>
 
             {{-- Link vào giỏ hàng thống nhất --}}
-            <a class="pd-cart-link" href="{{ route('customer.gio-hang') }}">
+            <!-- <a class="pd-cart-link" href="{{ route('customer.gio-hang') }}">
                 <i class="fa-solid fa-bag-shopping"></i>
                 Xem giỏ hàng của bạn ({{ count(session('gio_hang', [])) + count(session('gio_bo_hoa', [])) }})
-            </a>
-        </form>
-        @else
-        <div class="login-notice">Vui lòng <a href="{{ route('login') }}">đăng nhập</a> để đặt bó hoa.</div>
-        @endauth
+            </a> -->
+        </div>
+    </form>
+    @else
+    <div class="info-panel pd-info">
+        <div class="pd-info-scroll">
+            <span class="pd-tag">Bó hoa</span>
+            <h1 class="info-title">{{ $boHoaMau->ten_mau }}</h1>
+            <p class="pd-subtitle">{{ $moTaNgan !== '' ? $moTaNgan : ($style . ' · Size ' . $boHoaMau->size) }}</p>
 
-        @include('customer.partials.pd-promises')
+            <div class="pd-price-row">
+                <p class="pd-price price-val">{{ number_format($quote['gia_moi_bo'], 0, ',', '.') }}₫ / bó</p>
+                <span class="pd-badge pd-badge--ok"><i class="fa-solid fa-leaf"></i> Đang bán</span>
+            </div>
+
+            <div class="meta-strip">
+                <div class="meta-chip">Kiểu dáng: <strong>{{ $style }}</strong></div>
+                <div class="meta-chip">Size: <strong>{{ $boHoaMau->size }}</strong></div>
+            </div>
+
+            @include('customer.partials.pd-features')
+
+            <section class="pd-card" aria-labelledby="pdCompTitle">
+                <h2 class="pd-card-title" id="pdCompTitle">Thành phần bó hoa</h2>
+                <ul class="pd-composition">
+                    @foreach($boHoaMau->chiTietMauBoHoa->groupBy('vai_tro') as $vaiTro => $items)
+                        <li>
+                            <strong>{{ \App\Http\Controllers\Admin\BoHoaController::VAI_TRO[$vaiTro] ?? $vaiTro }}:</strong>
+                            {{ $items->map(fn($i) => ($i->sanPham->ten_san_pham ?? 'Nguyên liệu').' × '.$i->so_luong)->join(', ') }}
+                        </li>
+                    @endforeach
+                </ul>
+                @if(mb_strlen($moTaDai) > 160)
+                    <p class="pd-composition-note">{{ $boHoaMau->mo_ta }}</p>
+                @endif
+            </section>
+
+            <div class="login-notice">
+                💡 <span>Vui lòng <a href="{{ route('login') }}">đăng nhập</a> để đặt bó hoa và theo dõi đơn hàng!</span>
+            </div>
+
+            @include('customer.partials.pd-promises')
+        </div>
+
+        <div class="pd-bottom-actions">
+            <a href="{{ route('login') }}" class="btn-buy-now pd-actions-wide">
+                <i class="fa-solid fa-right-to-bracket"></i><span class="btn-label">Đăng nhập để đặt bó hoa</span>
+            </a>
+        </div>
     </div>
+    @endauth
 </div>
 
 @elseif(($type ?? 'san-pham') === 'bo-hoa-tu-tao')
@@ -481,110 +531,115 @@
 
     {{-- RIGHT: Thông tin --}}
     <div class="info-panel pd-info">
+        <div class="pd-info-scroll">
+            <span class="pd-tag">{{ $emoji }} {{ $catLabel }}</span>
 
-        <span class="pd-tag">{{ $emoji }} {{ $catLabel }}</span>
+            <h1 class="info-title">{{ $sanPham->ten_san_pham }}</h1>
 
-        <h1 class="info-title">{{ $sanPham->ten_san_pham }}</h1>
-
-        @if($moTaNgan !== '')
-            <p class="pd-subtitle">{{ $moTaNgan }}</p>
-        @endif
-
-        {{-- Giá + tình trạng kho --}}
-        <div class="pd-price-row">
-            @if($sanSangMua)
-                @if(isset($activeFlashSale) && $activeFlashSale)
-                    <div style="display:flex; flex-direction:column; gap:4px;">
-                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                            <span style="text-decoration:line-through; color:#98A2B3; font-size:16px;">
-                                {{ number_format($giaGoc, 0, ',', '.') }}₫
-                            </span>
-                            <p class="pd-price" style="color:#EC3D8F; font-size:24px; font-weight:700; margin:0;">
-                                {{ number_format($activeFlashSale->gia_flash_sale, 0, ',', '.') }}₫
-                                <span style="font-size:14px; font-weight:normal; color:#667085;">/ {{ $donVi }}</span>
-                            </p>
-                            <span style="background:#FEE4E2; color:#D92D20; font-size:12px; font-weight:700; padding:2px 8px; border-radius:999px;">
-                                -{{ $activeFlashSale->phan_tram_giam }}%
-                            </span>
-                        </div>
-                        <div style="font-size:13px; color:#BE185D; display:flex; align-items:center; gap:6px;">
-                            <i class="fa-solid fa-bolt" style="color:#EC3D8F;"></i>
-                            <span>Flash Sale kết thúc sau: <strong class="fs-countdown" data-end="{{ $activeFlashSale->ket_thuc ? $activeFlashSale->ket_thuc->toISOString() : '' }}">--:--:--</strong></span>
-                            <span style="color:#667085;">· Còn {{ $activeFlashSale->available_quota }} suất sale</span>
-                        </div>
-                    </div>
-                @else
-                    <p class="pd-price">
-                        {{ $giaApDung ? number_format($giaApDung, 0, ',', '.') . '₫' : 'Liên hệ' }}
-                        <span>/ {{ $donVi }}</span>
-                    </p>
-                @endif
-            @else
-                <p class="pd-price pd-price--empty">Liên hệ để biết giá</p>
+            @if($moTaNgan !== '')
+                <p class="pd-subtitle">{{ $moTaNgan }}</p>
             @endif
 
-            @if($soLuong === 0)
-                <span class="pd-badge pd-badge--danger"><i class="fa-solid fa-circle-xmark"></i> Hết hàng</span>
-            @elseif($soLuong <= 5)
-                <span class="pd-badge pd-badge--warn"><i class="fa-solid fa-triangle-exclamation"></i> Sắp hết · còn {{ $soLuong }}</span>
-            @else
-                <span class="pd-badge pd-badge--ok"><i class="fa-solid fa-leaf"></i> Còn {{ $soLuong }} {{ $donVi }}</span>
-            @endif
-        </div>
-
-        {{-- Meta chips --}}
-        <div class="meta-strip">
-            <div class="meta-chip">Số lượng: <strong>{{ $soLuong }}</strong></div>
-            <div class="meta-chip">Loại: <strong>{{ $catLabel }}</strong></div>
-        </div>
-
-        @include('customer.partials.pd-features')
-
-        {{-- Tùy chọn đặt mua --}}
-        <section class="pd-card pd-options" aria-labelledby="pdOptionsTitle">
-            <h2 class="pd-card-title" id="pdOptionsTitle">Tùy chọn đặt mua</h2>
-
-            @if($soLuong > 0)
+            {{-- Giá + tình trạng kho --}}
+            <div class="pd-price-row">
                 @if($sanSangMua)
-                <div class="pd-field pd-qty-row">
-                    <label>Số lượng <small>(tối đa {{ $loDaiDien->so_luong_con_lai }})</small></label>
-                    <div class="pd-stepper" id="lo-row-0">
-                        <button type="button" class="lo-minus-btn" id="lo-minus-0"
-                                onclick="changeLo(0, -1)" aria-label="Giảm số lượng">−</button>
-                        <span class="lo-qty-count" id="lo-qty-0">1</span>
-                        <button type="button" class="lo-plus-btn"
-                                onclick="changeLo(0, 1)"
-                                data-max="{{ $loDaiDien->so_luong_con_lai }}"
-                                data-gia="{{ $giaApDung }}"
-                                data-id="{{ $loDaiDien->ma_chi_tiet_nhap }}"
-                                aria-label="Tăng số lượng">+</button>
-                    </div>
-                </div>
+                    @if(isset($activeFlashSale) && $activeFlashSale)
+                        <div style="display:flex; flex-direction:column; gap:4px;">
+                            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                                <span style="text-decoration:line-through; color:#98A2B3; font-size:16px;">
+                                    {{ number_format($giaGoc, 0, ',', '.') }}₫
+                                </span>
+                                <p class="pd-price" style="color:#EC3D8F; font-size:24px; font-weight:700; margin:0;">
+                                    {{ number_format($activeFlashSale->gia_flash_sale, 0, ',', '.') }}₫
+                                    <span style="font-size:14px; font-weight:normal; color:#667085;">/ {{ $donVi }}</span>
+                                </p>
+                                <span style="background:#FEE4E2; color:#D92D20; font-size:12px; font-weight:700; padding:2px 8px; border-radius:999px;">
+                                    -{{ $activeFlashSale->phan_tram_giam }}%
+                                </span>
+                            </div>
+                            <div style="font-size:13px; color:#BE185D; display:flex; align-items:center; gap:6px;">
+                                <i class="fa-solid fa-bolt" style="color:#EC3D8F;"></i>
+                                <span>Flash Sale kết thúc sau: <strong class="fs-countdown" data-end="{{ $activeFlashSale->ket_thuc ? $activeFlashSale->ket_thuc->toISOString() : '' }}">--:--:--</strong></span>
+                                <span style="color:#667085;">· Còn {{ $activeFlashSale->available_quota }} suất sale</span>
+                            </div>
+                        </div>
+                    @else
+                        <p class="pd-price">
+                            {{ $giaApDung ? number_format($giaApDung, 0, ',', '.') . '₫' : 'Liên hệ' }}
+                            <span>/ {{ $donVi }}</span>
+                        </p>
+                    @endif
+                @else
+                    <p class="pd-price pd-price--empty">Liên hệ để biết giá</p>
+                @endif
 
-                {{-- Tạm tính --}}
-                <div class="cart-summary" id="cartSummary" style="display:none;">
-                    <div class="cart-summary-inner">
-                        <div class="cart-summary-label">Tạm tính</div>
-                        <div id="cartLines"></div>
-                        <div class="cart-total-row">
-                            <span>Tổng cộng:</span>
-                            <span class="cart-total-price" id="cartTotal">0₫</span>
+                @if($soLuong === 0)
+                    <span class="pd-badge pd-badge--danger"><i class="fa-solid fa-circle-xmark"></i> Hết hàng</span>
+                @elseif($soLuong <= 5)
+                    <span class="pd-badge pd-badge--warn"><i class="fa-solid fa-triangle-exclamation"></i> Sắp hết · còn {{ $soLuong }}</span>
+                @else
+                    <span class="pd-badge pd-badge--ok"><i class="fa-solid fa-leaf"></i> Còn {{ $soLuong }} {{ $donVi }}</span>
+                @endif
+            </div>
+
+            {{-- Meta chips --}}
+            <div class="meta-strip">
+                <div class="meta-chip">Số lượng: <strong>{{ $soLuong }}</strong></div>
+                <div class="meta-chip">Loại: <strong>{{ $catLabel }}</strong></div>
+            </div>
+
+            @include('customer.partials.pd-features')
+
+            {{-- Tùy chọn đặt mua --}}
+            <section class="pd-card pd-options" aria-labelledby="pdOptionsTitle">
+                <h2 class="pd-card-title" id="pdOptionsTitle">Tùy chọn đặt mua</h2>
+
+                @if($soLuong > 0)
+                    @if($sanSangMua)
+                    <div class="pd-field pd-qty-row">
+                        <label>Số lượng <small>(tối đa {{ $loDaiDien->so_luong_con_lai }})</small></label>
+                        <div class="pd-stepper" id="lo-row-0">
+                            <button type="button" class="lo-minus-btn" id="lo-minus-0"
+                                    onclick="changeLo(0, -1)" aria-label="Giảm số lượng">−</button>
+                            <span class="lo-qty-count" id="lo-qty-0">1</span>
+                            <button type="button" class="lo-plus-btn"
+                                    onclick="changeLo(0, 1)"
+                                    data-max="{{ $loDaiDien->so_luong_con_lai }}"
+                                    data-gia="{{ $giaApDung }}"
+                                    data-id="{{ $loDaiDien->ma_chi_tiet_nhap }}"
+                                    aria-label="Tăng số lượng">+</button>
                         </div>
                     </div>
-                </div>
-                @else
-                    <p class="price-no-data">Chưa có thông tin giá. Vui lòng liên hệ để được tư vấn.</p>
+
+                    {{-- Tạm tính --}}
+                    <div class="cart-summary" id="cartSummary" style="display:none;">
+                        <div class="cart-summary-inner">
+                            <div class="cart-summary-label">Tạm tính</div>
+                            <div id="cartLines"></div>
+                            <div class="cart-total-row">
+                                <span>Tổng cộng:</span>
+                                <span class="cart-total-price" id="cartTotal">0₫</span>
+                            </div>
+                        </div>
+                    </div>
+                    @else
+                        <p class="price-no-data">Chưa có thông tin giá. Vui lòng liên hệ để được tư vấn.</p>
+                    @endif
                 @endif
-            @endif
 
-            {{-- Login notice if guest --}}
-            @guest
-            <div class="login-notice">
-                💡 <span>Vui lòng <a href="{{ route('login') }}">đăng nhập</a> để đặt hoa và theo dõi đơn hàng nhé!</span>
-            </div>
-            @endguest
+                {{-- Login notice if guest --}}
+                @guest
+                <div class="login-notice">
+                    💡 <span>Vui lòng <a href="{{ route('login') }}">đăng nhập</a> để đặt hoa và theo dõi đơn hàng nhé!</span>
+                </div>
+                @endguest
+            </section>
 
-            {{-- Action Buttons --}}
+            @include('customer.partials.pd-promises')
+        </div>
+
+        {{-- Nút mua hàng và thêm giỏ hàng ở ngoài vùng nội dung, ghim cố định ở đáy --}}
+        <div class="pd-bottom-actions">
             @if($soLuong > 0)
             <div class="pd-actions">
                 @auth
@@ -608,9 +663,7 @@
                 <i class="fa-regular fa-comments"></i> Liên hệ để đặt trước qua Zalo
             </a>
             @endif
-        </section>
-
-        @include('customer.partials.pd-promises')
+        </div>
     </div>
 </div>
 
@@ -1003,5 +1056,44 @@ function toggleHeart(btn) {
     updateFsCountdowns();
     setInterval(updateFsCountdowns, 1000);
 })();
+
+// Đồng bộ chiều cao div thông tin bên phải bằng đúng div ảnh bên trái trên desktop
+function syncDetailHeight() {
+    const isMobile = window.innerWidth <= 900;
+    const infoPanels = document.querySelectorAll('.info-panel.pd-info');
+
+    if (isMobile) {
+        infoPanels.forEach(function(el) {
+            el.style.height = '';
+            el.style.maxHeight = '';
+        });
+        return;
+    }
+
+    const gallery = document.querySelector('.pd-gallery, .custom-mix-gallery');
+    if (!gallery || !infoPanels.length) return;
+
+    const galleryHeight = gallery.offsetHeight;
+    if (galleryHeight > 200) {
+        infoPanels.forEach(function(panel) {
+            panel.style.height = galleryHeight + 'px';
+            panel.style.maxHeight = galleryHeight + 'px';
+        });
+    }
+}
+
+window.addEventListener('load', syncDetailHeight);
+window.addEventListener('resize', syncDetailHeight);
+document.addEventListener('DOMContentLoaded', syncDetailHeight);
+
+if (typeof ResizeObserver !== 'undefined') {
+    const galleryEl = document.querySelector('.pd-gallery, .custom-mix-gallery');
+    if (galleryEl) {
+        const ro = new ResizeObserver(function() {
+            syncDetailHeight();
+        });
+        ro.observe(galleryEl);
+    }
+}
 </script>
 @endsection
