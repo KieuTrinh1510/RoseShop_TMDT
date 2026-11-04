@@ -549,22 +549,21 @@
                     <tbody>
                         @foreach($hangHoanChoFlashSale as $hh)
                             @php
-                                $tenHh = $hh->chiTietHoaDon?->boHoa?->ten_bo_hoa 
-                                    ?? $hh->chiTietHoaDon?->sanPham?->ten_san_pham 
-                                    ?? 'Mặt hàng #' . $hh->ma_chi_tiet_hang_hoan;
-                                $giaSnapshot = $hh->chiTietHoaDon?->gia_ban ?? 0;
+                                $tenHh = $hh['ten'] ?? 'Mặt hàng #' . ($hh['ma_chi_tiet_hang_hoan'] ?? '—');
+                                $giaSnapshot = (float) ($hh['gia_goc'] ?? 0);
+                                $soLuongConBan = (int) ($hh['so_luong_con_lai_flash_sale'] ?? $hh['so_luong_con_ban_duoc'] ?? 0);
                             @endphp
                             <tr>
                                 <td class="fw-bold text-dark">{{ $tenHh }}</td>
-                                <td class="text-center fw-bold text-primary">{{ $hh->so_luong_tot }}</td>
+                                <td class="text-center fw-bold text-primary">{{ $soLuongConBan }}</td>
                                 <td class="text-end fw-semibold text-dark">{{ number_format($giaSnapshot) }}đ</td>
-                                <td class="text-muted" style="font-size: 13px;">{{ $hh->ghi_chu ?? '—' }}</td>
+                                <td class="text-muted" style="font-size: 13px;">Còn hàng sau kiểm tra chất lượng</td>
                                 <td class="text-center">
                                     <button type="button" class="btn btn-sm btn-primary fw-bold px-3 py-1 btn-open-modal-hang-hoan"
-                                            data-id="{{ $hh->ma_chi_tiet_hang_hoan }}"
+                                            data-id="{{ $hh['ma_chi_tiet_hang_hoan'] }}"
                                             data-ten="{{ $tenHh }}"
                                             data-giagoc="{{ $giaSnapshot }}"
-                                            data-sl="{{ $hh->so_luong_tot }}">
+                                            data-sl="{{ $soLuongConBan }}">
                                         <i class="bi bi-lightning-fill me-1"></i> Mở Flash Sale
                                     </button>
                                 </td>

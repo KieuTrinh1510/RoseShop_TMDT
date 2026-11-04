@@ -479,7 +479,10 @@
     $giaApDung    = (isset($activeFlashSale) && $activeFlashSale) ? (float) $activeFlashSale->gia_flash_sale : $giaGoc;
     $tongTon      = $loGiaConHang->sum('so_luong_con_lai');
     $loDaiDien    = $loGiaConHang->sortBy('ma_chi_tiet_nhap')->first();
-    $sanSangMua   = $loDaiDien && $tongTon > 0;
+    $gioiHanMua   = $activeFlashSale
+        ? min($tongTon, (int) $activeFlashSale->available_quota)
+        : $tongTon;
+    $sanSangMua   = $loDaiDien && $gioiHanMua > 0;
 
     $donVi    = trim((string) ($sanPham->don_vi_tinh_text ?? ''));
     $donVi    = $donVi !== '' ? mb_strtolower($donVi) : 'sản phẩm';
@@ -597,14 +600,14 @@
                 @if($soLuong > 0)
                     @if($sanSangMua)
                     <div class="pd-field pd-qty-row">
-                        <label>Số lượng <small>(tối đa {{ $loDaiDien->so_luong_con_lai }})</small></label>
+                        <label>Số lượng <small>(tối đa {{ $gioiHanMua }})</small></label>
                         <div class="pd-stepper" id="lo-row-0">
                             <button type="button" class="lo-minus-btn" id="lo-minus-0"
                                     onclick="changeLo(0, -1)" aria-label="Giảm số lượng">−</button>
                             <span class="lo-qty-count" id="lo-qty-0">1</span>
                             <button type="button" class="lo-plus-btn"
                                     onclick="changeLo(0, 1)"
-                                    data-max="{{ $loDaiDien->so_luong_con_lai }}"
+                                    data-max="{{ $gioiHanMua }}"
                                     data-gia="{{ $giaApDung }}"
                                     data-id="{{ $loDaiDien->ma_chi_tiet_nhap }}"
                                     aria-label="Tăng số lượng">+</button>
