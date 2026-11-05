@@ -396,6 +396,8 @@ Route::middleware(['auth', 'role:ADMIN,NHAN_VIEN'])->group(function () {
         ->name('admin.hoa-don.kiem-tra-hang');
     Route::post('/admin/hoa-don/{maHoaDon}/kiem-tra-hang', [AdminKiemTraHangController::class, 'store'])
         ->name('admin.hoa-don.kiem-tra-hang.store');
+    Route::post('/admin/hoa-don/{maHoaDon}/xac-nhan-da-kiem-tra', [AdminKiemTraHangController::class, 'xacNhanDaKiemTra'])
+        ->name('admin.hoa-don.xac-nhan-da-kiem-tra');
     Route::get('/admin/hoan-hang/flash-sale', [AdminHoanHangFlashSaleController::class, 'index'])
         ->name('admin.hoan-hang.flash-sale.index');
     Route::post('/admin/hoan-hang/flash-sale/{maChiTietHangHoan}', [AdminHoanHangFlashSaleController::class, 'store'])

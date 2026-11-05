@@ -34,12 +34,23 @@ class InventoryReservationService
     }
 
     /**
-     * Lấy số lượng tồn khả dụng của sản phẩm (available = on_hand - reserved).
+     * Lấy số lượng tồn khả dụng của sản phẩm cho luồng bán giá thường (available = on_hand - reserved - active_flash_sale_quota).
+     * Đảm bảo hàng Flash Sale (hàng hoàn giảm chất lượng / cận hạn) không bị bán lọt ở luồng giá thường.
      */
     public static function getAvailableForProduct(SanPham $sp): int
     {
         $reserved = self::getReservedForProduct($sp->ma_san_pham);
-        return max(0, (int) $sp->so_luong - $reserved);
+        $fsQuota = (int) FlashSale::where('ma_san_pham', $sp->ma_san_pham)
+            ->where('trang_thai', 'DANG_BAN')
+            ->where(function ($q) {
+                $q->whereNull('bat_dau')->orWhere('bat_dau', '<=', now());
+            })
+            ->where(function ($q) {
+                $q->whereNull('ket_thuc')->orWhere('ket_thuc', '>=', now());
+            })
+            ->sum(DB::raw('GREATEST(0, so_luong - so_luong_da_ban)'));
+
+        return max(0, (int) $sp->so_luong - $reserved - $fsQuota);
     }
 
     /**
@@ -371,9 +382,22 @@ class InventoryReservationService
                 ->lockForUpdate()
                 ->sum('so_luong');
 
-            $availableSp = (int) $sp->so_luong - $reservedSp;
+            // Quota Flash Sale đang mở bán phải được giữ riêng cho luồng Flash Sale,
+            // không cho phép mua ở luồng bán giá thường (chặn triệt để double availability).
+            $activeFsQuota = (int) FlashSale::where('ma_san_pham', $spId)
+                ->where('trang_thai', 'DANG_BAN')
+                ->where(function ($q) {
+                    $q->whereNull('bat_dau')->orWhere('bat_dau', '<=', now());
+                })
+                ->where(function ($q) {
+                    $q->whereNull('ket_thuc')->orWhere('ket_thuc', '>=', now());
+                })
+                ->lockForUpdate()
+                ->sum(DB::raw('GREATEST(0, so_luong - so_luong_da_ban)'));
+
+            $availableSp = (int) $sp->so_luong - $reservedSp - $activeFsQuota;
             if ($availableSp < $tongCan) {
-                self::loi("Sản phẩm \"{$sp->ten_san_pham}\" không đủ tồn kho khả dụng (cần {$tongCan}, còn {$availableSp}).");
+                self::loi("Sản phẩm \"{$sp->ten_san_pham}\" không đủ tồn kho khả dụng cho giá thường (cần {$tongCan}, còn {$availableSp}).");
             }
 
             // Lấy các lô từ phiếu nhập đã CONFIRMED theo FIFO

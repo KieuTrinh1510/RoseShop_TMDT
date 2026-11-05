@@ -6,8 +6,8 @@
 'use strict';
 
 const MS_PHUT = 60 * 1000; //10 * MS_PHUT nhớ sửa lại để đúng 10 phút ,đang dùng để test
-const CHO_LAN_1_MS = 30 * 1000; // từ ngay_den_noi đến khi được báo lỗi khách
-const CHO_LAN_2_MS = 30 * 1000; // từ lúc ghi nhận lỗi khách đến khi được finalize hủy
+const CHO_LAN_1_MS = 10 * 1000; // từ ngay_den_noi đến khi được báo lỗi khách
+const CHO_LAN_2_MS = 10 * 1000; // từ lúc ghi nhận lỗi khách đến khi được finalize hủy
 
 // Trạng thái giao_hang_that_bai (DANG_CHO_KHACH và KHACH_DA_NHAN cần migration thêm vào enum)
 const TRANG_THAI_BAO_CAO = {
