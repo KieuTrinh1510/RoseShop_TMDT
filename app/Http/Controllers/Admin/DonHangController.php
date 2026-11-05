@@ -146,8 +146,9 @@ class DonHangController extends Controller
             ->values();
 
         $boTheoDon = \App\Models\BoHoa::whereIn('ma_hoa_don', $donHangs->pluck('ma_hoa_don'))->get()->groupBy('ma_hoa_don');
+        $nhanViens = NhanVien::where('chuc_vu', '!=', 'SHIPPER')->orderBy('ten_nhan_vien')->get();
 
-        return view('admin.DonHang', compact('donHangs', 'shippers', 'boTheoDon', 'tab', 'tabCounts'));
+        return view('admin.DonHang', compact('donHangs', 'shippers', 'boTheoDon', 'tab', 'tabCounts', 'nhanViens'));
     }
 
     public function confirm(Request $request, $id)

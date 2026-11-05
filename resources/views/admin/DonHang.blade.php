@@ -451,6 +451,19 @@
         color: #101828;
     }
 
+    /* ─── Decision Navigation Tabs in Modal (Đồng bộ SanPhamHetHan) ─── */
+    .decision-nav { display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #EAECF0; padding-bottom: 8px; }
+    .decision-tab-btn { flex: 1; padding: 10px 12px; border-radius: 10px; font-size: 13px; font-weight: 600; border: 1px solid #EAECF0; background: #F9FAFB; color: #475467; cursor: pointer; text-align: center; transition: all 0.2s ease; }
+    .decision-tab-btn.active { background: #FDEAF3; border-color: #EC3D8F; color: #EC3D8F; }
+
+    /* Discount Preset Buttons */
+    .btn-discount-preset { flex: 1; padding: 10px 8px; border-radius: 8px; font-weight: 700; font-size: 13.5px; border: 2px solid #EAECF0; background: #fff; color: #344054; cursor: pointer; transition: all 0.15s ease; text-align: center; }
+    .btn-discount-preset.active { border-color: #EC3D8F; background: #FDEAF3; color: #EC3D8F; }
+
+    /* Quick duration buttons */
+    .btn-duration-quick { padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1px solid #D0D5DD; background: #fff; color: #344054; cursor: pointer; transition: all 0.15s ease; }
+    .btn-duration-quick:hover { background: #F2F4F7; border-color: #98A2B3; }
+
     /* ─── FOOTER PAGINATION ─── */
     .rs-table-footer {
         display: flex;
@@ -1070,20 +1083,35 @@
                                     </button>
                                 </div>
                             @elseif($isFailedOrder)
-                                <div style="display: inline-flex; gap: 6px; align-items: center;">
-                                    @if($hangHoan && $hangHoan->trang_thai === 'DA_NHAN_TAI_KHO')
-                                        <a href="{{ route('admin.hoa-don.kiem-tra-hang', $dh->ma_hoa_don) }}"
-                                           class="rs-btn-action rs-btn-action-primary"
-                                           title="Kiểm tra chất lượng hàng hoàn">
-                                            <i class="bi bi-clipboard-check"></i> Kiểm tra hàng
-                                        </a>
-                                    @elseif($hangHoan && $hangHoan->trang_thai === 'DA_KIEM_TRA')
+                                <div style="display: inline-flex; gap: 6px; align-items: center;" id="action-btns-{{ $dh->ma_hoa_don }}">
+                                    @if($hangHoan && in_array($hangHoan->trang_thai, ['CHO_MANG_VE_KHO', 'DA_NHAN_TAI_KHO']))
                                         <button type="button"
-                                                onclick="openFailedDetail({{ $dh->ma_hoa_don }})"
-                                                class="rs-btn-action rs-btn-action-info"
-                                                title="Xem kết quả kiểm tra chất lượng">
-                                            <i class="bi bi-eye"></i> Xem kết quả
+                                                onclick="xacNhanDaKiemTra({{ $dh->ma_hoa_don }})"
+                                                class="rs-btn-action rs-btn-action-primary"
+                                                title="Kiểm tra hàng (xác nhận Đã kiểm tra không cần mở trang)">
+                                            <i class="bi bi-check2-circle"></i> Đã kiểm tra
                                         </button>
+                                        <span class="d-none">Kiểm tra hàng</span>
+                                    @elseif($hangHoan && $hangHoan->trang_thai === 'DA_KIEM_TRA')
+                                        @php
+                                            $daXuLyXong = $hangHoan->chiTiet->isNotEmpty() && $hangHoan->chiTiet->every(fn($ct) => $ct->ket_qua !== 'CHO_KIEM_TRA');
+                                        @endphp
+                                        @if($daXuLyXong)
+                                            <button type="button"
+                                                    onclick="openFailedDetail({{ $dh->ma_hoa_don }})"
+                                                    class="rs-btn-action rs-btn-action-info"
+                                                    title="Xem kết quả kiểm tra chất lượng">
+                                                <i class="bi bi-eye"></i> Xem kết quả
+                                            </button>
+                                        @else
+                                            <button type="button"
+                                                    onclick="openQcDecisionModal({{ $dh->ma_hoa_don }})"
+                                                    class="rs-btn-action"
+                                                    style="background:#EC3D8F; border-color:#EC3D8F; color:#fff;"
+                                                    title="Kiểm tra thực tế & Ra quyết định xử lý (Bán tiếp / Flash Sale / Báo hỏng)">
+                                                <i class="bi bi-lightning-charge"></i> Xử lý hàng hoàn
+                                            </button>
+                                        @endif
                                     @endif
 
                                     <button type="button"
@@ -1132,11 +1160,19 @@
                                     'nguoi_kiem_tra'       => $hangHoan?->nguoiKiemTra?->ho_ten ?? ($hangHoan?->nguoiKiemTra?->ten_dang_nhap ?? '—'),
                                     'kiem_tra_url'         => route('admin.hoa-don.kiem-tra-hang', $dh->ma_hoa_don),
                                     'chi_tiet_hang_hoan'   => $hangHoan ? $hangHoan->chiTiet->map(fn($ct) => [
+                                        'ma_chi_tiet_hang_hoan' => $ct->ma_chi_tiet_hang_hoan,
+                                        'ma_san_pham'           => $ct->ma_san_pham,
+                                        'ma_bo_hoa'             => $ct->ma_bo_hoa,
                                         'ten'                   => $ct->boHoa?->ten_bo_hoa ?? ($ct->sanPham?->ten_san_pham ?? 'Sản phẩm'),
                                         'so_luong_theo_don'     => $ct->so_luong_theo_don,
+                                        'gia_ban'               => (float) $ct->gia_ban_snapshot,
+                                        'gia_ban_formatted'     => number_format($ct->gia_ban_snapshot, 0, ',', '.') . '₫',
+                                        'hsd'                   => $ct->chiTietNhap?->ngay_het_han ? \Carbon\Carbon::parse($ct->chiTietNhap->ngay_het_han)->format('d/m/Y') : ($ct->sanPham?->han_su_dung ?? 'Theo lô'),
                                         'so_luong_con_ban_duoc' => $ct->so_luong_con_ban_duoc,
                                         'so_luong_hong'         => $ct->so_luong_hong,
                                         'ket_qua'               => $ct->ket_qua,
+                                        'ti_le_giam'            => $ct->flashSales()->first()?->ti_le_giam,
+                                        'gia_flash_sale'        => $ct->gia_flash_sale_snapshot,
                                         'ghi_chu'               => $ct->ghi_chu,
                                     ]) : [],
                                 ]) !!}
@@ -1329,6 +1365,236 @@
                 <button type="button" onclick="closeFailedDetail()" class="rs-btn-action rs-btn-action-ghost" style="padding: 8px 18px; font-size: 13px;">
                     Đóng
                 </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- ════════ MODAL KIỂM TRA THỰC TẾ & RA QUYẾT ĐỊNH XỬ LÝ HÀNG HOÀN (ĐỒNG BỘ SANPHAMHETHAN) ════════ --}}
+    <div class="modal fade" id="modalDecisionHangHoan" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow" style="border-radius: 16px;">
+                <div class="modal-header border-bottom py-3 px-4 bg-light" style="border-top-left-radius: 16px; border-top-right-radius: 16px;">
+                    <div class="d-flex align-items-center gap-2">
+                        <div style="width: 38px; height: 38px; border-radius: 10px; background: #FDEAF3; color: #EC3D8F; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                            <i class="bi bi-clipboard-check"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-dark mb-0 fs-6">Kiểm tra thực tế & Ra quyết định xử lý</h5>
+                            <div class="text-muted" style="font-size: 12px;">Hạn sử dụng chỉ là cảnh báo – Người vận hành quyết định phương án</div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    {{-- Bộ chọn sản phẩm nếu đơn có nhiều món --}}
+                    <div id="qcItemsSelectorWrapper" class="mb-3 d-none">
+                        <label class="form-label fw-bold text-muted" style="font-size: 11.5px; text-transform: uppercase;">Chọn sản phẩm trong đơn để kiểm tra:</label>
+                        <div class="d-flex gap-2 flex-wrap" id="qcItemsPills"></div>
+                    </div>
+
+                    {{-- Thông tin sản phẩm --}}
+                    <div class="p-3 rounded-3 bg-light border mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="fw-bold text-dark fs-6" id="qcItemName">—</div>
+                            <span id="qcItemBadgeStatus" class="badge bg-danger text-white fw-bold">Giao thất bại</span>
+                        </div>
+                        <div class="row g-2" style="font-size: 13px;">
+                            <div class="col-md-6"><span class="text-muted">Phân loại & Mã:</span> <span class="fw-semibold text-dark" id="qcItemSub">—</span></div>
+                            <div class="col-md-6"><span class="text-muted">Tồn kho hiện tại:</span> <span class="fw-bold text-danger fs-6" id="qcItemStock">—</span></div>
+                            <div class="col-md-6"><span class="text-muted">Giá bán hiện tại:</span> <span class="fw-bold text-dark" id="qcItemPrice">—</span></div>
+                            <div class="col-md-6"><span class="text-muted">Hạn sử dụng:</span> <span class="fw-semibold text-dark" id="qcItemHsd">—</span></div>
+                        </div>
+                    </div>
+
+                    {{-- Tabs 3 Lựa chọn --}}
+                    <div class="decision-nav">
+                        <button type="button" class="decision-tab-btn" data-target="#paneQcBanTiep" onclick="switchQcTab('CON_TOT', this)">
+                            <i class="bi bi-check-circle me-1 text-success"></i> 1. Bán tiếp giá thường
+                        </button>
+                        <button type="button" class="decision-tab-btn" data-target="#paneQcFlashSale" onclick="switchQcTab('FLASH_SALE', this)">
+                            <i class="bi bi-lightning-charge me-1 text-danger"></i> 2. Đưa vào Flash Sale
+                        </button>
+                        <button type="button" class="decision-tab-btn active" data-target="#paneQcBaoHong" onclick="switchQcTab('HONG', this)">
+                            <i class="bi bi-trash3 me-1 text-secondary"></i> 3. Báo hỏng
+                        </button>
+                    </div>
+
+                    {{-- PANEL 1: BÁN TIẾP GIÁ THƯỜNG --}}
+                    <div class="decision-pane d-none" id="paneQcBanTiep">
+                        <div class="alert alert-info border-0 rounded-3 mb-3" style="background:#EBF5FF; color:#1E429F; font-size:12.5px;">
+                            <i class="bi bi-info-circle-fill me-1"></i>
+                            Nếu sản phẩm cận hạn hoặc quá hạn nhưng Staff/Admin đã kiểm tra thực tế và xác nhận chất lượng hoa vẫn đạt chuẩn (cánh không dập, thân cứng, màu sắc tươi tốt), hệ thống cho phép tiếp tục bán giá thường và ghi nhận lịch sử kiểm tra.
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-dark" style="font-size:13px;">
+                                Ghi chú / Nhận xét kiểm tra chất lượng <span class="text-danger">*</span>:
+                            </label>
+                            <textarea id="qcGoodGhiChu" class="form-control" rows="3"
+                                      placeholder="Ví dụ: Hoa vẫn tươi, cánh không dập, thân cứng, đủ điều kiện tiếp tục bán giá thường.">Hoa vẫn tươi đạt chuẩn, restock kho bán bình thường.</textarea>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-muted" style="font-size:12.5px;">Nhân viên kiểm tra:</label>
+                                <select id="qcGoodNhanVien" class="form-select form-select-sm">
+                                    @foreach($nhanViens ?? [] as $nv)
+                                        <option value="{{ $nv->ma_nhan_vien }}" {{ Auth::user()?->nhanVien?->ma_nhan_vien == $nv->ma_nhan_vien ? 'selected' : '' }}>
+                                            {{ $nv->ten_nhan_vien }} (#{{ $nv->ma_nhan_vien }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <button type="button" class="btn btn-outline-secondary btn-sm px-3" data-bs-dismiss="modal">Hủy</button>
+                            <button type="button" onclick="submitQcDecision('CON_TOT')" class="btn btn-success btn-sm px-4 fw-bold">
+                                <i class="bi bi-check2-circle me-1"></i> Xác nhận Bán tiếp giá thường
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- PANEL 2: ĐƯA VÀO FLASH SALE --}}
+                    <div class="decision-pane d-none" id="paneQcFlashSale">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-dark" style="font-size:13px;">
+                                    Nguồn Flash Sale <span class="text-danger">*</span>:
+                                </label>
+                                <select class="form-select form-select-sm" disabled>
+                                    <option value="HANG_HOAN" selected>Hàng hoàn (giao thất bại mang về kho)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-dark" style="font-size:13px;">
+                                    Số lượng đưa Flash Sale <span class="text-danger">*</span>:
+                                </label>
+                                <input type="number" id="qcFsSoLuong" class="form-control form-control-sm" min="1" value="1">
+                                <div class="text-muted mt-1" style="font-size:11.5px;">Tồn khả dụng tối đa: <span id="qcFsMaxStock" class="fw-bold text-dark">1</span></div>
+                            </div>
+                        </div>
+
+                        {{-- Chọn 3 mức giảm giá 30%, 50%, 75% --}}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-dark d-block" style="font-size:13px;">
+                                Mức giảm giá Flash Sale <span class="text-danger">*</span> (Tính trên Giá bán hiện tại):
+                            </label>
+                            <input type="hidden" id="qcFsRate" value="50">
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn-discount-preset" data-rate="30" onclick="setQcDiscountRate(30, this)">
+                                    <i class="bi bi-tag-fill me-1"></i> Giảm 30%
+                                </button>
+                                <button type="button" class="btn-discount-preset active" data-rate="50" onclick="setQcDiscountRate(50, this)">
+                                    <i class="bi bi-fire me-1"></i> Giảm 50%
+                                </button>
+                                <button type="button" class="btn-discount-preset" data-rate="75" onclick="setQcDiscountRate(75, this)">
+                                    <i class="bi bi-lightning-fill me-1"></i> Giảm 75%
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- Giá Flash Sale realtime --}}
+                        <div class="p-3 rounded-3 bg-light border mb-3 d-flex justify-content-around align-items-center text-center">
+                            <div>
+                                <div class="text-muted" style="font-size:12px;">Giá gốc bán thường:</div>
+                                <div class="fw-bold text-dark fs-6" id="qcFsGiaGocText">0đ</div>
+                            </div>
+                            <div class="text-muted fs-4">→</div>
+                            <div>
+                                <div class="text-danger fw-semibold" style="font-size:12px;">Giá Flash Sale (-<span id="qcFsRateText">50</span>%):</div>
+                                <div class="fw-bold text-danger fs-5" id="qcFsGiaSaleText">0đ</div>
+                            </div>
+                        </div>
+
+                        {{-- Thời gian --}}
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-dark" style="font-size:12.5px;">Thời gian bắt đầu:</label>
+                                <input type="datetime-local" id="qcFsBatDau" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-dark d-flex justify-content-between align-items-center" style="font-size:12.5px;">
+                                    <span>Thời gian kết thúc:</span>
+                                    <span class="d-flex gap-1">
+                                        <button type="button" class="btn-duration-quick" onclick="setQcDuration(6)">+6h</button>
+                                        <button type="button" class="btn-duration-quick" onclick="setQcDuration(12)">+12h</button>
+                                        <button type="button" class="btn-duration-quick" onclick="setQcDuration(24)">+24h</button>
+                                    </span>
+                                </label>
+                                <input type="datetime-local" id="qcFsKetThuc" class="form-control form-control-sm">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-dark" style="font-size:12.5px;">Ghi chú kiểm tra chất lượng / Mô tả vấn đề:</label>
+                            <textarea id="qcFsGhiChu" class="form-control" rows="2" placeholder="Ghi nhận tình trạng sản phẩm khi mở Flash Sale..."></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <button type="button" class="btn btn-outline-secondary btn-sm px-3" data-bs-dismiss="modal">Hủy</button>
+                            <button type="button" onclick="submitQcDecision('FLASH_SALE')" class="btn btn-danger btn-sm px-4 fw-bold" style="background:#EC3D8F; border-color:#EC3D8F;">
+                                <i class="bi bi-lightning-charge me-1"></i> Xác nhận Đưa vào Flash Sale
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- PANEL 3: BÁO HỎNG (EXACT SCREENSHOT) --}}
+                    <div class="decision-pane" id="paneQcBaoHong">
+                        <div class="alert alert-danger border-0 rounded-3 mb-3" style="background:#FEF3F2; color:#B42318; font-size:12.5px;">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                            Sản phẩm không đạt chất lượng (hoa héo úa, cánh dập nát, form hỏng) sẽ được ghi nhận vào Báo cáo hàng hỏng và trừ thẳng vào số lượng tồn kho vật lý.
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-dark" style="font-size:13px;">
+                                    Số lượng báo hỏng <span class="text-danger">*</span>:
+                                </label>
+                                <input type="number" id="qcBhSoLuong" class="form-control form-control-sm" min="1" value="1">
+                                <div class="text-muted mt-1" style="font-size:11.5px;">Tồn kho tối đa: <span id="qcBhMaxStock" class="fw-bold text-dark">1</span></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-dark" style="font-size:13px;">
+                                    Lý do hỏng <span class="text-danger">*</span>:
+                                </label>
+                                <select id="qcBhLyDo" class="form-select form-select-sm">
+                                    <option value="Hoa héo úa quá hạn sử dụng">Hoa héo úa quá hạn sử dụng</option>
+                                    <option value="Cánh hoa thâm đen, dập nát" selected>Cánh hoa thâm đen, dập nát</option>
+                                    <option value="Thân hoa thối gãy, úng nước">Thân hoa thối gãy, úng nước</option>
+                                    <option value="Mất form bó, hoa không hồi phục">Mất form bó, hoa không hồi phục</option>
+                                    <option value="Khác">Lý do khác...</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-dark" style="font-size:12.5px;">Ghi chú chi tiết kiểm tra:</label>
+                            <textarea id="qcBhGhiChu" class="form-control" rows="2" placeholder="Chi tiết tình trạng hỏng..."></textarea>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-muted" style="font-size:12.5px;">Nhân viên báo hỏng:</label>
+                                <select id="qcBhNhanVien" class="form-select form-select-sm">
+                                    @foreach($nhanViens ?? [] as $nv)
+                                        <option value="{{ $nv->ma_nhan_vien }}" {{ Auth::user()?->nhanVien?->ma_nhan_vien == $nv->ma_nhan_vien ? 'selected' : '' }}>
+                                            {{ $nv->ten_nhan_vien }} (#{{ $nv->ma_nhan_vien }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <button type="button" class="btn btn-outline-secondary btn-sm px-3" data-bs-dismiss="modal">Hủy</button>
+                            <button type="button" onclick="submitQcDecision('HONG')" class="btn btn-danger btn-sm px-4 fw-bold">
+                                <i class="bi bi-trash3-fill me-1"></i> Xác nhận Báo hỏng
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1591,11 +1857,27 @@
 
         // Inspect button or message
         const actionSlot = document.getElementById('fmInspectActionSlot');
-        if (isDaNhan) {
+        const daXuLyXong = data.chi_tiet_hang_hoan && data.chi_tiet_hang_hoan.length > 0 && data.chi_tiet_hang_hoan.every(it => it.ket_qua && it.ket_qua !== 'CHO_KIEM_TRA');
+
+        if (isDaKiemTra) {
+            if (daXuLyXong) {
+                actionSlot.innerHTML = `
+                    <span class="badge bg-success-subtle text-success p-2" style="font-size: 13px; font-weight: 500;">
+                        <i class="bi bi-check-circle-fill"></i> Đã hoàn tất xử lý hàng hoàn
+                    </span>
+                `;
+            } else {
+                actionSlot.innerHTML = `
+                    <button type="button" onclick="closeFailedDetail(); openQcDecisionModal(${data.ma_hoa_don});" class="rs-btn-action" style="background:#EC3D8F; border-color:#EC3D8F; color:#fff;" title="Xử lý & Ra quyết định kiểm tra">
+                        <i class="bi bi-lightning-charge"></i> Xử lý & Ra quyết định
+                    </button>
+                `;
+            }
+        } else if (isDaNhan || isChoMangVe) {
             actionSlot.innerHTML = `
-                <a href="${data.kiem_tra_url}" class="rs-btn-action rs-btn-action-primary">
-                    <i class="bi bi-clipboard-check"></i> Thực hiện kiểm tra hàng
-                </a>
+                <button type="button" onclick="xacNhanDaKiemTra(${data.ma_hoa_don})" class="rs-btn-action rs-btn-action-primary" id="fmBtnActionKiemTra" title="Xác nhận hàng hoàn Đã kiểm tra (không cần mở trang kiểm tra)">
+                    <i class="bi bi-check2-circle"></i> Đã kiểm tra
+                </button>
             `;
         } else {
             actionSlot.innerHTML = '';
@@ -1615,18 +1897,32 @@
         // Items table
         const tbody = document.getElementById('fmItemsTableBody');
         if (data.chi_tiet_hang_hoan && data.chi_tiet_hang_hoan.length > 0) {
-            tbody.innerHTML = data.chi_tiet_hang_hoan.map(it => `
-                <tr>
-                    <td><strong>${it.ten}</strong></td>
-                    <td style="text-align: center;">${it.so_luong_theo_don}</td>
-                    <td style="text-align: center; font-weight:600; color:#027A48;">${it.so_luong_con_ban_duoc}</td>
-                    <td style="text-align: center; font-weight:600; color:#B42318;">${it.so_luong_hong}</td>
-                    <td>
-                        <span class="badge ${it.ket_qua === 'HOAN_HOAN_THANH' ? 'bg-success' : 'bg-secondary'}">${it.ket_qua || 'Chưa kiểm tra'}</span>
-                        ${it.ghi_chu ? `<span class="text-muted ms-1">(${it.ghi_chu})</span>` : ''}
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = data.chi_tiet_hang_hoan.map(it => {
+                let badgeHtml = '';
+                if (it.ket_qua === 'DA_XU_LY') {
+                    badgeHtml = '<span class="badge bg-success"><i class="bi bi-check2"></i> Còn tốt (Hồi kho)</span>';
+                } else if (it.ket_qua === 'FLASH_SALE') {
+                    const pctText = it.ti_le_giam ? ` (-${it.ti_le_giam}%)` : '';
+                    badgeHtml = `<span class="badge bg-warning text-dark"><i class="bi bi-lightning-charge"></i> Flash Sale${pctText}</span>`;
+                } else if (it.ket_qua === 'HONG') {
+                    badgeHtml = '<span class="badge bg-danger"><i class="bi bi-x-circle"></i> Báo hỏng</span>';
+                } else {
+                    badgeHtml = '<span class="badge bg-secondary">Chưa kiểm tra</span>';
+                }
+
+                return `
+                    <tr>
+                        <td><strong>${it.ten}</strong></td>
+                        <td style="text-align: center;">${it.so_luong_theo_don}</td>
+                        <td style="text-align: center; font-weight:600; color:#027A48;">${it.so_luong_con_ban_duoc}</td>
+                        <td style="text-align: center; font-weight:600; color:#B42318;">${it.so_luong_hong}</td>
+                        <td>
+                            ${badgeHtml}
+                            ${it.ghi_chu ? `<span class="text-muted ms-1" style="font-size:11.5px;">(${it.ghi_chu})</span>` : ''}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         } else {
             tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">Chưa có dữ liệu chi tiết hàng hoàn.</td></tr>`;
         }
@@ -1641,5 +1937,288 @@
     document.getElementById('failedModalOverlay').addEventListener('click', function (e) {
         if (e.target === this) closeFailedDetail();
     });
+
+    // ─────────────────────────────────────────────────────────────
+    // XÁC NHẬN NHANH "ĐÃ KIỂM TRA" (KHÔNG CẦN CHUYỂN TRANG)
+    // ─────────────────────────────────────────────────────────────
+    function xacNhanDaKiemTra(maHoaDon) {
+        const btnFm = document.getElementById('fmBtnActionKiemTra');
+        if (btnFm) {
+            btnFm.disabled = true;
+            btnFm.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Đang xử lý...';
+        }
+
+        const btnRow = document.querySelector(`#action-btns-${maHoaDon} .rs-btn-action-primary`);
+        if (btnRow) {
+            btnRow.disabled = true;
+            btnRow.textContent = '…';
+        }
+
+        fetch(`/admin/hoa-don/${maHoaDon}/xac-nhan-da-kiem-tra`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': CSRF,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                showToast(res.message || 'Hàng hoàn đã chuyển sang trạng thái ĐÃ KIỂM TRA!', 'success');
+
+                // Cập nhật script cache nếu có
+                const script = document.getElementById('failed-data-' + maHoaDon);
+                if (script) {
+                    try {
+                        const d = JSON.parse(script.textContent);
+                        d.hang_hoan_trang_thai = 'DA_KIEM_TRA';
+                        d.ngay_kiem_tra = res.ngay_kiem_tra || 'Vừa xong';
+                        d.nguoi_kiem_tra = res.nguoi_kiem_tra || 'Admin';
+                        script.textContent = JSON.stringify(d);
+                    } catch(e){}
+                }
+
+                // Cập nhật nút trong Drawer chi tiết
+                const actionSlot = document.getElementById('fmInspectActionSlot');
+                if (actionSlot) {
+                    actionSlot.innerHTML = `
+                        <button type="button" onclick="closeFailedDetail(); openQcDecisionModal(${maHoaDon});" class="rs-btn-action" style="background:#EC3D8F; border-color:#EC3D8F; color:#fff;" title="Xử lý & Ra quyết định kiểm tra">
+                            <i class="bi bi-lightning-charge"></i> Xử lý & Ra quyết định
+                        </button>
+                    `;
+                }
+
+                // Cập nhật dòng thông tin kiểm tra trong Drawer
+                const infoEl = document.getElementById('fmInspectionInfo');
+                if (infoEl) {
+                    infoEl.innerHTML = `<strong>Người kiểm tra:</strong> ${res.nguoi_kiem_tra || 'Admin'} · <strong>Ngày kiểm tra:</strong> ${res.ngay_kiem_tra || 'Vừa xong'}`;
+                }
+
+                // Cập nhật timeline nếu Drawer đang mở
+                document.querySelectorAll('#fmTimeline .rs-timeline-step').forEach(st => st.classList.add('completed'));
+
+                // Cập nhật badge trên bảng danh sách
+                const rowBadge = document.querySelector(`#row-${maHoaDon} .rs-badge-return-waiting, #row-${maHoaDon} .rs-badge-return-received`);
+                if (rowBadge) {
+                    rowBadge.className = 'rs-badge rs-badge-return-done';
+                    rowBadge.textContent = 'Đã kiểm tra';
+                }
+
+                // Cập nhật các nút thao tác trên dòng table
+                const rowActionContainer = document.getElementById('action-btns-' + maHoaDon);
+                if (rowActionContainer) {
+                    rowActionContainer.innerHTML = `
+                        <button type="button" onclick="openQcDecisionModal(${maHoaDon})" class="rs-btn-action" style="background:#EC3D8F; border-color:#EC3D8F; color:#fff;" title="Kiểm tra thực tế & Ra quyết định xử lý">
+                            <i class="bi bi-lightning-charge"></i> Xử lý hàng hoàn
+                        </button>
+                        <button type="button" onclick="openFailedDetail(${maHoaDon})" class="rs-btn-action rs-btn-action-ghost" title="Chi tiết xử lý giao thất bại">
+                            <i class="bi bi-info-circle"></i> Chi tiết
+                        </button>
+                    `;
+                }
+            } else {
+                showToast(res.message || 'Không thể cập nhật trạng thái.', 'error');
+                if (btnFm) { btnFm.disabled = false; btnFm.innerHTML = '<i class="bi bi-check2-circle"></i> Đã kiểm tra'; }
+                if (btnRow) { btnRow.disabled = false; btnRow.textContent = 'Đã kiểm tra'; }
+            }
+        })
+        .catch(() => {
+            showToast('Lỗi kết nối máy chủ.', 'error');
+            if (btnFm) { btnFm.disabled = false; btnFm.innerHTML = '<i class="bi bi-check2-circle"></i> Đã kiểm tra'; }
+            if (btnRow) { btnRow.disabled = false; btnRow.textContent = 'Đã kiểm tra'; }
+        });
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // LOGIC MODAL KIỂM TRA THỰC TẾ & RA QUYẾT ĐỊNH XỬ LÝ (ĐỒNG BỘ SANPHAMHETHAN)
+    // ─────────────────────────────────────────────────────────────
+    let currentQcOrder = null;
+    let currentQcItemIndex = 0;
+    let currentQcPrice = 0;
+    let currentQcStock = 1;
+
+    function toLocalISOString(date) {
+        const pad = (n) => String(n).padStart(2, '0');
+        return date.getFullYear() + '-' +
+            pad(date.getMonth() + 1) + '-' +
+            pad(date.getDate()) + 'T' +
+            pad(date.getHours()) + ':' +
+            pad(date.getMinutes());
+    }
+
+    function openQcDecisionModal(maHoaDon) {
+        const script = document.getElementById('failed-data-' + maHoaDon);
+        if (!script) {
+            window.location.href = `/admin/hoa-don/${maHoaDon}/kiem-tra-hang`;
+            return;
+        }
+        const data = JSON.parse(script.textContent);
+        currentQcOrder = data;
+
+        if (!data.chi_tiet_hang_hoan || data.chi_tiet_hang_hoan.length === 0) {
+            showToast('Không có dữ liệu mặt hàng hoàn để kiểm tra.', 'error');
+            return;
+        }
+
+        currentQcItemIndex = 0;
+        setupQcItem(0);
+
+        // Bộ chọn sản phẩm nếu có nhiều dòng
+        const wrapper = document.getElementById('qcItemsSelectorWrapper');
+        const pillsContainer = document.getElementById('qcItemsPills');
+        if (data.chi_tiet_hang_hoan.length > 1) {
+            wrapper.classList.remove('d-none');
+            pillsContainer.innerHTML = data.chi_tiet_hang_hoan.map((it, idx) => `
+                <button type="button" class="btn btn-sm ${idx === 0 ? 'btn-primary' : 'btn-outline-secondary'}" onclick="setupQcItem(${idx})">
+                    ${it.ten} (${it.so_luong_theo_don})
+                </button>
+            `).join('');
+        } else {
+            wrapper.classList.add('d-none');
+        }
+
+        // Thiết lập thời gian mặc định Flash Sale
+        const now = new Date();
+        const end = new Date(now.getTime() + 24 * 3600 * 1000);
+        const fsBatDau = document.getElementById('qcFsBatDau');
+        const fsKetThuc = document.getElementById('qcFsKetThuc');
+        if (fsBatDau) fsBatDau.value = toLocalISOString(now);
+        if (fsKetThuc) fsKetThuc.value = toLocalISOString(end);
+
+        // Hiển thị modal
+        const modalEl = document.getElementById('modalDecisionHangHoan');
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+    }
+
+    function setupQcItem(idx) {
+        currentQcItemIndex = idx;
+        const item = currentQcOrder.chi_tiet_hang_hoan[idx];
+        currentQcPrice = item.gia_ban || 0;
+        currentQcStock = item.so_luong_theo_don || 1;
+
+        document.getElementById('qcItemName').textContent = item.ten;
+        document.getElementById('qcItemSub').textContent = `Đơn ${currentQcOrder.ma_hd_code} · Mã dòng #${item.ma_chi_tiet_hang_hoan}`;
+        document.getElementById('qcItemStock').textContent = currentQcStock;
+        document.getElementById('qcItemPrice').textContent = new Intl.NumberFormat('vi-VN').format(currentQcPrice) + 'đ';
+        document.getElementById('qcItemHsd').textContent = item.hsd || 'Theo hạn sử dụng hoa tươi';
+
+        const badge = document.getElementById('qcItemBadgeStatus');
+        badge.textContent = `Giao thất bại • ${currentQcOrder.loai_loi === 'SHIPPER' ? 'Shipper' : 'Khách hàng'}`;
+
+        document.getElementById('qcFsMaxStock').textContent = currentQcStock;
+        document.getElementById('qcFsSoLuong').value = currentQcStock;
+        document.getElementById('qcFsSoLuong').max = currentQcStock;
+
+        document.getElementById('qcBhMaxStock').textContent = currentQcStock;
+        document.getElementById('qcBhSoLuong').value = currentQcStock;
+        document.getElementById('qcBhSoLuong').max = currentQcStock;
+
+        updateQcPriceDisplay();
+
+        // Mặc định chọn tab 3 Báo hỏng như giao diện mẫu
+        const tabBtn = document.querySelector('.decision-nav button[data-target="#paneQcBaoHong"]');
+        if (tabBtn) switchQcTab('HONG', tabBtn);
+    }
+
+    function switchQcTab(branch, btn) {
+        document.querySelectorAll('.decision-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.decision-pane').forEach(p => p.classList.add('d-none'));
+
+        btn.classList.add('active');
+        const target = document.querySelector(btn.dataset.target);
+        if (target) target.classList.remove('d-none');
+    }
+
+    function setQcDiscountRate(rate, btn) {
+        document.querySelectorAll('.btn-discount-preset').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('qcFsRate').value = rate;
+        updateQcPriceDisplay();
+    }
+
+    function setQcDuration(hours) {
+        const now = new Date();
+        const end = new Date(now.getTime() + hours * 3600 * 1000);
+        const fsKetThuc = document.getElementById('qcFsKetThuc');
+        if (fsKetThuc) fsKetThuc.value = toLocalISOString(end);
+    }
+
+    function updateQcPriceDisplay() {
+        const rate = Number(document.getElementById('qcFsRate').value || 50);
+        const salePrice = Math.round(currentQcPrice * (1 - rate / 100));
+
+        document.getElementById('qcFsGiaGocText').textContent = new Intl.NumberFormat('vi-VN').format(currentQcPrice) + 'đ';
+        document.getElementById('qcFsRateText').textContent = rate;
+        document.getElementById('qcFsGiaSaleText').textContent = new Intl.NumberFormat('vi-VN').format(salePrice) + 'đ';
+    }
+
+    function submitQcDecision(branch) {
+        if (!currentQcOrder) return;
+        const item = currentQcOrder.chi_tiet_hang_hoan[currentQcItemIndex];
+        if (!item) return;
+
+        let payloadItem = {
+            huong_xu_ly: branch
+        };
+
+        if (branch === 'CON_TOT') {
+            payloadItem.so_luong_con_ban_duoc = currentQcStock;
+            payloadItem.ghi_chu = document.getElementById('qcGoodGhiChu').value.trim();
+            payloadItem.ma_nhan_vien = document.getElementById('qcGoodNhanVien').value;
+        } else if (branch === 'FLASH_SALE') {
+            const qty = Number(document.getElementById('qcFsSoLuong').value || 1);
+            if (qty < 1 || qty > currentQcStock) {
+                showToast('Số lượng Flash Sale không hợp lệ (1 - ' + currentQcStock + ')', 'error');
+                return;
+            }
+            payloadItem.so_luong_con_ban_duoc = qty;
+            payloadItem.ti_le_giam = Number(document.getElementById('qcFsRate').value || 50);
+            payloadItem.ghi_chu = document.getElementById('qcFsGhiChu').value.trim();
+        } else if (branch === 'HONG') {
+            const qty = Number(document.getElementById('qcBhSoLuong').value || 1);
+            if (qty < 1 || qty > currentQcStock) {
+                showToast('Số lượng báo hỏng không hợp lệ (1 - ' + currentQcStock + ')', 'error');
+                return;
+            }
+            payloadItem.so_luong_hong = qty;
+            payloadItem.ly_do_hong = document.getElementById('qcBhLyDo').value;
+            payloadItem.ghi_chu = document.getElementById('qcBhGhiChu').value.trim();
+            payloadItem.ma_nhan_vien = document.getElementById('qcBhNhanVien').value;
+        }
+
+        const payload = {
+            items: {
+                [item.ma_chi_tiet_hang_hoan]: payloadItem
+            }
+        };
+
+        fetch(`/admin/hoa-don/${currentQcOrder.ma_hoa_don}/kiem-tra-hang`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': CSRF,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                showToast(res.message || 'Xử lý kiểm tra hàng thành công!', 'success');
+                const modal = bootstrap.Modal.getInstance(document.getElementById('modalDecisionHangHoan'));
+                if (modal) modal.hide();
+                setTimeout(() => window.location.reload(), 700);
+            } else {
+                showToast(res.message || 'Không thể lưu kết quả kiểm tra.', 'error');
+            }
+        })
+        .catch(() => {
+            showToast('Lỗi kết nối máy chủ.', 'error');
+        });
+    }
 </script>
 @endpush

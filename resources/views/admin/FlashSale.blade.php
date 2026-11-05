@@ -42,7 +42,7 @@
         .badge-rate-75 { background: #FDF2FA; color: #C11574; border: 1px solid #FCCEEE; }
 
         /* Filter Tab */
-        .fs-filter-tab { display: inline-block; padding: 5px 9px; border-radius: 6px; font-size: 12px; font-weight: 600; color: #667085; text-decoration: none; transition: all 0.2s; white-space: nowrap; }
+        .fs-filter-tab { display: inline-block; padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #667085; text-decoration: none; transition: all 0.2s; white-space: nowrap; }
         .fs-filter-tab:hover { background: #F2F4F7; color: #344054; }
         .fs-filter-tab.active { background: #EC3D8F; color: #fff; }
 
@@ -237,40 +237,42 @@
         </div>
     </div>
 
-    {{-- Filter bar: Cùng 1 hàng, không bị rớt dòng --}}
-    <div class="card border-0 shadow-sm rounded-3 p-2 mb-4 bg-white">
-        <form method="GET" action="{{ route('admin.hoan-hang.flash-sale.index') }}" class="d-flex align-items-center justify-content-between gap-2 flex-nowrap" style="overflow-x: auto;">
-            <div class="d-flex align-items-center gap-1 flex-nowrap">
-                <span class="text-muted fw-semibold me-1 text-nowrap" style="font-size: 11px; text-transform: uppercase;">Bộ lọc:</span>
-                <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'all', 'keyword' => $keyword ?? '']) }}"
-                   class="fs-filter-tab {{ ($filter ?? 'all') === 'all' ? 'active' : '' }}">Tất cả ({{ $thongKe['tat_ca'] }})</a>
-                <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'CAN_HAN', 'keyword' => $keyword ?? '']) }}"
-                   class="fs-filter-tab {{ ($filter ?? '') === 'CAN_HAN' ? 'active' : '' }}">Cận hạn</a>
-                <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'HET_HAN', 'keyword' => $keyword ?? '']) }}"
-                   class="fs-filter-tab {{ ($filter ?? '') === 'HET_HAN' ? 'active' : '' }}">Hết hạn</a>
-                <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'HANG_HOAN', 'keyword' => $keyword ?? '']) }}"
-                   class="fs-filter-tab {{ ($filter ?? '') === 'HANG_HOAN' ? 'active' : '' }}">Hàng hoàn</a>
-                <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'HANG_CO_VAN_DE', 'keyword' => $keyword ?? '']) }}"
-                   class="fs-filter-tab {{ ($filter ?? '') === 'HANG_CO_VAN_DE' ? 'active' : '' }}">Có vấn đề</a>
-                <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'dang_ban', 'keyword' => $keyword ?? '']) }}"
-                   class="fs-filter-tab {{ ($filter ?? '') === 'dang_ban' ? 'active' : '' }}">Đang bán ({{ $thongKe['dang_ban'] }})</a>
-                <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'het_thoi_gian', 'keyword' => $keyword ?? '']) }}"
-                   class="fs-filter-tab {{ ($filter ?? '') === 'het_thoi_gian' ? 'active' : '' }}">Hết giờ ({{ $thongKe['het_thoi_gian'] }})</a>
-            </div>
-            <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                <div class="position-relative" style="width: 250px;">
-                    <i class="bi bi-search position-absolute text-muted" style="left: 12px; top: 50%; transform: translateY(-50%); pointer-events: none; font-size: 13px; z-index: 5;"></i>
-                    <input type="text" name="keyword" class="form-control" style="padding: 0 12px 0 38px !important; height: 34px; border-radius: 8px; font-size: 12px;" placeholder="Tìm tên hoa, mã Flash Sale..." value="{{ $keyword ?? '' }}">
-                    <input type="hidden" name="filter" value="{{ $filter ?? 'all' }}">
+    {{-- Filter bar --}}
+    <div class="card border-0 shadow-sm rounded-3 p-3 mb-4 bg-white">
+        <form method="GET" action="{{ route('admin.hoan-hang.flash-sale.index') }}" class="row g-3 align-items-center">
+            <div class="col-lg-8 col-md-12">
+                <div class="d-flex flex-wrap gap-1 align-items-center">
+                    <span class="text-muted fw-semibold me-2" style="font-size: 12px; text-transform: uppercase;">Bộ lọc:</span>
+                    <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'all', 'keyword' => $keyword ?? '']) }}"
+                       class="fs-filter-tab {{ ($filter ?? 'all') === 'all' ? 'active' : '' }}">Tất cả ({{ $thongKe['tat_ca'] }})</a>
+                    <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'CAN_HAN', 'keyword' => $keyword ?? '']) }}"
+                       class="fs-filter-tab {{ ($filter ?? '') === 'CAN_HAN' ? 'active' : '' }}">Cận hạn</a>
+                    <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'HET_HAN', 'keyword' => $keyword ?? '']) }}"
+                       class="fs-filter-tab {{ ($filter ?? '') === 'HET_HAN' ? 'active' : '' }}">Hết hạn</a>
+                    <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'HANG_HOAN', 'keyword' => $keyword ?? '']) }}"
+                       class="fs-filter-tab {{ ($filter ?? '') === 'HANG_HOAN' ? 'active' : '' }}">Hàng hoàn</a>
+                    <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'HANG_CO_VAN_DE', 'keyword' => $keyword ?? '']) }}"
+                       class="fs-filter-tab {{ ($filter ?? '') === 'HANG_CO_VAN_DE' ? 'active' : '' }}">Có vấn đề</a>
+                    <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'dang_ban', 'keyword' => $keyword ?? '']) }}"
+                       class="fs-filter-tab {{ ($filter ?? '') === 'dang_ban' ? 'active' : '' }}">Đang bán ({{ $thongKe['dang_ban'] }})</a>
+                    <a href="{{ route('admin.hoan-hang.flash-sale.index', ['filter' => 'het_thoi_gian', 'keyword' => $keyword ?? '']) }}"
+                       class="fs-filter-tab {{ ($filter ?? '') === 'het_thoi_gian' ? 'active' : '' }}">Hết giờ ({{ $thongKe['het_thoi_gian'] }})</a>
                 </div>
-                <button type="submit" class="btn text-white fw-bold d-inline-flex align-items-center justify-content-center text-nowrap" style="background:#EC3D8F; border-color:#EC3D8F; font-size: 12px; height: 34px; padding: 0 14px; border-radius: 8px;">
-                    Tìm
-                </button>
-                @if(!empty($keyword) || ($filter ?? 'all') !== 'all')
-                    <a href="{{ route('admin.hoan-hang.flash-sale.index') }}" class="btn btn-light border d-inline-flex align-items-center justify-content-center" style="height: 34px; width: 34px; padding: 0; border-radius: 8px;" title="Đặt lại">
-                        <i class="bi bi-arrow-counterclockwise"></i>
-                    </a>
-                @endif
+            </div>
+            <div class="col-lg-4 col-md-12">
+                <div class="input-group">
+                    <input type="text" name="keyword" class="form-control" placeholder="Tìm tên hoa, mã Flash Sale..." value="{{ $keyword ?? '' }}">
+                    <input type="hidden" name="filter" value="{{ $filter ?? 'all' }}">
+                    @if(request('per_page'))
+                        <input type="hidden" name="per_page" value="{{ request('per_page') }}">
+                    @endif
+                    <button class="btn btn-outline-secondary px-3" type="submit">Tìm</button>
+                    @if(!empty($keyword) || ($filter ?? 'all') !== 'all')
+                        <a href="{{ route('admin.hoan-hang.flash-sale.index') }}" class="btn btn-light border px-3" title="Đặt lại">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                        </a>
+                    @endif
+                </div>
             </div>
         </form>
     </div>

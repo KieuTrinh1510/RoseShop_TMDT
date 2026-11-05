@@ -110,7 +110,8 @@ class KiemTraHangHoanService
                 throw new \Exception("Không tìm thấy hàng hoàn #{$maHangHoan}.");
             }
 
-            if ($hangHoan->trang_thai === 'DA_KIEM_TRA') {
+            $daHoanTatHet = $hangHoan->chiTiet->isNotEmpty() && $hangHoan->chiTiet->every(fn ($ct) => $ct->ket_qua !== 'CHO_KIEM_TRA');
+            if ($daHoanTatHet) {
                 throw new \Exception("Hàng hoàn #{$maHangHoan} đã được kiểm tra, không xử lý lại.");
             }
 
