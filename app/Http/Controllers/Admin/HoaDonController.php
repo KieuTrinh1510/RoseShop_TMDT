@@ -198,7 +198,8 @@ class HoaDonController extends Controller
             ]);
         }
 
-        return view('hoa-don.show', compact('hoaDon'));
+        // Không có trang chi tiết riêng – toàn bộ chi tiết hiển thị qua modal AJAX trên trang danh sách.
+        return redirect()->route('don-hang.index');
     }
 
     public function destroy($id)
